@@ -1,8 +1,8 @@
-# ORBITAL DC-1 · Space Data Center Simulator v3 — 详尽技术文档
+# ORBITAL DC-1 · Space Data Center Simulator — 详尽技术文档
 
-> **文件**: `space_dc_simulator_v3.html`  
-> **版本**: v3  
-> **类型**: 单文件 HTML 应用（HTML + CSS + JavaScript，含 Canvas 2D 实时渲染）  
+> **入口文件**: `index.html`  
+> **版本**: 模块化重构版  
+> **类型**: 模块化 Web 应用（HTML + CSS + 12 个 JavaScript 模块，含 Canvas 2D 实时渲染 + Digital Twin）  
 > **用途**: 模拟一个部署在太阳同步轨道 (SSO) 550km 高度的 1MW 级太空数据中心的运行状态
 
 ---
@@ -16,7 +16,7 @@
    - 3.2 [星空背景画布 `#starfield`](#32-星空背景画布-starfield)
    - 3.3 [顶部导航栏 `.header`](#33-顶部导航栏-header)
    - 3.4 [主布局 `.outer`](#34-主布局-outer)
-   - 3.5 [左侧四象限 `.left-main`](#35-左侧四象限-left-main)
+   - 3.5 [左侧内容区 `.left-main`](#35-左侧内容区-left-main)
    - 3.6 [右侧边栏 `.rsidebar`](#36-右侧边栏-rsidebar)
    - 3.7 [底部状态栏 `.botbar`](#37-底部状态栏-botbar)
 4. [CSS 样式系统详解](#4-css-样式系统详解)
@@ -41,15 +41,33 @@
    - 5.13 [主更新循环 `update()`](#513-主更新循环-update)
    - 5.14 [时间加速控制 `setSpeed()`](#514-时间加速控制-setspeed)
    - 5.15 [动画主循环 `animate()`](#515-动画主循环-animate)
+   - 5.16 [趋势图 `drawTrend()`](#516-趋势图-drawtrend)
+   - 5.17 [Digital Twin 控件 `setupDTControls()`](#517-digital-twin-控件-setupdtcontrols)
 6. [物理模型与公式](#6-物理模型与公式)
 7. [模拟参数一览表](#7-模拟参数一览表)
 8. [交互功能说明](#8-交互功能说明)
+9. [Digital Twin 功能总览](#9-digital-twin-功能总览)
+10. [散热器材料编辑器](#10-功能-1散热器材料编辑器-radiator-material-editor)
+11. [太阳能翼数量/面积调节](#11-功能-2太阳能翼数量面积调节-solar-wing-configuration)
+12. [太阳能电池技术选择](#12-功能-3太阳能电池技术选择-cell-technology-selection)
+13. [散热器面板数量/面积调节](#13-功能-4散热器面板数量面积调节-radiator-panel-configuration)
+14. [实时趋势图](#14-功能-5实时趋势图-real-time-trend-chart)
+15. [Digital Twin 控制面板交互总览](#15-digital-twin-控制面板交互总览)
+16. [物理模型补充](#16-物理模型补充digital-twin-扩展)
+17. [完整参数交叉影响矩阵](#17-完整参数交叉影响矩阵)
+18. [卫星模型动态跟随参数变化](#18-功能-6卫星3d模型动态跟随参数变化-satellite-visual-follows-dt-parameters)
+19. [模块化架构说明](#19-模块化架构说明)
+   - 19.1 [设计目标](#191-设计目标)
+   - 19.2 [文件清单与职责](#192-文件清单与职责)
+   - 19.3 [加载顺序与依赖](#193-加载顺序与依赖)
+   - 19.4 [模块间通信方式](#194-模块间通信方式)
+   - 19.5 [扩展指南](#195-扩展指南)
 
 ---
 
 ## 1. 项目概述
 
-本项目是一个**纯前端单文件 HTML 模拟器**，使用 HTML5 Canvas 2D API 实时渲染一个虚构的太空数据中心——**ORBITAL DC-1** 的运行全貌。
+本项目是一个**纯前端模块化 Web 模拟器**，使用 HTML5 Canvas 2D API 实时渲染一个虚构的太空数据中心——**ORBITAL DC-1** 的运行全貌，并提供 Digital Twin 数字孪生交互调参功能。
 
 ### 核心模拟场景
 
@@ -57,49 +75,66 @@
 |------|------|
 | **轨道** | 太阳同步轨道 (SSO)，高度 550km，轨道倾角 97.6° |
 | **周期** | 95.7 分钟/圈，其中 64% 为日照段，36% 为食 (Eclipse) 段 |
-| **电力** | 8 组三结太阳能电池翼，峰值 1400kW |
-| **散热** | 6 块辐射散热板，氨两相可变热导热管 (VCHP)，峰值 ~400kW 散热 |
+| **电力** | 2~12 组可配置太阳能电池翼（4 种电池技术），峰值可达 ~2500kW |
+| **散热** | 2~10 块可配置辐射散热板（3 种冷却剂），可变热导热管 (VCHP) |
 | **计算** | 5120 块 NVIDIA H100 GPU，~12.8 ExaFLOPS |
 | **储能** | 1.4 MWh 锂电池组 |
+| **数字孪生** | 7 项实时可调参数 + 实时趋势图 + 卫星外观动态跟随 |
 
 ### 技术栈
 
-- **HTML5**: 页面结构
-- **CSS3**: 暗色太空主题 UI、CSS Grid/Flexbox 布局、CSS 变量
-- **JavaScript (ES6+)**: 模拟逻辑、Canvas 2D 绘制、requestAnimationFrame 动画循环
+- **HTML5**: 页面结构 (`index.html`)
+- **CSS3**: 独立样式文件 (`css/styles.css`)，暗色太空主题 UI、CSS Grid/Flexbox 布局、CSS 变量
+- **JavaScript (ES6+)**: 12 个功能模块 (`js/*.js`)，模拟逻辑、Canvas 2D 绘制、requestAnimationFrame 动画循环
 - **外部字体**: Google Fonts (Orbitron, Share Tech Mono, Exo 2)
 
 ---
 
 ## 2. 文件结构总览
 
-整个应用包含在 **一个** HTML 文件中，结构如下：
+项目采用模块化架构，主入口为 `index.html`，样式和逻辑分别拆分到独立文件：
 
 ```
-space_dc_simulator_v3.html
-├── <head>
-│   ├── <meta> 标签（字符集、视口）
-│   ├── <title> 标题
-│   └── <style> 完整 CSS 样式
-├── <body>
-│   ├── <canvas id="starfield">         — 全屏星空背景
-│   ├── <div class="header">            — 顶部信息栏
-│   ├── <div class="outer">             — 主内容区
-│   │   ├── <div class="left-main">     — 左侧 2×2 Canvas 网格
-│   │   │   ├── Q1: 轨道模拟 Canvas
-│   │   │   ├── Q2: 航天器详情 Canvas
-│   │   │   ├── Q3: 太阳能阵列 Canvas + 面板
-│   │   │   └── Q4: 辐射散热器 Canvas + 面板
-│   │   └── <div class="rsidebar">      — 右侧边栏
-│   │       ├── 轨道阶段 (Orbital Phase)
-│   │       ├── 电力系统 (Power System)
-│   │       ├── 计算系统 (Compute)
-│   │       ├── 模拟控制 (Simulation Control)
-│   │       ├── 任务成本 (Mission Cost)
-│   │       └── 遥测日志 (Telemetry Log)
-│   └── <div class="botbar">            — 底部轨道参数栏
-└── <script>                             — 全部 JavaScript 逻辑
+SpaceDC/
+├── index.html                          — 主入口 HTML（纯结构，不含 CSS/JS 代码）
+├── css/
+│   └── styles.css                      — 全部 CSS 样式（~190 行）
+├── js/
+│   ├── constants.js                    — 轨道常数、电池技术库、冷却剂数据库
+│   ├── state.js                        — 仿真状态变量、动态数据模型、趋势缓冲区
+│   ├── telemetry.js                    — 遥测日志系统（LOGS, addLog, p2）
+│   ├── starfield.js                    — 星空背景层（initStars, drawStars）
+│   ├── canvas.js                       — Canvas 引用、resizeAll、角度/食判断工具
+│   ├── satellite.js                    — 卫星图标 drawSatIcon() + 详情标注 drawDetail()
+│   ├── orbit.js                        — 地球轨道视图 drawOrbit()
+│   ├── solar-array.js                  — 太阳能阵列 Canvas + 翼板状态表
+│   ├── radiator.js                     — 散热器 Canvas + 面板状态表
+│   ├── trend-chart.js                  — 实时趋势图 drawTrend()
+│   ├── dt-controls.js                  — Digital Twin 控制面板事件处理
+│   └── simulation.js                   — 主循环 update()、setSpeed()、animate()、初始化
+└── SpaceDC_Simulator_Documentation.md  — 本文档
 ```
+
+### 模块加载顺序
+
+`index.html` 底部按依赖顺序引入 12 个 JS 模块：
+
+```html
+<script src="js/constants.js"></script>     <!-- 1. 常量（无依赖） -->
+<script src="js/state.js"></script>         <!-- 2. 状态（依赖 constants） -->
+<script src="js/telemetry.js"></script>     <!-- 3. 日志（依赖 state） -->
+<script src="js/starfield.js"></script>     <!-- 4. 星空（独立） -->
+<script src="js/canvas.js"></script>        <!-- 5. Canvas 工具（依赖 constants） -->
+<script src="js/satellite.js"></script>     <!-- 6. 卫星绘制（依赖 state, canvas） -->
+<script src="js/orbit.js"></script>         <!-- 7. 轨道视图（依赖 satellite, canvas, state） -->
+<script src="js/solar-array.js"></script>   <!-- 8. 太阳能（依赖 state, canvas, constants） -->
+<script src="js/radiator.js"></script>      <!-- 9. 散热器（依赖 state, canvas, constants） -->
+<script src="js/trend-chart.js"></script>   <!-- 10. 趋势图（依赖 state, canvas, constants） -->
+<script src="js/dt-controls.js"></script>   <!-- 11. DT控制（依赖 state, constants, telemetry） -->
+<script src="js/simulation.js"></script>    <!-- 12. 主循环（依赖以上所有模块） -->
+```
+
+所有模块通过全局作用域共享状态，无需打包工具。
 
 ---
 
@@ -110,14 +145,16 @@ space_dc_simulator_v3.html
 ```html
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ORBITAL DC-1 · Space Data Center Simulator v3</title>
+<title>ORBITAL DC-1 · Space Data Center Simulator · Digital Twin</title>
+<link rel="stylesheet" href="css/styles.css">
 ```
 
 - **字符编码**: UTF-8，支持希腊字母 (ε, σ, Δ) 等特殊字符
 - **视口设置**: `width=device-width, initial-scale=1.0`，确保在不同屏幕尺寸下正确渲染
 - **标题**: 显示在浏览器标签页
+- **样式**: 通过外部 CSS 文件引入 (`css/styles.css`)
 
-**外部字体引入** (在 `<style>` 内):
+**外部字体引入** (在 `css/styles.css` 内):
 ```css
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap');
 ```
@@ -166,17 +203,17 @@ space_dc_simulator_v3.html
 .outer { display: flex; height: calc(100vh - 46px); }
 ```
 
-顶层采用 **Flexbox** 布局，左侧 `.left-main` 自适应填满（`flex:1`），右侧 `.rsidebar` 固定宽度 250px。
+顶层采用 **Flexbox** 布局，左侧 `.left-main` 自适应填满（`flex:1`），右侧 `.rsidebar` 固定宽度 270px。
 
 ---
 
-### 3.5 左侧四象限 `.left-main`
+### 3.5 左侧内容区 `.left-main`
 
 ```css
-.left-main { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.left-main { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 160px; }
 ```
 
-使用 **CSS Grid** 将画面等分为 2×2 四个象限：
+使用 **CSS Grid** 将左侧分为 3 行：上方 2×2 四象限 + 底部趋势图（跨两列，160px 高）：
 
 #### Q1: 轨道模拟 (左上)
 
@@ -455,15 +492,17 @@ body (overflow:hidden, 100vh)
 │   └── flex 布局: logo ←→ hdr-stats
 ├── .outer (z-index:5, calc(100vh-46px))
 │   └── flex 布局:
-│       ├── .left-main (flex:1, Grid 2×2)
-│       │   └── 4个 .quad (position:relative)
-│       └── .rsidebar (width:250px, flex列)
+│       ├── .left-main (flex:1, Grid 2col × 3row)
+│       │   ├── 4个 .quad (position:relative) — 2×2 象限
+│       │   └── .trend-pane (grid-column:1/3) — 趋势图
+│       └── .rsidebar (width:270px, flex列)
 └── .botbar (fixed, z-index:20) — 底栏
 ```
 
 关键布局特性:
 - **全屏无滚动**: `body { overflow:hidden; height:100vh }`
-- **四象限网格**: CSS Grid `1fr 1fr / 1fr 1fr`，间距为 0
+- **2×2 象限 + 趋势行**: CSS Grid `1fr 1fr / 1fr 1fr 160px`，间距为 0
+- **趋势图**: `.trend-pane` 使用 `grid-column: 1/3` 跨两列
 - **太阳能/散热器象限**: 特殊三栏布局 — 顶部条(26px) + 左Canvas + 右面板(160px)
 
 ### 4.4 组件样式
@@ -523,7 +562,11 @@ body (overflow:hidden, 100vh)
 
 ## 5. JavaScript 逻辑详解
 
+> **模块化架构**: JavaScript 代码已从单个 `<script>` 块拆分为 12 个独立模块文件 (`js/*.js`)。以下各节按功能描述逻辑，并标注对应的源文件。完整的模块依赖关系和加载顺序见 [Section 19](#19-模块化架构说明)。
+
 ### 5.1 全局状态变量
+
+> **源文件**: `js/state.js`
 
 ```javascript
 let simTime    = 0;      // 模拟总时间 (秒)，持续累加
@@ -553,6 +596,8 @@ const SIGMA         = 5.67e-8;                               // Stefan-Boltzmann
 ---
 
 ### 5.2 数据模型 (Wings & Radiator Panels)
+
+> **源文件**: `js/state.js` — `rebuildWings()` / `rebuildRadPanels()`
 
 #### 太阳能翼 `wings`
 
@@ -591,6 +636,8 @@ const radPanels = Array.from({length:6}, (_, i) => ({
 ---
 
 ### 5.3 星空渲染 (Starfield)
+
+> **源文件**: `js/starfield.js`
 
 #### `initStars()`
 
@@ -634,6 +681,8 @@ function drawStars() {
 
 ### 5.4 Canvas 引用与初始化
 
+> **源文件**: `js/canvas.js`
+
 ```javascript
 const oC = document.getElementById('orbitCanvas'),   oX = oC.getContext('2d');  // 轨道
 const dC = document.getElementById('detailCanvas'),  dX = dC.getContext('2d');  // 详情
@@ -667,6 +716,8 @@ function resizeAll() {
 
 ### 5.5 轨道判断工具函数
 
+> **源文件**: `js/canvas.js` — `getAngle()` / `isEclipse()`
+
 #### `getAngle(t)`
 
 ```javascript
@@ -695,6 +746,8 @@ function isEclipse(a) {
 ---
 
 ### 5.6 轨道视图绘制 `drawOrbit()`
+
+> **源文件**: `js/orbit.js`
 
 这是最复杂的绘制函数，逐步绘制以下元素：
 
@@ -779,6 +832,8 @@ for (let i = 1; i <= 3; i++) {
 
 ### 5.7 卫星图标绘制 `drawSatIcon()`
 
+> **源文件**: `js/satellite.js`
+
 ```javascript
 function drawSatIcon(ctx, x, y, angle, eclipse, s) { ... }
 ```
@@ -819,6 +874,8 @@ function drawSatIcon(ctx, x, y, angle, eclipse, s) { ... }
 
 ### 5.8 航天器详情视图 `drawDetail()`
 
+> **源文件**: `js/satellite.js`
+
 ```javascript
 function drawDetail(eclipse) { ... }
 ```
@@ -848,6 +905,8 @@ function drawDetail(eclipse) { ... }
 
 ### 5.9 太阳能阵列视图 `drawSolarArray()`
 
+> **源文件**: `js/solar-array.js`
+
 ```javascript
 function drawSolarArray(eclipse) { ... }
 ```
@@ -874,6 +933,8 @@ function drawSolarArray(eclipse) { ... }
 ---
 
 ### 5.10 辐射散热器视图 `drawRadiator()`
+
+> **源文件**: `js/radiator.js`
 
 ```javascript
 function drawRadiator(eclipse) { ... }
@@ -902,6 +963,8 @@ function drawRadiator(eclipse) { ... }
 ---
 
 ### 5.11 表格数据更新
+
+> **源文件**: `js/solar-array.js` (`updateWingTable`) + `js/radiator.js` (`updateRadTable`)
 
 #### `updateWingTable(eclipse)`
 
@@ -952,6 +1015,8 @@ $$Q_{rad} = \frac{\varepsilon \cdot \sigma \cdot A \cdot F_v \cdot (T^4 - T_{spa
 
 ### 5.12 遥测日志系统
 
+> **源文件**: `js/telemetry.js`
+
 #### 预设日志列表 `LOGS`
 
 ```javascript
@@ -996,6 +1061,8 @@ function p2(n) { return String(Math.floor(n)).padStart(2, '0'); }
 ---
 
 ### 5.13 主更新循环 `update()`
+
+> **源文件**: `js/simulation.js`
 
 这是模拟器的核心逻辑函数，每帧调用一次。
 
@@ -1144,6 +1211,8 @@ drawRadiator(eclipse);
 
 ### 5.14 时间加速控制 `setSpeed()`
 
+> **源文件**: `js/simulation.js`
+
 ```javascript
 function setSpeed(s) {
   speed = s;
@@ -1159,6 +1228,8 @@ function setSpeed(s) {
 ---
 
 ### 5.15 动画主循环 `animate()`
+
+> **源文件**: `js/simulation.js`
 
 ```javascript
 function animate(ts) {
@@ -1179,6 +1250,20 @@ requestAnimationFrame(animate);    // 启动动画循环
 ```
 
 典型的 `requestAnimationFrame` 循环，通常以 60fps 运行。
+
+---
+
+### 5.16 趋势图 `drawTrend()`
+
+> **源文件**: `js/trend-chart.js`
+
+在底部 `trendCanvas` 上绘制四通道实时曲线（Solar / Battery / Radiator / GPU），详见 [Section 14](#14-功能-5实时趋势图-real-time-trend-chart)。
+
+### 5.17 Digital Twin 控件 `setupDTControls()`
+
+> **源文件**: `js/dt-controls.js`
+
+在页面加载时绑定右侧边栏所有 DT 控件的事件监听器（滑块 `input`、下拉 `change`），并提供实时摘要更新 `updateDTSummary()`。详见 [Section 15](#15-digital-twin-控制面板交互总览)。
 
 ---
 
@@ -1310,20 +1395,11 @@ $$SOC_{new} = \begin{cases} \max(10, \; SOC - 0.85 \cdot \Delta t / 60) & \text{
 
 ---
 
----
+## 9. Digital Twin 功能总览
 
-# ORBITAL DC-1 · Space Data Center Simulator v4 — Digital Twin 扩展功能文档
+> **源文件**: `js/dt-controls.js` (控件绑定) + `js/state.js` (数据模型) + `js/simulation.js` (计算逻辑)
 
-> **文件**: `space_dc_simulator_v4.html`  
-> **版本**: v4 (基于 v3 扩展)  
-> **新增特性**: 5 项数字孪生 (Digital Twin) 功能  
-> **代码行数**: ~900+ 行
-
----
-
-## 9. v4 新增功能总览
-
-v4 在 v3 的基础上新增了 **5 项数字孪生核心功能**，将静态演示升级为可交互调参的工程仿真平台：
+模拟器内置 **5 项数字孪生核心功能**，将静态演示升级为可交互调参的工程仿真平台：
 
 | # | 功能名称 | 控制方式 | 影响范围 |
 |---|----------|----------|----------|
@@ -1648,7 +1724,7 @@ if (trendData.solar[i] < 1) {
 
 #### 14.2.4 布局调整
 
-主视图从 v3 的 2×2 网格改为 3 行布局：
+主视图采用 3 行布局（上两行为四象限，第三行为趋势图）：
 
 ```css
 .left-main {
@@ -1733,11 +1809,11 @@ const breakeven = totalCost / (revenue - opex);
 
 ---
 
-## 16. 物理模型补充（v4 新增）
+## 16. 物理模型补充（Digital Twin 扩展）
 
 ### 16.1 GPU 温度模型
 
-v4 引入了散热充裕度对 GPU 温度的影响：
+Digital Twin 引入了散热充裕度对 GPU 温度的影响：
 
 $$T_{GPU} = T_{base} + (1 - \theta) \times 25°C$$
 
@@ -1874,6 +1950,98 @@ const cellCols = Math.max(3, Math.min(10, Math.round(wingWBase/(6*s))));
 
 ---
 
+## 19. 模块化架构说明
+
+### 19.1 设计目标
+
+将原先 ~1300 行的单体 HTML 文件重构为 **1 个入口 HTML + 1 个 CSS + 12 个 JS 模块**，实现：
+
+1. **关注点分离** — 每个文件只负责一个功能域
+2. **可维护性** — 修改某一绘制逻辑无需搜索千行文件
+3. **零依赖** — 不引入 ES Module bundler，保持双击即可运行的简洁性
+
+### 19.2 文件清单与职责
+
+| 文件 | 职责 | 主要导出 (全局函数/变量) |
+|------|------|--------------------------|
+| `index.html` | HTML 结构 + 脚本加载顺序 | — |
+| `css/styles.css` | 全部 CSS 样式 | — |
+| `js/constants.js` | 轨道常量、电池技术库、冷却剂库 | `ORBIT_PERIOD`, `ECLIPSE_FRAC`, `SIGMA`, `CELL_TECHS`, `COOLANTS` |
+| `js/state.js` | 全局状态、数据模型、趋势缓冲 | `simTime`, `speed`, `wings`, `radPanels`, `rebuildWings()`, `pushTrend()` |
+| `js/telemetry.js` | 遥测日志系统 | `LOGS`, `addLog()`, `p2()` |
+| `js/starfield.js` | 背景星空渲染 | `initStars()`, `drawStars()` |
+| `js/canvas.js` | Canvas 引用、尺寸管理、工具函数 | `oC/oX`, `dC/dX`, `sC/sX`, `rC/rX`, `tC/tX`, `resizeAll()`, `getAngle()`, `isEclipse()` |
+| `js/satellite.js` | 卫星图标 + 详情视图绘制 | `drawSatIcon()`, `drawDetail()` |
+| `js/orbit.js` | 地球轨道视图 | `drawOrbit()` |
+| `js/solar-array.js` | 太阳能阵列 Canvas + 翼表 | `drawSolarArray()`, `updateWingTable()` |
+| `js/radiator.js` | 散热器 Canvas + 面板表 | `drawRadiator()`, `updateRadTable()` |
+| `js/trend-chart.js` | 底部趋势图 | `drawTrend()` |
+| `js/dt-controls.js` | Digital Twin 控件事件绑定 | `setupDTControls()`, `updateDTSummary()` |
+| `js/simulation.js` | 主循环、动画帧、初始化 | `update()`, `setSpeed()`, `animate()` |
+
+### 19.3 加载顺序与依赖
+
+脚本标签在 `index.html` 底部按严格顺序加载，确保被依赖模块先行注册到全局作用域：
+
+```text
+constants.js          ← 无依赖（纯数据）
+      ↓
+state.js              ← 依赖 constants（CELL_TECHS, COOLANTS）
+      ↓
+telemetry.js          ← 无依赖
+      ↓
+starfield.js          ← 无依赖
+      ↓
+canvas.js             ← 依赖 constants（ORBIT_PERIOD, ECLIPSE_FRAC, ECLIPSE_START）
+      ↓
+satellite.js          ← 依赖 canvas（dC, dX）+ state（wingCount, radPanelCount 等）
+      ↓
+orbit.js              ← 依赖 canvas + satellite + state
+      ↓
+solar-array.js        ← 依赖 canvas + state
+      ↓
+radiator.js           ← 依赖 canvas + state + constants
+      ↓
+trend-chart.js        ← 依赖 canvas（tC, tX）+ state（trendData）
+      ↓
+dt-controls.js        ← 依赖 state + constants + telemetry
+      ↓
+simulation.js         ← 依赖以上全部模块（调用所有 draw/update 函数）
+```
+
+### 19.4 模块间通信方式
+
+所有模块通过 **全局作用域** 共享状态与函数，无 `import`/`export`：
+
+```javascript
+// js/state.js — 声明全局变量
+let wingCount = 8;
+
+// js/simulation.js — 直接读取
+const totalPower = wings.slice(0, wingCount).reduce(…);
+
+// js/dt-controls.js — 直接修改
+document.getElementById('wingSlider').addEventListener('input', e => {
+  wingCount = +e.target.value;
+  rebuildWings();
+});
+```
+
+**优势**: 零配置、无打包步骤、双击 `index.html` 即可运行  
+**约束**: 脚本加载顺序必须正确，否则运行时会出现 `ReferenceError`
+
+### 19.5 扩展指南
+
+添加新功能模块时：
+
+1. 在 `js/` 下创建新文件（如 `js/new-feature.js`）
+2. 在 `index.html` 中按依赖关系插入 `<script>` 标签
+3. 若需新的全局状态，在 `js/state.js` 中声明
+4. 若需新的 UI 控件，在 `js/dt-controls.js` 的 `setupDTControls()` 中绑定
+5. 在 `js/simulation.js` 的 `update()` 或 `animate()` 中调用新模块的渲染函数
+
+---
+
 > **文档更新时间**: 2025-02-26  
-> **文档适用版本**: Space Data Center Simulator v3 + v4 Digital Twin  
-> **文件**: `space_dc_simulator_v3.html` (828 行) + `space_dc_simulator_v4.html` (~1300 行)
+> **文档适用版本**: Space Data Center Simulator (模块化架构)  
+> **项目结构**: `index.html` + `css/styles.css` + 12 个 JS 模块 (`js/*.js`)
