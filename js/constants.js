@@ -22,3 +22,83 @@ const COOLANTS = {
   propylene: { name:'Propylene 1-phase', flow:5.8, tIn:80, tOut:50, heatCapFactor:0.72 },
   r134a:     { name:'R-134a 2-phase',    flow:6.1, tIn:78, tOut:48, heatCapFactor:0.85 },
 };
+
+// Workload database
+// Each workload defines: GPU demand, per-GPU TDP, total compute load,
+// peak ExaFLOPS, and heat output (≈ 0.4 × compute power)
+const WORKLOADS = {
+  // --- Training workloads ---
+  llama70b_train: {
+    name: 'LLaMA-3 70B Training',
+    type: 'train', model: '70B',
+    desc: '70B dense LLM · FP16/BF16 · data-parallel + tensor-parallel',
+    gpuCount: 5120, gpuModel: 'H100 80GB',
+    perGpuTDP: 0.700,                       // kW per GPU (TDP)
+    gpuUtil: 0.92,                           // typical training util
+    totalComputekW: 5120 * 0.700 * 0.92,     // ~3,297 kW
+    heatFraction: 0.40,                      // fraction of compute → waste heat to radiators
+    peakFLOPS: 12.8,                         // ExaFLOPS
+    batchInfo: '4096 global batch · micro-bs 4',
+  },
+  llama405b_train: {
+    name: 'LLaMA-3 405B Training',
+    type: 'train', model: '405B',
+    desc: '405B dense LLM · FP16/BF16 · 4D-parallel (TP×PP×DP×CP)',
+    gpuCount: 5120, gpuModel: 'H100 80GB',
+    perGpuTDP: 0.700,
+    gpuUtil: 0.88,
+    totalComputekW: 5120 * 0.700 * 0.88,     // ~3,154 kW
+    heatFraction: 0.42,
+    peakFLOPS: 11.2,
+    batchInfo: '2048 global batch · 8-way PP',
+  },
+  gpt4_train: {
+    name: 'GPT-4 1.8T MoE Training',
+    type: 'train', model: '1.8T MoE',
+    desc: '1.8T Mixture-of-Experts · FP16 · expert-parallel',
+    gpuCount: 5120, gpuModel: 'H100 80GB',
+    perGpuTDP: 0.700,
+    gpuUtil: 0.85,
+    totalComputekW: 5120 * 0.700 * 0.85,     // ~3,046 kW
+    heatFraction: 0.43,
+    peakFLOPS: 10.6,
+    batchInfo: '1024 global batch · 16 experts',
+  },
+  // --- Inference workloads ---
+  llama70b_infer: {
+    name: 'LLaMA-3 70B Inference',
+    type: 'infer', model: '70B',
+    desc: '70B dense LLM · INT8/FP8 · vLLM continuous batching',
+    gpuCount: 2560, gpuModel: 'H100 80GB',
+    perGpuTDP: 0.700,
+    gpuUtil: 0.55,
+    totalComputekW: 2560 * 0.700 * 0.55,     // ~986 kW
+    heatFraction: 0.35,
+    peakFLOPS: 6.4,
+    batchInfo: '128 concurrent reqs · KV-cache',
+  },
+  llama405b_infer: {
+    name: 'LLaMA-3 405B Inference',
+    type: 'infer', model: '405B',
+    desc: '405B dense LLM · INT8 · tensor-parallel across 8 GPUs',
+    gpuCount: 5120, gpuModel: 'H100 80GB',
+    perGpuTDP: 0.700,
+    gpuUtil: 0.50,
+    totalComputekW: 5120 * 0.700 * 0.50,     // ~1,792 kW
+    heatFraction: 0.38,
+    peakFLOPS: 8.0,
+    batchInfo: '64 concurrent reqs · 8-way TP',
+  },
+  sd_xl_infer: {
+    name: 'Stable Diffusion XL Inference',
+    type: 'infer', model: 'SDXL 6.6B',
+    desc: '6.6B UNet + VAE · FP16 · batched image generation',
+    gpuCount: 1280, gpuModel: 'H100 80GB',
+    perGpuTDP: 0.700,
+    gpuUtil: 0.70,
+    totalComputekW: 1280 * 0.700 * 0.70,     // ~627 kW
+    heatFraction: 0.33,
+    peakFLOPS: 3.2,
+    batchInfo: '512 imgs/batch · 50 steps',
+  },
+};

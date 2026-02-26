@@ -151,7 +151,7 @@
       <div style="margin-top:5px;">
         <div class="frow sol"><span class="fl">☀ Solar Arrays</span><span class="fv" id="ffSolar">+1400 kW</span></div>
         <div class="frow bat"><span class="fl">⚡ Battery 1.4MWh</span><span class="fv" id="ffBat">CHG +380kW</span></div>
-        <div class="frow cmp"><span class="fl">🖥 H100 × 5120</span><span class="fv">−1000 kW</span></div>
+        <div class="frow cmp"><span class="fl">🖥 <span id="ffCompLabel">H100 × 5120</span></span><span class="fv" id="ffComp">−1000 kW</span></div>
         <div class="frow rad2"><span class="fl">🌡 Radiator Panels</span><span class="fv" id="ffRad">−400 kW</span></div>
       </div>
     </div>
@@ -230,6 +230,41 @@
         </div>
       </div>
 
+      <!-- Workload Config -->
+      <div class="dt-group">
+        <div class="dt-group-title"><em class="ico">🖥</em> WORKLOAD CONFIG</div>
+        <div class="dt-row">
+          <span class="dt-label">Task</span>
+          <select class="dt-select" id="selWorkload">
+            <optgroup label="Training">
+              <option value="llama70b_train" selected>LLaMA-3 70B Train</option>
+              <option value="llama405b_train">LLaMA-3 405B Train</option>
+              <option value="gpt4_train">GPT-4 1.8T MoE Train</option>
+            </optgroup>
+            <optgroup label="Inference">
+              <option value="llama70b_infer">LLaMA-3 70B Infer</option>
+              <option value="llama405b_infer">LLaMA-3 405B Infer</option>
+              <option value="sd_xl_infer">SDXL Image Gen</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="wl-info" id="wlInfo">
+          <table class="cell-t" id="wlTable">
+            <tr><td>Model</td><td class="ok" id="wlModel">LLaMA-3 70B</td></tr>
+            <tr><td>Type</td><td id="wlType">Training</td></tr>
+            <tr><td>GPUs</td><td id="wlGpus">5120 × H100</td></tr>
+            <tr><td>Compute</td><td id="wlCompute">3297 kW</td></tr>
+            <tr><td>Heat Load</td><td id="wlHeat">1319 kW</td></tr>
+            <tr><td>Peak FLOPS</td><td id="wlFlops">12.8 EF</td></tr>
+            <tr><td>GPU Util</td><td id="wlUtil">92%</td></tr>
+          </table>
+          <div class="wl-thermal-status" id="wlThermalStatus">
+            <span class="wl-th-label">Thermal:</span>
+            <span class="wl-th-val ok" id="wlThermalVal">✓ Can dissipate</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Impact Summary -->
       <div class="dt-summary" id="dtSummary">
         <div>Total Solar Area: <span class="val" id="dsSolarArea">2800 m²</span> · Peak: <span class="val" id="dsPeakPwr">1400 kW</span></div>
@@ -258,7 +293,7 @@
         <tr><td>☀ Solar Arrays TJ</td><td id="costSolar">$65M</td></tr>
         <tr><td>⚡ Battery 1.4MWh</td><td>$42M</td></tr>
         <tr><td>🌡 Radiator+VCHP</td><td id="costRad">$28M</td></tr>
-        <tr><td>🖥 H100×5120</td><td>$256M</td></tr>
+        <tr><td>🖥 GPU Cluster</td><td id="costGpu">$256M</td></tr>
         <tr><td>📡 Optical Downlink</td><td>$38M</td></tr>
         <tr><td>🔧 Ground Segment</td><td>$22M</td></tr>
         <tr><td>🛠 AIT</td><td>$45M</td></tr>

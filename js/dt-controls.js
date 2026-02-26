@@ -61,6 +61,15 @@ function setupDTControls() {
     updateCoolantDisplay(); updateDTSummary();
     addLog('info', `[DT] Coolant → ${COOLANTS[currentCoolant].name}.`);
   });
+
+  // Workload
+  const selWL = document.getElementById('selWorkload');
+  selWL.addEventListener('change', () => {
+    currentWorkload = selWL.value;
+    updateWorkloadDisplay(); updateDTSummary();
+    const wl = WORKLOADS[currentWorkload];
+    addLog('info', `[DT] Workload → ${wl.name}.`);
+  });
 }
 
 function updateCellTechDisplay() {
@@ -83,15 +92,56 @@ function updateCoolantDisplay() {
   document.getElementById('radPaneTitle').textContent = `🌡 Radiative Cooling · ${radCount} Panels · ${cool.name} VCHP`;
 }
 
+function updateWorkloadDisplay() {
+  const wl = WORKLOADS[currentWorkload];
+  document.getElementById('wlModel').textContent = wl.model;
+  document.getElementById('wlType').textContent = wl.type === 'train' ? 'Training' : 'Inference';
+  document.getElementById('wlGpus').textContent = `${wl.gpuCount} × ${wl.gpuModel}`;
+  document.getElementById('wlCompute').textContent = Math.round(wl.totalComputekW) + ' kW';
+  document.getElementById('wlHeat').textContent = Math.round(wl.totalComputekW * wl.heatFraction) + ' kW';
+  document.getElementById('wlFlops').textContent = wl.peakFLOPS.toFixed(1) + ' EF';
+  document.getElementById('wlUtil').textContent = Math.round(wl.gpuUtil * 100) + '%';
+
+  // Update power flow label
+  document.getElementById('ffCompLabel').textContent = `${wl.gpuModel} × ${wl.gpuCount}`;
+
+  // Thermal feasibility check
+  updateThermalStatus();
+}
+
+function updateThermalStatus() {
+  const wl = WORKLOADS[currentWorkload];
+  const cool = COOLANTS[currentCoolant];
+  const heatLoad = wl.totalComputekW * wl.heatFraction;
+  const totalRadArea = radCount * radArea;
+  const Tsurf = 58 + 273.15;
+  const peakQ = (radEpsilon * SIGMA * totalRadArea * 0.9 * (Tsurf ** 4 - 2.7 ** 4)) / 1000 * cool.heatCapFactor;
+  const ratio = peakQ / Math.max(1, heatLoad);
+
+  const el = document.getElementById('wlThermalVal');
+  if (ratio >= 1.2) {
+    el.className = 'wl-th-val ok';
+    el.textContent = `✓ OK (${Math.round(ratio * 100)}% capacity)`;
+  } else if (ratio >= 1.0) {
+    el.className = 'wl-th-val warn';
+    el.textContent = `⚠ Marginal (${Math.round(ratio * 100)}%)`;
+  } else {
+    el.className = 'wl-th-val danger';
+    el.textContent = `✗ OVERHEAT (${Math.round(ratio * 100)}% — deficit ${Math.round(heatLoad - peakQ)} kW)`;
+  }
+}
+
 function updateDTSummary() {
   const tech = CELL_TECHS[currentCellTech];
   const cool = COOLANTS[currentCoolant];
+  const wl   = WORKLOADS[currentWorkload];
   const totalSolarArea = wingCount * wingArea;
   const peakSolar = (totalSolarArea * 1367 * tech.eff / 1000) * (1 - (75 - 25) * tech.tcoef);
   const totalRadArea = radCount * radArea;
   const Tsurf = 58 + 273.15;
   const peakQ = (radEpsilon * SIGMA * totalRadArea * 0.9 * (Tsurf ** 4 - 2.7 ** 4)) / 1000 * cool.heatCapFactor;
-  const balance = peakSolar - 1000;
+  const computeLoad = wl.totalComputekW;
+  const balance = peakSolar - computeLoad;
 
   document.getElementById('dsSolarArea').textContent = totalSolarArea + ' m²';
   document.getElementById('dsPeakPwr').textContent = peakSolar.toFixed(0) + ' kW';
@@ -116,13 +166,18 @@ function updateDTSummary() {
   document.getElementById('caFlow').textContent = cool.flow.toFixed(1) + ' kg/s';
 
   // Update cost estimates
+  const gpuCost = Math.round(wl.gpuCount * 0.05);    // ~$50k per H100
   const solarCost = Math.round(totalSolarArea * 0.023);
   const radCost = Math.round(totalRadArea * 0.033);
   document.getElementById('costSolar').textContent = '$' + solarCost + 'M';
   document.getElementById('costRad').textContent = '$' + radCost + 'M';
-  const totalCost = 120 + 85 + solarCost + 42 + radCost + 256 + 38 + 22 + 45 + 80;
+  document.getElementById('costGpu').textContent = '$' + gpuCost + 'M';
+  const totalCost = 120 + 85 + solarCost + 42 + radCost + gpuCost + 38 + 22 + 45 + 80;
   document.getElementById('costTotal').textContent = '$' + totalCost + 'M';
   const revenue = 420, opex = 38;
   const be = totalCost / (revenue - opex);
   document.getElementById('costBreakeven').textContent = '~' + be.toFixed(1) + ' yrs';
+
+  // Update thermal status
+  updateThermalStatus();
 }

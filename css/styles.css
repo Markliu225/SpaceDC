@@ -194,3 +194,17 @@ body{background:var(--void);color:var(--text);font-family:'Exo 2',sans-serif;ove
 .dt-summary .val{color:var(--accent);font-weight:bold;}
 .dt-summary .warn-val{color:var(--warn);font-weight:bold;}
 .dt-summary .danger-val{color:var(--danger);font-weight:bold;}
+
+/* --- Workload info panel --- */
+.wl-info{margin-top:4px;}
+.wl-thermal-status{
+  display:flex;align-items:center;gap:4px;margin-top:4px;
+  padding:3px 5px;border-radius:2px;
+  font-family:'Share Tech Mono',monospace;font-size:8px;
+  background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.1);
+}
+.wl-th-label{color:var(--dim);}
+.wl-th-val{font-weight:bold;}
+.wl-th-val.ok{color:var(--accent3);}
+.wl-th-val.warn{color:var(--warn);}
+.wl-th-val.danger{color:var(--danger);}

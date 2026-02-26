@@ -56,12 +56,18 @@
 16. [物理模型补充](#16-物理模型补充digital-twin-扩展)
 17. [完整参数交叉影响矩阵](#17-完整参数交叉影响矩阵)
 18. [卫星模型动态跟随参数变化](#18-功能-6卫星3d模型动态跟随参数变化-satellite-visual-follows-dt-parameters)
-19. [模块化架构说明](#19-模块化架构说明)
-   - 19.1 [设计目标](#191-设计目标)
-   - 19.2 [文件清单与职责](#192-文件清单与职责)
-   - 19.3 [加载顺序与依赖](#193-加载顺序与依赖)
-   - 19.4 [模块间通信方式](#194-模块间通信方式)
-   - 19.5 [扩展指南](#195-扩展指南)
+19. [Workload 负载选择](#19-功能-7workload-负载选择-compute-workload-configuration)
+   - 19.1 [功能描述](#191-功能描述)
+   - 19.2 [Workload 数据模型](#192-workload-数据模型)
+   - 19.3 [预设负载一览](#193-预设负载一览)
+   - 19.4 [散热可行性判断](#194-散热可行性判断)
+   - 19.5 [对仿真引擎的影响](#195-对仿真引擎的影响)
+20. [模块化架构说明](#20-模块化架构说明)
+   - 20.1 [设计目标](#201-设计目标)
+   - 20.2 [文件清单与职责](#202-文件清单与职责)
+   - 20.3 [加载顺序与依赖](#203-加载顺序与依赖)
+   - 20.4 [模块间通信方式](#204-模块间通信方式)
+   - 20.5 [扩展指南](#205-扩展指南)
 
 ---
 
@@ -562,7 +568,7 @@ body (overflow:hidden, 100vh)
 
 ## 5. JavaScript 逻辑详解
 
-> **模块化架构**: JavaScript 代码已从单个 `<script>` 块拆分为 12 个独立模块文件 (`js/*.js`)。以下各节按功能描述逻辑，并标注对应的源文件。完整的模块依赖关系和加载顺序见 [Section 19](#19-模块化架构说明)。
+> **模块化架构**: JavaScript 代码已从单个 `<script>` 块拆分为 12 个独立模块文件 (`js/*.js`)。以下各节按功能描述逻辑，并标注对应的源文件。完整的模块依赖关系和加载顺序见 [Section 20](#20-模块化架构说明)。
 
 ### 5.1 全局状态变量
 
@@ -1399,7 +1405,7 @@ $$SOC_{new} = \begin{cases} \max(10, \; SOC - 0.85 \cdot \Delta t / 60) & \text{
 
 > **源文件**: `js/dt-controls.js` (控件绑定) + `js/state.js` (数据模型) + `js/simulation.js` (计算逻辑)
 
-模拟器内置 **5 项数字孪生核心功能**，将静态演示升级为可交互调参的工程仿真平台：
+模拟器内置 **7 项数字孪生核心功能**，将静态演示升级为可交互调参的工程仿真平台：
 
 | # | 功能名称 | 控制方式 | 影响范围 |
 |---|----------|----------|----------|
@@ -1408,6 +1414,8 @@ $$SOC_{new} = \begin{cases} \max(10, \; SOC - 0.85 \cdot \Delta t / 60) & \text{
 | 3 | 太阳能电池技术选择 | 下拉菜单 (4 种技术) | 发电效率、温度系数、成本 |
 | 4 | 散热器面板数量/面积调节 | 面板数滑块 + 面积滑块 | 散热能力、GPU 温度、Canvas 布局 |
 | 5 | 实时趋势图 | 自动绘制，底部全宽 | Solar/Bat/Rad/GPU 四通道时序 |
+| 6 | 卫星模型动态跟随 | 自动 (参数变化时) | Canvas 卫星几何、标注 |
+| 7 | **Workload 负载选择** | **下拉菜单 (6 种负载)** | **GPU功耗、废热、FLOPS、散热可行性、电池充放电** |
 
 ---
 
@@ -1950,9 +1958,84 @@ const cellCols = Math.max(3, Math.min(10, Math.round(wingWBase/(6*s))));
 
 ---
 
-## 19. 模块化架构说明
+## 19. 功能 7：Workload 负载选择 (Compute Workload Configuration)
 
-### 19.1 设计目标
+### 19.1 功能描述
+
+用户可在右侧 "Digital Twin Controls" 面板的 **WORKLOAD CONFIG** 区域切换计算负载类型，包括：
+
+- **训练任务**: LLaMA-3 70B、LLaMA-3 405B、GPT-4 1.8T MoE
+- **推理任务**: LLaMA-3 70B Inference、LLaMA-3 405B Inference、Stable Diffusion XL
+
+切换后，模拟器自动更新：
+1. GPU 数量与型号
+2. 总计算功耗 (kW)
+3. 废热负载 (kW) — 影响散热器是否足够
+4. ExaFLOPS 峰值
+5. GPU 利用率
+6. 能量平衡 (Solar peak - Compute load)
+7. **散热可行性判断** — 实时显示散热器能否满足当前负载产生的废热
+
+### 19.2 Workload 数据模型
+
+> **源文件**: `js/constants.js` — `WORKLOADS` 对象
+
+每个 workload 条目的字段：
+
+| 字段 | 说明 | 示例 |
+|------|------|------|
+| `name` | 显示名称 | `'LLaMA-3 70B Training'` |
+| `type` | `'train'` 或 `'infer'` | `'train'` |
+| `model` | 模型规模 | `'70B'` |
+| `gpuCount` | GPU 数量 | `5120` |
+| `gpuModel` | GPU 型号 | `'H100 80GB'` |
+| `perGpuTDP` | 单卡 TDP (kW) | `0.700` |
+| `gpuUtil` | 典型利用率 | `0.92` |
+| `totalComputekW` | 总功耗 = gpuCount × TDP × util | `3297` |
+| `heatFraction` | 废热占比 (→ 散热器) | `0.40` |
+| `peakFLOPS` | 峰值 ExaFLOPS | `12.8` |
+
+### 19.3 预设负载一览
+
+| Workload | 类型 | GPU数 | 总功耗 | 废热 | FLOPS |
+|----------|------|-------|--------|------|-------|
+| LLaMA-3 70B Train | 训练 | 5120 | 3,297 kW | 1,319 kW | 12.8 EF |
+| LLaMA-3 405B Train | 训练 | 5120 | 3,154 kW | 1,325 kW | 11.2 EF |
+| GPT-4 1.8T MoE Train | 训练 | 5120 | 3,046 kW | 1,310 kW | 10.6 EF |
+| LLaMA-3 70B Infer | 推理 | 2560 | 986 kW | 345 kW | 6.4 EF |
+| LLaMA-3 405B Infer | 推理 | 5120 | 1,792 kW | 681 kW | 8.0 EF |
+| SDXL Image Gen | 推理 | 1280 | 627 kW | 207 kW | 3.2 EF |
+
+### 19.4 散热可行性判断
+
+> **源文件**: `js/dt-controls.js` — `updateThermalStatus()`
+
+系统实时计算散热容量与废热负载之比：
+
+$$\rho = \frac{Q_{rad,peak}}{Q_{heat}} = \frac{Q_{rad,peak}}{P_{compute} \times f_{heat}}$$
+
+判定规则：
+- $\rho \geq 1.2$ → ✓ OK (绿色)
+- $1.0 \leq \rho < 1.2$ → ⚠ Marginal (黄色)
+- $\rho < 1.0$ → ✗ OVERHEAT (红色，显示热缺口 kW)
+
+### 19.5 对仿真引擎的影响
+
+> **源文件**: `js/simulation.js`
+
+Workload 参数直接驱动主循环中的以下计算：
+
+- **FLOPS**: `wl.peakFLOPS × gpuUtil` (日照时有随机扰动，食段按 SOC 比例降低)
+- **GPU 利用率**: 基于 `wl.gpuUtil` + 随机波动
+- **电池充放电**: 放电速率与 `computeLoad / 1400` 成正比；充电仅在 `solarPwr > computeLoad` 时进行
+- **GPU 温度**: 受 `heatLoad` 与散热器容量之比影响，$T_{GPU} = T_{base} + (1 - \theta) \times 25°C$
+- **系统状态**: 新增 `THERMAL DEFICIT` 告警 (散热不足 80%)
+
+---
+
+## 20. 模块化架构说明
+
+### 20.1 设计目标
 
 将原先 ~1300 行的单体 HTML 文件重构为 **1 个入口 HTML + 1 个 CSS + 12 个 JS 模块**，实现：
 
@@ -1960,14 +2043,14 @@ const cellCols = Math.max(3, Math.min(10, Math.round(wingWBase/(6*s))));
 2. **可维护性** — 修改某一绘制逻辑无需搜索千行文件
 3. **零依赖** — 不引入 ES Module bundler，保持双击即可运行的简洁性
 
-### 19.2 文件清单与职责
+### 20.2 文件清单与职责
 
 | 文件 | 职责 | 主要导出 (全局函数/变量) |
 |------|------|--------------------------|
 | `index.html` | HTML 结构 + 脚本加载顺序 | — |
 | `css/styles.css` | 全部 CSS 样式 | — |
-| `js/constants.js` | 轨道常量、电池技术库、冷却剂库 | `ORBIT_PERIOD`, `ECLIPSE_FRAC`, `SIGMA`, `CELL_TECHS`, `COOLANTS` |
-| `js/state.js` | 全局状态、数据模型、趋势缓冲 | `simTime`, `speed`, `wings`, `radPanels`, `rebuildWings()`, `pushTrend()` |
+| `js/constants.js` | 轨道常量、电池技术库、冷却剂库、负载库 | `ORBIT_PERIOD`, `ECLIPSE_FRAC`, `SIGMA`, `CELL_TECHS`, `COOLANTS`, `WORKLOADS` |
+| `js/state.js` | 全局状态、数据模型、趋势缓冲 | `simTime`, `speed`, `wings`, `radPanels`, `currentWorkload`, `rebuildWings()`, `pushTrend()` |
 | `js/telemetry.js` | 遥测日志系统 | `LOGS`, `addLog()`, `p2()` |
 | `js/starfield.js` | 背景星空渲染 | `initStars()`, `drawStars()` |
 | `js/canvas.js` | Canvas 引用、尺寸管理、工具函数 | `oC/oX`, `dC/dX`, `sC/sX`, `rC/rX`, `tC/tX`, `resizeAll()`, `getAngle()`, `isEclipse()` |
@@ -1976,10 +2059,10 @@ const cellCols = Math.max(3, Math.min(10, Math.round(wingWBase/(6*s))));
 | `js/solar-array.js` | 太阳能阵列 Canvas + 翼表 | `drawSolarArray()`, `updateWingTable()` |
 | `js/radiator.js` | 散热器 Canvas + 面板表 | `drawRadiator()`, `updateRadTable()` |
 | `js/trend-chart.js` | 底部趋势图 | `drawTrend()` |
-| `js/dt-controls.js` | Digital Twin 控件事件绑定 | `setupDTControls()`, `updateDTSummary()` |
+| `js/dt-controls.js` | Digital Twin 控件事件绑定 | `setupDTControls()`, `updateDTSummary()`, `updateWorkloadDisplay()`, `updateThermalStatus()` |
 | `js/simulation.js` | 主循环、动画帧、初始化 | `update()`, `setSpeed()`, `animate()` |
 
-### 19.3 加载顺序与依赖
+### 20.3 加载顺序与依赖
 
 脚本标签在 `index.html` 底部按严格顺序加载，确保被依赖模块先行注册到全局作用域：
 
@@ -2009,7 +2092,7 @@ dt-controls.js        ← 依赖 state + constants + telemetry
 simulation.js         ← 依赖以上全部模块（调用所有 draw/update 函数）
 ```
 
-### 19.4 模块间通信方式
+### 20.4 模块间通信方式
 
 所有模块通过 **全局作用域** 共享状态与函数，无 `import`/`export`：
 
@@ -2030,7 +2113,7 @@ document.getElementById('wingSlider').addEventListener('input', e => {
 **优势**: 零配置、无打包步骤、双击 `index.html` 即可运行  
 **约束**: 脚本加载顺序必须正确，否则运行时会出现 `ReferenceError`
 
-### 19.5 扩展指南
+### 20.5 扩展指南
 
 添加新功能模块时：
 

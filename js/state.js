@@ -10,6 +10,7 @@ let logIdx = 0, logTimer = 0;
 // --- Digital-twin configurable parameters ---
 let wingCount = 8, wingArea = 350, currentCellTech = 'tj';
 let radCount = 6, radArea = 143.3, radEpsilon = 0.92, currentCoolant = 'nh3';
+let currentWorkload = 'llama70b_train';
 
 // --- Dynamic arrays ---
 let wings = [], radPanels = [];

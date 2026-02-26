@@ -12,24 +12,32 @@ function update(ts) {
   if (newOrbit !== orbitCount) { orbitCount = newOrbit; addLog('info', `Orbit #${orbitCount} commenced.`); }
   if (eclipse !== prevEclipse) { phaseTime = 0; eclipse ? addLog('warn', 'Entering umbra. Battery discharge.') : addLog('ok', 'Exiting eclipse. Solar online.'); }
 
-  batSOC = eclipse ? Math.max(10, batSOC - 0.85 * dt * speed / 60) : Math.min(100, batSOC + 1.25 * dt * speed / 60);
+  // Compute workload + solar first (needed for battery model)
+  const tech = CELL_TECHS[currentCellTech];
+  const cool = COOLANTS[currentCoolant];
+  const wl   = WORKLOADS[currentWorkload];
+  const peakSolar = wingCount * wingArea * 1367 * tech.eff / 1000 * (1 - (75 - 25) * tech.tcoef);
+  const solarPwr = eclipse ? 0 : peakSolar * (0.97 + Math.random() * 0.03);
+  const radPwr = radPanels.reduce((a, p) => a + (eclipse ? p.qRad * 0.5 : p.qRad), 0);
+
+  // Workload-driven compute
+  const computeLoad = wl.totalComputekW;                           // kW total GPU power
+  const heatLoad    = computeLoad * wl.heatFraction;               // kW waste heat → radiators
+  const flops = eclipse ? wl.peakFLOPS * (batSOC / 100) : wl.peakFLOPS * (wl.gpuUtil + Math.random() * (1 - wl.gpuUtil) * 0.3);
+  const gpu   = eclipse ? Math.floor(wl.gpuUtil * 100 * batSOC / 100) : Math.floor(wl.gpuUtil * 100 * (0.87 + Math.random() * 0.13));
+
+  // Battery model (uses computeLoad & solarPwr)
+  batSOC = eclipse
+    ? Math.max(10, batSOC - (computeLoad / 1400) * 0.85 * dt * speed / 60)
+    : Math.min(100, batSOC + ((solarPwr - computeLoad) > 0 ? 1 : 0) * 1.25 * dt * speed / 60);
   logTimer += dt * speed;
   if (logTimer > 85) { logTimer = 0; const [t, m] = LOGS[logIdx % LOGS.length]; addLog(t, m); logIdx++; }
 
   updateWingTable(eclipse); updateRadTable(eclipse);
 
-  const tech = CELL_TECHS[currentCellTech];
-  const cool = COOLANTS[currentCoolant];
-  const peakSolar = wingCount * wingArea * 1367 * tech.eff / 1000 * (1 - (75 - 25) * tech.tcoef);
-  const solarPwr = eclipse ? 0 : peakSolar * (0.97 + Math.random() * 0.03);
-  const radPwr = radPanels.reduce((a, p) => a + (eclipse ? p.qRad * 0.5 : p.qRad), 0);
-  const flops = eclipse ? 12.8 * (batSOC / 100) : 12.8 * (0.87 + Math.random() * 0.13);
-  const gpu = eclipse ? Math.floor(72 * batSOC / 100) : Math.floor(88 + Math.random() * 10);
-
-  // GPU temp influenced by radiator capacity
+  // GPU temp influenced by radiator capacity vs workload heat
   const radCapacity = radPwr;
-  const heatLoad = 1000;
-  const thermalRatio = Math.min(1, radCapacity / Math.max(1, heatLoad * 0.4));
+  const thermalRatio = Math.min(1, radCapacity / Math.max(1, heatLoad));
   const gpuTempBase = eclipse ? 65 + batSOC * 0.18 : 76 + Math.random() * 4;
   const gpuTemp = gpuTempBase + (1 - thermalRatio) * 25;
   const arrTemp = eclipse ? -55 + Math.random() * 5 : 62 + Math.random() * 16;
@@ -57,8 +65,9 @@ function update(ts) {
   document.getElementById('rRadP').innerHTML = `${radPwr.toFixed(0)}<span class="mg-u">kW</span>`;
   document.getElementById('rRadBar').style.width = Math.min(100, radPwr / 500 * 100) + '%';
   document.getElementById('ffSolar').textContent = eclipse ? '0 kW' : `+${solarPwr.toFixed(0)} kW`;
-  document.getElementById('ffBat').textContent = eclipse ? `DIS −1000kW (${batSOC.toFixed(0)}%)` : `CHG +${Math.max(0, Math.floor(400 * (1 - batSOC / 100)))}kW`;
+  document.getElementById('ffBat').textContent = eclipse ? `DIS −${Math.round(computeLoad)}kW (${batSOC.toFixed(0)}%)` : `CHG +${Math.max(0, Math.floor((solarPwr - computeLoad) * 0.3))}kW`;
   document.getElementById('ffRad').textContent = `−${radPwr.toFixed(0)} kW`;
+  document.getElementById('ffComp').textContent = `−${Math.round(computeLoad)} kW`;
 
   // Compute gauges
   document.getElementById('rFlops').innerHTML = `${flops.toFixed(1)}<span class="mg-u">EF</span>`;
@@ -93,6 +102,7 @@ function update(ts) {
   // System status
   const se = document.getElementById('sysStatus');
   if (gpuTemp > 95) { se.textContent = '▲ GPU OVERHEAT'; se.style.color = 'var(--danger)'; }
+  else if (radPwr < heatLoad * 0.8 && !eclipse) { se.textContent = '▲ THERMAL DEFICIT'; se.style.color = 'var(--danger)'; }
   else if (batSOC < 20) { se.textContent = '▲ LOW BATTERY'; se.style.color = 'var(--danger)'; }
   else if (eclipse) { se.textContent = '◉ ECLIPSE MODE'; se.style.color = '#6688ff'; }
   else { se.textContent = '● NOMINAL'; se.style.color = 'var(--accent3)'; }
@@ -122,5 +132,6 @@ initStars(); resizeAll();
 setupDTControls();
 updateCellTechDisplay();
 updateCoolantDisplay();
+updateWorkloadDisplay();
 updateDTSummary();
 requestAnimationFrame(animate);
