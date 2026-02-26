@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ORBITAL DC-1 · Space Data Center Simulator · Digital Twin</title>
+<style>
+/* ================================================================
+ *  ORBITAL DC-1 · Space Data Center Simulator · Stylesheet
+ * ================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap');
+
+/* --- Design Tokens --- */
+:root{
+  --void:#020408;--deep:#050d1a;--panel:#080f1e;--border:#0d2040;
+  --accent:#00d4ff;--accent2:#ff6b00;--accent3:#39ff14;
+  --warn:#ffcc00;--danger:#ff2244;--text:#a8d8f0;--dim:#3a5a7a;
+  --solar:#ffe066;--rad:#ff4400;
+}
+
+/* --- Reset --- */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--void);color:var(--text);font-family:'Exo 2',sans-serif;overflow:hidden;height:100vh;}
+#starfield{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+
+/* --- Header --- */
+.header{position:relative;z-index:10;background:rgba(2,4,8,0.98);padding:0 18px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);height:46px;flex-shrink:0;}
+.logo{font-family:'Orbitron',monospace;font-size:15px;font-weight:900;color:var(--accent);
+  text-shadow:0 0 16px rgba(0,212,255,0.5);letter-spacing:3px;white-space:nowrap;}
+.logo span{color:var(--accent2);}
+.hdr-stats{display:flex;gap:14px;}
+.hs{display:flex;flex-direction:column;align-items:center;}
+.hs-l{color:var(--dim);font-size:7px;letter-spacing:1px;text-transform:uppercase;font-family:'Share Tech Mono',monospace;}
+.hs-v{color:var(--accent3);font-size:11px;font-family:'Share Tech Mono',monospace;}
+.blink{animation:blink 1.2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* --- Layout --- */
+.outer{position:relative;z-index:5;display:flex;height:calc(100vh - 46px);}
+
+/* LEFT CONTENT: 3 rows — top 2×2 quads, bottom trend chart */
+.left-main{flex:1;min-width:0;display:grid;
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:1fr 1fr 160px;
+  gap:0;}
+
+/* --- Quad canvases --- */
+.quad{position:relative;overflow:hidden;border-right:1px solid var(--border);border-bottom:1px solid var(--border);}
+.quad canvas{position:absolute;top:0;left:0;width:100%;height:100%;}
+.qlabel{position:absolute;top:7px;left:9px;z-index:5;
+  font-family:'Orbitron',monospace;font-size:7px;color:var(--dim);
+  letter-spacing:2px;text-transform:uppercase;
+  background:rgba(2,4,8,0.7);padding:2px 5px;border-radius:2px;}
+
+/* --- Pane bars (Solar / Radiator headers) --- */
+.pane-bar{position:absolute;top:0;left:0;right:0;z-index:5;
+  background:rgba(4,10,22,0.92);border-bottom:1px solid var(--border);
+  padding:3px 8px;display:flex;align-items:center;justify-content:space-between;height:26px;}
+.pbar-title{font-family:'Orbitron',monospace;font-size:7px;color:var(--accent);
+  letter-spacing:2px;text-transform:uppercase;}
+.pbar-title.r{color:var(--rad);}
+.pbar-stats{display:flex;gap:10px;font-family:'Share Tech Mono',monospace;font-size:8px;}
+.pbs-l{color:var(--dim);}
+.pbs-v{color:var(--text);}
+
+/* --- Canvas wrappers for solar / radiator --- */
+.solar-canvas-wrap,.rad-canvas-wrap{
+  position:absolute;top:26px;left:0;right:160px;bottom:0;}
+.solar-canvas-wrap canvas,.rad-canvas-wrap canvas{
+  position:absolute;top:0;left:0;width:100%;height:100%;}
+.spec-panel{position:absolute;top:26px;right:0;width:160px;bottom:0;
+  background:rgba(4,10,22,0.9);border-left:1px solid var(--border);
+  overflow-y:auto;padding:5px;}
+.spec-panel::-webkit-scrollbar{width:2px;}
+.spec-panel::-webkit-scrollbar-thumb{background:var(--border);}
+
+/* --- Trend chart pane --- */
+.trend-pane{grid-column:1/3;position:relative;overflow:hidden;
+  border-top:1px solid var(--border);background:rgba(4,8,18,0.95);}
+.trend-pane canvas{position:absolute;top:0;left:0;width:100%;height:100%;}
+.trend-label{position:absolute;top:5px;left:9px;z-index:5;
+  font-family:'Orbitron',monospace;font-size:7px;color:var(--dim);
+  letter-spacing:2px;text-transform:uppercase;
+  background:rgba(2,4,8,0.7);padding:2px 5px;border-radius:2px;}
+.trend-legend{position:absolute;top:4px;right:10px;z-index:5;display:flex;gap:10px;
+  font-family:'Share Tech Mono',monospace;font-size:7px;}
+.tleg{display:flex;align-items:center;gap:3px;}
+.tleg-dot{width:6px;height:6px;border-radius:50%;}
+
+/* --- Right sidebar --- */
+.rsidebar{width:270px;flex-shrink:0;background:var(--deep);
+  border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
+.rsidebar::-webkit-scrollbar{width:3px;}
+.rsidebar::-webkit-scrollbar-thumb{background:var(--border);}
+.psec{border-bottom:1px solid var(--border);padding:9px 11px;}
+.ptitle{font-family:'Orbitron',monospace;font-size:7px;font-weight:700;color:var(--accent);
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:7px;
+  display:flex;align-items:center;gap:4px;}
+.ptitle::before{content:'';display:block;width:3px;height:3px;background:var(--accent);
+  border-radius:50%;box-shadow:0 0 4px var(--accent);}
+.ptitle.dt::before{background:var(--accent2);box-shadow:0 0 4px var(--accent2);}
+
+/* --- Metric grid --- */
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.mg{background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:5px;}
+.mg-l{font-family:'Share Tech Mono',monospace;font-size:7px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;}
+.mg-v{font-family:'Share Tech Mono',monospace;font-size:12px;font-weight:bold;color:var(--accent);}
+.mg-u{font-size:7px;color:var(--dim);margin-left:1px;}
+.mbar{height:2px;background:var(--border);border-radius:1px;margin-top:3px;overflow:hidden;}
+.mfill{height:100%;border-radius:1px;transition:width 0.4s ease;}
+
+/* --- Flow rows --- */
+.frow{display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;
+  font-size:8px;padding:3px 6px;background:var(--panel);border-radius:2px;
+  border-left:2px solid var(--dim);margin-bottom:3px;}
+.frow.sol{border-left-color:var(--solar);}
+.frow.bat{border-left-color:var(--accent2);}
+.frow.cmp{border-left-color:var(--accent);}
+.frow.rad2{border-left-color:var(--rad);}
+.fl{color:var(--dim);}
+.fv{color:var(--text);font-weight:bold;}
+
+/* --- Telemetry log --- */
+.tlog{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--dim);
+  height:70px;overflow-y:auto;padding:5px;background:var(--panel);border-radius:3px;line-height:1.7;}
+.tlog .ok{color:var(--accent3);}.tlog .info{color:var(--accent);}.tlog .warn{color:var(--warn);}
+
+/* --- Cost table --- */
+.ctab{width:100%;border-collapse:collapse;font-size:8px;}
+.ctab td,.ctab th{padding:2px 4px;border-bottom:1px solid var(--border);font-family:'Share Tech Mono',monospace;}
+.ctab th{color:var(--dim);font-size:7px;text-transform:uppercase;letter-spacing:1px;}
+.ctab td:last-child{text-align:right;color:var(--accent);}
+.ctab .tot td{color:var(--accent2);font-weight:bold;border-top:2px solid var(--border);}
+
+/* --- Cell/wing tables --- */
+.cell-t{width:100%;border-collapse:collapse;}
+.cell-t td,.cell-t th{padding:2px 3px;border-bottom:1px solid rgba(13,32,64,0.7);
+  font-family:'Share Tech Mono',monospace;font-size:7px;}
+.cell-t th{color:var(--dim);font-size:6px;text-transform:uppercase;}
+.ok{color:var(--accent3);}.wn{color:var(--warn);}.ht{color:var(--danger);}
+
+/* --- Section labels --- */
+.seclbl{font-family:'Orbitron',monospace;font-size:6px;color:var(--dim);
+  letter-spacing:2px;text-transform:uppercase;margin:5px 0 2px;}
+
+/* --- Speed control buttons --- */
+.spctrl{display:flex;gap:3px;margin-top:4px;}
+.spbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);
+  font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 6px;
+  cursor:pointer;border-radius:2px;transition:all 0.2s;}
+.spbtn:hover,.spbtn.active{background:var(--accent);color:var(--void);border-color:var(--accent);}
+
+/* --- Phase box --- */
+.phase-box{display:flex;align-items:center;gap:7px;padding:7px;border-radius:3px;
+  border:1px solid;margin-bottom:5px;}
+.phase-sunlit{background:rgba(255,224,0,0.04);border-color:rgba(255,224,0,0.2);}
+.phase-eclipse{background:rgba(0,80,180,0.08);border-color:rgba(0,80,180,0.25);}
+.ph-icon{font-size:14px;}.ph-name{font-family:'Orbitron',monospace;font-size:9px;font-weight:700;}
+.ph-desc{font-size:7px;color:var(--dim);margin-top:1px;}
+
+/* --- Bottom bar --- */
+.botbar{position:fixed;bottom:0;left:0;right:270px;background:rgba(2,4,8,0.96);
+  border-top:1px solid var(--border);padding:3px 12px;
+  display:flex;gap:16px;align-items:center;z-index:20;
+  font-family:'Share Tech Mono',monospace;font-size:8px;}
+.bb{display:flex;gap:4px;}.bbk{color:var(--dim);}.bbv{color:var(--accent);}
+
+/* --- Digital Twin Controls --- */
+.dt-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+.dt-label{font-family:'Share Tech Mono',monospace;font-size:7px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;flex-shrink:0;width:58px;}
+.dt-val{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--accent);width:42px;text-align:right;flex-shrink:0;}
+.dt-slider{-webkit-appearance:none;appearance:none;flex:1;height:3px;background:var(--border);
+  border-radius:2px;outline:none;margin:0 5px;cursor:pointer;}
+.dt-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+  width:10px;height:10px;border-radius:50%;background:var(--accent);cursor:pointer;border:none;}
+.dt-slider::-moz-range-thumb{width:10px;height:10px;border-radius:50%;
+  background:var(--accent);cursor:pointer;border:none;}
+.dt-slider.solar-s::-webkit-slider-thumb{background:var(--solar);}
+.dt-slider.solar-s::-moz-range-thumb{background:var(--solar);}
+.dt-slider.rad-s::-webkit-slider-thumb{background:var(--rad);}
+.dt-slider.rad-s::-moz-range-thumb{background:var(--rad);}
+
+.dt-select{background:var(--panel);border:1px solid var(--border);color:var(--accent);
+  font-family:'Share Tech Mono',monospace;font-size:8px;padding:2px 4px;
+  border-radius:2px;outline:none;cursor:pointer;flex:1;margin-left:5px;}
+.dt-select option{background:var(--panel);color:var(--text);}
+
+.dt-group{background:var(--panel);border:1px solid var(--border);border-radius:3px;
+  padding:5px 7px;margin-bottom:5px;}
+.dt-group-title{font-family:'Orbitron',monospace;font-size:6px;color:var(--dim);
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;
+  display:flex;align-items:center;gap:3px;}
+.dt-group-title .ico{font-style:normal;font-size:9px;}
+
+.dt-summary{font-family:'Share Tech Mono',monospace;font-size:7px;color:var(--dim);
+  padding:3px 5px;background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.1);
+  border-radius:2px;margin-top:4px;line-height:1.6;}
+.dt-summary .val{color:var(--accent);font-weight:bold;}
+.dt-summary .warn-val{color:var(--warn);font-weight:bold;}
+.dt-summary .danger-val{color:var(--danger);font-weight:bold;}
+
+/* --- Workload info panel --- */
+.wl-info{margin-top:4px;}
+.wl-thermal-status{
+  display:flex;align-items:center;gap:4px;margin-top:4px;
+  padding:3px 5px;border-radius:2px;
+  font-family:'Share Tech Mono',monospace;font-size:8px;
+  background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.1);
+}
+.wl-th-label{color:var(--dim);}
+.wl-th-val{font-weight:bold;}
+.wl-th-val.ok{color:var(--accent3);}
+.wl-th-val.warn{color:var(--warn);}
+.wl-th-val.danger{color:var(--danger);}
+</style>
+</head>
+<body>
+<canvas id="starfield"></canvas>
+
+<div class="header">
+  <div class="logo">ORBITAL<span>·</span>DC·1 <span style="font-size:8px;color:var(--dim)">1MW SPACE DATA CENTER · SSO 550km · i=97.6° · <span style="color:var(--accent2)">DIGITAL TWIN</span></span></div>
+  <div class="hdr-stats">
+    <div class="hs"><span class="hs-l">MET</span><span class="hs-v" id="met">T+000:00:00</span></div>
+    <div class="hs"><span class="hs-l">Orbit</span><span class="hs-v" id="orbitNum">1</span></div>
+    <div class="hs"><span class="hs-l">Solar</span><span class="hs-v" id="hSolar">1400kW</span></div>
+    <div class="hs"><span class="hs-l">Radiator</span><span class="hs-v" id="hRad">400kW</span></div>
+    <div class="hs"><span class="hs-l">Bat SOC</span><span class="hs-v" id="hBat">87%</span></div>
+    <div class="hs"><span class="hs-l">GPU Temp</span><span class="hs-v" id="hGpuT">84°C</span></div>
+    <div class="hs"><span class="hs-l">Status</span><span class="hs-v blink" id="sysStatus" style="color:var(--accent3)">● NOMINAL</span></div>
+  </div>
+</div>
+
+<div class="outer">
+  <div class="left-main">
+
+    <!-- Q1: ORBIT SIMULATION -->
+    <div class="quad">
+      <div class="qlabel">SUN-SYNCHRONOUS ORBIT · 550 km · i=97.6°</div>
+      <canvas id="orbitCanvas"></canvas>
+    </div>
+
+    <!-- Q2: SATELLITE DETAIL -->
+    <div class="quad">
+      <div class="qlabel" style="color:rgba(0,200,255,0.5)">SPACECRAFT DETAIL · SOLAR PANELS + RADIATORS</div>
+      <canvas id="detailCanvas"></canvas>
+    </div>
+
+    <!-- Q3: SOLAR ARRAY -->
+    <div class="quad">
+      <div class="pane-bar">
+        <div class="pbar-title" id="solarPaneTitle">☀ Solar Array · 8 Wings · InGaP/GaAs/Ge Triple-Junction</div>
+        <div class="pbar-stats">
+          <span><span class="pbs-l">Out: </span><span class="pbs-v" id="phSolarOut">1400kW</span></span>
+          <span><span class="pbs-l">Irr: </span><span class="pbs-v" id="phIrr">1367W/m²</span></span>
+          <span><span class="pbs-l">Temp: </span><span class="pbs-v" id="phArrTemp">72°C</span></span>
+          <span><span class="pbs-l">Eff: </span><span class="pbs-v" id="phEff">29.5%</span></span>
+        </div>
+      </div>
+      <div class="solar-canvas-wrap"><canvas id="solarArrayCanvas"></canvas></div>
+      <div class="spec-panel">
+        <div class="seclbl">Wing Status</div>
+        <table class="cell-t" id="wingTable">
+          <tr><th>Wing</th><th>kW</th><th>T°C</th><th>St</th></tr>
+        </table>
+        <div class="seclbl" style="margin-top:5px">Cell Tech</div>
+        <table class="cell-t" id="cellTechTable">
+          <tr><td>Type</td><td class="ok" id="ctType">TJ InGaP/GaAs/Ge</td></tr>
+          <tr><td>BOL Eff</td><td id="ctBOL">32.0%</td></tr>
+          <tr><td>EOL Eff</td><td class="wn" id="ctEOL">28.8%</td></tr>
+          <tr><td>Voc</td><td id="ctVoc">2.67V/cell</td></tr>
+          <tr><td>T-coef</td><td id="ctTcoef">-0.20%/°C</td></tr>
+          <tr><td>RadTol</td><td class="ok" id="ctRadTol">1e15 e/cm²</td></tr>
+          <tr><td>Total A</td><td id="ctArea">2800 m²</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Q4: RADIATOR -->
+    <div class="quad" style="border-right:none;">
+      <div class="pane-bar">
+        <div class="pbar-title r" id="radPaneTitle">🌡 Radiative Cooling · 6 Panels · Ammonia VCHP Heat Pipes</div>
+        <div class="pbar-stats">
+          <span><span class="pbs-l">Q: </span><span class="pbs-v" id="phQrad">400kW</span></span>
+          <span><span class="pbs-l">T_surf: </span><span class="pbs-v" id="phTsurf">58°C</span></span>
+          <span><span class="pbs-l">ΔT: </span><span class="pbs-v" id="phDeltaT">40°C</span></span>
+          <span><span class="pbs-l">ε=</span><span class="pbs-v" id="phEpsDisp">0.92</span></span>
+        </div>
+      </div>
+      <div class="rad-canvas-wrap"><canvas id="radiatorCanvas"></canvas></div>
+      <div class="spec-panel">
+        <div class="seclbl">Panel Status</div>
+        <table class="cell-t" id="radPanelTable">
+          <tr><th>Panel</th><th>T°C</th><th>kW</th><th>St</th></tr>
+        </table>
+        <div class="seclbl" style="margin-top:5px">Cooling Arch</div>
+        <table class="cell-t" id="coolingArchTable">
+          <tr><td>Fluid</td><td class="ok" id="caFluid">NH₃ 2-phase</td></tr>
+          <tr><td>Type</td><td id="caType">VCHP</td></tr>
+          <tr><td>Area</td><td id="caArea">860 m²</td></tr>
+          <tr><td>Flow</td><td id="caFlow">4.2 kg/s</td></tr>
+          <tr><td>T_in</td><td id="specTin">85°C</td></tr>
+          <tr><td>T_out</td><td id="specTout">45°C</td></tr>
+          <tr><td>TIM</td><td class="ok">Liq.Metal</td></tr>
+          <tr><td>T_sink</td><td class="ok">2.7 K</td></tr>
+          <tr><td>Law</td><td>Q=ε·σ·A·T⁴</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Q5: TREND CHART — spans both columns -->
+    <div class="trend-pane">
+      <div class="trend-label">📈 REAL-TIME TREND · DIGITAL TWIN TELEMETRY</div>
+      <div class="trend-legend">
+        <div class="tleg"><div class="tleg-dot" style="background:#ffe066"></div><span style="color:#ffe066">Solar kW</span></div>
+        <div class="tleg"><div class="tleg-dot" style="background:#ff6b00"></div><span style="color:#ff6b00">Bat SOC%</span></div>
+        <div class="tleg"><div class="tleg-dot" style="background:#ff4400"></div><span style="color:#ff4400">Rad kW</span></div>
+        <div class="tleg"><div class="tleg-dot" style="background:#00d4ff"></div><span style="color:#00d4ff">GPU °C</span></div>
+      </div>
+      <canvas id="trendCanvas"></canvas>
+    </div>
+
+  </div><!-- end left-main -->
+
+  <!-- RIGHT SIDEBAR -->
+  <div class="rsidebar">
+
+    <div class="psec">
+      <div class="ptitle">Orbital Phase</div>
+      <div id="phaseBox" class="phase-box phase-sunlit">
+        <div class="ph-icon" id="phIcon">☀️</div>
+        <div>
+          <div class="ph-name" id="phName">SUNLIT PASS</div>
+          <div class="ph-desc" id="phDesc">Solar arrays 1400 kW</div>
+        </div>
+      </div>
+      <div style="display:flex;height:11px;border-radius:2px;overflow:hidden;border:1px solid var(--border);">
+        <div style="flex:0.64;background:linear-gradient(90deg,#ffe066,#ff9900);display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;font-size:6px;color:#000;">☀ 64%</div>
+        <div style="flex:0.36;background:linear-gradient(90deg,#1a2040,#060c18);display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;font-size:6px;color:#6688ff;">● 36%</div>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:15px;color:var(--accent);text-align:center;padding:4px 0;" id="phTimer">00:00</div>
+    </div>
+
+    <div class="psec">
+      <div class="ptitle">Power System</div>
+      <div class="mgrid">
+        <div class="mg"><div class="mg-l">Solar</div>
+          <div class="mg-v" id="rSolar">1400<span class="mg-u">kW</span></div>
+          <div class="mbar"><div class="mfill" id="rSolarBar" style="width:100%;background:linear-gradient(90deg,#ffe066,#ff9900)"></div></div></div>
+        <div class="mg"><div class="mg-l">Bat SOC</div>
+          <div class="mg-v" id="rBat">87<span class="mg-u">%</span></div>
+          <div class="mbar"><div class="mfill" id="rBatBar" style="width:87%;background:linear-gradient(90deg,#39ff14,#00d4ff)"></div></div></div>
+        <div class="mg"><div class="mg-l">Radiator</div>
+          <div class="mg-v" id="rRadP">400<span class="mg-u">kW</span></div>
+          <div class="mbar"><div class="mfill" id="rRadBar" style="width:80%;background:linear-gradient(90deg,#ff4400,#ffaa00)"></div></div></div>
+        <div class="mg"><div class="mg-l">PUE</div>
+          <div class="mg-v">1.08</div>
+          <div class="mbar"><div class="mfill" style="width:92%;background:var(--accent3)"></div></div></div>
+      </div>
+      <div style="margin-top:5px;">
+        <div class="frow sol"><span class="fl">☀ Solar Arrays</span><span class="fv" id="ffSolar">+1400 kW</span></div>
+        <div class="frow bat"><span class="fl">⚡ Battery 1.4MWh</span><span class="fv" id="ffBat">CHG +380kW</span></div>
+        <div class="frow cmp"><span class="fl">🖥 <span id="ffCompLabel">H100 × 5120</span></span><span class="fv" id="ffComp">−1000 kW</span></div>
+        <div class="frow rad2"><span class="fl">🌡 Radiator Panels</span><span class="fv" id="ffRad">−400 kW</span></div>
+      </div>
+    </div>
+
+    <div class="psec">
+      <div class="ptitle">Compute</div>
+      <div class="mgrid">
+        <div class="mg"><div class="mg-l">FLOPS</div>
+          <div class="mg-v" id="rFlops">12.8<span class="mg-u">EF</span></div>
+          <div class="mbar"><div class="mfill" id="rFlopsBar" style="width:85%"></div></div></div>
+        <div class="mg"><div class="mg-l">GPU Util</div>
+          <div class="mg-v" id="rGpu">94<span class="mg-u">%</span></div>
+          <div class="mbar"><div class="mfill" id="rGpuBar" style="width:94%;background:linear-gradient(90deg,#8844ff,var(--accent))"></div></div></div>
+        <div class="mg"><div class="mg-l">GPU Temp</div>
+          <div class="mg-v" id="rGpuT">84<span class="mg-u">°C</span></div>
+          <div class="mbar"><div class="mfill" id="rGpuTBar" style="width:60%;background:linear-gradient(90deg,#00bfff,#ff4444)"></div></div></div>
+        <div class="mg"><div class="mg-l">Downlink</div>
+          <div class="mg-v">12<span class="mg-u">Gbps</span></div>
+          <div class="mbar"><div class="mfill" style="width:60%"></div></div></div>
+      </div>
+    </div>
+
+    <!-- DIGITAL TWIN CONTROLS -->
+    <div class="psec">
+      <div class="ptitle dt">Digital Twin Controls</div>
+
+      <!-- Solar Array Config -->
+      <div class="dt-group">
+        <div class="dt-group-title"><em class="ico">☀</em> SOLAR ARRAY CONFIG</div>
+        <div class="dt-row">
+          <span class="dt-label">Wings</span>
+          <input type="range" class="dt-slider solar-s" id="slWingCount" min="2" max="50" step="1" value="8">
+          <span class="dt-val" id="valWingCount">8</span>
+        </div>
+        <div class="dt-row">
+          <span class="dt-label">Area/W</span>
+          <input type="range" class="dt-slider solar-s" id="slWingArea" min="100" max="500" step="10" value="350">
+          <span class="dt-val" id="valWingArea">350m²</span>
+        </div>
+        <div class="dt-row">
+          <span class="dt-label">Cell</span>
+          <select class="dt-select" id="selCellTech">
+            <option value="tj" selected>TJ InGaP/GaAs/Ge (29.5%)</option>
+            <option value="imm4j">4J IMM (34.0%)</option>
+            <option value="perov">Perovskite Tandem (26.0%)</option>
+            <option value="si">Silicon PERC (22.0%)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Radiator Config -->
+      <div class="dt-group">
+        <div class="dt-group-title"><em class="ico">🌡</em> RADIATOR CONFIG</div>
+        <div class="dt-row">
+          <span class="dt-label">Panels</span>
+          <input type="range" class="dt-slider rad-s" id="slRadCount" min="2" max="50" step="1" value="6">
+          <span class="dt-val" id="valRadCount">6</span>
+        </div>
+        <div class="dt-row">
+          <span class="dt-label">Area/P</span>
+          <input type="range" class="dt-slider rad-s" id="slRadArea" min="50" max="300" step="5" value="143">
+          <span class="dt-val" id="valRadArea">143m²</span>
+        </div>
+        <div class="dt-row">
+          <span class="dt-label">ε</span>
+          <input type="range" class="dt-slider rad-s" id="slEpsilon" min="50" max="98" step="1" value="92">
+          <span class="dt-val" id="valEpsilon">0.92</span>
+        </div>
+        <div class="dt-row">
+          <span class="dt-label">Fluid</span>
+          <select class="dt-select" id="selCoolant">
+            <option value="nh3" selected>NH₃ (Ammonia)</option>
+            <option value="propylene">Propylene</option>
+            <option value="r134a">R-134a</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Workload Config -->
+      <div class="dt-group">
+        <div class="dt-group-title"><em class="ico">🖥</em> WORKLOAD CONFIG</div>
+        <div class="dt-row">
+          <span class="dt-label">Task</span>
+          <select class="dt-select" id="selWorkload">
+            <optgroup label="Training">
+              <option value="llama70b_train" selected>LLaMA-3 70B Train</option>
+              <option value="llama405b_train">LLaMA-3 405B Train</option>
+              <option value="gpt4_train">GPT-4 1.8T MoE Train</option>
+            </optgroup>
+            <optgroup label="Inference">
+              <option value="llama70b_infer">LLaMA-3 70B Infer</option>
+              <option value="llama405b_infer">LLaMA-3 405B Infer</option>
+              <option value="sd_xl_infer">SDXL Image Gen</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="wl-info" id="wlInfo">
+          <table class="cell-t" id="wlTable">
+            <tr><td>Model</td><td class="ok" id="wlModel">LLaMA-3 70B</td></tr>
+            <tr><td>Type</td><td id="wlType">Training</td></tr>
+            <tr><td>GPUs</td><td id="wlGpus">5120 × H100</td></tr>
+            <tr><td>Compute</td><td id="wlCompute">3297 kW</td></tr>
+            <tr><td>Heat Load</td><td id="wlHeat">1319 kW</td></tr>
+            <tr><td>Peak FLOPS</td><td id="wlFlops">12.8 EF</td></tr>
+            <tr><td>GPU Util</td><td id="wlUtil">92%</td></tr>
+          </table>
+          <div class="wl-thermal-status" id="wlThermalStatus">
+            <span class="wl-th-label">Thermal:</span>
+            <span class="wl-th-val ok" id="wlThermalVal">✓ Can dissipate</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Impact Summary -->
+      <div class="dt-summary" id="dtSummary">
+        <div>Total Solar Area: <span class="val" id="dsSolarArea">2800 m²</span> · Peak: <span class="val" id="dsPeakPwr">1400 kW</span></div>
+        <div>Total Rad Area: <span class="val" id="dsRadArea">860 m²</span> · Peak Q: <span class="val" id="dsPeakQ">400 kW</span></div>
+        <div>Energy Balance: <span class="val" id="dsBalance">+400 kW surplus</span></div>
+      </div>
+    </div>
+
+    <div class="psec">
+      <div class="ptitle">Simulation Control</div>
+      <div class="seclbl">Time Acceleration</div>
+      <div class="spctrl">
+        <button class="spbtn" onclick="setSpeed(1)">1×</button>
+        <button class="spbtn active" onclick="setSpeed(60)">60×</button>
+        <button class="spbtn" onclick="setSpeed(300)">300×</button>
+        <button class="spbtn" onclick="setSpeed(600)">600×</button>
+      </div>
+    </div>
+
+    <div class="psec">
+      <div class="ptitle">Mission Cost</div>
+      <table class="ctab" id="costTable">
+        <tr><th>Component</th><th>Cost</th></tr>
+        <tr><td>🚀 Launch (Starship)</td><td>$120M</td></tr>
+        <tr><td>🛰 Spacecraft Bus</td><td>$85M</td></tr>
+        <tr><td>☀ Solar Arrays TJ</td><td id="costSolar">$65M</td></tr>
+        <tr><td>⚡ Battery 1.4MWh</td><td>$42M</td></tr>
+        <tr><td>🌡 Radiator+VCHP</td><td id="costRad">$28M</td></tr>
+        <tr><td>🖥 GPU Cluster</td><td id="costGpu">$256M</td></tr>
+        <tr><td>📡 Optical Downlink</td><td>$38M</td></tr>
+        <tr><td>🔧 Ground Segment</td><td>$22M</td></tr>
+        <tr><td>🛠 AIT</td><td>$45M</td></tr>
+        <tr><td>📋 Insurance</td><td>$80M</td></tr>
+        <tr class="tot"><td>TOTAL CAPEX</td><td id="costTotal">$781M</td></tr>
+        <tr><td>OPEX/yr</td><td>$38M</td></tr>
+        <tr><td>Revenue</td><td>~$420M/yr</td></tr>
+        <tr class="tot"><td>Break-even</td><td id="costBreakeven">~4.2 yrs</td></tr>
+      </table>
+    </div>
+
+    <div class="psec">
+      <div class="ptitle">Telemetry Log</div>
+      <div class="tlog" id="telemLog">
+        <div class="ok">[BOOT] ORBITAL DC-1 Digital Twin initialized.</div>
+        <div class="info">[SYS] SSO 550km i=97.6° acquired.</div>
+        <div class="ok">[PWR] 8 solar wings online. 1400kW.</div>
+        <div class="ok">[THERM] 6 radiators active. 400kW.</div>
+        <div class="info">[COMP] 5120×H100. 12.8 ExaFLOPS.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="botbar">
+  <div class="bb"><span class="bbk">VEL</span><span class="bbv">7.61 km/s</span></div>
+  <div class="bb"><span class="bbk">ALT</span><span class="bbv">550 km</span></div>
+  <div class="bb"><span class="bbk">PERIOD</span><span class="bbv">95.7 min</span></div>
+  <div class="bb"><span class="bbk">INCL</span><span class="bbv">97.6°</span></div>
+  <div class="bb"><span class="bbk">RAAN</span><span class="bbv" id="bbRaan">156.3°</span></div>
+  <div class="bb"><span class="bbk">TA</span><span class="bbv" id="bbTa">0.0°</span></div>
+  <div class="bb"><span class="bbk">SUN β</span><span class="bbv" id="bbSun">2.3°</span></div>
+  <div class="bb"><span class="bbk">ENERGY</span><span class="bbv" id="bbEnergy">1218 kWh</span></div>
+  <div class="bb"><span class="bbk">ORBIT</span><span class="bbv" id="bbOrbit">#1</span></div>
+</div>
+
+<!-- ============================================================
+     ALL JavaScript inlined — single file, no dependencies
+     ============================================================ -->
+<script>
+/* ================================================================
+ *  constants.js — Orbital & physics constants, tech databases
+ * ================================================================ */
+
+// Orbital parameters
+const ORBIT_PERIOD = 95.7 * 60;           // seconds
+const ECLIPSE_FRAC = 0.36;
+const ECLIPSE_START = Math.PI * (1 - ECLIPSE_FRAC);
+const SIGMA = 5.67e-8;                    // Stefan-Boltzmann constant
+
+// Solar cell technology database
+const CELL_TECHS = {
+  tj:    { name:'TJ InGaP/GaAs/Ge',               eff:0.295, bolEff:'32.0%', eolEff:'28.8%', voc:'2.67V/cell', tcoef:0.002,  tcoefStr:'-0.20%/°C', radTol:'1e15 e/cm²' },
+  imm4j: { name:'4J IMM InGaP/GaAs/InGaAsP/InGaAs', eff:0.340, bolEff:'36.8%', eolEff:'33.2%', voc:'3.42V/cell', tcoef:0.0018, tcoefStr:'-0.18%/°C', radTol:'8e14 e/cm²' },
+  perov: { name:'Perovskite/Si Tandem',             eff:0.260, bolEff:'28.0%', eolEff:'22.5%', voc:'1.92V/cell', tcoef:0.0025, tcoefStr:'-0.25%/°C', radTol:'5e13 e/cm²' },
+  si:    { name:'Silicon PERC',                     eff:0.220, bolEff:'24.0%', eolEff:'21.2%', voc:'0.72V/cell', tcoef:0.003,  tcoefStr:'-0.30%/°C', radTol:'1e14 e/cm²' },
+};
+
+// Coolant / heat-pipe fluid database
+const COOLANTS = {
+  nh3:       { name:'NH₃ 2-phase',      flow:4.2, tIn:85, tOut:45, heatCapFactor:1.0  },
+  propylene: { name:'Propylene 1-phase', flow:5.8, tIn:80, tOut:50, heatCapFactor:0.72 },
+  r134a:     { name:'R-134a 2-phase',    flow:6.1, tIn:78, tOut:48, heatCapFactor:0.85 },
+};
+
+// Workload database
+const WORKLOADS = {
+  // --- Training workloads ---
+  llama70b_train: {
+    name: 'LLaMA-3 70B Training',
+    type: 'train', model: '70B',
+    desc: '70B dense LLM · FP16/BF16 · data-parallel + tensor-parallel',
+    gpuCount: 5120, gpuModel: 'H100 80GB',
+    perGpuTDP: 0.700,
+    gpuUtil: 0.92,
+    totalComputekW: 5120 * 0.700 * 0.92,
+    heatFraction: 0.40,
+    peakFLOPS: 12.8,
+    batchInfo: '4096 global batch · micro-bs 4',
+  },
+  llama405b_train: {
+    name: 'LLaMA-3 405B Training',
+    type: 'train', model: '405B',
+    desc: '405B dense LLM · FP16/BF16 · 4D-parallel (TP×PP×DP×CP)',
+    gpuCount: 5120, gpuModel: 'H100 80GB',
+    perGpuTDP: 0.700,
+    gpuUtil: 0.88,
+    totalComputekW: 5120 * 0.700 * 0.88,
+    heatFraction: 0.42,
+    peakFLOPS: 11.2,
+    batchInfo: '2048 global batch · 8-way PP',
+  },
+  gpt4_train: {
+    name: 'GPT-4 1.8T MoE Training',
+    type: 'train', model: '1.8T MoE',
+    desc: '1.8T Mixture-of-Experts · FP16 · expert-parallel',
+    gpuCount: 5120, gpuModel: 'H100 80GB',
+    perGpuTDP: 0.700,
+    gpuUtil: 0.85,
+    totalComputekW: 5120 * 0.700 * 0.85,
+    heatFraction: 0.43,
+    peakFLOPS: 10.6,
+    batchInfo: '1024 global batch · 16 experts',
+  },
+  // --- Inference workloads ---
+  llama70b_infer: {
+    name: 'LLaMA-3 70B Inference',
+    type: 'infer', model: '70B',
+    desc: '70B dense LLM · INT8/FP8 · vLLM continuous batching',
+    gpuCount: 2560, gpuModel: 'H100 80GB',
+    perGpuTDP: 0.700,
+    gpuUtil: 0.55,
+    totalComputekW: 2560 * 0.700 * 0.55,
+    heatFraction: 0.35,
+    peakFLOPS: 6.4,
+    batchInfo: '128 concurrent reqs · KV-cache',
+  },
+  llama405b_infer: {
+    name: 'LLaMA-3 405B Inference',
+    type: 'infer', model: '405B',
+    desc: '405B dense LLM · INT8 · tensor-parallel across 8 GPUs',
+    gpuCount: 5120, gpuModel: 'H100 80GB',
+    perGpuTDP: 0.700,
+    gpuUtil: 0.50,
+    totalComputekW: 5120 * 0.700 * 0.50,
+    heatFraction: 0.38,
+    peakFLOPS: 8.0,
+    batchInfo: '64 concurrent reqs · 8-way TP',
+  },
+  sd_xl_infer: {
+    name: 'Stable Diffusion XL Inference',
+    type: 'infer', model: 'SDXL 6.6B',
+    desc: '6.6B UNet + VAE · FP16 · batched image generation',
+    gpuCount: 1280, gpuModel: 'H100 80GB',
+    perGpuTDP: 0.700,
+    gpuUtil: 0.70,
+    totalComputekW: 1280 * 0.700 * 0.70,
+    heatFraction: 0.33,
+    peakFLOPS: 3.2,
+    batchInfo: '512 imgs/batch · 50 steps',
+  },
+};
+
+/* ================================================================
+ *  state.js — Simulation state, dynamic data models, trend buffer
+ * ================================================================ */
+
+// --- Simulation state ---
+let simTime = 0, speed = 60, metSeconds = 0, orbitCount = 1;
+let batSOC = 87, phaseTime = 0, lastTime = null;
+let logIdx = 0, logTimer = 0;
+
+// --- Digital-twin configurable parameters ---
+let wingCount = 8, wingArea = 350, currentCellTech = 'tj';
+let radCount = 6, radArea = 143.3, radEpsilon = 0.92, currentCoolant = 'nh3';
+let currentWorkload = 'llama70b_train';
+
+// --- Dynamic arrays ---
+let wings = [], radPanels = [];
+
+function rebuildWings() {
+  const tech = CELL_TECHS[currentCellTech];
+  wings = Array.from({ length: wingCount }, (_, i) => ({
+    id: i + 1,
+    name: `W${String.fromCharCode(65 + (i % 26))}${i >= 26 ? Math.floor(i / 26) : ''}`,
+    cells: 240, area: wingArea,
+    temp: 65 + Math.random() * 10,
+    efficiency: tech.eff + (Math.random() - 0.5) * 0.005,
+    output: 0
+  }));
+}
+
+function rebuildRadPanels() {
+  radPanels = Array.from({ length: radCount }, (_, i) => ({
+    id: i + 1, area: radArea,
+    surfTemp: 55 + Math.random() * 8,
+    emissivity: radEpsilon,
+    viewFactor: 0.85 + Math.random() * 0.1,
+    qRad: 0
+  }));
+}
+
+// Build initial arrays
+rebuildWings();
+rebuildRadPanels();
+
+// --- Trend data buffer ---
+const TREND_MAX = 600;
+const trendData = { solar: [], bat: [], rad: [], gpuT: [] };
+let trendTimer = 0;
+
+function pushTrend(solarPwr, radPwr, gpuTemp) {
+  trendData.solar.push(solarPwr);
+  trendData.bat.push(batSOC);
+  trendData.rad.push(radPwr);
+  trendData.gpuT.push(gpuTemp);
+  if (trendData.solar.length > TREND_MAX) {
+    trendData.solar.shift(); trendData.bat.shift();
+    trendData.rad.shift();   trendData.gpuT.shift();
+  }
+}
+
+/* ================================================================
+ *  telemetry.js — Telemetry log system
+ * ================================================================ */
+
+const LOGS = [
+  ['ok',   'Solar tracking nominal. Sun angle <3°.'],
+  ['info', 'Station-keeping ΔV=0.2m/s done.'],
+  ['ok',   'GPU T=84°C. Cold plate ΔT=8°C.'],
+  ['info', 'Downlink: Tokyo→Svalbard. 12Gbps.'],
+  ['warn', 'Cosmic ray DIMM-07. ECC corrected.'],
+  ['ok',   'BMS: 480 cells balanced. SOH=99.8%.'],
+  ['info', 'LLM batch queued. 847 jobs pending.'],
+  ['ok',   'ADCS 0.01° off-nadir. RWA OK.'],
+  ['info', 'SSO dawn-dusk geometry. β=2.3°.'],
+  ['ok',   'Laser: 12Gbps Tenerife. BER=1e-12.'],
+  ['ok',   'VCHP conductance adj. post-eclipse.'],
+  ['warn', 'Wing-D 82°C. Within TML.'],
+  ['ok',   'Radiator P3 NH₃ 4.2kg/s nominal.'],
+  ['info', 'Orbit decay +0.1km cold-gas thrust.'],
+];
+
+function addLog(type, msg) {
+  const el = document.getElementById('telemLog');
+  const div = document.createElement('div');
+  div.className = type;
+  const h = Math.floor(metSeconds / 3600);
+  const m = Math.floor((metSeconds % 3600) / 60);
+  const s2 = Math.floor(metSeconds % 60);
+  div.textContent = `[${String(h).padStart(3, '0')}:${p2(m)}:${p2(s2)}] ${msg}`;
+  el.appendChild(div);
+  while (el.children.length > 60) el.removeChild(el.firstChild);
+  el.scrollTop = el.scrollHeight;
+}
+
+function p2(n) { return String(Math.floor(n)).padStart(2, '0'); }
+
+/* ================================================================
+ *  starfield.js — Background star layer
+ * ================================================================ */
+
+const sfC = document.getElementById('starfield'), sfX = sfC.getContext('2d');
+let stars = [];
+
+function initStars() {
+  sfC.width = window.innerWidth;
+  sfC.height = window.innerHeight;
+  stars = Array.from({ length: 400 }, () => ({
+    x: Math.random() * sfC.width,
+    y: Math.random() * sfC.height,
+    r: Math.random() * 1.2,
+    a: Math.random(),
+    sp: Math.random() * 0.25 + 0.05
+  }));
+}
+
+function drawStars() {
+  sfX.clearRect(0, 0, sfC.width, sfC.height);
+  stars.forEach(s => {
+    s.a += s.sp * 0.008;
+    sfX.beginPath();
+    sfX.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    sfX.fillStyle = `rgba(180,220,255,${0.25 + 0.6 * Math.abs(Math.sin(s.a))})`;
+    sfX.fill();
+  });
+}
+
+/* ================================================================
+ *  canvas.js — Canvas references, resize helper, angle utilities
+ * ================================================================ */
+
+const oC = document.getElementById('orbitCanvas'),    oX = oC.getContext('2d');
+const dC = document.getElementById('detailCanvas'),   dX = dC.getContext('2d');
+const sC = document.getElementById('solarArrayCanvas'), sX = sC.getContext('2d');
+const rC = document.getElementById('radiatorCanvas'),  rX = rC.getContext('2d');
+const tC = document.getElementById('trendCanvas'),     tX = tC.getContext('2d');
+
+function resizeAll() {
+  [oC, dC].forEach(c => {
+    if (c.offsetWidth > 0 && c.offsetHeight > 0) { c.width = c.offsetWidth; c.height = c.offsetHeight; }
+  });
+  [sC, rC, tC].forEach(c => {
+    if (c.offsetWidth > 0 && c.offsetHeight > 0) { c.width = c.offsetWidth; c.height = c.offsetHeight; }
+  });
+}
+
+function getAngle(t) { return (t / ORBIT_PERIOD) * Math.PI * 2; }
+
+function isEclipse(a) {
+  const n = ((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+  return n > ECLIPSE_START && n < ECLIPSE_START + ECLIPSE_FRAC * Math.PI * 2;
+}
+
+/* ================================================================
+ *  satellite.js — drawSatIcon() + drawDetail() (dynamic geometry)
+ * ================================================================ */
+
+function drawSatIcon(ctx, x, y, angle, eclipse, s) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(angle + Math.PI / 2);
+
+  // --- Dynamic geometry from DT controls ---
+  const wingWBase = Math.max(28, Math.min(80, (wingArea / 350) * 52)) * s;
+  const wingsPerSide = Math.ceil(wingCount / 2);
+  const wingH = 12 * s;
+  const wingGap = 2 * s;
+  const totalWingStackH = wingsPerSide * wingH + (wingsPerSide - 1) * wingGap;
+
+  const radsPerSide = Math.ceil(radCount / 2);
+  const radHBase = Math.max(12, Math.min(32, (radArea / 143) * 20)) * s;
+  const radW = 8 * s;
+  const radGap = 1.5 * s;
+  const totalRadStackH = radsPerSide * radHBase + (radsPerSide - 1) * radGap;
+
+  const cellCols = Math.max(3, Math.min(10, Math.round(wingWBase / (6 * s))));
+  const cellRows = 2;
+  const bw = 12 * s, bh = 14 * s;
+  const armLen = 4 * s;
+
+  // --- Draw Solar Wings (stacked per side) ---
+  for (let side of [-1, 1]) {
+    const nThisSide = side > 0 ? Math.ceil(wingCount / 2) : Math.floor(wingCount / 2);
+    if (nThisSide === 0) continue;
+    const stackH = nThisSide * wingH + (nThisSide - 1) * wingGap;
+    for (let wi = 0; wi < nThisSide; wi++) {
+      const wy = -stackH / 2 + wi * (wingH + wingGap);
+      const wx = side > 0 ? (bw / 2 + armLen) : -(bw / 2 + armLen + wingWBase);
+      ctx.fillStyle = eclipse ? '#1a2030' : '#1a3060'; ctx.fillRect(wx, wy, wingWBase, wingH);
+      const cw = wingWBase / cellCols, ch = wingH / cellRows;
+      for (let col = 0; col < cellCols; col++) for (let row = 0; row < cellRows; row++) {
+        const cx2 = wx + col * cw, cy2 = wy + row * ch;
+        const bright = eclipse ? 0 : 0.45 + 0.5 * Math.random() + 0.05;
+        ctx.fillStyle = eclipse ? 'rgb(18,20,52)' : `rgb(${Math.floor(35 + bright * 65)},${Math.floor(75 + bright * 90)},${Math.floor(22 + bright * 14)})`;
+        ctx.fillRect(cx2 + 0.5, cy2 + 0.5, cw - 1, ch - 1);
+        ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 0.5 / s; ctx.strokeRect(cx2 + 0.5, cy2 + 0.5, cw - 1, ch - 1);
+        if (!eclipse && col % 2 === 0 && row === 0) { ctx.fillStyle = 'rgba(255,255,180,0.08)'; ctx.fillRect(cx2 + 1, cy2 + 1, cw - 2, 1.5); }
+      }
+      ctx.strokeStyle = eclipse ? '#334466' : '#4488cc'; ctx.lineWidth = 1 / s; ctx.strokeRect(wx, wy, wingWBase, wingH);
+      if (!eclipse) { ctx.shadowColor = 'rgba(255,200,0,0.3)'; ctx.shadowBlur = 7 * s; ctx.strokeStyle = 'rgba(255,220,50,0.22)'; ctx.strokeRect(wx, wy, wingWBase, wingH); ctx.shadowBlur = 0; }
+    }
+    ctx.fillStyle = '#334455';
+    const armX = side > 0 ? bw / 2 : -(bw / 2 + armLen);
+    ctx.fillRect(armX, -1.5 * s, armLen, 3 * s);
+  }
+
+  // --- Draw Spacecraft Body ---
+  ctx.shadowColor = eclipse ? 'rgba(0,20,60,0.4)' : 'rgba(0,212,255,0.6)'; ctx.shadowBlur = eclipse ? 4 * s : 12 * s;
+  ctx.fillStyle = eclipse ? '#1c2535' : '#b8860b'; ctx.fillRect(-bw / 2, -bh / 2, bw, bh);
+  ctx.strokeStyle = eclipse ? '#2a3545' : 'rgba(220,180,20,0.4)'; ctx.lineWidth = 0.5 / s;
+  for (let i = 1; i < 4; i++) { ctx.beginPath(); ctx.moveTo(-bw / 2 + i * bw / 4, -bh / 2); ctx.lineTo(-bw / 2 + i * bw / 4, bh / 2); ctx.stroke(); }
+  for (let i = 1; i < 5; i++) { ctx.beginPath(); ctx.moveTo(-bw / 2, -bh / 2 + i * bh / 5); ctx.lineTo(bw / 2, -bh / 2 + i * bh / 5); ctx.stroke(); }
+  ctx.strokeStyle = eclipse ? '#445566' : '#00aadd'; ctx.lineWidth = 1 / s; ctx.strokeRect(-bw / 2, -bh / 2, bw, bh); ctx.shadowBlur = 0;
+
+  // --- Draw Radiator Panels (stacked per side, beside body) ---
+  for (let side of [-1, 1]) {
+    const nThisSide = side > 0 ? Math.ceil(radCount / 2) : Math.floor(radCount / 2);
+    if (nThisSide === 0) continue;
+    const stackH = nThisSide * radHBase + (nThisSide - 1) * radGap;
+    for (let ri = 0; ri < nThisSide; ri++) {
+      const ry = -stackH / 2 + ri * (radHBase + radGap);
+      const rx = side > 0 ? bw / 2 : -(bw / 2 + radW);
+      const rg = ctx.createLinearGradient(rx, ry, rx + radW, ry + radHBase);
+      eclipse ? (rg.addColorStop(0, '#180600'), rg.addColorStop(1, '#0a0300')) : (rg.addColorStop(0, '#cc3300'), rg.addColorStop(0.5, '#ff6600'), rg.addColorStop(1, '#882200'));
+      ctx.fillStyle = rg; ctx.fillRect(rx, ry, radW, radHBase);
+      const numPipes = Math.max(2, Math.min(6, Math.round(radHBase / (3 * s))));
+      ctx.strokeStyle = eclipse ? '#2a0e00' : 'rgba(255,100,0,0.45)'; ctx.lineWidth = 0.6 / s;
+      for (let i = 1; i <= numPipes; i++) { const py = ry + i * (radHBase / (numPipes + 1)); ctx.beginPath(); ctx.moveTo(rx + 1, py); ctx.lineTo(rx + radW - 1, py); ctx.stroke(); }
+      ctx.strokeStyle = eclipse ? '#3a1000' : '#ff4400'; ctx.lineWidth = 1 / s; ctx.strokeRect(rx, ry, radW, radHBase);
+      if (!eclipse) { ctx.shadowColor = 'rgba(255,80,0,0.4)'; ctx.shadowBlur = 5 * s; ctx.strokeStyle = 'rgba(255,80,0,0.3)'; ctx.strokeRect(rx, ry, radW, radHBase); ctx.shadowBlur = 0; }
+      for (let r = 0; r < Math.min(3, nThisSide > 3 ? 2 : 3); r++) {
+        const ery = ry + radHBase * (r + 1) / (Math.min(3, nThisSide > 3 ? 2 : 3) + 1);
+        const erx = rx + (side > 0 ? radW : 0);
+        const len = (5 + Math.sin(simTime * 0.012 + r + ri) * 2) * s;
+        ctx.beginPath(); ctx.moveTo(erx, ery); ctx.lineTo(erx + (side > 0 ? len : -len), ery);
+        ctx.strokeStyle = `rgba(255,80,0,${eclipse ? 0.05 : 0.13 + 0.04 * Math.sin(simTime * 0.02 + r + ri)})`;
+        ctx.lineWidth = 1.5 / s; ctx.setLineDash([1, 2]); ctx.stroke(); ctx.setLineDash([]);
+      }
+    }
+  }
+
+  // --- Antenna ---
+  ctx.fillStyle = '#667788'; ctx.beginPath(); ctx.arc(0, -bh / 2 - 3 * s, 2 * s, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(0, -bh / 2 - 1 * s); ctx.lineTo(0, -bh / 2 - 6 * s);
+  ctx.strokeStyle = '#445566'; ctx.lineWidth = 1.5 / s; ctx.stroke();
+  ctx.restore();
+}
+
+// ================================================================
+// SATELLITE DETAIL (annotations follow dynamic sat geometry)
+// ================================================================
+function drawDetail(eclipse) {
+  const W = dC.width, H = dC.height; dX.clearRect(0, 0, W, H);
+  const bg = dX.createRadialGradient(W / 2, H / 2, 40, W / 2, H / 2, W * 0.55);
+  bg.addColorStop(0, 'rgba(0,12,35,0.95)'); bg.addColorStop(1, 'rgba(0,0,8,0.95)');
+  dX.fillStyle = bg; dX.fillRect(0, 0, W, H);
+  dX.fillStyle = 'rgba(0,180,255,0.55)'; dX.font = '9px Orbitron'; dX.textAlign = 'center';
+  dX.fillText('SPACECRAFT DETAIL · ORBITAL DC-1', W / 2, 20);
+  dX.font = '7px Share Tech Mono'; dX.fillStyle = 'rgba(0,180,255,0.3)';
+  dX.fillText(eclipse ? 'ECLIPSE — Battery Discharge Active' : 'SUNLIT — Solar Arrays at Peak Output', W / 2, 32);
+  dX.textAlign = 'left';
+  // Auto-scale detail view
+  const maxExtent = Math.max(wingCount, radCount);
+  const sc = Math.min(W, H) * 0.0035 * Math.max(0.35, 1.0 / (1 + maxExtent * 0.035));
+  const yB = H / 2 + 15;
+  drawSatIcon(dX, W / 2, yB, Math.PI / 2, eclipse, sc);
+
+  // Compute geometry dimensions for annotation placement
+  const bw = 12 * sc, bh = 14 * sc;
+  const armLen = 4 * sc;
+  const wingWPx = Math.max(28, Math.min(80, (wingArea / 350) * 52)) * sc;
+  const wingsPerSide = Math.ceil(wingCount / 2);
+  const wingHPx = 12 * sc;
+  const wingGapPx = 2 * sc;
+  const totalWingStackH = wingsPerSide * wingHPx + (wingsPerSide - 1) * wingGapPx;
+  const radWPx = 8 * sc;
+  const radsPerSide = Math.ceil(radCount / 2);
+  const radHPx = Math.max(12, Math.min(32, (radArea / 143) * 20)) * sc;
+  const totalRadStackH = radsPerSide * radHPx + (radsPerSide - 1) * 1.5 * sc;
+
+  const wingTipOffset = bw / 2 + armLen + wingWPx;
+  const tech = CELL_TECHS[currentCellTech];
+  const cool = COOLANTS[currentCoolant];
+
+  // --- Left wing annotation ---
+  const lwTipX = W / 2 - wingTipOffset;
+  const annoLx = Math.max(10, lwTipX - 60);
+  const annoLy = yB - Math.max(totalWingStackH / 2, 30) - 10;
+  dX.fillStyle = eclipse ? 'rgba(70,70,180,0.7)' : 'rgba(255,220,50,0.88)'; dX.font = 'bold 8px Share Tech Mono';
+  dX.fillText('◄ SOLAR WING', annoLx, annoLy);
+  dX.font = '7px Share Tech Mono'; dX.fillStyle = eclipse ? 'rgba(60,60,140,0.6)' : 'rgba(255,200,50,0.6)';
+  dX.fillText(tech.name, annoLx, annoLy + 11);
+  dX.fillText(`${wingArea}m² × ${wingCount} wings`, annoLx, annoLy + 21);
+  const perWingPwr = eclipse ? 0 : Math.round(wings.length > 0 && wings[0].output ? wings[0].output : wingArea * 1367 * tech.eff / 1000);
+  dX.fillText(eclipse ? 'DARK — 0 kW' : `~${perWingPwr} kW/wing`, annoLx, annoLy + 31);
+  dX.strokeStyle = eclipse ? 'rgba(70,70,180,0.25)' : 'rgba(255,220,50,0.3)'; dX.lineWidth = 0.7; dX.setLineDash([3, 4]);
+  dX.beginPath(); dX.moveTo(lwTipX, yB); dX.lineTo(annoLx + 30, annoLy + 5); dX.stroke(); dX.setLineDash([]);
+
+  // --- Right wing annotation ---
+  const rwTipX = W / 2 + wingTipOffset;
+  const annoRx = Math.min(W - 10, rwTipX + 10);
+  const annoRy = annoLy;
+  dX.fillStyle = eclipse ? 'rgba(70,70,180,0.7)' : 'rgba(255,220,50,0.88)'; dX.font = 'bold 8px Share Tech Mono'; dX.textAlign = 'right';
+  dX.fillText('WING ►', annoRx + 50, annoRy);
+  dX.font = '7px Share Tech Mono'; dX.fillStyle = eclipse ? 'rgba(60,60,140,0.6)' : 'rgba(255,200,50,0.6)';
+  dX.fillText(`η=${(tech.eff * 100).toFixed(1)}% (EOL ${tech.eolEff})`, annoRx + 50, annoRy + 11);
+  dX.fillText(`T-coef: ${tech.tcoefStr}`, annoRx + 50, annoRy + 21);
+  dX.fillText(`Total: ${(wingCount * wingArea)} m²`, annoRx + 50, annoRy + 31);
+  dX.strokeStyle = eclipse ? 'rgba(70,70,180,0.25)' : 'rgba(255,220,50,0.3)'; dX.lineWidth = 0.7; dX.setLineDash([3, 4]);
+  dX.beginPath(); dX.moveTo(rwTipX, yB); dX.lineTo(annoRx + 20, annoRy + 5); dX.stroke(); dX.setLineDash([]); dX.textAlign = 'left';
+
+  // --- Radiator annotation ---
+  const radAnnoX = W / 2 + bw / 2 + radWPx + 12;
+  const radAnnoY = yB + Math.max(totalRadStackH / 2, 10) + 10;
+  dX.fillStyle = 'rgba(255,80,0,0.82)'; dX.font = 'bold 8px Share Tech Mono'; dX.fillText('RADIATOR ►', radAnnoX, radAnnoY);
+  dX.font = '7px Share Tech Mono'; dX.fillStyle = 'rgba(255,80,0,0.6)';
+  dX.fillText(`${cool.name} VCHP`, radAnnoX, radAnnoY + 11);
+  const rT = eclipse ? 26 : 57;
+  dX.fillText(`ε=${radEpsilon.toFixed(2)}  T=${rT}°C`, radAnnoX, radAnnoY + 21);
+  const avgQPerPanel = radPanels.length > 0 ? radPanels.reduce((a, p) => a + p.qRad, 0) / radPanels.length : 0;
+  dX.fillText(`Q≈${avgQPerPanel.toFixed(0)}kW/panel × ${radCount}`, radAnnoX, radAnnoY + 31);
+  dX.fillText('Q = ε·σ·A·(T⁴−T_space⁴)', radAnnoX, radAnnoY + 41);
+  dX.strokeStyle = 'rgba(255,80,0,0.25)'; dX.lineWidth = 0.7; dX.setLineDash([3, 4]);
+  dX.beginPath(); dX.moveTo(W / 2 + bw / 2 + radWPx, yB); dX.lineTo(radAnnoX - 2, radAnnoY - 4); dX.stroke(); dX.setLineDash([]);
+
+  // --- Bus label ---
+  dX.textAlign = 'center'; dX.font = '7px Share Tech Mono'; dX.fillStyle = 'rgba(200,180,50,0.65)';
+  const busLabelY = yB + Math.max(totalRadStackH / 2 + 10, totalWingStackH / 2 + 10) + 30;
+  dX.fillText(`SPACECRAFT BUS · 5120×H100 · MLI blanket · T_GPU=${eclipse ? 72 : 84}°C`, W / 2, busLabelY);
+  dX.textAlign = 'left';
+
+  // --- Solar irradiance arrows ---
+  if (!eclipse) {
+    const arY = yB - Math.max(totalWingStackH / 2, 20) - 25;
+    dX.strokeStyle = 'rgba(255,220,50,0.38)'; dX.lineWidth = 1.2; dX.setLineDash([4, 4]);
+    dX.beginPath(); dX.moveTo(lwTipX, arY); dX.lineTo(W / 2 - bw / 2, arY); dX.stroke();
+    dX.beginPath(); dX.moveTo(W / 2 + bw / 2, arY); dX.lineTo(rwTipX, arY); dX.stroke();
+    dX.setLineDash([]);
+    for (let d of [-1, 1]) {
+      const ax = W / 2 + d * (bw / 2);
+      dX.beginPath(); dX.moveTo(ax, arY); dX.lineTo(ax - d * 7, arY - 3.5); dX.lineTo(ax - d * 7, arY + 3.5); dX.closePath();
+      dX.fillStyle = 'rgba(255,220,50,0.45)'; dX.fill();
+    }
+    dX.fillStyle = 'rgba(255,220,50,0.5)'; dX.font = '7px Share Tech Mono'; dX.textAlign = 'center';
+    dX.fillText('1367 W/m² solar irradiance', W / 2, arY - 5); dX.textAlign = 'left';
+  }
+
+  // --- Radiator IR emission lines ---
+  const emBaseX = W / 2 + bw / 2 + radWPx;
+  const emCount = Math.min(5, radsPerSide * 2 + 1);
+  for (let i = 0; i < emCount; i++) {
+    const frac = (i + 0.5) / emCount;
+    const ery = yB - totalRadStackH / 2 + totalRadStackH * frac;
+    const alpha = eclipse ? 0.05 : 0.16 + 0.05 * Math.sin(simTime * 0.05 + i);
+    dX.strokeStyle = `rgba(255,80,0,${alpha})`; dX.lineWidth = 0.9;
+    dX.beginPath(); dX.moveTo(emBaseX, ery); dX.lineTo(emBaseX + sc * 16, ery); dX.stroke();
+    dX.beginPath(); dX.moveTo(emBaseX + sc * 16, ery); dX.lineTo(emBaseX + sc * 13, ery - 3); dX.lineTo(emBaseX + sc * 13, ery + 3); dX.closePath();
+    dX.fillStyle = `rgba(255,80,0,${alpha})`; dX.fill();
+  }
+}
+
+/* ================================================================
+ *  orbit.js — Earth orbit view (top-left quad)
+ * ================================================================ */
+
+function drawOrbit(eclipse) {
+  const W = oC.width, H = oC.height, cx = W * 0.46, cy = H * 0.5;
+  const earthR = Math.min(W, H) * 0.28, orbitR = earthR * 1.7;
+  oX.clearRect(0, 0, W, H);
+
+  // Background glow
+  const bg = oX.createRadialGradient(cx, cy, 0, cx, cy, W * 0.7);
+  bg.addColorStop(0, 'rgba(0,18,50,0.35)'); bg.addColorStop(1, 'rgba(0,0,0,0)');
+  oX.fillStyle = bg; oX.fillRect(0, 0, W, H);
+
+  // Sun
+  const sunX = cx - orbitR * 1.85, sunY = cy - orbitR * 0.65;
+  const sg = oX.createRadialGradient(sunX, sunY, 0, sunX, sunY, 110);
+  sg.addColorStop(0, 'rgba(255,248,200,0.95)'); sg.addColorStop(0.2, 'rgba(255,200,50,0.5)');
+  sg.addColorStop(0.6, 'rgba(255,130,0,0.12)'); sg.addColorStop(1, 'rgba(255,80,0,0)');
+  oX.beginPath(); oX.arc(sunX, sunY, 110, 0, Math.PI * 2); oX.fillStyle = sg; oX.fill();
+  oX.beginPath(); oX.arc(sunX, sunY, 22, 0, Math.PI * 2); oX.fillStyle = '#fff8c0'; oX.fill();
+  for (let i = 0; i < 14; i++) {
+    const ra = (i / 14) * Math.PI * 2 + simTime * 0.00012;
+    const len = 22 + 10 * Math.sin(simTime * 0.002 + i);
+    oX.beginPath(); oX.moveTo(sunX + Math.cos(ra) * 28, sunY + Math.sin(ra) * 28);
+    oX.lineTo(sunX + Math.cos(ra) * (28 + len), sunY + Math.sin(ra) * (28 + len));
+    oX.strokeStyle = `rgba(255,220,80,${0.12 + 0.07 * Math.sin(simTime * 0.003 + i)})`; oX.lineWidth = 1.3; oX.stroke();
+  }
+
+  // Sunlight rays toward satellite
+  if (!eclipse) {
+    const ang = getAngle(simTime);
+    const sx2 = cx + Math.cos(ang) * orbitR, sy2 = cy + Math.sin(ang) * orbitR;
+    const ddx = sx2 - sunX, ddy = sy2 - sunY, dist = Math.sqrt(ddx * ddx + ddy * ddy);
+    for (let j = 0; j < 5; j++) {
+      const off = (j - 2) * 14, px = -ddy / dist * off, py2 = ddx / dist * off;
+      oX.beginPath(); oX.moveTo(sunX + ddx * 0.23 + px, sunY + ddy * 0.23 + py2);
+      oX.lineTo(sunX + ddx * 0.73 + px, sunY + ddy * 0.73 + py2);
+      oX.strokeStyle = `rgba(255,220,80,${0.09 - Math.abs(j - 2) * 0.015})`; oX.lineWidth = 0.9;
+      oX.setLineDash([3, 5]); oX.stroke(); oX.setLineDash([]);
+    }
+  }
+
+  // Shadow cone
+  const shAng = Math.atan2(cy - sunY, cx - sunX);
+  oX.save(); oX.beginPath(); oX.moveTo(cx, cy);
+  oX.arc(cx, cy, orbitR * 1.5, shAng + Math.PI + (ECLIPSE_FRAC * Math.PI), shAng + Math.PI - (ECLIPSE_FRAC * Math.PI), true);
+  oX.closePath();
+  const shG = oX.createRadialGradient(cx, cy, earthR * 0.85, cx, cy, orbitR * 1.3);
+  shG.addColorStop(0, 'rgba(0,4,15,0.78)'); shG.addColorStop(0.65, 'rgba(0,4,15,0.4)'); shG.addColorStop(1, 'rgba(0,4,15,0)');
+  oX.fillStyle = shG; oX.fill(); oX.restore();
+
+  // Orbit ring
+  oX.beginPath(); oX.arc(cx, cy, orbitR, 0, Math.PI * 2);
+  oX.strokeStyle = 'rgba(0,140,255,0.12)'; oX.lineWidth = 1.1; oX.setLineDash([5, 7]); oX.stroke(); oX.setLineDash([]);
+
+  // Earth
+  const eG = oX.createRadialGradient(cx - earthR * 0.22, cy - earthR * 0.18, earthR * 0.05, cx, cy, earthR);
+  eG.addColorStop(0, '#1e9460'); eG.addColorStop(0.3, '#1565a0'); eG.addColorStop(0.7, '#0d3d7a'); eG.addColorStop(1, '#030c20');
+  oX.beginPath(); oX.arc(cx, cy, earthR, 0, Math.PI * 2); oX.fillStyle = eG; oX.fill();
+  const atG = oX.createRadialGradient(cx, cy, earthR * 0.88, cx, cy, earthR * 1.12);
+  atG.addColorStop(0, 'rgba(60,140,255,0.3)'); atG.addColorStop(1, 'rgba(20,80,200,0)');
+  oX.beginPath(); oX.arc(cx, cy, earthR * 1.12, 0, Math.PI * 2); oX.fillStyle = atG; oX.fill();
+  oX.fillStyle = 'rgba(100,200,100,0.5)'; oX.font = 'bold 11px Orbitron'; oX.textAlign = 'center';
+  oX.fillText('EARTH', cx, cy + 4); oX.textAlign = 'left';
+
+  // Orbital trail
+  for (let i = 1; i <= 3; i++) {
+    const ta = getAngle(simTime - i * ORBIT_PERIOD * 0.07);
+    oX.beginPath(); oX.arc(cx, cy, orbitR, ta, ta + 0.22, false);
+    oX.strokeStyle = `rgba(0,100,200,${0.07 - i * 0.02})`; oX.lineWidth = 2.5; oX.stroke();
+  }
+
+  // Satellite position
+  const angle = getAngle(simTime);
+  const satX = cx + Math.cos(angle) * orbitR, satY = cy + Math.sin(angle) * orbitR;
+  // Satellite icon scale
+  const satScale = Math.max(0.5, 1.2 / (1 + Math.max(wingCount, radCount) * 0.04));
+  if (!eclipse) {
+    const haloR = 20 * satScale + 8;
+    const halo = oX.createRadialGradient(satX, satY, 0, satX, satY, haloR);
+    halo.addColorStop(0, 'rgba(0,212,255,0.22)'); halo.addColorStop(1, 'rgba(0,212,255,0)');
+    oX.beginPath(); oX.arc(satX, satY, haloR, 0, Math.PI * 2); oX.fillStyle = halo; oX.fill();
+  }
+  drawSatIcon(oX, satX, satY, angle, eclipse, satScale);
+
+  // Downlink beam
+  if (!eclipse && Math.random() > 0.5) {
+    const gx = cx + Math.cos(angle + 0.32) * earthR * 0.8, gy = cy + Math.sin(angle + 0.32) * earthR * 0.8;
+    oX.beginPath(); oX.moveTo(satX, satY); oX.lineTo(gx, gy);
+    oX.strokeStyle = 'rgba(0,255,160,0.18)'; oX.lineWidth = 1; oX.setLineDash([2, 4]); oX.stroke(); oX.setLineDash([]);
+  }
+
+  // Labels
+  oX.fillStyle = eclipse ? '#6688ff' : '#00d4ff'; oX.font = 'bold 8px Share Tech Mono';
+  oX.fillText(eclipse ? '● ECLIPSE' : '☀ SUNLIT', satX + 18, satY - 10);
+  oX.fillStyle = 'rgba(0,140,220,0.4)'; oX.font = '8px Share Tech Mono';
+  oX.fillText('SSO 550km  T=95.7min', cx + orbitR + 4, cy - 4);
+  oX.fillStyle = 'rgba(0,160,255,0.4)'; oX.font = '8px Orbitron'; oX.textAlign = 'center';
+  oX.fillText(`ORBIT #${orbitCount}`, cx, cy + earthR + 18); oX.textAlign = 'left';
+}
+
+/* ================================================================
+ *  solar-array.js — Solar array canvas + wing table
+ * ================================================================ */
+
+function drawSolarArray(eclipse) {
+  const W = sC.width, H = sC.height; sX.clearRect(0, 0, W, H);
+  sX.fillStyle = '#040c1a'; sX.fillRect(0, 0, W, H);
+  const n = wings.length;
+  if (n === 0) return;
+
+  let cols = Math.ceil(Math.sqrt(n));
+  let rows = Math.ceil(n / cols);
+  const margin = 5, gap = 3;
+  const cellW = (W - 2 * margin - (cols - 1) * gap) / cols;
+  const cellH = (H - 2 * margin - (rows - 1) * gap) / rows;
+  const tech = CELL_TECHS[currentCellTech];
+  const maxPwr = wingArea * 1367 * tech.eff / 1000 * 1.1;
+
+  for (let idx = 0; idx < n; idx++) {
+    const wing = wings[idx];
+    const col = idx % cols, row = Math.floor(idx / cols);
+    const wx = margin + col * (cellW + gap), wy = margin + row * (cellH + gap);
+    const norm = eclipse ? 0 : Math.min(1, wing.output / maxPwr);
+
+    const wg = sX.createLinearGradient(wx, wy, wx + cellW, wy + cellH);
+    eclipse
+      ? (wg.addColorStop(0, '#0c121c'), wg.addColorStop(1, '#070a12'))
+      : (wg.addColorStop(0, `rgb(${Math.floor(18 + norm * 52)},${Math.floor(40 + norm * 100)},${Math.floor(55 + norm * 28)})`),
+         wg.addColorStop(1, `rgb(${Math.floor(10 + norm * 38)},${Math.floor(26 + norm * 75)},${Math.floor(42 + norm * 18)})`));
+    sX.fillStyle = wg; sX.fillRect(wx, wy, cellW, cellH);
+
+    const cC = Math.max(2, Math.min(6, Math.floor(cellW / 12))), cR = Math.max(2, Math.min(4, Math.floor(cellH / 12)));
+    const cw = (cellW - 4) / cC, ch = (cellH - 4) / cR;
+    for (let cc = 0; cc < cC; cc++) for (let cr = 0; cr < cR; cr++) {
+      const cx3 = wx + 2 + cc * cw, cy3 = wy + 2 + cr * ch;
+      const jitter = eclipse ? 0 : Math.random() * 0.12;
+      const r2 = eclipse ? 10 : Math.floor(32 + norm * 62 + jitter * 18);
+      const g2 = eclipse ? 13 : Math.floor(70 + norm * 85 + jitter * 25);
+      const b2 = eclipse ? 38 : Math.floor(18 + norm * 14);
+      sX.fillStyle = `rgb(${r2},${g2},${b2})`; sX.fillRect(cx3 + 0.5, cy3 + 0.5, cw - 1, ch - 1);
+      sX.strokeStyle = 'rgba(0,0,0,0.55)'; sX.lineWidth = 0.5; sX.strokeRect(cx3 + 0.5, cy3 + 0.5, cw - 1, ch - 1);
+      if (!eclipse && cr === 0) { sX.fillStyle = `rgba(255,255,180,${0.04 + norm * 0.09})`; sX.fillRect(cx3 + 1, cy3 + 1, cw - 2, 1.5); }
+    }
+
+    sX.strokeStyle = eclipse ? 'rgba(28,56,95,0.45)' : 'rgba(255,200,50,0.38)'; sX.lineWidth = 1;
+    if (!eclipse) { sX.shadowColor = 'rgba(255,200,50,0.25)'; sX.shadowBlur = 5; }
+    sX.strokeRect(wx, wy, cellW, cellH); sX.shadowBlur = 0;
+
+    sX.fillStyle = eclipse ? 'rgba(70,90,140,0.65)' : 'rgba(255,220,50,0.82)';
+    sX.font = `bold ${Math.max(7, Math.min(cellH * 0.13, 12))}px Share Tech Mono`; sX.textAlign = 'left';
+    sX.fillText(wing.name, wx + 3, wy + cellH - 11);
+    sX.font = `${Math.max(6, Math.min(cellH * 0.11, 10))}px Share Tech Mono`;
+    sX.fillStyle = eclipse ? 'rgba(50,65,105,0.65)' : 'rgba(180,255,90,0.8)';
+    sX.fillText(eclipse ? '0kW' : `${wing.output.toFixed(0)}kW`, wx + 3, wy + cellH - 1);
+
+    const tN = Math.min(1, (wing.temp + 70) / 160);
+    sX.beginPath(); sX.arc(wx + cellW - 7, wy + 7, 3.5, 0, Math.PI * 2);
+    sX.fillStyle = eclipse ? `rgb(25,${Math.floor(10 + tN * 20)},10)` : `rgb(${Math.floor(60 + tN * 195)},${Math.floor(Math.max(0, 175 - tN * 175))},15)`; sX.fill();
+  }
+  sX.textAlign = 'left';
+
+  // Power summary bar
+  const total = eclipse ? 0 : wings.reduce((a, w) => a + w.output, 0);
+  const peakTotal = wingCount * wingArea * 1367 * CELL_TECHS[currentCellTech].eff / 1000;
+  const bw = W - 10, bh = 3;
+  sX.fillStyle = 'rgba(13,32,64,0.7)'; sX.fillRect(5, H - 8, bw, bh);
+  if (!eclipse && total > 0) {
+    const fill = sX.createLinearGradient(5, 0, 5 + bw, 0);
+    fill.addColorStop(0, '#39ff14'); fill.addColorStop(0.5, '#ffe066'); fill.addColorStop(1, '#ff4400');
+    sX.fillStyle = fill; sX.fillRect(5, H - 8, bw * Math.min(1, total / peakTotal), bh);
+  }
+}
+
+// --- Wing status table ---
+function updateWingTable(eclipse) {
+  const tb = document.getElementById('wingTable');
+  while (tb.rows.length > 1) tb.deleteRow(1);
+  const tech = CELL_TECHS[currentCellTech];
+  wings.forEach(w => {
+    w.output = eclipse ? 0 : (w.area * 1367 * w.efficiency / 1000) * (1 - (w.temp - 25) * tech.tcoef);
+    w.temp = eclipse ? Math.max(-65, w.temp - 1.4) : Math.min(84, w.temp + 0.35);
+    const tr = tb.insertRow();
+    const tc = w.temp > 80 ? 'ht' : w.temp > 70 ? 'wn' : 'ok';
+    tr.innerHTML = `<td>${w.name}</td><td class="${eclipse ? '' : 'ok'}">${w.output.toFixed(0)}</td>` +
+      `<td class="${tc}">${w.temp.toFixed(0)}</td><td class="${eclipse ? 'wn' : 'ok'}">${eclipse ? 'STB' : 'ACT'}</td>`;
+  });
+}
+
+/* ================================================================
+ *  radiator.js — Radiator canvas + panel status table
+ * ================================================================ */
+
+function drawRadiator(eclipse) {
+  const W = rC.width, H = rC.height; rX.clearRect(0, 0, W, H);
+  rX.fillStyle = '#040c1a'; rX.fillRect(0, 0, W, H);
+  const n = radPanels.length;
+  if (n === 0) return;
+
+  const margin = 5, gap = 4;
+  const panelW = (W - 2 * margin - (n - 1) * gap) / n;
+  const panelH = H - 2 * margin - 14;
+
+  radPanels.forEach((panel, i) => {
+    const px = margin + i * (panelW + gap), py = margin;
+
+    // Panel gradient
+    const pg = rX.createLinearGradient(px, py, px, py + panelH);
+    eclipse
+      ? (pg.addColorStop(0, '#160500'), pg.addColorStop(0.5, '#0c0300'), pg.addColorStop(1, '#060100'))
+      : (pg.addColorStop(0, '#dd3800'), pg.addColorStop(0.3, '#ff5500'), pg.addColorStop(0.7, '#bb2800'), pg.addColorStop(1, '#651000'));
+    rX.fillStyle = pg; rX.fillRect(px, py, panelW, panelH);
+
+    // Heat pipes
+    const numPipes = 10;
+    for (let p = 0; p < numPipes; p++) {
+      const py2 = py + p * (panelH / numPipes), heatI = 1 - p / numPipes;
+      rX.strokeStyle = eclipse ? 'rgba(70,20,0,0.4)' : `rgba(255,${Math.floor(55 + heatI * 115)},0,${0.3 + heatI * 0.28})`;
+      rX.lineWidth = 1.1; rX.beginPath(); rX.moveTo(px + 2, py2); rX.lineTo(px + panelW - 2, py2); rX.stroke();
+      if (p % 2 === 0) {
+        const ax = px + panelW * 0.5;
+        rX.fillStyle = eclipse ? 'rgba(45,12,0,0.35)' : 'rgba(255,110,0,0.3)';
+        rX.beginPath(); rX.moveTo(ax, py2 + 2.5); rX.lineTo(ax - 3.5, py2 + 6); rX.lineTo(ax + 3.5, py2 + 6); rX.closePath(); rX.fill();
+      }
+    }
+
+    // IR emission lines (left side)
+    if (!eclipse) {
+      for (let r = 0; r < 5; r++) {
+        const ry2 = py + r * (panelH / 4);
+        const alpha = 0.1 + 0.07 * Math.sin(simTime * 0.05 + r + i * 0.7);
+        for (let d = 1; d <= 3; d++) {
+          rX.beginPath(); rX.moveTo(px, ry2); rX.lineTo(px - d * 4, ry2);
+          rX.strokeStyle = `rgba(255,80,0,${alpha / d})`; rX.lineWidth = 0.9;
+          rX.setLineDash([1, 2]); rX.stroke(); rX.setLineDash([]);
+        }
+      }
+    }
+
+    // Panel border
+    rX.strokeStyle = eclipse ? '#260d00' : '#ff4400'; rX.lineWidth = 1.1; rX.strokeRect(px, py, panelW, panelH);
+    if (!eclipse) { rX.shadowColor = 'rgba(255,80,0,0.3)'; rX.shadowBlur = 7; rX.strokeStyle = 'rgba(255,80,0,0.18)'; rX.strokeRect(px, py, panelW, panelH); rX.shadowBlur = 0; }
+
+    // Labels
+    rX.fillStyle = eclipse ? 'rgba(130,55,8,0.75)' : 'rgba(255,190,75,0.88)';
+    rX.font = `bold ${Math.max(7, Math.min(panelW * 0.17, 12))}px Share Tech Mono`; rX.textAlign = 'center';
+    rX.fillText(`P${i + 1}`, px + panelW / 2, py + 12);
+    rX.font = `${Math.max(6, Math.min(panelW * 0.14, 10))}px Share Tech Mono`;
+    rX.fillStyle = eclipse ? 'rgba(110,45,5,0.7)' : 'rgba(255,145,45,0.82)';
+    rX.fillText(`${panel.surfTemp.toFixed(0)}°C`, px + panelW / 2, py + panelH - 16);
+    rX.fillStyle = eclipse ? 'rgba(90,35,3,0.6)' : 'rgba(255,115,28,0.72)';
+    rX.fillText(`${panel.qRad.toFixed(0)}kW`, px + panelW / 2, py + panelH - 5);
+  });
+
+  rX.textAlign = 'left';
+  const cool = COOLANTS[currentCoolant];
+  rX.fillStyle = 'rgba(255,80,0,0.38)'; rX.font = '7px Share Tech Mono';
+  rX.fillText(`← IR to deep space (2.7K) · ε=${radEpsilon.toFixed(2)}`, margin, H - 3);
+  rX.textAlign = 'right'; rX.fillStyle = 'rgba(0,150,200,0.38)';
+  rX.fillText(`${cool.name}: ${cool.tIn}°C in → ${cool.tOut}°C out`, W - margin - 5, H - 3);
+  rX.textAlign = 'left';
+}
+
+// --- Radiator panel status table ---
+function updateRadTable(eclipse) {
+  const tb = document.getElementById('radPanelTable');
+  while (tb.rows.length > 1) tb.deleteRow(1);
+  const cool = COOLANTS[currentCoolant];
+  radPanels.forEach(p => {
+    p.surfTemp = eclipse ? Math.max(14, p.surfTemp - 0.5) : Math.min(63, 54 + Math.random() * 7);
+    const T = p.surfTemp + 273.15;
+    p.qRad = (p.emissivity * SIGMA * p.area * p.viewFactor * (T ** 4 - 2.7 ** 4)) / 1000 * cool.heatCapFactor;
+    const tr = tb.insertRow();
+    const tc = p.surfTemp > 60 ? 'ht' : p.surfTemp > 50 ? 'wn' : 'ok';
+    tr.innerHTML = `<td>P${p.id}</td><td class="${tc}">${p.surfTemp.toFixed(0)}</td>` +
+      `<td class="ok">${p.qRad.toFixed(0)}</td><td class="${eclipse ? 'wn' : 'ok'}">${eclipse ? 'RED' : 'OK'}</td>`;
+  });
+}
+
+/* ================================================================
+ *  trend-chart.js — Real-time telemetry trend chart
+ * ================================================================ */
+
+function drawTrend() {
+  const W = tC.width, H = tC.height;
+  if (W < 10 || H < 10) return;
+  tX.clearRect(0, 0, W, H);
+
+  // Background
+  tX.fillStyle = 'rgba(4,8,18,0.98)'; tX.fillRect(0, 0, W, H);
+  const padL = 40, padR = 10, padT = 22, padB = 18;
+  const gW = W - padL - padR, gH = H - padT - padB;
+
+  // Grid
+  tX.strokeStyle = 'rgba(13,32,64,0.5)'; tX.lineWidth = 0.5;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + i * (gH / 4);
+    tX.beginPath(); tX.moveTo(padL, y); tX.lineTo(padL + gW, y); tX.stroke();
+    tX.fillStyle = 'rgba(58,90,122,0.6)'; tX.font = '7px Share Tech Mono'; tX.textAlign = 'right';
+    const val = Math.round(100 - i * 25);
+    tX.fillText(val + '%', padL - 4, y + 3);
+  }
+
+  // Normalization helpers
+  const tech = CELL_TECHS[currentCellTech];
+  const cool = COOLANTS[currentCoolant];
+  const peakSolar = Math.max(1, wingCount * wingArea * 1367 * tech.eff / 1000);
+  const Tsurf = 58 + 273.15;
+  const peakRad = Math.max(1, (radEpsilon * SIGMA * radCount * radArea * 0.9 * (Tsurf ** 4 - 2.7 ** 4)) / 1000 * cool.heatCapFactor);
+
+  const lines = [
+    { data: trendData.solar, color: '#ffe066', norm: v => Math.min(100, v / peakSolar * 100) },
+    { data: trendData.bat,   color: '#ff6b00', norm: v => v },
+    { data: trendData.rad,   color: '#ff4400', norm: v => Math.min(100, v / peakRad * 100) },
+    { data: trendData.gpuT,  color: '#00d4ff', norm: v => Math.min(100, Math.max(0, (v - 20) / 80 * 100)) },
+  ];
+
+  // Eclipse shading
+  const n = trendData.solar.length;
+  if (n > 1) {
+    for (let i = 0; i < n; i++) {
+      if (trendData.solar[i] < 1) {
+        const x = padL + (i / (n - 1)) * gW;
+        tX.fillStyle = 'rgba(0,20,80,0.15)'; tX.fillRect(x - 0.5, padT, 1.5, gH);
+      }
+    }
+  }
+
+  // Draw trend lines
+  lines.forEach(line => {
+    if (line.data.length < 2) return;
+    tX.beginPath();
+    const pts = line.data;
+    for (let i = 0; i < pts.length; i++) {
+      const x = padL + (i / (pts.length - 1)) * gW;
+      const y = padT + gH - (line.norm(pts[i]) / 100) * gH;
+      i === 0 ? tX.moveTo(x, y) : tX.lineTo(x, y);
+    }
+    tX.strokeStyle = line.color; tX.lineWidth = 1.2; tX.stroke();
+    // Glow
+    tX.strokeStyle = line.color.replace(')', ',0.3)').replace('rgb', 'rgba');
+    tX.lineWidth = 3; tX.stroke();
+  });
+
+  // Time axis
+  tX.textAlign = 'center'; tX.fillStyle = 'rgba(58,90,122,0.5)'; tX.font = '6px Share Tech Mono';
+  for (let i = 0; i <= 4; i++) {
+    const x = padL + i * (gW / 4);
+    tX.fillText(`−${Math.round((4 - i) / 4 * TREND_MAX)}`, x, H - 4);
+  }
+  tX.fillText('NOW', padL + gW, H - 4);
+
+  // Current values at right edge
+  if (n > 0) {
+    const labelData = [
+      { val: trendData.solar[n - 1].toFixed(0) + 'kW', color: '#ffe066' },
+      { val: trendData.bat[n - 1].toFixed(0) + '%',    color: '#ff6b00' },
+      { val: trendData.rad[n - 1].toFixed(0) + 'kW',   color: '#ff4400' },
+      { val: trendData.gpuT[n - 1].toFixed(0) + '°C',  color: '#00d4ff' },
+    ];
+    labelData.forEach((l, i) => {
+      tX.fillStyle = l.color; tX.font = 'bold 7px Share Tech Mono'; tX.textAlign = 'left';
+      tX.fillText(l.val, padL + gW + 3, padT + 12 + i * 12);
+    });
+  }
+}
+
+/* ================================================================
+ *  dt-controls.js — Digital Twin control panel handlers
+ * ================================================================ */
+
+function setupDTControls() {
+  // Solar wing count
+  const slWC = document.getElementById('slWingCount');
+  slWC.addEventListener('input', () => {
+    wingCount = parseInt(slWC.value);
+    document.getElementById('valWingCount').textContent = wingCount;
+    rebuildWings(); updateDTSummary();
+    addLog('info', `[DT] Solar wings reconfigured: ${wingCount} wings.`);
+  });
+
+  // Solar wing area
+  const slWA = document.getElementById('slWingArea');
+  slWA.addEventListener('input', () => {
+    wingArea = parseInt(slWA.value);
+    document.getElementById('valWingArea').textContent = wingArea + 'm²';
+    rebuildWings(); updateDTSummary();
+  });
+
+  // Cell tech
+  const selCT = document.getElementById('selCellTech');
+  selCT.addEventListener('change', () => {
+    currentCellTech = selCT.value;
+    rebuildWings(); updateCellTechDisplay(); updateDTSummary();
+    addLog('info', `[DT] Cell tech → ${CELL_TECHS[currentCellTech].name}.`);
+  });
+
+  // Rad panel count
+  const slRC = document.getElementById('slRadCount');
+  slRC.addEventListener('input', () => {
+    radCount = parseInt(slRC.value);
+    document.getElementById('valRadCount').textContent = radCount;
+    rebuildRadPanels(); updateDTSummary();
+    addLog('info', `[DT] Radiator panels reconfigured: ${radCount} panels.`);
+  });
+
+  // Rad panel area
+  const slRA = document.getElementById('slRadArea');
+  slRA.addEventListener('input', () => {
+    radArea = parseInt(slRA.value);
+    document.getElementById('valRadArea').textContent = radArea + 'm²';
+    rebuildRadPanels(); updateDTSummary();
+  });
+
+  // Epsilon
+  const slEps = document.getElementById('slEpsilon');
+  slEps.addEventListener('input', () => {
+    radEpsilon = parseInt(slEps.value) / 100;
+    document.getElementById('valEpsilon').textContent = radEpsilon.toFixed(2);
+    radPanels.forEach(p => p.emissivity = radEpsilon);
+    updateDTSummary();
+  });
+
+  // Coolant
+  const selCo = document.getElementById('selCoolant');
+  selCo.addEventListener('change', () => {
+    currentCoolant = selCo.value;
+    updateCoolantDisplay(); updateDTSummary();
+    addLog('info', `[DT] Coolant → ${COOLANTS[currentCoolant].name}.`);
+  });
+
+  // Workload
+  const selWL = document.getElementById('selWorkload');
+  selWL.addEventListener('change', () => {
+    currentWorkload = selWL.value;
+    updateWorkloadDisplay(); updateDTSummary();
+    const wl = WORKLOADS[currentWorkload];
+    addLog('info', `[DT] Workload → ${wl.name}.`);
+  });
+}
+
+function updateCellTechDisplay() {
+  const tech = CELL_TECHS[currentCellTech];
+  document.getElementById('ctType').textContent = tech.name;
+  document.getElementById('ctBOL').textContent = tech.bolEff;
+  document.getElementById('ctEOL').textContent = tech.eolEff;
+  document.getElementById('ctVoc').textContent = tech.voc;
+  document.getElementById('ctTcoef').textContent = tech.tcoefStr;
+  document.getElementById('ctRadTol').textContent = tech.radTol;
+  document.getElementById('ctArea').textContent = (wingCount * wingArea) + ' m²';
+  document.getElementById('solarPaneTitle').textContent = `☀ Solar Array · ${wingCount} Wings · ${tech.name}`;
+}
+
+function updateCoolantDisplay() {
+  const cool = COOLANTS[currentCoolant];
+  document.getElementById('caFluid').textContent = cool.name;
+  document.getElementById('caFlow').textContent = cool.flow.toFixed(1) + ' kg/s';
+  document.getElementById('caArea').textContent = (radCount * radArea).toFixed(0) + ' m²';
+  document.getElementById('radPaneTitle').textContent = `🌡 Radiative Cooling · ${radCount} Panels · ${cool.name} VCHP`;
+}
+
+function updateWorkloadDisplay() {
+  const wl = WORKLOADS[currentWorkload];
+  document.getElementById('wlModel').textContent = wl.model;
+  document.getElementById('wlType').textContent = wl.type === 'train' ? 'Training' : 'Inference';
+  document.getElementById('wlGpus').textContent = `${wl.gpuCount} × ${wl.gpuModel}`;
+  document.getElementById('wlCompute').textContent = Math.round(wl.totalComputekW) + ' kW';
+  document.getElementById('wlHeat').textContent = Math.round(wl.totalComputekW * wl.heatFraction) + ' kW';
+  document.getElementById('wlFlops').textContent = wl.peakFLOPS.toFixed(1) + ' EF';
+  document.getElementById('wlUtil').textContent = Math.round(wl.gpuUtil * 100) + '%';
+
+  // Update power flow label
+  document.getElementById('ffCompLabel').textContent = `${wl.gpuModel} × ${wl.gpuCount}`;
+
+  // Thermal feasibility check
+  updateThermalStatus();
+}
+
+function updateThermalStatus() {
+  const wl = WORKLOADS[currentWorkload];
+  const cool = COOLANTS[currentCoolant];
+  const heatLoad = wl.totalComputekW * wl.heatFraction;
+  const totalRadArea = radCount * radArea;
+  const Tsurf = 58 + 273.15;
+  const peakQ = (radEpsilon * SIGMA * totalRadArea * 0.9 * (Tsurf ** 4 - 2.7 ** 4)) / 1000 * cool.heatCapFactor;
+  const ratio = peakQ / Math.max(1, heatLoad);
+
+  const el = document.getElementById('wlThermalVal');
+  if (ratio >= 1.2) {
+    el.className = 'wl-th-val ok';
+    el.textContent = `✓ OK (${Math.round(ratio * 100)}% capacity)`;
+  } else if (ratio >= 1.0) {
+    el.className = 'wl-th-val warn';
+    el.textContent = `⚠ Marginal (${Math.round(ratio * 100)}%)`;
+  } else {
+    el.className = 'wl-th-val danger';
+    el.textContent = `✗ OVERHEAT (${Math.round(ratio * 100)}% — deficit ${Math.round(heatLoad - peakQ)} kW)`;
+  }
+}
+
+function updateDTSummary() {
+  const tech = CELL_TECHS[currentCellTech];
+  const cool = COOLANTS[currentCoolant];
+  const wl   = WORKLOADS[currentWorkload];
+  const totalSolarArea = wingCount * wingArea;
+  const peakSolar = (totalSolarArea * 1367 * tech.eff / 1000) * (1 - (75 - 25) * tech.tcoef);
+  const totalRadArea = radCount * radArea;
+  const Tsurf = 58 + 273.15;
+  const peakQ = (radEpsilon * SIGMA * totalRadArea * 0.9 * (Tsurf ** 4 - 2.7 ** 4)) / 1000 * cool.heatCapFactor;
+  const computeLoad = wl.totalComputekW;
+  const balance = peakSolar - computeLoad;
+
+  document.getElementById('dsSolarArea').textContent = totalSolarArea + ' m²';
+  document.getElementById('dsPeakPwr').textContent = peakSolar.toFixed(0) + ' kW';
+  document.getElementById('dsRadArea').textContent = totalRadArea.toFixed(0) + ' m²';
+  document.getElementById('dsPeakQ').textContent = peakQ.toFixed(0) + ' kW';
+
+  const balEl = document.getElementById('dsBalance');
+  if (balance > 0) {
+    balEl.className = 'val'; balEl.textContent = `+${balance.toFixed(0)} kW surplus`;
+  } else {
+    balEl.className = 'danger-val'; balEl.textContent = `${balance.toFixed(0)} kW DEFICIT`;
+  }
+
+  // Update pane titles
+  document.getElementById('solarPaneTitle').textContent = `☀ Solar Array · ${wingCount} Wings · ${tech.name}`;
+  document.getElementById('radPaneTitle').textContent = `🌡 Radiative Cooling · ${radCount} Panels · ${cool.name} VCHP`;
+  document.getElementById('phEpsDisp').textContent = radEpsilon.toFixed(2);
+
+  // Update cell tech & coolant display
+  document.getElementById('ctArea').textContent = totalSolarArea + ' m²';
+  document.getElementById('caArea').textContent = totalRadArea.toFixed(0) + ' m²';
+  document.getElementById('caFlow').textContent = cool.flow.toFixed(1) + ' kg/s';
+
+  // Update cost estimates
+  const gpuCost = Math.round(wl.gpuCount * 0.05);
+  const solarCost = Math.round(totalSolarArea * 0.023);
+  const radCost = Math.round(totalRadArea * 0.033);
+  document.getElementById('costSolar').textContent = '$' + solarCost + 'M';
+  document.getElementById('costRad').textContent = '$' + radCost + 'M';
+  document.getElementById('costGpu').textContent = '$' + gpuCost + 'M';
+  const totalCost = 120 + 85 + solarCost + 42 + radCost + gpuCost + 38 + 22 + 45 + 80;
+  document.getElementById('costTotal').textContent = '$' + totalCost + 'M';
+  const revenue = 420, opex = 38;
+  const be = totalCost / (revenue - opex);
+  document.getElementById('costBreakeven').textContent = '~' + be.toFixed(1) + ' yrs';
+
+  // Update thermal status
+  updateThermalStatus();
+}
+
+/* ================================================================
+ *  simulation.js — Main update loop, speed control, animation
+ * ================================================================ */
+
+function update(ts) {
+  if (!lastTime) lastTime = ts;
+  const dt = Math.min((ts - lastTime) / 1000, 0.1); lastTime = ts;
+  simTime += dt * speed; metSeconds += dt * speed; phaseTime += dt * speed;
+
+  const angle = getAngle(simTime), eclipse = isEclipse(angle), prevEclipse = isEclipse(getAngle(simTime - dt * speed));
+  const newOrbit = Math.floor(simTime / ORBIT_PERIOD) + 1;
+  if (newOrbit !== orbitCount) { orbitCount = newOrbit; addLog('info', `Orbit #${orbitCount} commenced.`); }
+  if (eclipse !== prevEclipse) { phaseTime = 0; eclipse ? addLog('warn', 'Entering umbra. Battery discharge.') : addLog('ok', 'Exiting eclipse. Solar online.'); }
+
+  // Compute workload + solar first (needed for battery model)
+  const tech = CELL_TECHS[currentCellTech];
+  const cool = COOLANTS[currentCoolant];
+  const wl   = WORKLOADS[currentWorkload];
+  const peakSolar = wingCount * wingArea * 1367 * tech.eff / 1000 * (1 - (75 - 25) * tech.tcoef);
+  const solarPwr = eclipse ? 0 : peakSolar * (0.97 + Math.random() * 0.03);
+  const radPwr = radPanels.reduce((a, p) => a + (eclipse ? p.qRad * 0.5 : p.qRad), 0);
+
+  // Workload-driven compute
+  const computeLoad = wl.totalComputekW;
+  const heatLoad    = computeLoad * wl.heatFraction;
+  const flops = eclipse ? wl.peakFLOPS * (batSOC / 100) : wl.peakFLOPS * (wl.gpuUtil + Math.random() * (1 - wl.gpuUtil) * 0.3);
+  const gpu   = eclipse ? Math.floor(wl.gpuUtil * 100 * batSOC / 100) : Math.floor(wl.gpuUtil * 100 * (0.87 + Math.random() * 0.13));
+
+  // Battery model (uses computeLoad & solarPwr)
+  batSOC = eclipse
+    ? Math.max(10, batSOC - (computeLoad / 1400) * 0.85 * dt * speed / 60)
+    : Math.min(100, batSOC + ((solarPwr - computeLoad) > 0 ? 1 : 0) * 1.25 * dt * speed / 60);
+  logTimer += dt * speed;
+  if (logTimer > 85) { logTimer = 0; const [t, m] = LOGS[logIdx % LOGS.length]; addLog(t, m); logIdx++; }
+
+  updateWingTable(eclipse); updateRadTable(eclipse);
+
+  // GPU temp influenced by radiator capacity vs workload heat
+  const radCapacity = radPwr;
+  const thermalRatio = Math.min(1, radCapacity / Math.max(1, heatLoad));
+  const gpuTempBase = eclipse ? 65 + batSOC * 0.18 : 76 + Math.random() * 4;
+  const gpuTemp = gpuTempBase + (1 - thermalRatio) * 25;
+  const arrTemp = eclipse ? -55 + Math.random() * 5 : 62 + Math.random() * 16;
+  const radSurfT = radPanels.length > 0 ? radPanels.reduce((a, p) => a + p.surfTemp, 0) / radPanels.length : 0;
+  const pm = Math.floor(phaseTime / 60), ps2 = Math.floor(phaseTime % 60);
+
+  // Trend data (push every ~1s sim time)
+  trendTimer += dt * speed;
+  if (trendTimer >= 1) { trendTimer = 0; pushTrend(solarPwr, radPwr, gpuTemp); }
+
+  // --- DOM updates ---
+  // Phase
+  document.getElementById('phaseBox').className = 'phase-box ' + (eclipse ? 'phase-eclipse' : 'phase-sunlit');
+  document.getElementById('phIcon').textContent = eclipse ? '🌑' : '☀️';
+  document.getElementById('phName').textContent = eclipse ? 'ECLIPSE PASS' : 'SUNLIT PASS';
+  document.getElementById('phDesc').textContent = eclipse ? `Bat ${batSOC.toFixed(0)}% SOC — discharge` : `Solar arrays ${solarPwr.toFixed(0)} kW`;
+  document.getElementById('phTimer').textContent = `${p2(pm)}:${p2(ps2)}`;
+
+  // Power gauges
+  document.getElementById('rSolar').innerHTML = `${solarPwr.toFixed(0)}<span class="mg-u">kW</span>`;
+  document.getElementById('rSolarBar').style.width = Math.min(100, solarPwr / Math.max(1, peakSolar) * 100) + '%';
+  document.getElementById('rBat').innerHTML = `${batSOC.toFixed(0)}<span class="mg-u">%</span>`;
+  document.getElementById('rBatBar').style.width = batSOC + '%';
+  document.getElementById('rBatBar').style.background = batSOC < 25 ? 'linear-gradient(90deg,#ff2244,#ff6600)' : 'linear-gradient(90deg,#39ff14,#00d4ff)';
+  document.getElementById('rRadP').innerHTML = `${radPwr.toFixed(0)}<span class="mg-u">kW</span>`;
+  document.getElementById('rRadBar').style.width = Math.min(100, radPwr / 500 * 100) + '%';
+  document.getElementById('ffSolar').textContent = eclipse ? '0 kW' : `+${solarPwr.toFixed(0)} kW`;
+  document.getElementById('ffBat').textContent = eclipse ? `DIS −${Math.round(computeLoad)}kW (${batSOC.toFixed(0)}%)` : `CHG +${Math.max(0, Math.floor((solarPwr - computeLoad) * 0.3))}kW`;
+  document.getElementById('ffRad').textContent = `−${radPwr.toFixed(0)} kW`;
+  document.getElementById('ffComp').textContent = `−${Math.round(computeLoad)} kW`;
+
+  // Compute gauges
+  document.getElementById('rFlops').innerHTML = `${flops.toFixed(1)}<span class="mg-u">EF</span>`;
+  document.getElementById('rFlopsBar').style.width = (flops / 15 * 100) + '%';
+  document.getElementById('rGpu').innerHTML = `${gpu}<span class="mg-u">%</span>`;
+  document.getElementById('rGpuBar').style.width = gpu + '%';
+  document.getElementById('rGpuT').innerHTML = `${gpuTemp.toFixed(0)}<span class="mg-u">°C</span>`;
+  document.getElementById('rGpuTBar').style.width = ((gpuTemp - 20) / 80 * 100) + '%';
+
+  // Pane headers
+  document.getElementById('phSolarOut').textContent = `${solarPwr.toFixed(0)}kW`;
+  document.getElementById('phIrr').textContent = eclipse ? '0W/m²' : '1367W/m²';
+  document.getElementById('phArrTemp').textContent = `${arrTemp.toFixed(0)}°C`;
+  document.getElementById('phEff').textContent = eclipse ? '0%' : `${(tech.eff * 100).toFixed(1)}%`;
+  document.getElementById('phQrad').textContent = `${radPwr.toFixed(0)}kW`;
+  document.getElementById('phTsurf').textContent = `${radSurfT.toFixed(0)}°C`;
+  document.getElementById('phDeltaT').textContent = eclipse ? '25°C' : `${cool.tIn - cool.tOut}°C`;
+  document.getElementById('specTin').textContent = eclipse ? '50°C' : `${cool.tIn}°C`;
+  document.getElementById('specTout').textContent = eclipse ? '25°C' : `${cool.tOut}°C`;
+
+  // Header stats
+  document.getElementById('hSolar').textContent = `${solarPwr.toFixed(0)}kW`;
+  document.getElementById('hRad').textContent = `${radPwr.toFixed(0)}kW`;
+  document.getElementById('hBat').textContent = `${batSOC.toFixed(0)}%`;
+  document.getElementById('hGpuT').textContent = `${gpuTemp.toFixed(0)}°C`;
+
+  // MET
+  const h = Math.floor(metSeconds / 3600), m2 = Math.floor((metSeconds % 3600) / 60), s3 = Math.floor(metSeconds % 60);
+  document.getElementById('met').textContent = `T+${String(h).padStart(3, '0')}:${p2(m2)}:${p2(s3)}`;
+  document.getElementById('orbitNum').textContent = orbitCount;
+
+  // System status
+  const se = document.getElementById('sysStatus');
+  if (gpuTemp > 95) { se.textContent = '▲ GPU OVERHEAT'; se.style.color = 'var(--danger)'; }
+  else if (radPwr < heatLoad * 0.8 && !eclipse) { se.textContent = '▲ THERMAL DEFICIT'; se.style.color = 'var(--danger)'; }
+  else if (batSOC < 20) { se.textContent = '▲ LOW BATTERY'; se.style.color = 'var(--danger)'; }
+  else if (eclipse) { se.textContent = '◉ ECLIPSE MODE'; se.style.color = '#6688ff'; }
+  else { se.textContent = '● NOMINAL'; se.style.color = 'var(--accent3)'; }
+
+  // Bottom bar
+  const raan = (156.3 + (metSeconds / 86400) * 0.9856) % 360;
+  document.getElementById('bbRaan').textContent = raan.toFixed(1) + '°';
+  document.getElementById('bbTa').textContent = ((angle * 180 / Math.PI) % 360).toFixed(1) + '°';
+  document.getElementById('bbSun').textContent = (2.3 + Math.sin(simTime * 0.0001) * 0.5).toFixed(1) + '°';
+  document.getElementById('bbEnergy').textContent = (batSOC * 14).toFixed(0) + ' kWh';
+  document.getElementById('bbOrbit').textContent = `#${orbitCount}`;
+
+  // Draw all canvases
+  drawOrbit(eclipse); drawDetail(eclipse); drawSolarArray(eclipse); drawRadiator(eclipse); drawTrend();
+}
+
+function setSpeed(s) {
+  speed = s;
+  document.querySelectorAll('.spbtn').forEach(b => b.classList.toggle('active', b.textContent === s + '×'));
+}
+
+function animate(ts) { resizeAll(); drawStars(); update(ts); requestAnimationFrame(animate); }
+
+// --- Initialization ---
+window.addEventListener('resize', () => { initStars(); resizeAll(); });
+initStars(); resizeAll();
+setupDTControls();
+updateCellTechDisplay();
+updateCoolantDisplay();
+updateWorkloadDisplay();
+updateDTSummary();
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>

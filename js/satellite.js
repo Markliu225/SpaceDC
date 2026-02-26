@@ -104,7 +104,9 @@ function drawDetail(eclipse) {
   dX.font = '7px Share Tech Mono'; dX.fillStyle = 'rgba(0,180,255,0.3)';
   dX.fillText(eclipse ? 'ECLIPSE — Battery Discharge Active' : 'SUNLIT — Solar Arrays at Peak Output', W / 2, 32);
   dX.textAlign = 'left';
-  const sc = Math.min(W, H) * 0.0035;
+  // Auto-scale detail view: shrink when many wings/panels to stay within canvas
+  const maxExtent = Math.max(wingCount, radCount);
+  const sc = Math.min(W, H) * 0.0035 * Math.max(0.35, 1.0 / (1 + maxExtent * 0.035));
   const yB = H / 2 + 15;
   drawSatIcon(dX, W / 2, yB, Math.PI / 2, eclipse, sc);
 

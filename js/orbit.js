@@ -4,7 +4,7 @@
 
 function drawOrbit(eclipse) {
   const W = oC.width, H = oC.height, cx = W * 0.46, cy = H * 0.5;
-  const earthR = Math.min(W, H) * 0.18, orbitR = earthR * 2.1;
+  const earthR = Math.min(W, H) * 0.28, orbitR = earthR * 1.7;
   oX.clearRect(0, 0, W, H);
 
   // Background glow
@@ -61,7 +61,7 @@ function drawOrbit(eclipse) {
   const atG = oX.createRadialGradient(cx, cy, earthR * 0.88, cx, cy, earthR * 1.12);
   atG.addColorStop(0, 'rgba(60,140,255,0.3)'); atG.addColorStop(1, 'rgba(20,80,200,0)');
   oX.beginPath(); oX.arc(cx, cy, earthR * 1.12, 0, Math.PI * 2); oX.fillStyle = atG; oX.fill();
-  oX.fillStyle = 'rgba(100,200,100,0.5)'; oX.font = 'bold 9px Orbitron'; oX.textAlign = 'center';
+  oX.fillStyle = 'rgba(100,200,100,0.5)'; oX.font = 'bold 11px Orbitron'; oX.textAlign = 'center';
   oX.fillText('EARTH', cx, cy + 4); oX.textAlign = 'left';
 
   // Orbital trail
@@ -74,12 +74,15 @@ function drawOrbit(eclipse) {
   // Satellite position
   const angle = getAngle(simTime);
   const satX = cx + Math.cos(angle) * orbitR, satY = cy + Math.sin(angle) * orbitR;
+  // Satellite icon scale: shrink as wing/rad count grows to avoid overwhelming the orbit view
+  const satScale = Math.max(0.5, 1.2 / (1 + Math.max(wingCount, radCount) * 0.04));
   if (!eclipse) {
-    const halo = oX.createRadialGradient(satX, satY, 0, satX, satY, 35);
+    const haloR = 20 * satScale + 8;
+    const halo = oX.createRadialGradient(satX, satY, 0, satX, satY, haloR);
     halo.addColorStop(0, 'rgba(0,212,255,0.22)'); halo.addColorStop(1, 'rgba(0,212,255,0)');
-    oX.beginPath(); oX.arc(satX, satY, 35, 0, Math.PI * 2); oX.fillStyle = halo; oX.fill();
+    oX.beginPath(); oX.arc(satX, satY, haloR, 0, Math.PI * 2); oX.fillStyle = halo; oX.fill();
   }
-  drawSatIcon(oX, satX, satY, angle, eclipse, 1.9);
+  drawSatIcon(oX, satX, satY, angle, eclipse, satScale);
 
   // Downlink beam
   if (!eclipse && Math.random() > 0.5) {
