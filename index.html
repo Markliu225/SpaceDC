@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ORBITAL DC-1 · Space Data Center Simulator · Digital Twin</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<canvas id="starfield"></canvas>
+
+<div class="header">
+  <div class="logo">ORBITAL<span>·</span>DC·1 <span style="font-size:8px;color:var(--dim)">1MW SPACE DATA CENTER · SSO 550km · i=97.6° · <span style="color:var(--accent2)">DIGITAL TWIN</span></span></div>
+  <div class="hdr-stats">
+    <div class="hs"><span class="hs-l">MET</span><span class="hs-v" id="met">T+000:00:00</span></div>
+    <div class="hs"><span class="hs-l">Orbit</span><span class="hs-v" id="orbitNum">1</span></div>
+    <div class="hs"><span class="hs-l">Solar</span><span class="hs-v" id="hSolar">1400kW</span></div>
+    <div class="hs"><span class="hs-l">Radiator</span><span class="hs-v" id="hRad">400kW</span></div>
+    <div class="hs"><span class="hs-l">Bat SOC</span><span class="hs-v" id="hBat">87%</span></div>
+    <div class="hs"><span class="hs-l">GPU Temp</span><span class="hs-v" id="hGpuT">84°C</span></div>
+    <div class="hs"><span class="hs-l">Status</span><span class="hs-v blink" id="sysStatus" style="color:var(--accent3)">● NOMINAL</span></div>
+  </div>
+</div>
+
+<div class="outer">
+  <div class="left-main">
+
+    <!-- Q1: ORBIT SIMULATION -->
+    <div class="quad">
+      <div class="qlabel">SUN-SYNCHRONOUS ORBIT · 550 km · i=97.6°</div>
+      <canvas id="orbitCanvas"></canvas>
+    </div>
+
+    <!-- Q2: SATELLITE DETAIL -->
+    <div class="quad">
+      <div class="qlabel" style="color:rgba(0,200,255,0.5)">SPACECRAFT DETAIL · SOLAR PANELS + RADIATORS</div>
+      <canvas id="detailCanvas"></canvas>
+    </div>
+
+    <!-- Q3: SOLAR ARRAY -->
+    <div class="quad">
+      <div class="pane-bar">
+        <div class="pbar-title" id="solarPaneTitle">☀ Solar Array · 8 Wings · InGaP/GaAs/Ge Triple-Junction</div>
+        <div class="pbar-stats">
+          <span><span class="pbs-l">Out: </span><span class="pbs-v" id="phSolarOut">1400kW</span></span>
+          <span><span class="pbs-l">Irr: </span><span class="pbs-v" id="phIrr">1367W/m²</span></span>
+          <span><span class="pbs-l">Temp: </span><span class="pbs-v" id="phArrTemp">72°C</span></span>
+          <span><span class="pbs-l">Eff: </span><span class="pbs-v" id="phEff">29.5%</span></span>
+        </div>
+      </div>
+      <div class="solar-canvas-wrap"><canvas id="solarArrayCanvas"></canvas></div>
+      <div class="spec-panel">
+        <div class="seclbl">Wing Status</div>
+        <table class="cell-t" id="wingTable">
+          <tr><th>Wing</th><th>kW</th><th>T°C</th><th>St</th></tr>
+        </table>
+        <div class="seclbl" style="margin-top:5px">Cell Tech</div>
+        <table class="cell-t" id="cellTechTable">
+          <tr><td>Type</td><td class="ok" id="ctType">TJ InGaP/GaAs/Ge</td></tr>
+          <tr><td>BOL Eff</td><td id="ctBOL">32.0%</td></tr>
+          <tr><td>EOL Eff</td><td class="wn" id="ctEOL">28.8%</td></tr>
+          <tr><td>Voc</td><td id="ctVoc">2.67V/cell</td></tr>
+          <tr><td>T-coef</td><td id="ctTcoef">-0.20%/°C</td></tr>
+          <tr><td>RadTol</td><td class="ok" id="ctRadTol">1e15 e/cm²</td></tr>
+          <tr><td>Total A</td><td id="ctArea">2800 m²</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Q4: RADIATOR -->
+    <div class="quad" style="border-right:none;">
+      <div class="pane-bar">
+        <div class="pbar-title r" id="radPaneTitle">🌡 Radiative Cooling · 6 Panels · Ammonia VCHP Heat Pipes</div>
+        <div class="pbar-stats">
+          <span><span class="pbs-l">Q: </span><span class="pbs-v" id="phQrad">400kW</span></span>
+          <span><span class="pbs-l">T_surf: </span><span class="pbs-v" id="phTsurf">58°C</span></span>
+          <span><span class="pbs-l">ΔT: </span><span class="pbs-v" id="phDeltaT">40°C</span></span>
+          <span><span class="pbs-l">ε=</span><span class="pbs-v" id="phEpsDisp">0.92</span></span>
+        </div>
+      </div>
+      <div class="rad-canvas-wrap"><canvas id="radiatorCanvas"></canvas></div>
+      <div class="spec-panel">
+        <div class="seclbl">Panel Status</div>
+        <table class="cell-t" id="radPanelTable">
+          <tr><th>Panel</th><th>T°C</th><th>kW</th><th>St</th></tr>
+        </table>
+        <div class="seclbl" style="margin-top:5px">Cooling Arch</div>
+        <table class="cell-t" id="coolingArchTable">
+          <tr><td>Fluid</td><td class="ok" id="caFluid">NH₃ 2-phase</td></tr>
+          <tr><td>Type</td><td id="caType">VCHP</td></tr>
+          <tr><td>Area</td><td id="caArea">860 m²</td></tr>
+          <tr><td>Flow</td><td id="caFlow">4.2 kg/s</td></tr>
+          <tr><td>T_in</td><td id="specTin">85°C</td></tr>
+          <tr><td>T_out</td><td id="specTout">45°C</td></tr>
+          <tr><td>TIM</td><td class="ok">Liq.Metal</td></tr>
+          <tr><td>T_sink</td><td class="ok">2.7 K</td></tr>
+          <tr><td>Law</td><td>Q=ε·σ·A·T⁴</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Q5: TREND CHART — spans both columns -->
+    <div class="trend-pane">
+      <div class="trend-label">📈 REAL-TIME TREND · DIGITAL TWIN TELEMETRY</div>
+      <div class="trend-legend">
+        <div class="tleg"><div class="tleg-dot" style="background:#ffe066"></div><span style="color:#ffe066">Solar kW</span></div>
+        <div class="tleg"><div class="tleg-dot" style="background:#ff6b00"></div><span style="color:#ff6b00">Bat SOC%</span></div>
+        <div class="tleg"><div class="tleg-dot" style="background:#ff4400"></div><span style="color:#ff4400">Rad kW</span></div>
+        <div class="tleg"><div class="tleg-dot" style="background:#00d4ff"></div><span style="color:#00d4ff">GPU °C</span></div>
+      </div>
+      <canvas id="trendCanvas"></canvas>
+    </div>
+
+  </div><!-- end left-main -->
+
+  <!-- RIGHT SIDEBAR -->
+  <div class="rsidebar">
+
+    <div class="psec">
+      <div class="ptitle">Orbital Phase</div>
+      <div id="phaseBox" class="phase-box phase-sunlit">
+        <div class="ph-icon" id="phIcon">☀️</div>
+        <div>
+          <div class="ph-name" id="phName">SUNLIT PASS</div>
+          <div class="ph-desc" id="phDesc">Solar arrays 1400 kW</div>
+        </div>
+      </div>
+      <div style="display:flex;height:11px;border-radius:2px;overflow:hidden;border:1px solid var(--border);">
+        <div style="flex:0.64;background:linear-gradient(90deg,#ffe066,#ff9900);display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;font-size:6px;color:#000;">☀ 64%</div>
+        <div style="flex:0.36;background:linear-gradient(90deg,#1a2040,#060c18);display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;font-size:6px;color:#6688ff;">● 36%</div>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:15px;color:var(--accent);text-align:center;padding:4px 0;" id="phTimer">00:00</div>
+    </div>
+
+    <div class="psec">
+      <div class="ptitle">Power System</div>
+      <div class="mgrid">
+        <div class="mg"><div class="mg-l">Solar</div>
+          <div class="mg-v" id="rSolar">1400<span class="mg-u">kW</span></div>
+          <div class="mbar"><div class="mfill" id="rSolarBar" style="width:100%;background:linear-gradient(90deg,#ffe066,#ff9900)"></div></div></div>
+        <div class="mg"><div class="mg-l">Bat SOC</div>
+          <div class="mg-v" id="rBat">87<span class="mg-u">%</span></div>
+          <div class="mbar"><div class="mfill" id="rBatBar" style="width:87%;background:linear-gradient(90deg,#39ff14,#00d4ff)"></div></div></div>
+        <div class="mg"><div class="mg-l">Radiator</div>
+          <div class="mg-v" id="rRadP">400<span class="mg-u">kW</span></div>
+          <div class="mbar"><div class="mfill" id="rRadBar" style="width:80%;background:linear-gradient(90deg,#ff4400,#ffaa00)"></div></div></div>
+        <div class="mg"><div class="mg-l">PUE</div>
+          <div class="mg-v">1.08</div>
+          <div class="mbar"><div class="mfill" style="width:92%;background:var(--accent3)"></div></div></div>
+      </div>
+      <div style="margin-top:5px;">
+        <div class="frow sol"><span class="fl">☀ Solar Arrays</span><span class="fv" id="ffSolar">+1400 kW</span></div>
+        <div class="frow bat"><span class="fl">⚡ Battery 1.4MWh</span><span class="fv" id="ffBat">CHG +380kW</span></div>
+        <div class="frow cmp"><span class="fl">🖥 H100 × 5120</span><span class="fv">−1000 kW</span></div>
+        <div class="frow rad2"><span class="fl">🌡 Radiator Panels</span><span class="fv" id="ffRad">−400 kW</span></div>
+      </div>
+    </div>
+
+    <div class="psec">
+      <div class="ptitle">Compute</div>
+      <div class="mgrid">
+        <div class="mg"><div class="mg-l">FLOPS</div>
+          <div class="mg-v" id="rFlops">12.8<span class="mg-u">EF</span></div>
+          <div class="mbar"><div class="mfill" id="rFlopsBar" style="width:85%"></div></div></div>
+        <div class="mg"><div class="mg-l">GPU Util</div>
+          <div class="mg-v" id="rGpu">94<span class="mg-u">%</span></div>
+          <div class="mbar"><div class="mfill" id="rGpuBar" style="width:94%;background:linear-gradient(90deg,#8844ff,var(--accent))"></div></div></div>
+        <div class="mg"><div class="mg-l">GPU Temp</div>
+          <div class="mg-v" id="rGpuT">84<span class="mg-u">°C</span></div>
+          <div class="mbar"><div class="mfill" id="rGpuTBar" style="width:60%;background:linear-gradient(90deg,#00bfff,#ff4444)"></div></div></div>
+        <div class="mg"><div class="mg-l">Downlink</div>
+          <div class="mg-v">12<span class="mg-u">Gbps</span></div>
+          <div class="mbar"><div class="mfill" style="width:60%"></div></div></div>
+      </div>
+    </div>
+
+    <!-- DIGITAL TWIN CONTROLS -->
+    <div class="psec">
+      <div class="ptitle dt">Digital Twin Controls</div>
+
+      <!-- Solar Array Config -->
+      <div class="dt-group">
+        <div class="dt-group-title"><em class="ico">☀</em> SOLAR ARRAY CONFIG</div>
+        <div class="dt-row">
+          <span class="dt-label">Wings</span>
+          <input type="range" class="dt-slider solar-s" id="slWingCount" min="2" max="12" step="1" value="8">
+          <span class="dt-val" id="valWingCount">8</span>
+        </div>
+        <div class="dt-row">
+          <span class="dt-label">Area/W</span>
+          <input type="range" class="dt-slider solar-s" id="slWingArea" min="100" max="500" step="10" value="350">
+          <span class="dt-val" id="valWingArea">350m²</span>
+        </div>
+        <div class="dt-row">
+          <span class="dt-label">Cell</span>
+          <select class="dt-select" id="selCellTech">
+            <option value="tj" selected>TJ InGaP/GaAs/Ge (29.5%)</option>
+            <option value="imm4j">4J IMM (34.0%)</option>
+            <option value="perov">Perovskite Tandem (26.0%)</option>
+            <option value="si">Silicon PERC (22.0%)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Radiator Config -->
+      <div class="dt-group">
+        <div class="dt-group-title"><em class="ico">🌡</em> RADIATOR CONFIG</div>
+        <div class="dt-row">
+          <span class="dt-label">Panels</span>
+          <input type="range" class="dt-slider rad-s" id="slRadCount" min="2" max="10" step="1" value="6">
+          <span class="dt-val" id="valRadCount">6</span>
+        </div>
+        <div class="dt-row">
+          <span class="dt-label">Area/P</span>
+          <input type="range" class="dt-slider rad-s" id="slRadArea" min="50" max="300" step="5" value="143">
+          <span class="dt-val" id="valRadArea">143m²</span>
+        </div>
+        <div class="dt-row">
+          <span class="dt-label">ε</span>
+          <input type="range" class="dt-slider rad-s" id="slEpsilon" min="50" max="98" step="1" value="92">
+          <span class="dt-val" id="valEpsilon">0.92</span>
+        </div>
+        <div class="dt-row">
+          <span class="dt-label">Fluid</span>
+          <select class="dt-select" id="selCoolant">
+            <option value="nh3" selected>NH₃ (Ammonia)</option>
+            <option value="propylene">Propylene</option>
+            <option value="r134a">R-134a</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Impact Summary -->
+      <div class="dt-summary" id="dtSummary">
+        <div>Total Solar Area: <span class="val" id="dsSolarArea">2800 m²</span> · Peak: <span class="val" id="dsPeakPwr">1400 kW</span></div>
+        <div>Total Rad Area: <span class="val" id="dsRadArea">860 m²</span> · Peak Q: <span class="val" id="dsPeakQ">400 kW</span></div>
+        <div>Energy Balance: <span class="val" id="dsBalance">+400 kW surplus</span></div>
+      </div>
+    </div>
+
+    <div class="psec">
+      <div class="ptitle">Simulation Control</div>
+      <div class="seclbl">Time Acceleration</div>
+      <div class="spctrl">
+        <button class="spbtn" onclick="setSpeed(1)">1×</button>
+        <button class="spbtn active" onclick="setSpeed(60)">60×</button>
+        <button class="spbtn" onclick="setSpeed(300)">300×</button>
+        <button class="spbtn" onclick="setSpeed(600)">600×</button>
+      </div>
+    </div>
+
+    <div class="psec">
+      <div class="ptitle">Mission Cost</div>
+      <table class="ctab" id="costTable">
+        <tr><th>Component</th><th>Cost</th></tr>
+        <tr><td>🚀 Launch (Starship)</td><td>$120M</td></tr>
+        <tr><td>🛰 Spacecraft Bus</td><td>$85M</td></tr>
+        <tr><td>☀ Solar Arrays TJ</td><td id="costSolar">$65M</td></tr>
+        <tr><td>⚡ Battery 1.4MWh</td><td>$42M</td></tr>
+        <tr><td>🌡 Radiator+VCHP</td><td id="costRad">$28M</td></tr>
+        <tr><td>🖥 H100×5120</td><td>$256M</td></tr>
+        <tr><td>📡 Optical Downlink</td><td>$38M</td></tr>
+        <tr><td>🔧 Ground Segment</td><td>$22M</td></tr>
+        <tr><td>🛠 AIT</td><td>$45M</td></tr>
+        <tr><td>📋 Insurance</td><td>$80M</td></tr>
+        <tr class="tot"><td>TOTAL CAPEX</td><td id="costTotal">$781M</td></tr>
+        <tr><td>OPEX/yr</td><td>$38M</td></tr>
+        <tr><td>Revenue</td><td>~$420M/yr</td></tr>
+        <tr class="tot"><td>Break-even</td><td id="costBreakeven">~4.2 yrs</td></tr>
+      </table>
+    </div>
+
+    <div class="psec">
+      <div class="ptitle">Telemetry Log</div>
+      <div class="tlog" id="telemLog">
+        <div class="ok">[BOOT] ORBITAL DC-1 Digital Twin initialized.</div>
+        <div class="info">[SYS] SSO 550km i=97.6° acquired.</div>
+        <div class="ok">[PWR] 8 solar wings online. 1400kW.</div>
+        <div class="ok">[THERM] 6 radiators active. 400kW.</div>
+        <div class="info">[COMP] 5120×H100. 12.8 ExaFLOPS.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="botbar">
+  <div class="bb"><span class="bbk">VEL</span><span class="bbv">7.61 km/s</span></div>
+  <div class="bb"><span class="bbk">ALT</span><span class="bbv">550 km</span></div>
+  <div class="bb"><span class="bbk">PERIOD</span><span class="bbv">95.7 min</span></div>
+  <div class="bb"><span class="bbk">INCL</span><span class="bbv">97.6°</span></div>
+  <div class="bb"><span class="bbk">RAAN</span><span class="bbv" id="bbRaan">156.3°</span></div>
+  <div class="bb"><span class="bbk">TA</span><span class="bbv" id="bbTa">0.0°</span></div>
+  <div class="bb"><span class="bbk">SUN β</span><span class="bbv" id="bbSun">2.3°</span></div>
+  <div class="bb"><span class="bbk">ENERGY</span><span class="bbv" id="bbEnergy">1218 kWh</span></div>
+  <div class="bb"><span class="bbk">ORBIT</span><span class="bbv" id="bbOrbit">#1</span></div>
+</div>
+
+<!-- ============================================================
+     Module scripts — loaded in dependency order
+     ============================================================ -->
+<script src="js/constants.js"></script>
+<script src="js/state.js"></script>
+<script src="js/telemetry.js"></script>
+<script src="js/starfield.js"></script>
+<script src="js/canvas.js"></script>
+<script src="js/satellite.js"></script>
+<script src="js/orbit.js"></script>
+<script src="js/solar-array.js"></script>
+<script src="js/radiator.js"></script>
+<script src="js/trend-chart.js"></script>
+<script src="js/dt-controls.js"></script>
+<script src="js/simulation.js"></script>
+</body>
+</html>

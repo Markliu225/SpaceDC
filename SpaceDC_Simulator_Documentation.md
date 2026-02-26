@@ -1310,6 +1310,570 @@ $$SOC_{new} = \begin{cases} \max(10, \; SOC - 0.85 \cdot \Delta t / 60) & \text{
 
 ---
 
-> **文档生成时间**: 2026-02-26  
-> **文档适用版本**: Space Data Center Simulator v3  
-> **文件**: `space_dc_simulator_v3.html` (828 行)
+---
+
+# ORBITAL DC-1 · Space Data Center Simulator v4 — Digital Twin 扩展功能文档
+
+> **文件**: `space_dc_simulator_v4.html`  
+> **版本**: v4 (基于 v3 扩展)  
+> **新增特性**: 5 项数字孪生 (Digital Twin) 功能  
+> **代码行数**: ~900+ 行
+
+---
+
+## 9. v4 新增功能总览
+
+v4 在 v3 的基础上新增了 **5 项数字孪生核心功能**，将静态演示升级为可交互调参的工程仿真平台：
+
+| # | 功能名称 | 控制方式 | 影响范围 |
+|---|----------|----------|----------|
+| 1 | 散热器材料编辑器 | ε 滑块 + 冷却剂下拉 | 散热功率、GPU 温度、能量平衡 |
+| 2 | 太阳能翼数量/面积调节 | 翼数滑块 + 面积滑块 | 发电功率、电池充电速率、Canvas 布局 |
+| 3 | 太阳能电池技术选择 | 下拉菜单 (4 种技术) | 发电效率、温度系数、成本 |
+| 4 | 散热器面板数量/面积调节 | 面板数滑块 + 面积滑块 | 散热能力、GPU 温度、Canvas 布局 |
+| 5 | 实时趋势图 | 自动绘制，底部全宽 | Solar/Bat/Rad/GPU 四通道时序 |
+
+---
+
+## 10. 功能 1：散热器材料编辑器 (Radiator Material Editor)
+
+### 10.1 功能描述
+
+用户可在右侧 "Digital Twin Controls" 面板中调整：
+- **发射率 ε (Emissivity)**：通过滑块在 0.50 ~ 0.98 之间调节
+- **冷却剂类型**：通过下拉菜单选择 NH₃ / Propylene / R-134a
+
+### 10.2 实现原理
+
+#### 10.2.1 Stefan-Boltzmann 辐射定律
+
+散热器的辐射散热功率由 Stefan-Boltzmann 定律决定：
+
+$$Q_{rad} = \varepsilon \cdot \sigma \cdot A \cdot F_v \cdot (T_{surf}^4 - T_{space}^4)$$
+
+其中：
+- $\varepsilon$ — 表面发射率 (用户可调，0.50~0.98)
+- $\sigma = 5.67 \times 10^{-8} \text{ W/m²·K⁴}$ — Stefan-Boltzmann 常数
+- $A$ — 散热面板面积 (m²)
+- $F_v$ — 视角因子 (view factor)，取 0.85~0.95
+- $T_{surf}$ — 面板表面温度 (K)
+- $T_{space} = 2.7 \text{ K}$ — 深空背景温度 (宇宙微波背景辐射)
+
+当用户调高 ε 时，$Q_{rad}$ 直接线性增大，散热能力增强 → GPU 温度降低。
+
+#### 10.2.2 冷却剂热容因子
+
+不同冷却剂通过 `heatCapFactor` 系数影响有效散热功率：
+
+| 冷却剂 | 名称 | 流量 (kg/s) | 入口温度 (°C) | 出口温度 (°C) | 热容因子 |
+|--------|------|-------------|---------------|---------------|----------|
+| NH₃ | 氨 (两相) | 4.2 | 85 | 45 | 1.00 |
+| Propylene | 丙烯 (单相) | 5.8 | 80 | 50 | 0.72 |
+| R-134a | R-134a (两相) | 6.1 | 78 | 48 | 0.85 |
+
+有效散热功率 = $Q_{rad} \times \text{heatCapFactor}$
+
+NH₃ 两相循环因利用蒸发潜热具有最高热传递效率；丙烯作为单相流体依赖显热传递，效率较低。
+
+### 10.3 代码实现
+
+```javascript
+// 冷却剂数据库
+const COOLANTS={
+  nh3:       {name:'NH₃ 2-phase', flow:4.2, tIn:85, tOut:45, heatCapFactor:1.0},
+  propylene: {name:'Propylene 1-phase', flow:5.8, tIn:80, tOut:50, heatCapFactor:0.72},
+  r134a:     {name:'R-134a 2-phase', flow:6.1, tIn:78, tOut:48, heatCapFactor:0.85},
+};
+
+// ε 滑块事件
+slEps.addEventListener('input', () => {
+  radEpsilon = parseInt(slEps.value) / 100;
+  radPanels.forEach(p => p.emissivity = radEpsilon);
+});
+
+// 实际散热计算 (updateRadTable)
+p.qRad = (p.emissivity * SIGMA * p.area * p.viewFactor * (T**4 - 2.7**4)) / 1000 * cool.heatCapFactor;
+```
+
+### 10.4 对系统的影响
+
+- **ε 增大** → 散热功率增大 → GPU 温度降低 → 系统更健康
+- **ε 降低** → 散热不足 → GPU 温度升高 → 可能触发 "GPU OVERHEAT" 告警
+- **切换冷却剂** → 改变入/出口温度差、流量、以及有效散热比例
+
+---
+
+## 11. 功能 2：太阳能翼数量/面积调节 (Solar Wing Configuration)
+
+### 11.1 功能描述
+
+- **翼数量 (Wing Count)**：滑块调节 2~12 片翼
+- **单翼面积 (Area per Wing)**：滑块调节 100~500 m²
+
+### 11.2 实现原理
+
+#### 11.2.1 太阳能发电功率模型
+
+每片翼的输出功率为：
+
+$$P_{wing} = A_{wing} \times G_{SC} \times \eta_{cell} \times [1 - \alpha_T \cdot (T_{cell} - 25)]$$
+
+其中：
+- $A_{wing}$ — 单翼面积 (m²)，用户可调
+- $G_{SC} = 1367 \text{ W/m²}$ — 太阳常数 (AM0)
+- $\eta_{cell}$ — 电池片效率 (由电池技术决定)
+- $\alpha_T$ — 温度功率系数 (°C⁻¹)
+- $T_{cell}$ — 电池工作温度 (°C)
+- 25°C — 标准测试条件 (STC) 参考温度
+
+总发电功率 = $\sum_{i=1}^{N} P_{wing,i}$，其中 $N$ 为翼数量。
+
+#### 11.2.2 动态数组重建
+
+调节翼数时，`rebuildWings()` 函数会销毁旧数组并创建新数组：
+
+```javascript
+function rebuildWings() {
+  const tech = CELL_TECHS[currentCellTech];
+  wings = Array.from({length: wingCount}, (_, i) => ({
+    id: i+1, name: `W${String.fromCharCode(65+(i%26))}`,
+    cells: 240, area: wingArea,
+    temp: 65 + Math.random()*10,
+    efficiency: tech.eff + (Math.random()-0.5)*0.005,
+    output: 0
+  }));
+}
+```
+
+#### 11.2.3 自适应 Canvas 网格布局
+
+太阳能阵列 Canvas 的网格布局根据翼数量动态计算：
+
+```javascript
+let cols = Math.ceil(Math.sqrt(n));  // n = wings.length
+let rows = Math.ceil(n / cols);
+const cellW = (W - 2*margin - (cols-1)*gap) / cols;
+const cellH = (H - 2*margin - (rows-1)*gap) / rows;
+```
+
+| 翼数 | 列数 | 行数 | 布局 |
+|------|------|------|------|
+| 2 | 2 | 1 | 2×1 |
+| 4 | 2 | 2 | 2×2 |
+| 6 | 3 | 2 | 3×2 |
+| 8 | 3 | 3 | 3×3 (最后行不满) |
+| 12 | 4 | 3 | 4×3 |
+
+### 11.3 对系统的影响
+
+- **翼数增加** → 总面积增大 → 发电能力增强 → 电池充电更快
+- **面积增大** → 单翼功率增大 → 但成本 ($23k/m²) 也线性增加
+- 成本表中太阳能阵列成本自动更新：`costSolar = totalArea × 0.023` ($M)
+
+---
+
+## 12. 功能 3：太阳能电池技术选择 (Cell Technology Selection)
+
+### 12.1 功能描述
+
+通过下拉菜单在 4 种电池技术间切换：
+
+| 技术 | 效率 η | BOL 效率 | EOL 效率 | Voc | 温度系数 | 辐射耐受 |
+|------|--------|----------|----------|-----|----------|----------|
+| **TJ InGaP/GaAs/Ge** (默认) | 29.5% | 32.0% | 28.8% | 2.67V | -0.20%/°C | 1×10¹⁵ e/cm² |
+| **4J IMM** | 34.0% | 36.8% | 33.2% | 3.42V | -0.18%/°C | 8×10¹⁴ e/cm² |
+| **Perovskite/Si Tandem** | 26.0% | 28.0% | 22.5% | 1.92V | -0.25%/°C | 5×10¹³ e/cm² |
+| **Silicon PERC** | 22.0% | 24.0% | 21.2% | 0.72V | -0.30%/°C | 1×10¹⁴ e/cm² |
+
+### 12.2 实现原理
+
+#### 12.2.1 多结太阳能电池效率差异
+
+- **三结 (TJ)**：InGaP (1.86eV) / GaAs (1.42eV) / Ge (0.67eV) 三层堆叠，各层吸收不同波段光谱
+- **四结倒生长 (4J IMM)**：额外增加 InGaAsP 层覆盖 1.0eV 带隙，理论效率更高但辐射退化稍快
+- **钙钛矿/硅叠层**：新兴技术，成本低但辐射耐受差，适合 LEO 短期任务
+- **单晶硅 PERC**：最成熟最便宜，但空间效率低，温度系数最大
+
+#### 12.2.2 温度功率去额系数 ($\alpha_T$)
+
+温度去额公式为：
+
+$$\text{Derating} = 1 - \alpha_T \cdot (T_{cell} - 25\text{°C})$$
+
+当电池温度从 25°C 升至 75°C 时：
+- TJ: 功率损失 = 0.002 × 50 = 10%
+- 4J IMM: 功率损失 = 0.0018 × 50 = 9%
+- Perovskite: 功率损失 = 0.0025 × 50 = 12.5%
+- Si PERC: 功率损失 = 0.003 × 50 = 15%
+
+这意味着 Si PERC 在轨道日照期（电池温度 ~75°C）的实际功率比 STC 标称低 15%。
+
+### 12.3 代码实现
+
+```javascript
+const CELL_TECHS = {
+  tj:    { name:'TJ InGaP/GaAs/Ge', eff:0.295, tcoef:0.002, ... },
+  imm4j: { name:'4J IMM', eff:0.340, tcoef:0.0018, ... },
+  perov: { name:'Perovskite/Si Tandem', eff:0.260, tcoef:0.0025, ... },
+  si:    { name:'Silicon PERC', eff:0.220, tcoef:0.003, ... },
+};
+
+// 切换时重建所有翼
+selCT.addEventListener('change', () => {
+  currentCellTech = selCT.value;
+  rebuildWings();
+  updateCellTechDisplay(); // 更新右侧 Cell Tech 表格
+  updateDTSummary();       // 更新 Impact Summary
+});
+```
+
+### 12.4 对系统的影响
+
+- **选择高效率电池** → 相同面积下发电更多 → 可以减少翼数以降低质量/成本
+- **选择低温度系数电池** → 高温下功率损失更小 → 日照期更稳定
+- **辐射耐受差的电池** (如 Perovskite) → EOL 效率退化严重 → 需要更大面积冗余
+
+---
+
+## 13. 功能 4：散热器面板数量/面积调节 (Radiator Panel Configuration)
+
+### 13.1 功能描述
+
+- **面板数量 (Panel Count)**：滑块调节 2~10 片
+- **单面板面积 (Area per Panel)**：滑块调节 50~300 m²
+
+### 13.2 实现原理
+
+与功能 2 类似，`rebuildRadPanels()` 函数动态创建散热面板数组：
+
+```javascript
+function rebuildRadPanels() {
+  radPanels = Array.from({length: radCount}, (_, i) => ({
+    id: i+1, area: radArea,
+    surfTemp: 55 + Math.random()*8,
+    emissivity: radEpsilon,
+    viewFactor: 0.85 + Math.random()*0.1,
+    qRad: 0
+  }));
+}
+```
+
+散热器 Canvas 布局为 N 列并排，自动适应面板数量：
+
+```javascript
+const panelW = (W - 2*margin - (n-1)*gap) / n;  // n = radPanels.length
+```
+
+### 13.3 散热能力 vs 计算热负荷
+
+系统设定计算热负荷为 ~1000 kW (5120 × H100 GPU)。GPU 温度模型：
+
+$$T_{GPU} = T_{base} + (1 - \theta) \times 25°C$$
+
+其中 $\theta = \min(1, \frac{Q_{rad,total}}{Q_{compute} \times 0.4})$ 为散热充裕度。
+
+- 当散热功率足够时 ($\theta = 1$)：GPU 温度正常 (~80°C)
+- 当散热不足时 ($\theta < 1$)：GPU 温度升高最多 25°C → 可达 105°C → 触发 OVERHEAT
+
+### 13.4 对系统的影响
+
+- **面板数减少** → 散热总面积减小 → GPU 温度上升 → 可能报警
+- **面板面积增大** → 单面板散热更强 → 但成本 ($33k/m²) 增加
+- 与功能 1 的 ε 和冷却剂联动：低 ε + 少面板 = 散热严重不足
+
+---
+
+## 14. 功能 5：实时趋势图 (Real-Time Trend Chart)
+
+### 14.1 功能描述
+
+在主视图区域底部新增一个全宽趋势图面板（跨两列，高度 160px），实时绘制 4 条时序曲线：
+
+| 通道 | 颜色 | 单位 | 归一化方法 |
+|------|------|------|------------|
+| Solar Power | 🟡 #ffe066 | kW | solar/peakSolar × 100% |
+| Battery SOC | 🟠 #ff6b00 | % | 原始值 (0-100%) |
+| Radiator Power | 🔴 #ff4400 | kW | rad/peakRad × 100% |
+| GPU Temperature | 🔵 #00d4ff | °C | (T-20)/(100-20) × 100% |
+
+### 14.2 实现原理
+
+#### 14.2.1 环形缓冲区 (Ring Buffer)
+
+使用 4 个独立数组存储历史数据，最大长度 `TREND_MAX = 600` 个数据点：
+
+```javascript
+const trendData = { solar: [], bat: [], rad: [], gpuT: [] };
+
+function pushTrend(solarPwr, radPwr, gpuTemp) {
+  trendData.solar.push(solarPwr);
+  trendData.bat.push(batSOC);
+  trendData.rad.push(radPwr);
+  trendData.gpuT.push(gpuTemp);
+  // 超过最大长度时移除最老的数据点
+  if (trendData.solar.length > TREND_MAX) {
+    trendData.solar.shift(); trendData.bat.shift();
+    trendData.rad.shift();   trendData.gpuT.shift();
+  }
+}
+```
+
+每 1 秒模拟时间采样一次 (`trendTimer` 累计)。
+
+#### 14.2.2 归一化与绘制
+
+所有 4 条曲线归一化到 0-100% 范围后绘制在同一坐标系中：
+
+```javascript
+const lines = [
+  {data: trendData.solar, color: '#ffe066', norm: v => v/peakSolar*100},
+  {data: trendData.bat,   color: '#ff6b00', norm: v => v},         // 已经是 %
+  {data: trendData.rad,   color: '#ff4400', norm: v => v/peakRad*100},
+  {data: trendData.gpuT,  color: '#00d4ff', norm: v => (v-20)/80*100},  // 20~100°C → 0~100%
+];
+```
+
+每条曲线绘制为 Canvas 折线，同时绘制发光效果 (glow) 增强可读性。
+
+#### 14.2.3 食段阴影
+
+当 Solar Power ≈ 0 时，在趋势图背景绘制蓝色竖条标识食段：
+
+```javascript
+if (trendData.solar[i] < 1) {
+  tX.fillStyle = 'rgba(0,20,80,0.15)';
+  tX.fillRect(x-0.5, padT, 1.5, gH);
+}
+```
+
+#### 14.2.4 布局调整
+
+主视图从 v3 的 2×2 网格改为 3 行布局：
+
+```css
+.left-main {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr 160px;  /* 新增第3行 */
+}
+
+.trend-pane {
+  grid-column: 1/3;  /* 跨两列 */
+}
+```
+
+### 14.3 趋势图的观察价值
+
+- **日照-食段交替**：清晰看到 Solar (黄) 方波切换 + Bat SOC (橙) 锯齿充放电
+- **散热波动**：Rad (红) 在食段因面板温度下降而功率降低
+- **GPU 温度响应**：调整散热参数后 GPU (蓝) 温度变化有滞后效应
+- **参数对比**：切换电池技术后立即在趋势图中看到发电功率的变化
+
+---
+
+## 15. Digital Twin 控制面板交互总览
+
+### 15.1 HTML 结构
+
+所有控件集中在右侧边栏的 `"Digital Twin Controls"` 区段内，分两组：
+
+```
+psec (Digital Twin Controls)
+├── dt-group (☀ SOLAR ARRAY CONFIG)
+│   ├── dt-row: Wings slider (2-12)
+│   ├── dt-row: Area/W slider (100-500 m²)
+│   └── dt-row: Cell tech dropdown (TJ/4J/Perov/Si)
+├── dt-group (🌡 RADIATOR CONFIG)
+│   ├── dt-row: Panels slider (2-10)
+│   ├── dt-row: Area/P slider (50-300 m²)
+│   ├── dt-row: ε slider (0.50-0.98)
+│   └── dt-row: Coolant dropdown (NH₃/Propylene/R-134a)
+└── dt-summary (Impact Summary)
+    ├── Total Solar Area + Peak Power
+    ├── Total Rad Area + Peak Q
+    └── Energy Balance (surplus/deficit)
+```
+
+### 15.2 CSS 样式
+
+新增的 Digital Twin 专用样式类：
+
+| 类名 | 用途 |
+|------|------|
+| `.dt-row` | 控件行布局 (label + slider + value) |
+| `.dt-label` | 控件标签 (7px, uppercase) |
+| `.dt-val` | 当前值显示 (9px, accent color) |
+| `.dt-slider` | 自定义滑块 (3px 高，圆形拇指) |
+| `.dt-slider.solar-s` | 太阳能色系拇指 (#ffe066) |
+| `.dt-slider.rad-s` | 散热器色系拇指 (#ff4400) |
+| `.dt-select` | 下拉选择框 (panel bg, accent text) |
+| `.dt-group` | 控件分组容器 (带边框) |
+| `.dt-summary` | 影响摘要面板 (淡蓝背景) |
+| `.ptitle.dt` | Digital Twin 标题 (橙色圆点) |
+
+### 15.3 事件绑定
+
+`setupDTControls()` 在初始化时绑定所有滑块/下拉的 `input`/`change` 事件。每次参数变更会触发：
+
+1. 更新对应的全局变量 (`wingCount`, `wingArea`, `radCount`, `radArea`, `radEpsilon`, etc.)
+2. 调用 `rebuildWings()` 或 `rebuildRadPanels()` 重建数据模型
+3. 调用 `updateDTSummary()` 更新影响摘要（含成本估算）
+4. 调用 `updateCellTechDisplay()` / `updateCoolantDisplay()` 更新详情表格
+5. 向遥测日志写入配置变更消息
+
+### 15.4 成本动态更新
+
+当用户调整面积时，Mission Cost 表格自动更新：
+
+```javascript
+const solarCost = Math.round(totalSolarArea * 0.023);  // $23k/m²
+const radCost = Math.round(totalRadArea * 0.033);       // $33k/m²
+const totalCost = 120 + 85 + solarCost + 42 + radCost + 256 + 38 + 22 + 45 + 80;
+const breakeven = totalCost / (revenue - opex);
+```
+
+---
+
+## 16. 物理模型补充（v4 新增）
+
+### 16.1 GPU 温度模型
+
+v4 引入了散热充裕度对 GPU 温度的影响：
+
+$$T_{GPU} = T_{base} + (1 - \theta) \times 25°C$$
+
+$$\theta = \min\left(1, \frac{Q_{rad,total}}{Q_{compute} \times 0.4}\right)$$
+
+其中：
+- $T_{base}$ — 基础 GPU 温度 (日照 ~80°C, 食段根据 SOC 调节)
+- $\theta$ — 散热充裕度因子 (0~1)
+- $Q_{compute} = 1000 \text{ kW}$ — 计算热负荷
+- 0.4 因子反映只有约 40% 计算热量需要通过辐射散出 (其余通过结构传导、MLI 等路径)
+
+### 16.2 能量平衡判定
+
+Impact Summary 面板显示能量平衡：
+
+$$\Delta P = P_{solar,peak} - P_{compute}$$
+
+- $\Delta P > 0$：系统有盈余，显示绿色 `+xxx kW surplus`
+- $\Delta P \leq 0$：系统亏损，显示红色 `−xxx kW DEFICIT`
+
+注意：此为日照期峰值估算。食段期间太阳能为零，完全依赖电池。
+
+---
+
+## 17. 完整参数交叉影响矩阵
+
+| 调节参数 | 发电功率 | 散热功率 | GPU温度 | 电池SOC | 成本 | 卫星外观 |
+|----------|----------|----------|---------|---------|------|----------|
+| ↑ Wing Count | ↑↑ | — | — | ↑ | ↑ | 翼片堆叠层数增加 |
+| ↑ Wing Area | ↑↑ | — | — | ↑ | ↑ | 翼片宽度增大 |
+| Cell Tech (高效) | ↑ | — | — | ↑ | — | — |
+| ↑ Rad Panel Count | — | ↑↑ | ↓↓ | — | ↑ | 散热面板堆叠层数增加 |
+| ↑ Rad Panel Area | — | ↑↑ | ↓↓ | — | ↑ | 散热面板高度增大 |
+| ↑ Emissivity ε | — | ↑ | ↓ | — | — | — |
+| Coolant (高效) | — | ↑ | ↓ | — | — | — |
+
+符号说明：↑↑ 强正相关 | ↑ 正相关 | ↓ 负相关 | ↓↓ 强负相关 | — 无直接影响
+
+---
+
+## 18. 功能 6：卫星3D模型动态跟随参数变化 (Satellite Visual Follows DT Parameters)
+
+### 18.1 功能描述
+
+当用户通过 Digital Twin Controls 调整太阳能翼数量/面积、散热器面板数量/面积时，**轨道视图和航天器详情视图中的卫星图标会实时跟随变化**：
+
+| 参数变化 | 视觉反馈 |
+|----------|----------|
+| 翼数量增加 | 每侧翼片堆叠层数增加（左/右各 ceil(N/2) 层） |
+| 翼面积增大 | 翼片宽度增大（100m²→短翼，500m²→宽翼） |
+| 散热面板数量增加 | 每侧散热面板堆叠层数增加 |
+| 散热面板面积增大 | 每个散热面板高度增大 |
+
+### 18.2 实现原理
+
+#### 18.2.1 动态几何参数计算
+
+`drawSatIcon()` 函数不再使用硬编码尺寸，而是根据全局 DT 参数动态计算：
+
+```javascript
+// 翼宽度按面积缩放 (350m² 基线 = 52px)
+const wingWBase = Math.max(28, Math.min(80, (wingArea/350)*52)) * s;
+
+// 每侧翼片数 = ceil(总翼数 / 2)
+const wingsPerSide = Math.ceil(wingCount / 2);
+
+// 散热面板高度按面积缩放 (143m² 基线 = 20px)
+const radHBase = Math.max(12, Math.min(32, (radArea/143)*20)) * s;
+
+// 每侧散热面板数 = ceil(总面板数 / 2)
+const radsPerSide = Math.ceil(radCount / 2);
+```
+
+#### 18.2.2 堆叠式翼/面板布局
+
+翼和散热面板按左右两侧分配，每侧从上到下堆叠排列：
+
+```
+            [Wing 1]     |BODY|     [Wing 1]
+            [Wing 2]     |    |     [Wing 2]
+   左侧翼   [Wing 3] ---|    |---  [Wing 3]  右侧翼
+            [Wing 4]     |    |     [Wing 4]
+                         |RAD1|
+                         |RAD2|
+                         |RAD3|
+```
+
+- 翼片之间有 `2*s` 的间距 (`wingGap`)
+- 散热面板之间有 `1.5*s` 的间距 (`radGap`)
+- 翼通过 `armLen = 4*s` 的连杆与本体相连
+
+左侧分配 `floor(N/2)` 片，右侧分配 `ceil(N/2)` 片，确保总数始终等于用户设置的翼数。
+
+#### 18.2.3 详情视图标注跟随
+
+`drawDetail()` 中的标注线和箭头位置基于实际卫星几何动态计算：
+
+```javascript
+// 翼尖到中心的距离
+const wingTipOffset = bw/2 + armLen + wingWPx;
+
+// 左翼尖在屏幕上的 x 坐标
+const lwTipX = W/2 - wingTipOffset;
+
+// 标注位置跟随翼尖
+const annoLx = Math.max(10, lwTipX - 60);
+
+// 太阳辐射箭头跨度从翼尖到翼尖
+dX.beginPath();
+dX.moveTo(lwTipX, arY);
+dX.lineTo(W/2 - bw/2, arY);  // 到本体边缘
+
+// IR 发射线从散热器外缘向外延伸
+const emBaseX = W/2 + bw/2 + radWPx;
+```
+
+### 18.3 视觉效果对比
+
+| 配置 | 卫星外观 |
+|------|----------|
+| 2 翼 100m² / 2 面板 50m² | 极简小型卫星：短小翼+小散热器 |
+| 8 翼 350m² / 6 面板 143m² (默认) | 标准配置：中等对称结构 |
+| 12 翼 500m² / 10 面板 300m² | 巨型卫星：宽大翼片层叠+高大散热阵列 |
+
+### 18.4 太阳能电池格子数自适应
+
+翼片内部的太阳能电池网格也随翼宽动态调整列数：
+
+```javascript
+const cellCols = Math.max(3, Math.min(10, Math.round(wingWBase/(6*s))));
+```
+
+窄翼 (100m²) 显示 3~4 列电池格，宽翼 (500m²) 显示 8~10 列，保持视觉比例协调。
+
+---
+
+> **文档更新时间**: 2025-02-26  
+> **文档适用版本**: Space Data Center Simulator v3 + v4 Digital Twin  
+> **文件**: `space_dc_simulator_v3.html` (828 行) + `space_dc_simulator_v4.html` (~1300 行)
