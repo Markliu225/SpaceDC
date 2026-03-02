@@ -58,99 +58,132 @@ var Detail3D = (function () {
     });
 
     // ── Solar wings ──
-    // Fixed visual size per sub-panel; layout adjusts to count
-    var panelW = 0.45;             // width of each sub-panel
-    var panelH = 0.55;             // height (Z extent) of one wing
-    var armLen = 0.30;             // arm connecting bus → wing
-    var wingStartX = bx / 2 + armLen + 0.02;
-    var wingTotalW = panelW * wpp; // total X extent of one wing
-    var wingGap = 0.12;            // Z gap between wing rows
+    // Map real area (m²) to visual size with a scale factor
+    // wingArea is already per-wing area (e.g. 350 m²/wing)
+    var wingScale = 0.018;
+    var singleWingW = Math.sqrt(wa) * wingScale * 1.4;
+    var singleWingH = Math.sqrt(wa) * wingScale * 1.0;
+    singleWingW = Math.max(0.3, Math.min(singleWingW, 1.8));
+    singleWingH = Math.max(0.25, Math.min(singleWingH, 1.2));
 
+    var armLen = 0.25;
+    var wingGap = 0.10;
+
+    // Each side: arrange wings in a grid (rows along Z, columns along X)
     var leftWings  = Math.ceil(wc / 2);
     var rightWings = wc - leftWings;
 
-    for (var wi = 0; wi < wc; wi++) {
-      var side, rowIdx, rowCount;
-      if (wi < leftWings) {
-        side = -1; rowIdx = wi; rowCount = leftWings;
-      } else {
-        side = 1;  rowIdx = wi - leftWings; rowCount = rightWings;
-      }
+    function layoutWingSide(count, side) {
+      // Determine grid: prefer wide → max cols based on count
+      var cols = (count <= 2) ? 1 : (count <= 6) ? 2 : 3;
+      var rows = Math.ceil(count / cols);
 
-      var wingG = new THREE.Group();
+      for (var idx = 0; idx < count; idx++) {
+        var col = Math.floor(idx / rows);  // which column (outward from bus)
+        var row = idx % rows;               // which row (along Z)
+        var wingG = new THREE.Group();
 
-      // Arm
-      var arm = new THREE.Mesh(new THREE.BoxGeometry(armLen, 0.04, 0.04), m.frame);
-      arm.position.x = side * (bx / 2 + armLen / 2);
-      wingG.add(arm);
+        // Wing X offset: stacked outward from bus
+        var colOffset = col * (singleWingW * wpp + wingGap);
+        var wingStartX = bx / 2 + armLen + 0.02 + colOffset;
+        var wingTotalW = singleWingW * wpp;
 
-      // Sub-panels
-      for (var pi = 0; pi < wpp; pi++) {
-        var panel = new THREE.Mesh(new THREE.BoxGeometry(panelW - 0.02, 0.02, panelH), m.solar);
-        panel.position.set(side * (wingStartX + pi * panelW + panelW / 2), 0, 0);
-        wingG.add(panel);
+        // Arm (only for first column, or extend to reach)
+        var fullArmLen = armLen + colOffset;
+        var armMesh = new THREE.Mesh(new THREE.BoxGeometry(fullArmLen, 0.04, 0.04), m.frame);
+        armMesh.position.x = side * (bx / 2 + fullArmLen / 2);
+        wingG.add(armMesh);
 
-        // Cell grid lines
-        var gridMat = new THREE.LineBasicMaterial({ color: 0x1a1a55, transparent: true, opacity: 0.35 });
-        for (var li = 1; li < 4; li++) {
-          var gy = (li / 4 - 0.5) * panelH;
-          var lPts = [
-            new THREE.Vector3(side * (wingStartX + pi * panelW + 0.02), 0.012, gy),
-            new THREE.Vector3(side * (wingStartX + (pi + 1) * panelW - 0.02), 0.012, gy)
-          ];
-          wingG.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(lPts), gridMat));
+        // Sub-panels
+        for (var pi = 0; pi < wpp; pi++) {
+          var panel = new THREE.Mesh(
+            new THREE.BoxGeometry(singleWingW - 0.02, 0.02, singleWingH), m.solar
+          );
+          panel.position.set(
+            side * (wingStartX + pi * singleWingW + singleWingW / 2), 0, 0
+          );
+          wingG.add(panel);
+
+          // Cell grid lines
+          var gridMat = new THREE.LineBasicMaterial({ color: 0x1a1a55, transparent: true, opacity: 0.35 });
+          for (var li = 1; li < 4; li++) {
+            var gy = (li / 4 - 0.5) * singleWingH;
+            wingG.add(new THREE.Line(
+              new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(side * (wingStartX + pi * singleWingW + 0.02), 0.012, gy),
+                new THREE.Vector3(side * (wingStartX + (pi + 1) * singleWingW - 0.02), 0.012, gy)
+              ]), gridMat
+            ));
+          }
         }
+
+        // Frame rails
+        [-1, 1].forEach(function(rs) {
+          var rail = new THREE.Mesh(
+            new THREE.BoxGeometry(wingTotalW + 0.04, 0.03, 0.025), m.frame
+          );
+          rail.position.set(side * (wingStartX + wingTotalW / 2), 0, rs * singleWingH / 2);
+          wingG.add(rail);
+        });
+
+        // Position row along Z, centered
+        var totalZSpan = rows * singleWingH + (rows - 1) * wingGap;
+        var startZ = -totalZSpan / 2 + singleWingH / 2;
+        wingG.position.z = startZ + row * (singleWingH + wingGap);
+
+        g.add(wingG);
       }
-
-      // Frame rails (top & bottom edge of wing)
-      [-1, 1].forEach(function(rs) {
-        var rail = new THREE.Mesh(new THREE.BoxGeometry(wingTotalW + 0.04, 0.03, 0.025), m.frame);
-        rail.position.set(side * (wingStartX + wingTotalW / 2), 0, rs * panelH / 2);
-        wingG.add(rail);
-      });
-
-      // Position wing row along Z, centered around bus
-      var totalZSpan = rowCount * panelH + (rowCount - 1) * wingGap;
-      var startZ = -totalZSpan / 2 + panelH / 2;
-      wingG.position.z = startZ + rowIdx * (panelH + wingGap);
-
-      g.add(wingG);
     }
 
+    layoutWingSide(leftWings, -1);
+    layoutWingSide(rightWings, 1);
+
     // ── Radiator panels ──
-    // Fixed visual size; arranged below bus along Z, alternating left/right
-    var radW = 0.38;               // width per rad panel
-    var radH = 0.42;               // height (Z extent) per rad panel
-    var radGap = 0.08;             // Z gap between rad rows
-    var radYOff = -by / 2 - 0.08; // Y offset below bus
+    // Map real area to visual size (radArea is per-panel)
+    var radScale = 0.032;
+    var singleRadW = Math.sqrt(radA) * radScale * 1.2;
+    var singleRadH = Math.sqrt(radA) * radScale * 0.9;
+    singleRadW = Math.max(0.2, Math.min(singleRadW, 1.0));
+    singleRadH = Math.max(0.18, Math.min(singleRadH, 0.8));
+    var radGap = 0.08;
+    var radYOff = -by / 2 - 0.08;
 
     var leftRads  = Math.ceil(radC / 2);
     var rightRads = radC - leftRads;
 
-    for (var ri = 0; ri < radC; ri++) {
-      var rSide, rRowIdx, rRowCount;
-      if (ri < leftRads) {
-        rSide = -1; rRowIdx = ri; rRowCount = leftRads;
-      } else {
-        rSide = 1;  rRowIdx = ri - leftRads; rRowCount = rightRads;
-      }
+    function layoutRadSide(count, rSide) {
+      var cols = (count <= 2) ? 1 : (count <= 6) ? 2 : 3;
+      var rows = Math.ceil(count / cols);
 
-      var rTotalZ = rRowCount * radH + (rRowCount - 1) * radGap;
-      var rStartZ = -rTotalZ / 2 + radH / 2;
-      var rz = rStartZ + rRowIdx * (radH + radGap);
+      for (var idx = 0; idx < count; idx++) {
+        var col = Math.floor(idx / rows);
+        var row = idx % rows;
 
-      var radPanel = new THREE.Mesh(new THREE.BoxGeometry(radW, 0.015, radH), m.rad);
-      radPanel.position.set(rSide * (bx / 2 + radW / 2 + 0.06), radYOff, rz);
-      g.add(radPanel);
+        var colOffset = col * (singleRadW + radGap);
+        var rx = rSide * (bx / 2 + singleRadW / 2 + 0.06 + colOffset);
 
-      // Heat pipes
-      for (var hi = 0; hi < 3; hi++) {
-        var pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, radH - 0.04, 6), m.copper);
-        pipe.rotation.x = Math.PI / 2;
-        pipe.position.set(rSide * (bx / 2 + radW / 2 + 0.06 + (hi - 1) * radW * 0.28), radYOff, rz);
-        g.add(pipe);
+        var totalZSpan = rows * singleRadH + (rows - 1) * radGap;
+        var startZ = -totalZSpan / 2 + singleRadH / 2;
+        var rz = startZ + row * (singleRadH + radGap);
+
+        var radPanel = new THREE.Mesh(new THREE.BoxGeometry(singleRadW, 0.015, singleRadH), m.rad);
+        radPanel.position.set(rx, radYOff, rz);
+        g.add(radPanel);
+
+        // Heat pipes
+        for (var hi = 0; hi < 3; hi++) {
+          var pipe = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.012, 0.012, singleRadH - 0.04, 6), m.copper
+          );
+          pipe.rotation.x = Math.PI / 2;
+          pipe.position.set(rx + (hi - 1) * singleRadW * 0.28, radYOff, rz);
+          g.add(pipe);
+        }
       }
     }
+
+    layoutRadSide(leftRads, -1);
+    layoutRadSide(rightRads, 1);
 
     // High-gain antenna
     var antPole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.45, 8), m.ant);
