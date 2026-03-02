@@ -2,7 +2,7 @@
 
 > **入口文件**: `index.html`  
 > **版本**: 模块化重构版  
-> **类型**: 模块化 Web 应用（HTML + CSS + 12 个 JavaScript 模块，含 Canvas 2D 实时渲染 + Digital Twin）  
+> **类型**: 模块化 Web 应用（HTML + CSS + 14 个 JavaScript 模块，含 Three.js 3D 实时渲染 + Canvas 2D + Digital Twin）  
 > **用途**: 模拟一个部署在太阳同步轨道 (SSO) 550km 高度的 1MW 级太空数据中心的运行状态
 
 ---
@@ -68,6 +68,15 @@
    - 20.3 [加载顺序与依赖](#203-加载顺序与依赖)
    - 20.4 [模块间通信方式](#204-模块间通信方式)
    - 20.5 [扩展指南](#205-扩展指南)
+21. [3D 渲染系统详解](#21-3d-渲染系统详解)
+   - 21.1 [技术选型与依赖](#211-技术选型与依赖)
+   - 21.2 [HTML 容器与 CSS 布局](#212-html-容器与-css-布局)
+   - 21.3 [3D 轨道地球场景 — orbit3d.js](#213-3d-轨道地球场景--orbit3djs)
+   - 21.4 [3D 卫星细节视图 — satellite3d.js](#214-3d-卫星细节视图--satellite3djs)
+   - 21.5 [主循环集成](#215-主循环集成)
+   - 21.6 [Digital Twin 联动](#216-digital-twin-联动)
+   - 21.7 [渲染管线配置](#217-渲染管线配置)
+   - 21.8 [性能优化策略](#218-性能优化策略)
 
 ---
 
@@ -91,8 +100,11 @@
 
 - **HTML5**: 页面结构 (`index.html`)
 - **CSS3**: 独立样式文件 (`css/styles.css`)，暗色太空主题 UI、CSS Grid/Flexbox 布局、CSS 变量
-- **JavaScript (ES6+)**: 12 个功能模块 (`js/*.js`)，模拟逻辑、Canvas 2D 绘制、requestAnimationFrame 动画循环
+- **Three.js v0.128.0**: 3D WebGL 渲染引擎（CDN 引入），用于轨道地球场景与卫星细节视图
+- **OrbitControls**: Three.js 官方轨道控制器扩展，支持鼠标旋转/缩放/平移 3D 场景
+- **JavaScript (ES6+)**: 14 个功能模块 (`js/*.js`)，模拟逻辑、3D 渲染、Canvas 2D 绘制、requestAnimationFrame 动画循环
 - **外部字体**: Google Fonts (Orbitron, Share Tech Mono, Exo 2)
+- **NASA 纹理**: Blue Marble 日照面 + 夜间灯光 + 地形凹凸贴图（via three-globe CDN）
 
 ---
 
@@ -102,15 +114,17 @@
 
 ```
 SpaceDC/
-├── index.html                          — 主入口 HTML（纯结构，不含 CSS/JS 代码）
+├── index.html                          — 主入口 HTML（含 Three.js CDN + 3D 容器）
 ├── css/
-│   └── styles.css                      — 全部 CSS 样式（~190 行）
+│   └── styles.css                      — 全部 CSS 样式（~200 行，含 .three-container）
 ├── js/
 │   ├── constants.js                    — 轨道常数、电池技术库、冷却剂数据库
 │   ├── state.js                        — 仿真状态变量、动态数据模型、趋势缓冲区
 │   ├── telemetry.js                    — 遥测日志系统（LOGS, addLog, p2）
 │   ├── starfield.js                    — 星空背景层（initStars, drawStars）
 │   ├── canvas.js                       — Canvas 引用、resizeAll、角度/食判断工具
+│   ├── orbit3d.js                      — ★ 3D 轨道场景（Earth + 卫星 + 大气层），IIFE: Orbit3D
+│   ├── satellite3d.js                  — ★ 3D 卫星细节视图（Space DC 模型），IIFE: Detail3D
 │   ├── satellite.js                    — 卫星图标 drawSatIcon() + 详情标注 drawDetail()
 │   ├── orbit.js                        — 地球轨道视图 drawOrbit()
 │   ├── solar-array.js                  — 太阳能阵列 Canvas + 翼板状态表
@@ -123,24 +137,31 @@ SpaceDC/
 
 ### 模块加载顺序
 
-`index.html` 底部按依赖顺序引入 12 个 JS 模块：
+`index.html` `<head>` 中首先引入 Three.js CDN，底部按依赖顺序引入 14 个 JS 模块：
 
 ```html
+<!-- <head> 中引入 Three.js -->
+<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<!-- <body> 底部加载项目模块 -->
 <script src="js/constants.js"></script>     <!-- 1. 常量（无依赖） -->
 <script src="js/state.js"></script>         <!-- 2. 状态（依赖 constants） -->
 <script src="js/telemetry.js"></script>     <!-- 3. 日志（依赖 state） -->
 <script src="js/starfield.js"></script>     <!-- 4. 星空（独立） -->
 <script src="js/canvas.js"></script>        <!-- 5. Canvas 工具（依赖 constants） -->
-<script src="js/satellite.js"></script>     <!-- 6. 卫星绘制（依赖 state, canvas） -->
-<script src="js/orbit.js"></script>         <!-- 7. 轨道视图（依赖 satellite, canvas, state） -->
-<script src="js/solar-array.js"></script>   <!-- 8. 太阳能（依赖 state, canvas, constants） -->
-<script src="js/radiator.js"></script>      <!-- 9. 散热器（依赖 state, canvas, constants） -->
-<script src="js/trend-chart.js"></script>   <!-- 10. 趋势图（依赖 state, canvas, constants） -->
-<script src="js/dt-controls.js"></script>   <!-- 11. DT控制（依赖 state, constants, telemetry） -->
-<script src="js/simulation.js"></script>    <!-- 12. 主循环（依赖以上所有模块） -->
+<script src="js/orbit3d.js"></script>       <!-- 6. ★ 3D 轨道场景（依赖 THREE, canvas） -->
+<script src="js/satellite3d.js"></script>   <!-- 7. ★ 3D 卫星细节（依赖 THREE, state） -->
+<script src="js/satellite.js"></script>     <!-- 8. 卫星绘制（依赖 state, canvas） -->
+<script src="js/orbit.js"></script>         <!-- 9. 轨道视图（依赖 satellite, canvas, state） -->
+<script src="js/solar-array.js"></script>   <!-- 10. 太阳能（依赖 state, canvas, constants） -->
+<script src="js/radiator.js"></script>      <!-- 11. 散热器（依赖 state, canvas, constants） -->
+<script src="js/trend-chart.js"></script>   <!-- 12. 趋势图（依赖 state, canvas, constants） -->
+<script src="js/dt-controls.js"></script>   <!-- 13. DT控制（依赖 state, constants, telemetry, Detail3D） -->
+<script src="js/simulation.js"></script>    <!-- 14. 主循环（依赖以上所有模块） -->
 ```
 
-所有模块通过全局作用域共享状态，无需打包工具。
+Three.js 在 `<head>` 中加载，确保后续 JS 模块可引用全局 `THREE` 对象。所有项目模块通过全局作用域共享状态，无需打包工具。
 
 ---
 
@@ -153,12 +174,14 @@ SpaceDC/
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ORBITAL DC-1 · Space Data Center Simulator · Digital Twin</title>
 <link rel="stylesheet" href="css/styles.css">
+<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 ```
 
 - **字符编码**: UTF-8，支持希腊字母 (ε, σ, Δ) 等特殊字符
-- **视口设置**: `width=device-width, initial-scale=1.0`，确保在不同屏幕尺寸下正确渲染
-- **标题**: 显示在浏览器标签页
+- **视口设置**: `width=device-width, initial-scale=1.0`
 - **样式**: 通过外部 CSS 文件引入 (`css/styles.css`)
+- **Three.js**: 在 `<head>` 中通过 CDN 引入 Three.js v0.128.0 核心库 + OrbitControls 扩展，确保后续 JS 模块可访问全局 `THREE` 对象
 
 **外部字体引入** (在 `css/styles.css` 内):
 ```css
@@ -226,25 +249,28 @@ SpaceDC/
 ```html
 <div class="quad">
   <div class="qlabel">SUN-SYNCHRONOUS ORBIT · 550 km · i=97.6°</div>
-  <canvas id="orbitCanvas"></canvas>
+  <div id="orbit3dContainer" class="three-container"></div>
 </div>
 ```
 
-- **功能**: 用 Canvas 实时绘制地球、太阳、轨道路径、卫星位置、食影区域
-- **标签**: 浮动在左上角，显示轨道类型和参数
-- Canvas 通过 CSS `position:absolute` 填满整个象限
+- **功能**: 使用 Three.js 3D 场景展示地球（NASA Blue Marble 纹理 + 日/夜着色器）、多层大气辉光、程序化云层、卫星沿倾斜轨道运动、太阳 + 日冕、5000 颗星星
+- **交互**: 鼠标拖拽旋转、滚轮缩放（OrbitControls）
+- **容器**: `<div>` 替代原 `<canvas>`，Three.js 在 `Orbit3D.init()` 中动态注入 WebGL canvas
+- 详见 [§21.3](#213-3d-轨道地球场景--orbit3djs)
 
 #### Q2: 航天器详情 (右上)
 
 ```html
 <div class="quad">
   <div class="qlabel">SPACECRAFT DETAIL · SOLAR PANELS + RADIATORS</div>
-  <canvas id="detailCanvas"></canvas>
+  <div id="detail3dContainer" class="three-container"></div>
 </div>
 ```
 
-- **功能**: 放大展示航天器结构，标注太阳能翼、散热器、机体等部件的详细参数
-- 展示方式随日照/食模式切换
+- **功能**: 使用 Three.js 3D 场景展示 Space Data Center 卫星完整模型，包括服务器机架面板、通风格栅、太阳能翼阵列、散热器面板、天线、传感器等
+- **交互**: 鼠标拖拽旋转、滚轮缩放；模型自动缓慢旋转 + 俯仰微摆
+- **动态**: LED 闪烁动画模拟数据活动；DT 参数变化时整个模型实时重建
+- 详见 [§21.4](#214-3d-卫星细节视图--satellite3djs)
 
 #### Q3: 太阳能阵列 (左下)
 
@@ -568,7 +594,7 @@ body (overflow:hidden, 100vh)
 
 ## 5. JavaScript 逻辑详解
 
-> **模块化架构**: JavaScript 代码已从单个 `<script>` 块拆分为 12 个独立模块文件 (`js/*.js`)。以下各节按功能描述逻辑，并标注对应的源文件。完整的模块依赖关系和加载顺序见 [Section 20](#20-模块化架构说明)。
+> **模块化架构**: JavaScript 代码已从单个 `<script>` 块拆分为 14 个独立模块文件 (`js/*.js`，含 2 个 Three.js 3D 渲染模块)。以下各节按功能描述逻辑，并标注对应的源文件。完整的模块依赖关系和加载顺序见 [Section 20](#20-模块化架构说明)，3D 渲染详解见 [Section 21](#21-3d-渲染系统详解)。
 
 ### 5.1 全局状态变量
 
@@ -2037,7 +2063,7 @@ Workload 参数直接驱动主循环中的以下计算：
 
 ### 20.1 设计目标
 
-将原先 ~1300 行的单体 HTML 文件重构为 **1 个入口 HTML + 1 个 CSS + 12 个 JS 模块**，实现：
+将原先 ~1300 行的单体 HTML 文件重构为 **1 个入口 HTML + 1 个 CSS + 14 个 JS 模块**（含 2 个 Three.js 3D 渲染模块），实现：
 
 1. **关注点分离** — 每个文件只负责一个功能域
 2. **可维护性** — 修改某一绘制逻辑无需搜索千行文件
@@ -2054,6 +2080,8 @@ Workload 参数直接驱动主循环中的以下计算：
 | `js/telemetry.js` | 遥测日志系统 | `LOGS`, `addLog()`, `p2()` |
 | `js/starfield.js` | 背景星空渲染 | `initStars()`, `drawStars()` |
 | `js/canvas.js` | Canvas 引用、尺寸管理、工具函数 | `oC/oX`, `dC/dX`, `sC/sX`, `rC/rX`, `tC/tX`, `resizeAll()`, `getAngle()`, `isEclipse()` |
+| `js/orbit3d.js` | ★ 3D 轨道地球场景 (Three.js IIFE) | `Orbit3D.init()`, `Orbit3D.update(eclipse)`, `Orbit3D.resize()` |
+| `js/satellite3d.js` | ★ 3D 卫星细节视图 (Three.js IIFE) | `Detail3D.init()`, `Detail3D.update(eclipse)`, `Detail3D.resize()`, `Detail3D.rebuild()` |
 | `js/satellite.js` | 卫星图标 + 详情视图绘制 | `drawSatIcon()`, `drawDetail()` |
 | `js/orbit.js` | 地球轨道视图 | `drawOrbit()` |
 | `js/solar-array.js` | 太阳能阵列 Canvas + 翼表 | `drawSolarArray()`, `updateWingTable()` |
@@ -2067,6 +2095,9 @@ Workload 参数直接驱动主循环中的以下计算：
 脚本标签在 `index.html` 底部按严格顺序加载，确保被依赖模块先行注册到全局作用域：
 
 ```text
+[CDN] three.min.js    ← 全局 THREE 对象
+[CDN] OrbitControls.js← 依赖 THREE
+      ↓
 constants.js          ← 无依赖（纯数据）
       ↓
 state.js              ← 依赖 constants（CELL_TECHS, COOLANTS）
@@ -2076,6 +2107,10 @@ telemetry.js          ← 无依赖
 starfield.js          ← 无依赖
       ↓
 canvas.js             ← 依赖 constants（ORBIT_PERIOD, ECLIPSE_FRAC, ECLIPSE_START）
+      ↓
+orbit3d.js            ← ★ 依赖 THREE + canvas（getAngle, simTime）
+      ↓
+satellite3d.js        ← ★ 依赖 THREE + state（wingCount, wingArea, radCount, radArea）
       ↓
 satellite.js          ← 依赖 canvas（dC, dX）+ state（wingCount, radPanelCount 等）
       ↓
@@ -2087,9 +2122,9 @@ radiator.js           ← 依赖 canvas + state + constants
       ↓
 trend-chart.js        ← 依赖 canvas（tC, tX）+ state（trendData）
       ↓
-dt-controls.js        ← 依赖 state + constants + telemetry
+dt-controls.js        ← 依赖 state + constants + telemetry + Detail3D（rebuild）
       ↓
-simulation.js         ← 依赖以上全部模块（调用所有 draw/update 函数）
+simulation.js         ← 依赖以上全部（调用 Orbit3D.update, Detail3D.update 等）
 ```
 
 ### 20.4 模块间通信方式
@@ -2125,6 +2160,679 @@ document.getElementById('wingSlider').addEventListener('input', e => {
 
 ---
 
-> **文档更新时间**: 2025-02-26  
-> **文档适用版本**: Space Data Center Simulator (模块化架构)  
-> **项目结构**: `index.html` + `css/styles.css` + 12 个 JS 模块 (`js/*.js`)
+---
+
+## 21. 3D 渲染系统详解
+
+本项目在原有 Canvas 2D 渲染之上引入 **Three.js WebGL 3D 渲染**，替换了左上角「轨道视图」和左上第二象限「卫星细节视图」两个面板，使其从 2D 示意图升级为可交互的 3D 实时场景。
+
+### 21.1 技术选型与依赖
+
+| 组件 | 版本/来源 | 用途 |
+|------|-----------|------|
+| Three.js | v0.128.0 (unpkg CDN) | WebGL 3D 渲染引擎 |
+| OrbitControls | Three.js examples | 鼠标拖拽旋转/缩放/平移 3D 场景 |
+| NASA Blue Marble 日照贴图 | `three-globe@2.31.1` CDN | 地球白天表面纹理 |
+| NASA Earth Night 灯光贴图 | `three-globe@2.31.1` CDN | 地球夜间城市灯光 |
+| NASA Earth Topology 凹凸贴图 | `three-globe@2.31.1` CDN | 海洋镜面反射判断 |
+
+**CDN 引入方式** (`index.html` `<head>`):
+
+```html
+<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+```
+
+> Three.js v0.128.0 使用全局 `THREE` 命名空间（非 ES Module），与本项目的全局作用域架构一致。
+
+### 21.2 HTML 容器与 CSS 布局
+
+原来的 `<canvas id="orbitCanvas">` 和 `<canvas id="detailCanvas">` 被替换为 `<div>` 容器，Three.js 在初始化时动态向其中注入 `<canvas>` 元素。
+
+#### HTML 结构
+
+```html
+<!-- Q1: 3D 轨道场景 -->
+<div class="quad">
+  <div class="qlabel">SUN-SYNCHRONOUS ORBIT · 550 km · i=97.6°</div>
+  <div id="orbit3dContainer" class="three-container"></div>
+</div>
+
+<!-- Q2: 3D 卫星细节 -->
+<div class="quad">
+  <div class="qlabel">SPACECRAFT DETAIL · SOLAR PANELS + RADIATORS</div>
+  <div id="detail3dContainer" class="three-container"></div>
+</div>
+```
+
+#### CSS 样式
+
+```css
+.three-container {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  overflow: hidden;
+}
+.three-container canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+```
+
+容器使用 `position:absolute` 铺满其父级 `.quad`（`position:relative`），Three.js 的 `<canvas>` 自适应填满容器。
+
+#### canvas.js 兼容处理
+
+原有的 `canvas.js` 对被移除的 2D Canvas 做了空值保护：
+
+```javascript
+const oC = document.getElementById('orbitCanvas');   // → null (已移除)
+const oX = oC ? oC.getContext('2d') : null;          // 空值安全
+```
+
+`drawOrbit()` 和 `drawDetail()` 在检测到 `oX === null` 或 `dX === null` 时直接返回，不再执行 2D 绘制。
+
+---
+
+### 21.3 3D 轨道地球场景 — `orbit3d.js`
+
+> **文件**: `js/orbit3d.js` (~442 行)  
+> **全局导出**: `Orbit3D` 对象 (IIFE)，接口: `{init, update, resize}`
+
+#### 21.3.1 模块架构
+
+`orbit3d.js` 使用 **IIFE (Immediately Invoked Function Expression)** + `'use strict'` 封装，避免内部变量污染全局：
+
+```javascript
+var Orbit3D = (function () {
+  'use strict';
+  var scene, camera, renderer, controls;
+  var earthMesh, cloudsMesh, satellite, orbitLine, sunLight, sunGroup;
+  var atmosMesh, earthMat;
+  var container;
+  var ready = false;
+  // ... 内部函数 ...
+  return { init: init, update: update, resize: resize };
+})();
+```
+
+#### 21.3.2 场景初始化 — `Orbit3D.init()`
+
+`init()` 在 `simulation.js` 启动时调用一次，执行以下步骤：
+
+1. **获取容器**: `document.getElementById('orbit3dContainer')`
+2. **创建渲染器**: `WebGLRenderer({ antialias: true, alpha: true })`
+3. **相机**: `PerspectiveCamera(45°, aspect, 0.1, 300)`，初始位置 `(-1.5, 3.5, 7.5)`
+4. **OrbitControls**: 阻尼 0.06，距离限制 3.5~18，禁用平移
+5. **加载纹理并构建地球**
+6. **构建云层、大气、轨道环、卫星、太阳、星场**
+7. **设置光照**
+
+#### 21.3.3 地球渲染 — 自定义 Day/Night GLSL 着色器
+
+地球**不使用**内置 `MeshStandardMaterial`，而是自定义 `ShaderMaterial`，实现日/夜面自动混合：
+
+**顶点着色器**:
+```glsl
+varying vec2 vUv;
+varying vec3 vNormal;
+varying vec3 vWorldPos;
+void main(){
+  vUv = uv;
+  vNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+  vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+```
+
+**片元着色器** (核心逻辑):
+```glsl
+uniform sampler2D dayMap;    // NASA Blue Marble 日照贴图
+uniform sampler2D nightMap;  // NASA 夜间灯光贴图
+uniform sampler2D bumpMap;   // 地形凹凸贴图 (用于海洋判断)
+uniform vec3 sunDir;         // 太阳方向向量
+
+void main(){
+  vec3 day = texture2D(dayMap, vUv).rgb;
+  vec3 night = texture2D(nightMap, vUv).rgb;
+  vec3 N = normalize(vNormal);
+  float NdL = dot(N, sunDir);
+
+  // 日/夜混合 — 在明暗交界线平滑过渡
+  float dayMix = smoothstep(-0.12, 0.2, NdL);
+  float diff = max(NdL, 0.0);
+
+  vec3 dayLit = day * (0.05 + 0.95 * diff);         // 日照面漫反射
+  vec3 nightLit = night * 1.8 * (1.0 - dayMix);     // 夜间灯光增亮
+  vec3 color = dayLit * dayMix + nightLit;
+
+  // 海洋镜面反射 (用 bumpMap 判断水域)
+  vec3 H = normalize(sunDir + normalize(cameraPosition - vWorldPos));
+  float spec = pow(max(dot(N, H), 0.0), 100.0);
+  float elev = texture2D(bumpMap, vUv).r;
+  float water = 1.0 - smoothstep(0.0, 0.08, elev);  // 低海拔 = 水域
+  color += vec3(0.45, 0.55, 0.7) * spec * water * dayMix * 0.4;
+
+  // 大气散射边缘辉光
+  float scatter = pow(max(1.0 - abs(NdL), 0.0), 5.0) * 0.07;
+  color += vec3(0.3, 0.5, 1.0) * scatter;
+
+  gl_FragColor = vec4(color, 1.0);
+}
+```
+
+**渲染效果**:
+- 朝阳面显示 NASA Blue Marble 高清纹理
+- 背阳面显示城市灯光
+- 明暗交界线有 `smoothstep(-0.12, 0.2)` 的柔和过渡
+- 海洋区域产生太阳镜面高光
+- 边缘产生蓝色大气散射辉光
+
+**纹理 URL**:
+```javascript
+var TEX_DAY   = 'https://unpkg.com/three-globe@2.31.1/example/img/earth-blue-marble.jpg';
+var TEX_NIGHT = 'https://unpkg.com/three-globe@2.31.1/example/img/earth-night.jpg';
+var TEX_BUMP  = 'https://unpkg.com/three-globe@2.31.1/example/img/earth-topology.png';
+```
+
+#### 21.3.4 程序化云层
+
+云层通过 **fBm (Fractal Brownian Motion) 噪声**生成 Canvas 贴图，而非加载外部图片：
+
+```javascript
+// 值噪声基函数
+function _h(x, y) { /* 哈希 → [0,1] */ }
+function _s(x, y) { /* 双线性插值的值噪声 */ }
+function _fbm(x, y, n) { /* n 层 fBm 叠加 */ }
+
+function makeCloudTexture() {
+  var W = 1024, H = 512;
+  // 对每个像素：
+  //   n = fbm(14倍频率, 6层) + fbm(24倍频率, 4层) * 0.25
+  //   cloud = max(0, (n * latitudeFade - 0.33) * 2.6)
+  //   → 赤道附近云量更多，极地稀疏
+  // 输出: 白色 (255,255,255) + alpha 通道
+}
+```
+
+云层 Mesh 半径比地球略大 (`2.018` vs `2.0`)，使用 `MeshStandardMaterial({ transparent, opacity: 0.32 })`，在 `update()` 中以 1.06 倍地球自转速度旋转。
+
+#### 21.3.5 多层大气辉光 — 自定义 ShaderMaterial
+
+大气效果由 **4 层同心球壳** 叠加产生渐变辉光（非后处理 Bloom），每层球壳使用 `BackSide` 渲染 + `AdditiveBlending` 叠加。
+
+**层级配置**:
+
+| 层 | 半径倍率 | rimPow | alphaPow | 内色 (亮蓝白) | 外色 (深蓝) | 强度 |
+|----|----------|--------|----------|---------------|-------------|------|
+| 1 | 1.015× | 3.0 | 2.6 | (0.55, 0.78, 1.0) | (0.15, 0.35, 0.95) | 1.3 |
+| 2 | 1.04× | 2.2 | 2.0 | (0.40, 0.65, 1.0) | (0.10, 0.28, 0.85) | 0.7 |
+| 3 | 1.08× | 1.6 | 1.5 | (0.30, 0.55, 1.0) | (0.05, 0.15, 0.60) | 0.35 |
+| 4 | 1.14× | 1.2 | 1.2 | (0.20, 0.40, 0.90) | (0.02, 0.08, 0.35) | 0.15 |
+
+**着色器核心逻辑**:
+```glsl
+// Fresnel 边缘光
+float rim = 1.0 - max(dot(viewDir, normal), 0.0);
+
+// 向阳面增强 (日侧更亮)
+float sunFace = max(dot(worldNormal, sunDir), 0.0);
+float sunBoost = 0.35 + 0.65 * sunFace;
+
+// 内→外颜色渐变
+vec3 col = mix(innerColor, outerColor, pow(rim, 0.6));
+col *= pow(rim, rimPow) * intensity * sunBoost;
+
+// 柔和 alpha 衰减
+float alpha = pow(rim, alphaPow) * intensity * 0.6 * sunBoost;
+```
+
+**效果**: 地球边缘产生蓝色渐变光晕，向阳侧更明亮，背阳侧几乎不可见。食段时 `intensity` 降至原值 8%。
+
+#### 21.3.6 轨道环
+
+使用 `LineDashedMaterial` 绘制 256 段虚线圆环：
+
+```javascript
+function makeOrbitRing(radius) {
+  // 256 个点构成圆环，radius=3.4
+  var line = new THREE.Line(geo, new THREE.LineDashedMaterial({
+    color: 0x3388bb, transparent: true, opacity: 0.22,
+    dashSize: 0.12, gapSize: 0.08
+  }));
+  return line;
+}
+```
+
+轨道环绕 X 轴倾斜 7.6°（模拟 SSO 轨道倾角的视觉效果）。
+
+#### 21.3.7 卫星小模型 (轨道视图)
+
+轨道视图中的卫星是简化版 3D 模型 `makeSatModel()`，包含：
+
+| 部件 | 几何体 | 材质 |
+|------|--------|------|
+| 主体 (Bus) | BoxGeometry(0.14, 0.10, 0.16) | 浅灰 metalness:0.12 |
+| 金色 MLI 带 | BoxGeometry(0.145, 0.025, 0.165) | 金色 metalness:0.72 |
+| 太阳能翼 ×2 | BoxGeometry(0.34, 0.003, 0.12) | 深蓝 metalness:0.42 |
+| 连接臂 ×2 | BoxGeometry(0.06, 0.007, 0.007) | 框架灰 |
+| 翼边框 ×4 | BoxGeometry(0.345, 0.005, 0.004) | 框架灰 |
+| 散热器 ×2 | BoxGeometry(0.04, 0.003, 0.10) | 白色 roughness:0.82 |
+| 天线杆 | CylinderGeometry(0.003, 0.003, 0.07) | 浅灰 |
+| 天线碟 | SphereGeometry(0.022, 截球) | 浅灰 |
+| 状态 LED | SphereGeometry(0.006) | 绿色自发光 |
+
+#### 21.3.8 太阳 + 日冕
+
+太阳由一个白色 Sphere + Canvas 径向渐变 Sprite 组成：
+
+```javascript
+// 实体球
+new THREE.Mesh(SphereGeometry(0.42), MeshBasicMaterial({ color: 0xfff5d0 }));
+
+// 日冕光晕 (Canvas 径向渐变 → Sprite)
+var cg = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+cg.addColorStop(0,    'rgba(255,250,220,0.85)');  // 核心亮白
+cg.addColorStop(0.12, 'rgba(255,210,80,0.35)');   // 金色
+cg.addColorStop(0.4,  'rgba(255,160,40,0.06)');   // 橙色弱
+cg.addColorStop(1,    'rgba(255,100,0,0)');        // 完全透明
+// Sprite 使用 AdditiveBlending，scale = 3.2
+```
+
+#### 21.3.9 星场
+
+5000 颗星星使用 `Points` 粒子系统，按颜色分为 4 类：
+
+| 类型 | 概率 | RGB | 描述 |
+|------|------|-----|------|
+| 白色 | 65% | (0.92, 0.94, 1.0) | 普通恒星 |
+| 蓝白 | 15% | (0.72, 0.82, 1.0) | 热星 |
+| 暖黄 | 12% | (1.0, 0.96, 0.82) | G/K 型星 |
+| 橙红 | 8% | (1.0, 0.82, 0.65) | 冷星 |
+
+均匀分布在 80~160 单位球壳中。
+
+#### 21.3.10 每帧更新 — `Orbit3D.update(eclipse)`
+
+在 `simulation.js` 的主循环中每帧调用：
+
+```javascript
+Orbit3D.update(eclipse);  // 传入当前是否食段
+```
+
+更新内容：
+1. **卫星位置**: 根据 `getAngle(simTime)` 计算轨道角度，卫星沿倾斜 7.6° 的圆形轨道运动
+2. **卫星朝向**: `lookAt()` 指向运动前方
+3. **地球自转**: `earthMesh.rotation.y += 0.0012`，云层以 1.06 倍速差速旋转
+4. **同步着色器 sunDir**: 保持 Day/Night shader 的太阳方向与光源一致
+5. **食段效果**:
+   - `sunLight.intensity` 从 2.2 降至 0.06
+   - 大气辉光 `intensity` 降至原值 8%
+   - 卫星状态 LED 变蓝
+6. **自适应 resize**: 检测容器尺寸变化，自动更新 renderer 和 camera aspect
+7. **OrbitControls 更新 + 渲染帧**
+
+---
+
+### 21.4 3D 卫星细节视图 — `satellite3d.js`
+
+> **文件**: `js/satellite3d.js` (~526 行)  
+> **全局导出**: `Detail3D` 对象 (IIFE)，接口: `{init, update, resize, rebuild}`
+
+#### 21.4.1 模块架构
+
+与 `orbit3d.js` 相同的 IIFE 封装，额外提供 `rebuild()` 接口用于 Digital Twin 参数变更时重建模型。
+
+```javascript
+var Detail3D = (function () {
+  'use strict';
+  var scene, camera, renderer, controls;
+  var satGroup;       // THREE.Group，包含整个卫星模型
+  var container;
+  var ready = false;
+  // ...
+  return { init: init, update: update, resize: resize, rebuild: rebuild };
+})();
+```
+
+#### 21.4.2 材质系统 — `makeMats()`
+
+卫星使用 17+ 种材质，全部基于 `MeshStandardMaterial` (PBR) 或 `MeshBasicMaterial` (自发光)：
+
+| 材质名 | 颜色 | metalness | roughness | 用途 |
+|--------|------|-----------|-----------|------|
+| `busMain` | #1a1d22 深碳灰 | 0.55 | 0.45 | 卫星主体 |
+| `busEdge` | #2a2d33 浅碳灰 | 0.60 | 0.38 | 边框/装饰条 |
+| `accent` | #1c3348 蓝灰 | 0.50 | 0.40 | 背板/着重面 |
+| `gold` | #c8a530 金色 | 0.72 | 0.28 | MLI 热毯 |
+| `grille` | #0e1014 极深灰 | 0.40 | 0.70 | 通风格栅 |
+| `glowBlue` | #00bbff | — | — | LED 蓝 (BasicMaterial) |
+| `glowGreen` | #33ee66 | — | — | LED 绿 |
+| `glowAmber` | #ffaa22 | — | — | LED 琥珀 |
+| `glowRed` | #ff3333 | — | — | LED 红 |
+| `glowCyan` | #00ffe0 | — | — | LED 青 |
+| `solar` | #08082a 深蓝黑 | 0.42 | 0.24 | 太阳能电池 |
+| `frame` | #555860 金属灰 | 0.60 | 0.35 | 框架/连接件 |
+| `rad` | #e4e4ec 白 | 0.05 | 0.85 | 散热面板 |
+| `copper` | #b87333 铜色 | 0.80 | 0.32 | 热管/管道 |
+| `dark` | #111111 | 0.50 | 0.60 | 传感器/暗面 |
+| `ant` | #bbbbbb 浅灰 | 0.55 | 0.35 | 天线 |
+| `lens` | #0a0a15 | 0.70 | 0.12 | 镜头 |
+| `nozzle` | #3a3a3c | 0.65 | 0.40 | 推力器喷嘴 |
+| `port` | #0a1828 深蓝 | 0.65 | 0.30 | 数据端口 |
+
+#### 21.4.3 卫星模型构建 — `buildSat(m)`
+
+`buildSat()` 接收材质字典，返回一个 `THREE.Group`。所有部件均添加到此 Group 中。
+
+**本体尺寸**: `bx=1.6, by=1.3, bz=2.2` (宽×高×长)
+
+##### A. 主体结构
+
+| 部件 | 描述 |
+|------|------|
+| 主体 BoxGeometry | 深碳灰 `busMain` 材质 |
+| 12 条边框条 | 4 垂直 + 4 顶部水平 + 4 底部水平，`busEdge` 材质 |
+| 金色 MLI 热毯带 | `bx+0.03 × 0.10 × bz+0.03`，y 偏移 `by/2 - 0.12` (避免 Z-fighting) |
+
+##### B. 正面 (+Z) — 服务器机架面
+
+正面模拟数据中心服务器机架的外观：
+
+1. **暗色格栅面板**: `BoxGeometry(bx*0.88, by*0.75, 0.02)`，`grille` 材质
+2. **8 条水平机架单元分隔线**: `LineBasicMaterial({ color: 0x1a3050, opacity: 0.6 })`
+3. **每 RU 的 LED 指示灯**:
+   - 左侧活动 LED: 名称 `rackLed0` ~ `rackLed7`，颜色循环 (绿/蓝/绿/青/绿/琥珀/绿/蓝)
+   - 右侧电源 LED: 恒绿
+
+##### C. 侧面 (±X) — 散热通风面
+
+两侧对称布局：
+
+1. **通风格栅**: `BoxGeometry(0.02, by*0.6, bz*0.5)`，`grille` 材质
+2. **6 条水平通风百叶条**: `accent` 材质
+3. **蓝色状态灯条**: 名称 `sideStripeR` / `sideStripeL`，`glowBlue` 材质
+
+##### D. 背面 (−Z) — 数据端口面
+
+1. **背板**: `BoxGeometry(bx*0.92, by*0.80, 0.015)`，`accent` 材质
+2. **3×2 数据端口阵列**: `port` 材质 + 每端口一个 LED (cyan/green 交替)
+
+##### E. 顶面 (+Y) — 冷却/品牌面
+
+1. **冷却通风口**: `BoxGeometry(bx*0.5, 0.015, bz*0.4)`，`grille` 材质
+2. **品牌标识线**: 两条蓝色半透明 Line
+
+##### F. 底面 (−Y) — 热接口面
+
+`busEdge` 材质的热界面板。
+
+#### 21.4.4 太阳能翼 — 动态布局算法
+
+翼的数量和尺寸由 Digital Twin 参数 `wingCount`、`wingArea` 实时驱动。
+
+**面积→视觉尺寸映射**:
+
+$$W_{wing} = \sqrt{A_{wing}} \times 0.018 \times 1.4, \quad H_{wing} = \sqrt{A_{wing}} \times 0.018 \times 1.0$$
+
+$$W_{wing} \in [0.3, 1.8], \quad H_{wing} \in [0.25, 1.2]$$
+
+其中 $A_{wing}$ 是每翼面积 (如 350 m²)，`wingScale = 0.018` 为换算因子。
+
+**网格布局算法**:
+
+```javascript
+// 每侧翼数
+var leftWings  = Math.ceil(wc / 2);
+var rightWings = wc - leftWings;
+
+function layoutWingSide(count, side) {
+  // 列数决定策略
+  var cols = (count <= 2) ? 1 : (count <= 6) ? 2 : 3;
+  var rows = Math.ceil(count / cols);
+
+  for (var idx = 0; idx < count; idx++) {
+    var col = Math.floor(idx / rows);  // 列号 (向外堆叠)
+    var row = idx % rows;               // 行号 (沿 Z 排列)
+    // ...
+  }
+}
+```
+
+**布局规则**:
+- 翼数 ≤ 2: 单列
+- 翼数 3~6: 双列
+- 翼数 7+: 三列
+- 每翼包含 3 个子面板 (`wpp = 3`) + 电池格栅线 + 框架导轨
+- 连接臂长度随列数自动延伸
+
+#### 21.4.5 散热器面板 — 动态布局算法
+
+与翼类似，散热器由 `radCount`、`radArea` 驱动：
+
+$$W_{rad} = \sqrt{A_{rad}} \times 0.032 \times 1.2, \quad H_{rad} = \sqrt{A_{rad}} \times 0.032 \times 0.9$$
+
+$$W_{rad} \in [0.2, 1.0], \quad H_{rad} \in [0.18, 0.8]$$
+
+散热器位于卫星下方 (`y = -by/2 - 0.08`)，每块面板包含 3 根铜色热管 (`CylinderGeometry`)。布局策略与翼相同。
+
+#### 21.4.6 附件 (Accessories)
+
+| 部件 | 几何体 | 位置 | 材质 |
+|------|--------|------|------|
+| 高增益天线杆 | CylinderGeometry(0.025, 0.025, 0.50) | (+0.35, top+0.25, -bz/3) | ant |
+| 天线碟 | SphereGeometry(0.25, 截球) | (+0.35, top+0.56, -bz/3) | ant |
+| 馈源 | CylinderGeometry(锥形) | (+0.35, top+0.48, -bz/3) | dark |
+| 副通信天线 | CylinderGeometry(锥形) | (-0.40, top+0.08, +bz/3) | ant |
+| 星敏感器 ×2 | BoxGeometry + Cylinder 镜头 | (±0.55, top+0.04, +0.60) | dark+lens |
+| 推力器 ×4 | ConeGeometry(0.04, 0.08, 开口) | 四角底部 | nozzle |
+| 对接环 | TorusGeometry(0.24, 0.025) | 正面中心 | frame |
+| 角落状态 LED ×4 | SphereGeometry(0.018) | 正面四角 | led (BasicMaterial) |
+| 传感器条 | BoxGeometry(1.0, 0.06, 0.10) + 5 镜头 | 底部前缘 | dark+lens |
+
+#### 21.4.7 场景初始化 — `Detail3D.init()`
+
+```javascript
+function init() {
+  container = document.getElementById('detail3dContainer');
+  // 场景
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(38, aspect, 0.1, 50);
+  camera.position.set(3.2, 2.5, 4.5);
+  // 渲染器
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  // OrbitControls (阻尼 0.07, 距离 2~12)
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  // 光照
+  sunLight     — DirectionalLight(0xfff5e0, 2.0) @ (5, 4, 6)
+  fillLight    — DirectionalLight(0x3366aa, 0.18) @ (3, -2, -4)
+  ambientLight — AmbientLight(0x0a1530, 0.25)
+  hemiLight    — HemisphereLight(sky:0x445588, ground:0x000510, 0.12)
+  // 1500 颗星星背景
+  // 构建卫星 → buildSat(makeMats()) → scene.add(satGroup)
+}
+```
+
+**光照设计**:
+- 主光源模拟太阳（暖白 0xfff5e0），位于右上前方
+- 补光模拟地球反照（冷蓝 0x3366aa），位于下后方
+- 环境光极暗（0x0a1530），模拟太空真空
+- 半球光微弱（0.12），提供天/地色差
+
+#### 21.4.8 每帧更新 — `Detail3D.update(eclipse)`
+
+```javascript
+function update(eclipse) {
+  // 1. 缓慢自转 (0.0015 rad/帧) + 俯仰微摆
+  satGroup.rotation.y += 0.0015;
+  satGroup.rotation.x = Math.sin(Date.now() * 0.0003) * 0.06;
+
+  // 2. 机架 LED 闪烁动画 (模拟数据活动)
+  satGroup.traverse(function(child) {
+    if (child.name.indexOf('rackLed') === 0) {
+      var idx = parseInt(child.name.replace('rackLed', ''));
+      var blink  = Math.sin(t * 0.005 + idx * 1.7) * 0.5 + 0.5;
+      var flicker = Math.sin(t * 0.023 + idx * 3.1) > 0.3 ? 1.0 : 0.3;
+      child.material.opacity = blink * flicker * 0.8 + 0.2;
+    }
+    // 3. 侧面灯条脉冲
+    if (child.name.indexOf('sideStripe') === 0) {
+      child.material.opacity = 0.4 + Math.sin(t * 0.002) * 0.3;
+    }
+  });
+
+  // 4. 食段 LED 变色 (绿 → 蓝)
+  if (child.name.indexOf('led') === 0) {
+    child.material.color.setHex(eclipse ? 0x3355aa : 0x33cc66);
+  }
+
+  // 5. 自适应 resize + controls.update() + render()
+}
+```
+
+**LED 动画算法**:
+- **blink**: 低频正弦波 (0.005 Hz × 时间 + 偏移)，产生 0~1 的缓慢呼吸效果
+- **flicker**: 高频正弦波 (0.023 Hz) 做阈值判断，模拟数据活动的随机闪烁
+- 最终亮度 = `blink × flicker × 0.8 + 0.2`，确保最低 20% 可见度
+
+#### 21.4.9 模型重建 — `Detail3D.rebuild()`
+
+当 Digital Twin 参数变更时，`dt-controls.js` 调用此方法完整重建模型：
+
+```javascript
+function rebuild() {
+  if (!ready) return;
+  // 1. 移除旧模型
+  scene.remove(satGroup);
+  satGroup.traverse(function(child) {
+    if (child.geometry) child.geometry.dispose();
+    if (child.material) {
+      if (child.material.map) child.material.map.dispose();
+      child.material.dispose();
+    }
+  });
+  // 2. 重新构建
+  satGroup = buildSat(makeMats());
+  scene.add(satGroup);
+}
+```
+
+**内存管理**: 遍历旧 Group 的所有子对象，逐一释放 `geometry`、`material`、`texture`，防止 WebGL 内存泄漏。
+
+---
+
+### 21.5 主循环集成
+
+> **文件**: `js/simulation.js`
+
+3D 渲染模块在主循环中的调用点：
+
+```javascript
+// === 初始化阶段 ===
+Orbit3D.init();     // 创建地球 3D 场景
+Detail3D.init();    // 创建卫星 3D 场景
+
+// === 每帧更新 (在 update() 末尾) ===
+Orbit3D.update(eclipse);   // 更新轨道场景
+Detail3D.update(eclipse);  // 更新卫星场景
+drawSolarArray(eclipse);   // 2D Canvas 太阳能
+drawRadiator(eclipse);     // 2D Canvas 散热器
+drawTrend();               // 2D Canvas 趋势图
+
+// === 窗口 resize ===
+window.addEventListener('resize', () => {
+  initStars(); resizeAll();
+  Orbit3D.resize();
+  Detail3D.resize();
+});
+```
+
+3D 场景的 `update()` 与 2D Canvas 的 `draw*()` 函数在同一个 `requestAnimationFrame` 帧中顺序执行，共享同一帧时间戳。
+
+---
+
+### 21.6 Digital Twin 联动
+
+> **文件**: `js/dt-controls.js`
+
+以下 6 个 DT 参数变更时会触发 `Detail3D.rebuild()`：
+
+| 控件 | 变量 | 触发 |
+|------|------|------|
+| Wing Count 滑块 | `wingCount` | `Detail3D.rebuild()` |
+| Wing Area 滑块 | `wingArea` | `Detail3D.rebuild()` |
+| Cell Tech 下拉 | `currentCellTech` | `Detail3D.rebuild()` |
+| Rad Panel Count 滑块 | `radCount` | `Detail3D.rebuild()` |
+| Rad Panel Area 滑块 | `radArea` | `Detail3D.rebuild()` |
+| Coolant 下拉 | `currentCoolant` | `Detail3D.rebuild()` |
+
+典型调用链：
+
+```
+用户拖动 Wing Count 滑块
+  → wingCount = +e.target.value
+  → rebuildWings()
+  → updateDTSummary()
+  → Detail3D.rebuild()
+      → scene.remove(satGroup)
+      → dispose 所有 geometry/material
+      → buildSat(makeMats())
+        → 读取新的 wingCount, wingArea
+        → layoutWingSide() 生成新布局
+      → scene.add(satGroup)
+```
+
+`buildSat()` 内部通过全局变量直接读取最新 DT 参数：
+
+```javascript
+var wc  = Math.max(1, typeof wingCount !== 'undefined' ? wingCount : 4);
+var wa  = typeof wingArea !== 'undefined' ? wingArea : 6;
+var radC = Math.max(1, typeof radCount !== 'undefined' ? radCount : 4);
+var radA = typeof radArea !== 'undefined' ? radArea : 1.0;
+```
+
+---
+
+### 21.7 渲染管线配置
+
+两个 3D 场景的渲染器配置：
+
+| 参数 | 轨道场景 (Orbit3D) | 卫星场景 (Detail3D) |
+|------|-------------------|--------------------|
+| Tone Mapping | ACES Filmic | ACES Filmic |
+| Exposure | 1.1 | 1.0 |
+| Antialiasing | ✅ | ✅ |
+| Alpha (透明背景) | ✅ | ✅ |
+| Pixel Ratio | min(devicePixelRatio, 2) | min(devicePixelRatio, 2) |
+| FOV | 45° | 38° |
+| Near/Far | 0.1 / 300 | 0.1 / 50 |
+| Damping | 0.06 | 0.07 |
+| Distance Limits | 3.5 ~ 18 | 2 ~ 12 |
+| Pan | 禁用 | 启用 |
+
+**ACES Filmic Tone Mapping**: 模拟电影胶片的色调映射，压缩高光、提升暗部细节，使太空场景的光照更加自然。
+
+---
+
+### 21.8 性能优化策略
+
+| 策略 | 实现 |
+|------|------|
+| **像素比限制** | `Math.min(window.devicePixelRatio, 2)` — 4K+ 屏幕下避免渲染过多像素 |
+| **按需 resize** | 仅在检测到容器尺寸变化 >1px 时才更新 renderer |
+| **模型复用** | 轨道视图用简化模型 (~15 个 Mesh)，细节视图用完整模型 (~100+ Mesh) |
+| **纹理复用** | NASA 纹理通过 URL 全局缓存，不重复加载 |
+| **程序化纹理** | 云层/日冕使用 Canvas 生成纹理，无外部图片请求 |
+| **Additive Blending** | 大气辉光使用 `depthWrite: false` + `AdditiveBlending`，避免深度排序开销 |
+| **Group 清理** | `rebuild()` 中 traverse 释放所有 GPU 资源 (geometry + material + texture) |
+| **星场静态** | 星星使用 `Points` 粒子系统 (单次 draw call)，无逐帧更新 |
+
+---
+
+> **文档更新时间**: 2026-03-02  
+> **文档适用版本**: Space Data Center Simulator (模块化架构 + Three.js 3D 渲染)  
+> **项目结构**: `index.html` + `css/styles.css` + 14 个 JS 模块 (`js/*.js`，含 2 个 Three.js 3D 模块)
