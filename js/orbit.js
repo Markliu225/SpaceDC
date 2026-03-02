@@ -3,6 +3,7 @@
  * ================================================================ */
 
 function drawOrbit(eclipse) {
+  if (!oC || !oX) return;
   const W = oC.width, H = oC.height, cx = W * 0.46, cy = H * 0.5;
   const earthR = Math.min(W, H) * 0.28, orbitR = earthR * 1.7;
   oX.clearRect(0, 0, W, H);

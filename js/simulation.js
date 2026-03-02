@@ -116,7 +116,7 @@ function update(ts) {
   document.getElementById('bbOrbit').textContent = `#${orbitCount}`;
 
   // Draw all canvases
-  drawOrbit(eclipse); drawDetail(eclipse); drawSolarArray(eclipse); drawRadiator(eclipse); drawTrend();
+  Orbit3D.update(eclipse); Detail3D.update(eclipse); drawSolarArray(eclipse); drawRadiator(eclipse); drawTrend();
 }
 
 function setSpeed(s) {
@@ -127,8 +127,9 @@ function setSpeed(s) {
 function animate(ts) { resizeAll(); drawStars(); update(ts); requestAnimationFrame(animate); }
 
 // --- Initialization ---
-window.addEventListener('resize', () => { initStars(); resizeAll(); });
+window.addEventListener('resize', () => { initStars(); resizeAll(); Orbit3D.resize(); Detail3D.resize(); });
 initStars(); resizeAll();
+Orbit3D.init(); Detail3D.init();
 setupDTControls();
 updateCellTechDisplay();
 updateCoolantDisplay();

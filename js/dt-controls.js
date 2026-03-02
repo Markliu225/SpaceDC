@@ -9,6 +9,7 @@ function setupDTControls() {
     wingCount = parseInt(slWC.value);
     document.getElementById('valWingCount').textContent = wingCount;
     rebuildWings(); updateDTSummary();
+    if (typeof Detail3D !== 'undefined') Detail3D.rebuild();
     addLog('info', `[DT] Solar wings reconfigured: ${wingCount} wings.`);
   });
 
@@ -18,6 +19,7 @@ function setupDTControls() {
     wingArea = parseInt(slWA.value);
     document.getElementById('valWingArea').textContent = wingArea + 'm²';
     rebuildWings(); updateDTSummary();
+    if (typeof Detail3D !== 'undefined') Detail3D.rebuild();
   });
 
   // Cell tech
@@ -25,6 +27,7 @@ function setupDTControls() {
   selCT.addEventListener('change', () => {
     currentCellTech = selCT.value;
     rebuildWings(); updateCellTechDisplay(); updateDTSummary();
+    if (typeof Detail3D !== 'undefined') Detail3D.rebuild();
     addLog('info', `[DT] Cell tech → ${CELL_TECHS[currentCellTech].name}.`);
   });
 
@@ -34,6 +37,7 @@ function setupDTControls() {
     radCount = parseInt(slRC.value);
     document.getElementById('valRadCount').textContent = radCount;
     rebuildRadPanels(); updateDTSummary();
+    if (typeof Detail3D !== 'undefined') Detail3D.rebuild();
     addLog('info', `[DT] Radiator panels reconfigured: ${radCount} panels.`);
   });
 
@@ -43,6 +47,7 @@ function setupDTControls() {
     radArea = parseInt(slRA.value);
     document.getElementById('valRadArea').textContent = radArea + 'm²';
     rebuildRadPanels(); updateDTSummary();
+    if (typeof Detail3D !== 'undefined') Detail3D.rebuild();
   });
 
   // Epsilon
@@ -59,6 +64,7 @@ function setupDTControls() {
   selCo.addEventListener('change', () => {
     currentCoolant = selCo.value;
     updateCoolantDisplay(); updateDTSummary();
+    if (typeof Detail3D !== 'undefined') Detail3D.rebuild();
     addLog('info', `[DT] Coolant → ${COOLANTS[currentCoolant].name}.`);
   });
 

@@ -95,6 +95,7 @@ function drawSatIcon(ctx, x, y, angle, eclipse, s) {
 // SATELLITE DETAIL (annotations follow dynamic sat geometry)
 // ================================================================
 function drawDetail(eclipse) {
+  if (!dC || !dX) return;
   const W = dC.width, H = dC.height; dX.clearRect(0, 0, W, H);
   const bg = dX.createRadialGradient(W / 2, H / 2, 40, W / 2, H / 2, W * 0.55);
   bg.addColorStop(0, 'rgba(0,12,35,0.95)'); bg.addColorStop(1, 'rgba(0,0,8,0.95)');
