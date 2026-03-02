@@ -42,39 +42,79 @@ var Orbit3D = (function () {
     return tex;
   }
 
-  /* ---- Atmosphere ---- */
-  function makeAtmosphere(radius) {
+  /* ---- Atmosphere (multi-layer glow) ---- */
+  function makeAtmosphere(earthRadius) {
+    var group = new THREE.Group();
+
     var vs = [
       'varying vec3 vN;',
       'varying vec3 vP;',
+      'varying vec3 vWorldNormal;',
+      'varying vec3 vWorldPos;',
       'void main(){',
       '  vN = normalize(normalMatrix * normal);',
       '  vP = vec3(modelViewMatrix * vec4(position, 1.0));',
+      '  vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);',
+      '  vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;',
       '  gl_Position = projectionMatrix * vec4(vP, 1.0);',
       '}'
     ].join('\n');
+
     var fs = [
       'varying vec3 vN;',
       'varying vec3 vP;',
+      'varying vec3 vWorldNormal;',
+      'varying vec3 vWorldPos;',
       'uniform float intensity;',
+      'uniform float rimPow;',
+      'uniform float alphaPow;',
+      'uniform vec3 innerColor;',
+      'uniform vec3 outerColor;',
+      'uniform vec3 sunDir;',
       'void main(){',
       '  vec3 V = normalize(-vP);',
       '  float rim = 1.0 - max(dot(V, vN), 0.0);',
-      '  vec3 col = vec3(0.22, 0.48, 1.0) * pow(rim, 2.8) * intensity;',
-      '  col += vec3(0.55, 0.75, 1.0) * pow(rim, 5.5) * intensity * 0.25;',
-      '  gl_FragColor = vec4(col, pow(rim, 2.4) * intensity * 0.55);',
+      // Sun-facing boost: brighter on day side
+      '  float sunFace = max(dot(vWorldNormal, sunDir), 0.0);',
+      '  float sunBoost = 0.35 + 0.65 * sunFace;',
+      // Color gradient from inner (bright blue-white) to outer (deep blue)
+      '  vec3 col = mix(innerColor, outerColor, pow(rim, 0.6));',
+      '  col *= pow(rim, rimPow) * intensity * sunBoost;',
+      // Soft alpha falloff
+      '  float alpha = pow(rim, alphaPow) * intensity * 0.6 * sunBoost;',
+      '  gl_FragColor = vec4(col, alpha);',
       '}'
     ].join('\n');
-    var mat = new THREE.ShaderMaterial({
-      vertexShader: vs,
-      fragmentShader: fs,
-      uniforms: { intensity: { value: 1.1 } },
-      side: THREE.BackSide,
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending
+
+    // Layer config: [radius scale, rimPow, alphaPow, innerColor, outerColor, intensity]
+    var layers = [
+      { s: 1.015, rp: 3.0, ap: 2.6, ic: [0.55, 0.78, 1.0], oc: [0.15, 0.35, 0.95], int: 1.3 },
+      { s: 1.04,  rp: 2.2, ap: 2.0, ic: [0.40, 0.65, 1.0], oc: [0.10, 0.28, 0.85], int: 0.7 },
+      { s: 1.08,  rp: 1.6, ap: 1.5, ic: [0.30, 0.55, 1.0], oc: [0.05, 0.15, 0.60], int: 0.35 },
+      { s: 1.14,  rp: 1.2, ap: 1.2, ic: [0.20, 0.40, 0.90], oc: [0.02, 0.08, 0.35], int: 0.15 }
+    ];
+
+    layers.forEach(function(L) {
+      var mat = new THREE.ShaderMaterial({
+        vertexShader: vs,
+        fragmentShader: fs,
+        uniforms: {
+          intensity:  { value: L.int },
+          rimPow:     { value: L.rp },
+          alphaPow:   { value: L.ap },
+          innerColor: { value: new THREE.Vector3(L.ic[0], L.ic[1], L.ic[2]) },
+          outerColor: { value: new THREE.Vector3(L.oc[0], L.oc[1], L.oc[2]) },
+          sunDir:     { value: new THREE.Vector3(-1, 0.3, 0.5).normalize() }
+        },
+        side: THREE.BackSide,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      });
+      group.add(new THREE.Mesh(new THREE.SphereGeometry(earthRadius * L.s, 64, 64), mat));
     });
-    return new THREE.Mesh(new THREE.SphereGeometry(radius, 64, 64), mat);
+
+    return group;
   }
 
   /* ---- Stars ---- */
@@ -260,8 +300,8 @@ var Orbit3D = (function () {
       );
       scene.add(cloudsMesh);
 
-      /* --- Atmosphere --- */
-      atmosMesh = makeAtmosphere(2.15);
+      /* --- Atmosphere (multi-layer glow) --- */
+      atmosMesh = makeAtmosphere(2.0);
       scene.add(atmosMesh);
 
       /* --- Orbit ring --- */
@@ -348,8 +388,22 @@ var Orbit3D = (function () {
 
       // Eclipse effects
       sunLight.intensity = eclipse ? 0.06 : 2.2;
-      if (atmosMesh && atmosMesh.material && atmosMesh.material.uniforms) {
-        atmosMesh.material.uniforms.intensity.value = eclipse ? 0.25 : 1.1;
+      if (atmosMesh) {
+        var sunDirNorm = sunLight.position.clone().normalize();
+        atmosMesh.traverse(function(child) {
+          if (child.isMesh && child.material && child.material.uniforms) {
+            child.material.uniforms.intensity.value = eclipse ? child.material.uniforms.intensity.value * 0 + 0.08 : child.material.uniforms.intensity._original || child.material.uniforms.intensity.value;
+          }
+        });
+        // Store originals on first run & handle eclipse
+        atmosMesh.traverse(function(child) {
+          if (child.isMesh && child.material && child.material.uniforms) {
+            var u = child.material.uniforms;
+            if (!u.intensity._original) u.intensity._original = u.intensity.value;
+            u.intensity.value = eclipse ? u.intensity._original * 0.08 : u.intensity._original;
+            if (u.sunDir) u.sunDir.value.copy(sunDirNorm);
+          }
+        });
       }
       var led = satellite.getObjectByName('statusLED');
       if (led) led.material.color.setHex(eclipse ? 0x3355aa : 0x33cc66);
