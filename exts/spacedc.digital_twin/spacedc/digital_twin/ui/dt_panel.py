@@ -52,10 +52,12 @@ class DigitalTwinPanel:
         state: SimState,
         on_rebuild: Optional[Callable] = None,
         on_state_change: Optional[Callable] = None,
+        on_view_toggle: Optional[Callable] = None,
     ):
         self._state = state
         self._on_rebuild = on_rebuild        # called when 3D model needs rebuild
         self._on_state_change = on_state_change
+        self._on_view_toggle = on_view_toggle  # called to switch orbit/satellite view
         self._window: Optional["ui.Window"] = None
 
         # Value label references for live update
@@ -74,6 +76,8 @@ class DigitalTwinPanel:
 
         # Speed button references
         self._speed_labels = {}
+        # View toggle button reference
+        self._view_btn = None
 
     def build(self):
         if not HAS_OMNI_UI:
@@ -89,6 +93,8 @@ class DigitalTwinPanel:
             with ui.ScrollingFrame():
                 with ui.VStack(spacing=6, style=PANEL_STYLE):
                     self._build_header()
+                    ui.Separator(height=2)
+                    self._build_view_toggle()
                     ui.Separator(height=2)
                     self._build_speed_controls()
                     ui.Separator(height=2)
@@ -121,6 +127,26 @@ class DigitalTwinPanel:
             alignment=ui.Alignment.CENTER,
             height=20,
         )
+
+    def _build_view_toggle(self):
+        ui.Label("👁 Camera View", height=20)
+        with ui.HStack(height=28, spacing=4):
+            self._view_btn = ui.Button(
+                "🔭 Switch to Satellite Close-up",
+                height=26,
+                clicked_fn=self._on_view_btn_clicked,
+            )
+
+    def _on_view_btn_clicked(self):
+        """Handle view toggle button click."""
+        if self._on_view_toggle:
+            # Returns the new mode string from the callback
+            new_mode = self._on_view_toggle()
+            if self._view_btn and new_mode:
+                if new_mode == "satellite":
+                    self._view_btn.text = "🌍 Switch to Orbit Overview"
+                else:
+                    self._view_btn.text = "🔭 Switch to Satellite Close-up"
 
     def _build_speed_controls(self):
         ui.Label("⏱ Simulation Speed", height=20)
@@ -301,7 +327,8 @@ class DigitalTwinPanel:
         self._state.rebuild_wings()
         if self._lbl_wing_area:
             self._lbl_wing_area.text = f"{int(model.get_value_as_int())} m²"
-        self._notify_change()
+        self._trigger_rebuild()
+        self._update_summary()
 
     def _on_cell_tech_changed(self, key: str):
         self._state.current_cell_tech = key

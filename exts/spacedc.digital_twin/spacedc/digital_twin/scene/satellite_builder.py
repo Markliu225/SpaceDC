@@ -67,15 +67,25 @@ def build_satellite(
 ) -> None:
     """
     Build (or rebuild) the full satellite model at ``root_path``.
-    If the prim already exists it is cleared first.
+    If the prim already exists its **model children** are cleared first,
+    but camera and light prims created by ViewSwitcher are preserved so
+    that the micro-view camera survives a parameter-change rebuild.
     """
     if not HAS_USD:
         raise RuntimeError("pxr (OpenUSD) not available — run inside Omniverse Kit")
 
-    # Clear existing
+    # ── Selective clear: remove only model sub-prims, keep camera/lights ──
+    _KEEP_SUFFIXES = ("MicroCam", "MicroKeyLight", "MicroFillLight")
+
     existing = stage.GetPrimAtPath(root_path)
     if existing.IsValid():
-        stage.RemovePrim(root_path)
+        children_to_remove = []
+        for child in existing.GetChildren():
+            name = child.GetName()
+            if name not in _KEEP_SUFFIXES:
+                children_to_remove.append(child.GetPath())
+        for cpath in children_to_remove:
+            stage.RemovePrim(cpath)
 
     root = UsdGeom.Xform.Define(stage, root_path)
 

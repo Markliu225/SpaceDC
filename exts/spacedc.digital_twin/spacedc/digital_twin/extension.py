@@ -54,6 +54,8 @@ except Exception as e:
 from .ui.dt_panel import DigitalTwinPanel
 from .ui.telemetry_panel import TelemetryPanel, HUDOverlay
 from .ui.trend_chart import TrendChartPanel
+from .ui.satellite_status_window import SatelliteStatusWindow
+from .ui.view_switcher import ViewSwitcher
 
 
 # ── Prim paths ──────────────────────────────────────────────
@@ -86,6 +88,8 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         self._telem_panel: Optional[TelemetryPanel] = None
         self._hud: Optional[HUDOverlay] = None
         self._trend: Optional[TrendChartPanel] = None
+        self._sat_status: Optional[SatelliteStatusWindow] = None
+        self._view_switcher: Optional[ViewSwitcher] = None
 
         # Kit subscription
         self._update_sub = None
@@ -128,11 +132,15 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
             else:
                 print("[SpaceDC] Stage not ready at startup, will build on first tick")
 
-        # 4. Build UI panels
+        # 4. Create view switcher
+        self._view_switcher = ViewSwitcher()
+
+        # 5. Build UI panels
         self._dt_panel = DigitalTwinPanel(
             self._state,
             on_rebuild=self._rebuild_satellite,
             on_state_change=lambda: None,
+            on_view_toggle=self._on_view_toggle,
         )
         self._dt_panel.build()
 
@@ -145,7 +153,10 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         self._trend = TrendChartPanel(self._state)
         self._trend.build()
 
-        # 5. Subscribe to Kit update loop
+        self._sat_status = SatelliteStatusWindow(self._state)
+        self._sat_status.build()
+
+        # 6. Subscribe to Kit update loop
         if HAS_KIT:
             app = omni.kit.app.get_app()
             self._update_sub = app.get_update_event_stream().create_subscription_to_pop(
@@ -171,6 +182,10 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
             self._hud.destroy()
         if self._trend:
             self._trend.destroy()
+        if self._sat_status:
+            self._sat_status.destroy()
+        if self._view_switcher:
+            self._view_switcher.destroy()
 
         print("[SpaceDC] Extension shutdown complete")
 
@@ -227,6 +242,19 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         update_environment_for_eclipse(stage, result["eclipse"], SUN_LIGHT_PATH, AMBIENT_PATH)
         update_earth_rotation(stage, EARTH_PATH, CLOUDS_PATH, result["earth_rot_y"])
 
+        # Track satellite with camera in micro view
+        if self._view_switcher and self._view_switcher.mode == "satellite":
+            from pxr import Gf as _Gf
+            from .physics.orbital_mechanics import get_orbit_position
+            sx, sy, sz = get_orbit_position(
+                self._state.sim_time,
+                orbit_radius=dynamic_radius,
+                tilt_deg=self._state.orbit_inclination,
+                orbit_period=self._state.orbit_period,
+            )
+            sat_pos = _Gf.Vec3d(sx, sy, sz)
+            self._view_switcher.update_micro_camera(stage, sat_pos)
+
     # ── UI update callback ──────────────────────────────────
 
     def _on_ui_tick(self, result: dict):
@@ -235,6 +263,8 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
             self._hud.update()
         if self._trend:
             self._trend.update()
+        if self._sat_status:
+            self._sat_status.update()
 
     # ── Satellite rebuild (DT parameter change) ─────────────
 
@@ -245,11 +275,19 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
 
         stage = omni.usd.get_context().get_stage()
         if stage:
+            # Switch viewport away from MicroCam BEFORE the prim is deleted
+            if self._view_switcher:
+                self._view_switcher.before_satellite_rebuild()
+
             build_satellite(
                 stage, SATELLITE_PATH,
                 self._state.wing_count, self._state.wing_area,
                 self._state.rad_count, self._state.rad_area,
             )
+            # Rebuild destroys /World/Satellite children — restore camera & lights
+            if self._view_switcher:
+                self._view_switcher.on_satellite_rebuilt(stage)
+
             # Update orbit ring to match current altitude & inclination
             update_orbit_ring(
                 stage,
@@ -263,3 +301,44 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
                 f"alt={self._state.orbit_altitude:.0f}km, inc={self._state.orbit_inclination:.1f}°",
                 self._state.met_seconds,
             )
+
+    # ── View toggle (orbit ↔ satellite) ─────────────────────
+
+    def _on_view_toggle(self) -> str:
+        """
+        Toggle between orbit and satellite camera views.
+        Returns the new mode string so the UI button can update its label.
+        """
+        if not self._view_switcher or not HAS_SCENE or not HAS_KIT:
+            return "orbit"
+
+        stage = omni.usd.get_context().get_stage()
+        if not stage:
+            return "orbit"
+
+        # Compute current satellite position so camera can snap to it immediately
+        sat_pos = None
+        try:
+            from pxr import Gf as _Gf
+            from .scene.earth_builder import EARTH_RADIUS
+            from .physics.orbital_mechanics import get_orbit_position
+            re_km = 6371.0
+            dynamic_radius = EARTH_RADIUS * (re_km + self._state.orbit_altitude) / re_km
+            sx, sy, sz = get_orbit_position(
+                self._state.sim_time,
+                orbit_radius=dynamic_radius,
+                tilt_deg=self._state.orbit_inclination,
+                orbit_period=self._state.orbit_period,
+            )
+            sat_pos = _Gf.Vec3d(sx, sy, sz)
+        except Exception:
+            pass
+
+        self._view_switcher.toggle(stage, sat_pos)
+        new_mode = self._view_switcher.mode
+        self._logger.add_log(
+            "info",
+            f"[View] Switched to {'SATELLITE (micro)' if new_mode == 'satellite' else 'ORBIT (macro)'} view",
+            self._state.met_seconds,
+        )
+        return new_mode
