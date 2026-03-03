@@ -36,6 +36,7 @@ from .simulation_engine import SimulationEngine
 try:
     from .scene.earth_builder import (
         build_earth_scene, update_satellite_position, update_eclipse_lighting,
+        update_orbit_ring,
     )
     from .scene.satellite_builder import build_satellite
     from .scene.environment import (
@@ -211,12 +212,11 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         if not stage:
             return
 
-        # Use dynamic orbit parameters for scene position
-        # Convert altitude KM to scene units (placeholder: ORBIT_RADIUS corresponds to ~550km)
-        # For simplicity, we keep visual ORBIT_RADIUS constant or scale it slightly
-        from .scene.earth_builder import ORBIT_RADIUS
-        dynamic_radius = ORBIT_RADIUS * (1.0 + (self._state.orbit_altitude - 550.0) / 6371.0)
-        
+        # Dynamic orbit radius in scene units: EARTH_RADIUS * (Re + alt) / Re
+        from .scene.earth_builder import EARTH_RADIUS
+        re_km = 6371.0
+        dynamic_radius = EARTH_RADIUS * (re_km + self._state.orbit_altitude) / re_km
+
         update_satellite_position(
             stage, SATELLITE_PATH, self._state.sim_time,
             orbit_radius=dynamic_radius,
@@ -250,8 +250,16 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
                 self._state.wing_count, self._state.wing_area,
                 self._state.rad_count, self._state.rad_area,
             )
+            # Update orbit ring to match current altitude & inclination
+            update_orbit_ring(
+                stage,
+                self._state.orbit_altitude,
+                self._state.orbit_inclination,
+                WORLD_ROOT,
+            )
             self._logger.add_log(
                 "info",
-                f"[DT] Satellite rebuilt: {self._state.wing_count} wings, {self._state.rad_count} radiators.",
+                f"[DT] Rebuilt: {self._state.wing_count}W, {self._state.rad_count}R, "
+                f"alt={self._state.orbit_altitude:.0f}km, inc={self._state.orbit_inclination:.1f}°",
                 self._state.met_seconds,
             )

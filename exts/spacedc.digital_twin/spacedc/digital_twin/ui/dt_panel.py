@@ -68,9 +68,8 @@ class DigitalTwinPanel:
         self._lbl_peak_rad = None
         self._lbl_balance = None
         self._lbl_thermal = None
-        self._lbl_altitude = None
-        self._lbl_inclination = None
         self._lbl_period = None
+        self._lbl_eclipse_frac = None
         self._lbl_sunlight = None
 
         # Speed button references
@@ -136,34 +135,36 @@ class DigitalTwinPanel:
     def _build_orbit_section(self):
         ui.Label("🌍 Orbital Configuration", name="header", height=24)
 
-        # Altitude slider
-        with ui.HStack(height=22):
-            ui.Label("Altitude:", width=90)
-            self._lbl_altitude = ui.Label(
-                f"{int(self._state.orbit_altitude)} km", name="value", width=80
-            )
-        slider_alt = ui.IntSlider(min=200, max=2000, step=10, height=20)
-        slider_alt.model.set_value(int(self._state.orbit_altitude))
-        slider_alt.model.add_value_changed_fn(self._on_altitude_changed)
+        # Altitude input
+        with ui.HStack(height=24, spacing=4):
+            ui.Label("Altitude (km):", width=110)
+            field_alt = ui.FloatField(width=90, height=22)
+            field_alt.model.set_value(self._state.orbit_altitude)
+            field_alt.model.add_end_edit_fn(self._on_altitude_edited)
+            ui.Label("km", width=30)
 
-        # Inclination slider
-        with ui.HStack(height=22):
-            ui.Label("Inclination:", width=90)
-            self._lbl_inclination = ui.Label(
-                f"{self._state.orbit_inclination:.1f}°", name="value", width=80
-            )
-        slider_inc = ui.IntSlider(min=0, max=180, step=1, height=20)
-        slider_inc.model.set_value(int(self._state.orbit_inclination))
-        slider_inc.model.add_value_changed_fn(self._on_inclination_changed)
+        # Inclination input
+        with ui.HStack(height=24, spacing=4):
+            ui.Label("Inclination (°):", width=110)
+            field_inc = ui.FloatField(width=90, height=22)
+            field_inc.model.set_value(self._state.orbit_inclination)
+            field_inc.model.add_end_edit_fn(self._on_inclination_edited)
+            ui.Label("°", width=30)
 
-        # Dynamic Stats
+        # Dynamic readouts
         with ui.VStack(spacing=2):
             with ui.HStack(height=18):
                 ui.Label("Period:", width=120)
                 self._lbl_period = ui.Label("—", name="value")
             with ui.HStack(height=18):
+                ui.Label("Eclipse frac:", width=120)
+                self._lbl_eclipse_frac = ui.Label("—", name="value")
+            with ui.HStack(height=18):
                 ui.Label("Sunlight:", width=120)
                 self._lbl_sunlight = ui.Label("—", name="value")
+
+        # Initialise readouts
+        self._refresh_orbit_readouts()
 
     def _build_solar_section(self):
         ui.Label("☀ Solar Array Configuration", name="header", height=24)
@@ -343,18 +344,40 @@ class DigitalTwinPanel:
         self._update_summary()
         self._notify_change()
 
-    def _on_altitude_changed(self, model):
-        val = model.get_value_as_int()
+    def _on_altitude_edited(self, model):
+        val = model.get_value_as_float()
+        val = max(160.0, min(36000.0, val))   # clamp LEO→GEO
+        model.set_value(val)
         self._state.update_orbit_params(val, self._state.orbit_inclination)
-        self._lbl_altitude.text = f"{val} km"
+        self._refresh_orbit_readouts()
         self._update_summary()
         self._notify_change()
+        # Rebuild the 3-D orbit ring to match new radius
+        if self._on_rebuild:
+            self._on_rebuild()
 
-    def _on_inclination_changed(self, model):
+    def _on_inclination_edited(self, model):
         val = model.get_value_as_float()
+        val = max(0.0, min(180.0, val))
+        model.set_value(val)
         self._state.update_orbit_params(self._state.orbit_altitude, val)
-        self._lbl_inclination.text = f"{val:.1f}°"
+        self._refresh_orbit_readouts()
         self._notify_change()
+        if self._on_rebuild:
+            self._on_rebuild()
+
+    def _refresh_orbit_readouts(self):
+        """Update the Period / Eclipse / Sunlight labels from current state."""
+        s = self._state
+        period_min = s.orbit_period / 60.0
+        eclipse_pct = s.eclipse_fraction * 100.0
+        sunlight_pct = (1.0 - s.eclipse_fraction) * 100.0
+        if self._lbl_period:
+            self._lbl_period.text = f"{period_min:.1f} min"
+        if hasattr(self, "_lbl_eclipse_frac") and self._lbl_eclipse_frac:
+            self._lbl_eclipse_frac.text = f"{eclipse_pct:.1f}%"
+        if self._lbl_sunlight:
+            self._lbl_sunlight.text = f"{sunlight_pct:.1f}%"
 
     # ── Helpers ──────────────────────────────────────────────
 
@@ -399,21 +422,4 @@ class DigitalTwinPanel:
                 "value" if status == "ok" else ("warn" if status == "warn" else "danger")
             )
 
-        # Update dynamic orbit stats
-        period_min = self._state.orbit_period / 60.0
-        sunlight_pct = (1.0 - self._state.eclipse_fraction) * 100.0
-        if hasattr(self, "_lbl_period"):
-            self._lbl_period.text = f"{period_min:.1f} min"
-            self._lbl_sunlight.text = f"{sunlight_pct:.1f}%"
-
-    def _update_orbit_summary(self):
-        s = self._state
-
-        # 简单计算轨道周期和日照时间
-        orbital_period = 2 * 3.1416 * ((s.orbit_altitude + 6371) * 1000) / 29780
-        sunlight_hours = (orbital_period / 3600) * (s.orbit_inclination / 180)
-
-        if self._lbl_period:
-            self._lbl_period.text = f"{orbital_period:.1f} h"
-        if self._lbl_sunlight:
-            self._lbl_sunlight.text = f"{sunlight_hours:.1f} h"
+        # Orbit readouts are updated by _refresh_orbit_readouts() — no duplication here

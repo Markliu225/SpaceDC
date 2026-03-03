@@ -31,7 +31,8 @@ except ImportError:
 # ── Scene constants ─────────────────────────────────────────
 EARTH_RADIUS = 200.0            # scene units (cm in Kit default)
 ORBIT_RADIUS = EARTH_RADIUS * 1.7
-ORBIT_TILT_DEG = 7.6            # SSO ~97.6° inclination visual tilt
+ORBIT_INCLINATION_DEG = 97.6    # default SSO inclination (used by RotateX on orbit ring)
+ORBIT_TILT_DEG = ORBIT_INCLINATION_DEG   # alias kept for backward compat
 SUN_DISTANCE = 1500.0
 
 # NASA texture URLs (to be downloaded or shipped as assets)
@@ -112,10 +113,11 @@ def build_earth_scene(stage: "Usd.Stage", root_path: str = "/World") -> None:
     curves.GetCurveVertexCountsAttr().Set(Vt.IntArray([n_pts + 1]))
     curves.GetTypeAttr().Set(UsdGeom.Tokens.linear)
     curves.GetDisplayColorAttr().Set([Gf.Vec3f(0.0, 0.55, 1.0)])
-    # Apply orbit tilt
+    # Apply orbit tilt — must match get_orbit_position() which uses
+    # inclination directly as RotateX angle in the XZ plane.
     xf = UsdGeom.Xformable(curves.GetPrim())
     xf.ClearXformOpOrder()
-    xf.AddRotateXOp().Set(ORBIT_TILT_DEG)
+    xf.AddRotateXOp().Set(ORBIT_INCLINATION_DEG)
 
     # ── Sun ─────────────────────────────────────────────────
     sun_path = f"{root_path}/Sun"
@@ -221,3 +223,46 @@ def update_eclipse_lighting(
     if prim.IsValid():
         light = UsdLux.DistantLight(prim)
         light.GetIntensityAttr().Set(50.0 if eclipse else 5000.0)
+
+
+def update_orbit_ring(
+    stage: "Usd.Stage",
+    altitude_km: float,
+    inclination_deg: float,
+    root_path: str = "/World",
+) -> None:
+    """
+    Rebuild the orbit ring BasisCurves to match new altitude & inclination.
+    altitude_km → scene radius   (EARTH_RADIUS * (Re+alt)/Re)
+    inclination_deg → tilt angle (visual = inclination - 90)
+    """
+    if not HAS_USD:
+        return
+
+    orbit_path = f"{root_path}/OrbitRing"
+    prim = stage.GetPrimAtPath(orbit_path)
+    if not prim or not prim.IsValid():
+        return
+
+    # Convert altitude to visual scene units
+    re = 6371.0
+    visual_radius = EARTH_RADIUS * (re + altitude_km) / re
+
+    # Rebuild points
+    n_pts = 256
+    points = []
+    for i in range(n_pts + 1):
+        a = (i / n_pts) * math.pi * 2.0
+        x = math.cos(a) * visual_radius
+        z = math.sin(a) * visual_radius
+        points.append(Gf.Vec3f(x, 0, z))
+
+    curves = UsdGeom.BasisCurves(prim)
+    curves.GetPointsAttr().Set(Vt.Vec3fArray(points))
+
+    # Update tilt — RotateX must match get_orbit_position() which uses
+    # inclination_deg directly: sin(incl) → Y component, cos(incl) → Z component.
+    # 0° = equatorial (ring flat in XZ), 90° = polar, 97.6° = SSO.
+    xf = UsdGeom.Xformable(prim)
+    xf.ClearXformOpOrder()
+    xf.AddRotateXOp().Set(inclination_deg)
