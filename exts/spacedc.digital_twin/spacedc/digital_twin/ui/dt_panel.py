@@ -68,6 +68,10 @@ class DigitalTwinPanel:
         self._lbl_peak_rad = None
         self._lbl_balance = None
         self._lbl_thermal = None
+        self._lbl_altitude = None
+        self._lbl_inclination = None
+        self._lbl_period = None
+        self._lbl_sunlight = None
 
         # Speed button references
         self._speed_labels = {}
@@ -88,6 +92,8 @@ class DigitalTwinPanel:
                     self._build_header()
                     ui.Separator(height=2)
                     self._build_speed_controls()
+                    ui.Separator(height=2)
+                    self._build_orbit_section()  # <--- 新增
                     ui.Separator(height=2)
                     self._build_solar_section()
                     ui.Separator(height=2)
@@ -126,6 +132,38 @@ class DigitalTwinPanel:
                     width=60,
                     clicked_fn=lambda s=spd: self._set_speed(s),
                 )
+
+    def _build_orbit_section(self):
+        ui.Label("🌍 Orbital Configuration", name="header", height=24)
+
+        # Altitude slider
+        with ui.HStack(height=22):
+            ui.Label("Altitude:", width=90)
+            self._lbl_altitude = ui.Label(
+                f"{int(self._state.orbit_altitude)} km", name="value", width=80
+            )
+        slider_alt = ui.IntSlider(min=200, max=2000, step=10, height=20)
+        slider_alt.model.set_value(int(self._state.orbit_altitude))
+        slider_alt.model.add_value_changed_fn(self._on_altitude_changed)
+
+        # Inclination slider
+        with ui.HStack(height=22):
+            ui.Label("Inclination:", width=90)
+            self._lbl_inclination = ui.Label(
+                f"{self._state.orbit_inclination:.1f}°", name="value", width=80
+            )
+        slider_inc = ui.IntSlider(min=0, max=180, step=1, height=20)
+        slider_inc.model.set_value(int(self._state.orbit_inclination))
+        slider_inc.model.add_value_changed_fn(self._on_inclination_changed)
+
+        # Dynamic Stats
+        with ui.VStack(spacing=2):
+            with ui.HStack(height=18):
+                ui.Label("Period:", width=120)
+                self._lbl_period = ui.Label("—", name="value")
+            with ui.HStack(height=18):
+                ui.Label("Sunlight:", width=120)
+                self._lbl_sunlight = ui.Label("—", name="value")
 
     def _build_solar_section(self):
         ui.Label("☀ Solar Array Configuration", name="header", height=24)
@@ -261,9 +299,8 @@ class DigitalTwinPanel:
         self._state.wing_area = float(model.as_int)
         self._state.rebuild_wings()
         if self._lbl_wing_area:
-            self._lbl_wing_area.text = f"{int(self._state.wing_area)} m²"
-        self._trigger_rebuild()
-        self._update_summary()
+            self._lbl_wing_area.text = f"{int(model.get_value_as_int())} m²"
+        self._notify_change()
 
     def _on_cell_tech_changed(self, key: str):
         self._state.current_cell_tech = key
@@ -306,6 +343,19 @@ class DigitalTwinPanel:
         self._update_summary()
         self._notify_change()
 
+    def _on_altitude_changed(self, model):
+        val = model.get_value_as_int()
+        self._state.update_orbit_params(val, self._state.orbit_inclination)
+        self._lbl_altitude.text = f"{val} km"
+        self._update_summary()
+        self._notify_change()
+
+    def _on_inclination_changed(self, model):
+        val = model.get_value_as_float()
+        self._state.update_orbit_params(self._state.orbit_altitude, val)
+        self._lbl_inclination.text = f"{val:.1f}°"
+        self._notify_change()
+
     # ── Helpers ──────────────────────────────────────────────
 
     def _trigger_rebuild(self):
@@ -330,7 +380,7 @@ class DigitalTwinPanel:
         balance = peak_solar - compute_load
 
         if self._lbl_peak_solar:
-            self._lbl_peak_solar.text = f"{peak_solar:.0f} kW"
+            self._lbl_peak_solar.text = f"{peak_solar:.1f} kW"
         if self._lbl_peak_rad:
             self._lbl_peak_rad.text = f"{peak_rad:.0f} kW"
         if self._lbl_balance:
@@ -348,3 +398,22 @@ class DigitalTwinPanel:
             self._lbl_thermal.name = (
                 "value" if status == "ok" else ("warn" if status == "warn" else "danger")
             )
+
+        # Update dynamic orbit stats
+        period_min = self._state.orbit_period / 60.0
+        sunlight_pct = (1.0 - self._state.eclipse_fraction) * 100.0
+        if hasattr(self, "_lbl_period"):
+            self._lbl_period.text = f"{period_min:.1f} min"
+            self._lbl_sunlight.text = f"{sunlight_pct:.1f}%"
+
+    def _update_orbit_summary(self):
+        s = self._state
+
+        # 简单计算轨道周期和日照时间
+        orbital_period = 2 * 3.1416 * ((s.orbit_altitude + 6371) * 1000) / 29780
+        sunlight_hours = (orbital_period / 3600) * (s.orbit_inclination / 180)
+
+        if self._lbl_period:
+            self._lbl_period.text = f"{orbital_period:.1f} h"
+        if self._lbl_sunlight:
+            self._lbl_sunlight.text = f"{sunlight_hours:.1f} h"

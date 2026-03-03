@@ -211,7 +211,18 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         if not stage:
             return
 
-        update_satellite_position(stage, SATELLITE_PATH, self._state.sim_time)
+        # Use dynamic orbit parameters for scene position
+        # Convert altitude KM to scene units (placeholder: ORBIT_RADIUS corresponds to ~550km)
+        # For simplicity, we keep visual ORBIT_RADIUS constant or scale it slightly
+        from .scene.earth_builder import ORBIT_RADIUS
+        dynamic_radius = ORBIT_RADIUS * (1.0 + (self._state.orbit_altitude - 550.0) / 6371.0)
+        
+        update_satellite_position(
+            stage, SATELLITE_PATH, self._state.sim_time,
+            orbit_radius=dynamic_radius,
+            orbit_inclination=self._state.orbit_inclination,
+            orbit_period=self._state.orbit_period
+        )
         update_eclipse_lighting(stage, result["eclipse"], SUN_LIGHT_PATH)
         update_environment_for_eclipse(stage, result["eclipse"], SUN_LIGHT_PATH, AMBIENT_PATH)
         update_earth_rotation(stage, EARTH_PATH, CLOUDS_PATH, result["earth_rot_y"])

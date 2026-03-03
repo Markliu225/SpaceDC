@@ -144,6 +144,26 @@ class SimState:
     # ── Eclipse state ───────────────────
     eclipse: bool = False
 
+    # ── Simulation Controls ──
+    steps: int = 0
+    sim_time: float = 0.0      # seconds of mission elapsed time
+    timescale: float = 1.0     # simulation speed multiplier
+
+    # ── Current Orbital State ──
+    # User-configurable orbital parameters
+    orbit_altitude: float = 550.0  # km
+    orbit_inclination: float = 97.6 # deg
+    orbit_period: float = 5742.0   # s
+    eclipse_fraction: float = 0.36 # 0.0 to 1.0
+
+    def update_orbit_params(self, altitude_km: float, inclination_deg: float):
+        """Recalculate dynamic orbital physics on parameter change."""
+        self.orbit_altitude = altitude_km
+        self.orbit_inclination = inclination_deg
+        from .constants import compute_orbit_period, compute_eclipse_fraction
+        self.orbit_period = compute_orbit_period(altitude_km)
+        self.eclipse_fraction = compute_eclipse_fraction(altitude_km)
+
     def rebuild_wings(self):
         self.wings = SolarWing.build_fleet(
             self.wing_count, self.wing_area, self.current_cell_tech

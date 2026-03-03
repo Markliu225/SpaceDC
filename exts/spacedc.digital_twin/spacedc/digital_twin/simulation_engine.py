@@ -76,11 +76,11 @@ class SimulationEngine:
         s.phase_time += dt * s.speed
 
         # ── Orbit / eclipse detection ───────────────────────
-        angle = get_angle(s.sim_time)
-        eclipse = is_eclipse(angle)
-        prev_eclipse = is_eclipse(get_angle(s.sim_time - dt * s.speed))
+        angle = get_angle(s.sim_time, s.orbit_period)
+        eclipse = is_eclipse(angle, s.eclipse_fraction)
+        prev_eclipse = is_eclipse(get_angle(s.sim_time - dt * s.speed, s.orbit_period), s.eclipse_fraction)
 
-        new_orbit = int(s.sim_time / ORBIT_PERIOD) + 1
+        new_orbit = int(s.sim_time / s.orbit_period) + 1
         if new_orbit != s.orbit_count:
             s.orbit_count = new_orbit
             self.logger.add_log("info", f"Orbit #{s.orbit_count} commenced.", s.met_seconds)

@@ -185,16 +185,19 @@ def update_satellite_position(
     stage: "Usd.Stage",
     sat_prim_path: str,
     sim_time: float,
+    orbit_radius: float = ORBIT_RADIUS,
+    orbit_inclination: float = 97.6,
+    orbit_period: float = 5742.0,
 ) -> None:
     """
-    Move the satellite prim along its orbit based on sim_time.
+    Move the satellite prim along its orbit based on sim_time and dynamic parameters.
     Call each tick from the simulation engine.
     """
     if not HAS_USD:
         return
     from ..physics.orbital_mechanics import get_orbit_position
 
-    x, y, z = get_orbit_position(sim_time, orbit_radius=ORBIT_RADIUS, tilt_deg=ORBIT_TILT_DEG)
+    x, y, z = get_orbit_position(sim_time, orbit_radius=orbit_radius, tilt_deg=orbit_inclination, orbit_period=orbit_period)
     prim = stage.GetPrimAtPath(sat_prim_path)
     if prim.IsValid():
         xf = UsdGeom.Xformable(prim)

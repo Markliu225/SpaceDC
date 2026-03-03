@@ -178,3 +178,17 @@ WORKLOADS: dict = {
         "batchInfo":      "512 imgs/batch · 50 steps",
     },
 }
+
+def compute_orbit_period(altitude_km: float) -> float:
+    """Kepler's 3rd law: T = 2π * sqrt(a³/μ)"""
+    mu = 398600.4418  # Earth gravitational constant km³/s²
+    r = 6371.0 + altitude_km
+    return 2.0 * math.pi * math.sqrt(math.pow(r, 3) / mu)
+
+def compute_eclipse_fraction(altitude_km: float) -> float:
+    """Approximate eclipse fraction for circular orbit."""
+    r_earth = 6371.0
+    r_orbit = r_earth + altitude_km
+    # θ = asin(Re/Ro)
+    half_angle = math.asin(r_earth / r_orbit)
+    return half_angle / math.pi
