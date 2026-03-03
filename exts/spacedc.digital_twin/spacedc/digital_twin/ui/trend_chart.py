@@ -24,13 +24,13 @@ from ..physics.solar_array_model import compute_peak_solar
 from ..physics.thermal_model import compute_peak_rad_capacity
 
 # ── Color constants (AABBGGRR for omni.ui) ──────────────────
-COLOR_SOLAR  = 0xFF66E0FF   # yellow
-COLOR_BAT    = 0xFF006BFF   # orange
-COLOR_RAD    = 0xFF0044FF   # red
-COLOR_GPU_T  = 0xFFFFD400   # cyan
+COLOR_SOLAR  = 0xFF82E57A   # soft green
+COLOR_BAT    = 0xFF47B3FF   # amber
+COLOR_RAD    = 0xFF6B6BFF   # soft red
+COLOR_GPU_T  = 0xFFD8B400   # cyan accent
 
 TREND_STYLE = {
-    "Window": {"background_color": 0xFF040C12},
+    "Window": {"background_color": 0xFF18140A},
 }
 
 
@@ -53,7 +53,7 @@ class TrendChartPanel:
             return
 
         self._window = ui.Window(
-            "📈 Telemetry Trends",
+            "Telemetry Trends",
             width=460,
             height=320,
         )
@@ -62,38 +62,38 @@ class TrendChartPanel:
             with ui.VStack(spacing=4, style=TREND_STYLE):
                 # Solar power
                 with ui.HStack(height=14):
-                    ui.Label("☀ Solar (kW)", style={"color": COLOR_SOLAR, "font_size": 11})
+                    ui.Label("Solar (kW)", style={"color": COLOR_SOLAR, "font_size": 11})
                 self._plot_solar = ui.Plot(
                     ui.Type.LINE, 0.0, 100.0, *([0.0] * 10),
                     height=50,
-                    style={"color": COLOR_SOLAR, "background_color": 0xFF0A1428},
+                    style={"color": COLOR_SOLAR, "background_color": 0xFF0C1422},
                 )
 
                 # Battery SOC
                 with ui.HStack(height=14):
-                    ui.Label("🔋 Battery (%)", style={"color": COLOR_BAT, "font_size": 11})
+                    ui.Label("Battery (%)", style={"color": COLOR_BAT, "font_size": 11})
                 self._plot_bat = ui.Plot(
                     ui.Type.LINE, 0.0, 100.0, *([50.0] * 10),
                     height=50,
-                    style={"color": COLOR_BAT, "background_color": 0xFF0A1428},
+                    style={"color": COLOR_BAT, "background_color": 0xFF0C1422},
                 )
 
                 # Radiator
                 with ui.HStack(height=14):
-                    ui.Label("🌡 Radiator (kW)", style={"color": COLOR_RAD, "font_size": 11})
+                    ui.Label("Radiator (kW)", style={"color": COLOR_RAD, "font_size": 11})
                 self._plot_rad = ui.Plot(
                     ui.Type.LINE, 0.0, 100.0, *([0.0] * 10),
                     height=50,
-                    style={"color": COLOR_RAD, "background_color": 0xFF0A1428},
+                    style={"color": COLOR_RAD, "background_color": 0xFF0C1422},
                 )
 
                 # GPU Temp
                 with ui.HStack(height=14):
-                    ui.Label("🖥 GPU Temp (°C)", style={"color": COLOR_GPU_T, "font_size": 11})
+                    ui.Label("GPU Temp (C)", style={"color": COLOR_GPU_T, "font_size": 11})
                 self._plot_gpu = ui.Plot(
                     ui.Type.LINE, 20.0, 100.0, *([70.0] * 10),
                     height=50,
-                    style={"color": COLOR_GPU_T, "background_color": 0xFF0A1428},
+                    style={"color": COLOR_GPU_T, "background_color": 0xFF0C1422},
                 )
 
     def destroy(self):

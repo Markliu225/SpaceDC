@@ -18,21 +18,25 @@ from ..physics.telemetry import TelemetryLogger
 
 # ── Style ───────────────────────────────────────────────────
 LOG_STYLE = {
-    "Label::ok":     {"color": 0xFF39FF14, "font_size": 11},
-    "Label::info":   {"color": 0xFF00D4FF, "font_size": 11},
-    "Label::warn":   {"color": 0xFFFFAA00, "font_size": 11},
-    "Label::danger": {"color": 0xFFFF2244, "font_size": 11},
+    "Label::ok":     {"color": 0xFF7AE582, "font_size": 11},
+    "Label::info":   {"color": 0xFF00B4D8, "font_size": 11},
+    "Label::warn":   {"color": 0xFFFFB347, "font_size": 11},
+    "Label::danger": {"color": 0xFFFF6B6B, "font_size": 11},
 }
 
 HUD_STYLE = {
-    "Label::phase_sunlit":  {"color": 0xFFFFE066, "font_size": 16},
-    "Label::phase_eclipse": {"color": 0xFF6688FF, "font_size": 16},
-    "Label::metric":        {"color": 0xFF39FF14, "font_size": 14},
-    "Label::metric_warn":   {"color": 0xFFFF6600, "font_size": 14},
-    "Label::met":           {"color": 0xFF00D4FF, "font_size": 13},
-    "Label::status_ok":     {"color": 0xFF39FF14, "font_size": 14},
-    "Label::status_warn":   {"color": 0xFFFFAA00, "font_size": 14},
-    "Label::status_danger": {"color": 0xFFFF2244, "font_size": 14},
+    "Window":               {"background_color": 0xFF0A1018},
+    "Label::phase_sunlit":  {"color": 0xFFE8C547, "font_size": 15},
+    "Label::phase_eclipse": {"color": 0xFF6B8EC9, "font_size": 15},
+    "Label::metric":        {"color": 0xFF7AE582, "font_size": 13},
+    "Label::metric_warn":   {"color": 0xFFFF8844, "font_size": 13},
+    "Label::met":           {"color": 0xFF00B4D8, "font_size": 13},
+    "Label::label":         {"color": 0xFFB0C4D8, "font_size": 13},
+    "Label::section":       {"color": 0xFF00B4D8, "font_size": 13},
+    "Label::status_ok":     {"color": 0xFF7AE582, "font_size": 14},
+    "Label::status_warn":   {"color": 0xFFFFB347, "font_size": 14},
+    "Label::status_danger": {"color": 0xFFFF6B6B, "font_size": 14},
+    "Separator":            {"color": 0xFF1A2A3A},
 }
 
 
@@ -51,7 +55,7 @@ class TelemetryPanel:
     def build(self):
         if not HAS_OMNI_UI:
             return
-        self._window = ui.Window("📡 Telemetry Log", width=420, height=260)
+        self._window = ui.Window("Telemetry Log", width=420, height=260)
         with self._window.frame:
             self._scroll = ui.ScrollingFrame(style=LOG_STYLE)
             with self._scroll:
@@ -106,7 +110,7 @@ class HUDOverlay:
             return
 
         self._window = ui.Window(
-            "🛰️ ORBITAL DC-1 HUD",
+            "ORBITAL DC-1 HUD",
             width=340,
             height=400,
             flags=ui.WINDOW_FLAGS_NO_RESIZE,
@@ -116,7 +120,7 @@ class HUDOverlay:
             with ui.VStack(spacing=4, style=HUD_STYLE):
                 # Phase box
                 self._lbl_phase = ui.Label(
-                    "☀️ SUNLIT PASS", name="phase_sunlit",
+                    "SUNLIT PASS", name="phase_sunlit",
                     alignment=ui.Alignment.CENTER, height=28
                 )
                 self._lbl_phase_detail = ui.Label(
@@ -133,38 +137,38 @@ class HUDOverlay:
                 ui.Separator(height=2)
 
                 # Power gauges
-                ui.Label("⚡ Power", height=18)
+                ui.Label("POWER", name="section", height=18)
                 with ui.VStack(spacing=2):
                     with ui.HStack(height=18):
-                        ui.Label("Solar:", width=80)
+                        ui.Label("Solar:", name="label", width=80)
                         self._lbl_solar = ui.Label("0 kW", name="metric")
                     with ui.HStack(height=18):
-                        ui.Label("Battery:", width=80)
+                        ui.Label("Battery:", name="label", width=80)
                         self._lbl_bat = ui.Label("87%", name="metric")
                     with ui.HStack(height=18):
-                        ui.Label("Radiator:", width=80)
+                        ui.Label("Radiator:", name="label", width=80)
                         self._lbl_rad = ui.Label("0 kW", name="metric")
 
                 ui.Separator(height=2)
 
                 # Compute gauges
-                ui.Label("🖥 Compute", height=18)
+                ui.Label("COMPUTE", name="section", height=18)
                 with ui.VStack(spacing=2):
                     with ui.HStack(height=18):
-                        ui.Label("FLOPS:", width=80)
+                        ui.Label("FLOPS:", name="label", width=80)
                         self._lbl_flops = ui.Label("12.8 EF", name="metric")
                     with ui.HStack(height=18):
-                        ui.Label("GPU Util:", width=80)
+                        ui.Label("GPU Util:", name="label", width=80)
                         self._lbl_gpu_pct = ui.Label("92%", name="metric")
                     with ui.HStack(height=18):
-                        ui.Label("GPU Temp:", width=80)
-                        self._lbl_gpu_t = ui.Label("76°C", name="metric")
+                        ui.Label("GPU Temp:", name="label", width=80)
+                        self._lbl_gpu_t = ui.Label("76 C", name="metric")
 
                 ui.Separator(height=2)
 
                 # System status
                 self._lbl_status = ui.Label(
-                    "● NOMINAL", name="status_ok",
+                    "NOMINAL", name="status_ok",
                     alignment=ui.Alignment.CENTER, height=24,
                 )
 
@@ -182,11 +186,11 @@ class HUDOverlay:
 
         # Phase
         if s.eclipse:
-            self._lbl_phase.text = "🌑 ECLIPSE PASS"
+            self._lbl_phase.text = "ECLIPSE PASS"
             self._lbl_phase.name = "phase_eclipse"
             self._lbl_phase_detail.text = f"Bat {s.bat_soc:.0f}% SOC — discharge"
         else:
-            self._lbl_phase.text = "☀️ SUNLIT PASS"
+            self._lbl_phase.text = "SUNLIT PASS"
             self._lbl_phase.name = "phase_sunlit"
             self._lbl_phase_detail.text = f"Solar arrays {s.solar_pwr:.0f} kW"
 
@@ -203,7 +207,7 @@ class HUDOverlay:
         # Compute
         self._lbl_flops.text = f"{s.flops:.1f} EF"
         self._lbl_gpu_pct.text = f"{s.gpu_util}%"
-        self._lbl_gpu_t.text = f"{s.gpu_temp:.0f}°C"
+        self._lbl_gpu_t.text = f"{s.gpu_temp:.0f} C"
         self._lbl_gpu_t.name = "metric_warn" if s.gpu_temp > 90 else "metric"
 
         # System status

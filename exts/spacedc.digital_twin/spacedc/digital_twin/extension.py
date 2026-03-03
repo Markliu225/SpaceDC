@@ -56,6 +56,7 @@ from .ui.telemetry_panel import TelemetryPanel, HUDOverlay
 from .ui.trend_chart import TrendChartPanel
 from .ui.satellite_status_window import SatelliteStatusWindow
 from .ui.view_switcher import ViewSwitcher
+from .ui.component_info_popup import ComponentInfoPopup
 
 
 # ── Prim paths ──────────────────────────────────────────────
@@ -90,6 +91,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         self._trend: Optional[TrendChartPanel] = None
         self._sat_status: Optional[SatelliteStatusWindow] = None
         self._view_switcher: Optional[ViewSwitcher] = None
+        self._component_popup: Optional[ComponentInfoPopup] = None
 
         # Kit subscription
         self._update_sub = None
@@ -156,6 +158,10 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         self._sat_status = SatelliteStatusWindow(self._state)
         self._sat_status.build()
 
+        # 5b. Component click-to-inspect popup
+        self._component_popup = ComponentInfoPopup(self._state)
+        self._component_popup.start()
+
         # 6. Subscribe to Kit update loop
         if HAS_KIT:
             app = omni.kit.app.get_app()
@@ -186,6 +192,8 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
             self._sat_status.destroy()
         if self._view_switcher:
             self._view_switcher.destroy()
+        if self._component_popup:
+            self._component_popup.destroy()
 
         print("[SpaceDC] Extension shutdown complete")
 
@@ -265,6 +273,8 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
             self._trend.update()
         if self._sat_status:
             self._sat_status.update()
+        if self._component_popup:
+            self._component_popup.update()
 
     # ── Satellite rebuild (DT parameter change) ─────────────
 

@@ -20,95 +20,95 @@ from ..physics.state import SimState
 # ── Style tokens ────────────────────────────────────────────
 STATUS_STYLE = {
     "Window": {
-        "background_color": 0xFF0C1220,
-        "border_color": 0xFF1A3050,
+        "background_color": 0xFF18140A,
+        "border_color": 0xFF2A3545,
         "border_width": 1,
     },
     "Label::title": {
-        "color": 0xFF00D4FF,
+        "color": 0xFFD8B400,
         "font_size": 18,
     },
     "Label::section": {
-        "color": 0xFF00D4FF,
+        "color": 0xFFD8B400,
         "font_size": 14,
     },
     "Label::label": {
-        "color": 0xFFAABBCC,
+        "color": 0xFFD8C4B0,
         "font_size": 12,
     },
     "Label::value": {
-        "color": 0xFF39FF14,
+        "color": 0xFF82E57A,
         "font_size": 12,
     },
     "Label::value_warn": {
-        "color": 0xFFFFAA00,
+        "color": 0xFF47B3FF,
         "font_size": 12,
     },
     "Label::value_danger": {
-        "color": 0xFFFF2244,
+        "color": 0xFF6B6BFF,
         "font_size": 12,
     },
     "Label::unit": {
-        "color": 0xFF667788,
+        "color": 0xFF807060,
         "font_size": 11,
     },
     "Label::status_nominal": {
-        "color": 0xFF39FF14,
+        "color": 0xFF82E57A,
         "font_size": 12,
     },
     "Label::status_warn": {
-        "color": 0xFFFFAA00,
+        "color": 0xFF47B3FF,
         "font_size": 12,
     },
     "Label::status_danger": {
-        "color": 0xFFFF2244,
+        "color": 0xFF6B6BFF,
         "font_size": 12,
     },
     "Label::header_col": {
-        "color": 0xFF5588AA,
+        "color": 0xFF807060,
         "font_size": 11,
     },
     "Label::wing_name": {
-        "color": 0xFF00D4FF,
+        "color": 0xFFD8B400,
         "font_size": 12,
     },
     "Label::rad_name": {
-        "color": 0xFFFF8844,
+        "color": 0xFF47B3FF,
         "font_size": 12,
     },
     "Label::phase_sunlit": {
-        "color": 0xFFFFE066,
+        "color": 0xFF82E57A,
         "font_size": 14,
     },
     "Label::phase_eclipse": {
-        "color": 0xFF6688FF,
+        "color": 0xFF47B3FF,
         "font_size": 14,
     },
     "Rectangle::bar_bg": {
-        "background_color": 0xFF1A2540,
+        "background_color": 0xFF1A2030,
         "border_radius": 3,
     },
     "Rectangle::bar_fill_green": {
-        "background_color": 0xFF39FF14,
+        "background_color": 0xFF82E57A,
         "border_radius": 3,
     },
     "Rectangle::bar_fill_cyan": {
-        "background_color": 0xFF00D4FF,
+        "background_color": 0xFFD8B400,
         "border_radius": 3,
     },
     "Rectangle::bar_fill_orange": {
-        "background_color": 0xFFFF8844,
+        "background_color": 0xFF47B3FF,
         "border_radius": 3,
     },
     "Rectangle::bar_fill_red": {
-        "background_color": 0xFFFF2244,
+        "background_color": 0xFF6B6BFF,
         "border_radius": 3,
     },
     "Rectangle::separator": {
-        "background_color": 0xFF1A3050,
+        "background_color": 0xFF2A3545,
     },
     "ScrollingFrame": {
-        "background_color": 0xFF0A0F1A,
+        "background_color": 0xFF0C1422,
     },
 }
 
@@ -176,7 +176,7 @@ class SatelliteStatusWindow:
             return
 
         self._window = ui.Window(
-            "🛰️ Satellite Status",
+            "Satellite Status",
             width=460,
             height=700,
         )
@@ -214,18 +214,18 @@ class SatelliteStatusWindow:
 
     def _build_header(self):
         ui.Label(
-            "🛰️ ORBITAL DC-1  ·  Subsystem Status",
+            "ORBITAL DC-1  //  Subsystem Status",
             name="title",
             alignment=ui.Alignment.CENTER,
             height=28,
         )
         self._lbl_phase = ui.Label(
-            "☀️ SUNLIT", name="phase_sunlit",
+            "SUNLIT PASS", name="phase_sunlit",
             alignment=ui.Alignment.CENTER, height=22,
         )
 
     def _build_orbit_section(self):
-        ui.Label("🌍 Orbit", name="section", height=20)
+        ui.Label("ORBIT", name="section", height=20)
         with ui.VStack(spacing=2):
             self._lbl_altitude = self._kv_row("Altitude", "550.0 km")
             self._lbl_inclination = self._kv_row("Inclination", "97.6°")
@@ -234,7 +234,7 @@ class SatelliteStatusWindow:
             self._lbl_orbit_count = self._kv_row("Orbit #", "1")
 
     def _build_power_section(self):
-        ui.Label("⚡ Power Subsystem", name="section", height=20)
+        ui.Label("POWER SUBSYSTEM", name="section", height=20)
         with ui.VStack(spacing=2):
             self._lbl_solar_pwr = self._kv_row("Solar Output", "0 kW")
             self._lbl_rad_pwr = self._kv_row("Radiator Rejection", "0 kW")
@@ -254,20 +254,20 @@ class SatelliteStatusWindow:
                 )
 
     def _build_thermal_section(self):
-        ui.Label("🌡 Thermal", name="section", height=20)
+        ui.Label("THERMAL", name="section", height=20)
         with ui.VStack(spacing=2):
             self._lbl_gpu_temp = self._kv_row("GPU Temp", "76°C")
             self._lbl_arr_temp = self._kv_row("Array Temp", "62°C")
 
     def _build_compute_section(self):
-        ui.Label("🖥 Compute", name="section", height=20)
+        ui.Label("COMPUTE", name="section", height=20)
         with ui.VStack(spacing=2):
             self._lbl_flops = self._kv_row("Performance", "12.8 ExaFLOPS")
             self._lbl_gpu_util = self._kv_row("GPU Utilization", "92%")
             self._lbl_workload = self._kv_row("Workload", "—")
 
     def _build_wing_section(self):
-        ui.Label("☀️ Solar Wings", name="section", height=20)
+        ui.Label("SOLAR WINGS", name="section", height=20)
         # Table header
         with ui.HStack(height=16):
             ui.Label("Name", name="header_col", width=50)
@@ -281,7 +281,7 @@ class SatelliteStatusWindow:
         self._rebuild_wing_rows()
 
     def _build_radiator_section(self):
-        ui.Label("🧊 Radiator Panels", name="section", height=20)
+        ui.Label("RADIATOR PANELS", name="section", height=20)
         with ui.HStack(height=16):
             ui.Label("ID", name="header_col", width=40)
             ui.Label("Area m²", name="header_col", width=60)
@@ -362,10 +362,10 @@ class SatelliteStatusWindow:
         # Phase
         if self._lbl_phase:
             if s.eclipse:
-                self._lbl_phase.text = "🌑 ECLIPSE PASS"
+                self._lbl_phase.text = "ECLIPSE PASS"
                 self._lbl_phase.name = "phase_eclipse"
             else:
-                self._lbl_phase.text = "☀️ SUNLIT PASS"
+                self._lbl_phase.text = "SUNLIT PASS"
                 self._lbl_phase.name = "phase_sunlit"
 
         # Orbit

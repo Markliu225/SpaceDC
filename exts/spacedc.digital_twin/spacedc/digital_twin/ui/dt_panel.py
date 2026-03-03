@@ -23,14 +23,20 @@ from ..physics.state import SimState
 from ..physics.thermal_model import compute_peak_rad_capacity, check_thermal_feasibility
 from ..physics.solar_array_model import compute_peak_solar
 
-# ── Style tokens ────────────────────────────────────────────
+# ── Unified dark-space style ────────────────────────────────
 PANEL_STYLE = {
-    "Window": {"background_color": 0xFF0C1220},
-    "Label": {"color": 0xFFAABBCC, "font_size": 13},
-    "Label::header": {"color": 0xFF00D4FF, "font_size": 15},
-    "Label::value": {"color": 0xFF39FF14, "font_size": 14},
-    "Label::warn": {"color": 0xFFFFAA00, "font_size": 14},
-    "Label::danger": {"color": 0xFFFF2244, "font_size": 14},
+    "Window": {"background_color": 0xFF0A1018},
+    "Label":           {"color": 0xFFB0C4D8, "font_size": 13},
+    "Label::header":   {"color": 0xFF00B4D8, "font_size": 14},
+    "Label::value":    {"color": 0xFF7AE582, "font_size": 13},
+    "Label::warn":     {"color": 0xFFFFB347, "font_size": 13},
+    "Label::danger":   {"color": 0xFFFF6B6B, "font_size": 13},
+    "Label::muted":    {"color": 0xFF607080, "font_size": 12},
+    "Button":          {"background_color": 0xFF142030, "color": 0xFFB0C4D8,
+                        "border_color": 0xFF1E3448, "border_width": 1,
+                        "border_radius": 4, "font_size": 13},
+    "Button:hovered":  {"background_color": 0xFF1A2A40, "border_color": 0xFF00B4D8},
+    "Separator":       {"color": 0xFF1A2A3A},
 }
 
 
@@ -85,7 +91,7 @@ class DigitalTwinPanel:
             return
 
         self._window = ui.Window(
-            "🛰️ SpaceDC Digital Twin",
+            "SpaceDC Digital Twin",
             width=380,
             height=720,
         )
@@ -117,22 +123,23 @@ class DigitalTwinPanel:
 
     def _build_header(self):
         ui.Label(
-            "ORBITAL DC-1 · Space Data Center",
+            "ORBITAL DC-1  //  Space Data Center",
             name="header",
             alignment=ui.Alignment.CENTER,
             height=28,
         )
         ui.Label(
             "Digital Twin Control Panel",
+            name="muted",
             alignment=ui.Alignment.CENTER,
             height=20,
         )
 
     def _build_view_toggle(self):
-        ui.Label("👁 Camera View", height=20)
+        ui.Label("CAMERA VIEW", name="header", height=20)
         with ui.HStack(height=28, spacing=4):
             self._view_btn = ui.Button(
-                "🔭 Switch to Satellite Close-up",
+                "Satellite Close-up  >>",
                 height=26,
                 clicked_fn=self._on_view_btn_clicked,
             )
@@ -140,16 +147,15 @@ class DigitalTwinPanel:
     def _on_view_btn_clicked(self):
         """Handle view toggle button click."""
         if self._on_view_toggle:
-            # Returns the new mode string from the callback
             new_mode = self._on_view_toggle()
             if self._view_btn and new_mode:
                 if new_mode == "satellite":
-                    self._view_btn.text = "🌍 Switch to Orbit Overview"
+                    self._view_btn.text = "<<  Orbit Overview"
                 else:
-                    self._view_btn.text = "🔭 Switch to Satellite Close-up"
+                    self._view_btn.text = "Satellite Close-up  >>"
 
     def _build_speed_controls(self):
-        ui.Label("⏱ Simulation Speed", height=20)
+        ui.Label("SIMULATION SPEED", name="header", height=20)
         with ui.HStack(height=24, spacing=4):
             for spd in [1, 10, 60, 600]:
                 btn = ui.Button(
@@ -159,7 +165,7 @@ class DigitalTwinPanel:
                 )
 
     def _build_orbit_section(self):
-        ui.Label("🌍 Orbital Configuration", name="header", height=24)
+        ui.Label("ORBITAL CONFIGURATION", name="header", height=24)
 
         # Altitude input
         with ui.HStack(height=24, spacing=4):
@@ -193,7 +199,7 @@ class DigitalTwinPanel:
         self._refresh_orbit_readouts()
 
     def _build_solar_section(self):
-        ui.Label("☀ Solar Array Configuration", name="header", height=24)
+        ui.Label("SOLAR ARRAY", name="header", height=24)
 
         # Wing count slider
         with ui.HStack(height=22):
@@ -230,7 +236,7 @@ class DigitalTwinPanel:
         )
 
     def _build_radiator_section(self):
-        ui.Label("🌡 Radiative Cooling Configuration", name="header", height=24)
+        ui.Label("RADIATIVE COOLING", name="header", height=24)
 
         # Rad panel count
         with ui.HStack(height=22):
@@ -277,7 +283,7 @@ class DigitalTwinPanel:
         )
 
     def _build_workload_section(self):
-        ui.Label("🖥 Compute Workload", name="header", height=24)
+        ui.Label("COMPUTE WORKLOAD", name="header", height=24)
 
         wl_names = [WORKLOADS[k]["name"] for k in WORKLOADS]
         wl_keys = list(WORKLOADS.keys())
@@ -293,7 +299,7 @@ class DigitalTwinPanel:
         self._lbl_thermal = ui.Label("", name="value", height=20)
 
     def _build_summary_section(self):
-        ui.Label("📊 System Summary", name="header", height=24)
+        ui.Label("SYSTEM SUMMARY", name="header", height=24)
 
         with ui.VStack(spacing=3):
             with ui.HStack(height=18):
