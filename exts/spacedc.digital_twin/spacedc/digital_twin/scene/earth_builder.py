@@ -8,7 +8,7 @@
   The scene hierarchy:
 
   /World
-    /Earth              — Sphere with NASA Blue Marble material
+    /Earth              — Mesh sphere with NASA Blue Marble texture (UVs)
     /Clouds             — Slightly larger transparent sphere
     /Atmosphere         — Multi-layer rim-lit spheres
     /OrbitRing          — BasisCurves circle at orbit radius
@@ -21,7 +21,7 @@ from __future__ import annotations
 import math
 import os
 import random
-from typing import Optional
+from typing import Optional, Tuple, List
 
 try:
     from pxr import Usd, UsdGeom, UsdLux, UsdShade, Sdf, Gf, Vt
@@ -45,6 +45,67 @@ def _get_texture_dir() -> str:
         if os.path.isdir(alt):
             return alt
     return tex_dir  # return anyway, will just get placeholder material
+
+
+def _generate_sphere_mesh(
+    radius: float,
+    rings: int = 64,
+    segments: int = 128,
+) -> Tuple[
+    List[Gf.Vec3f],   # points
+    List[Gf.Vec3f],   # normals
+    List[Gf.Vec2f],   # uvs (per face-vertex)
+    List[int],         # faceVertexCounts
+    List[int],         # faceVertexIndices
+]:
+    """
+    Generate a UV-mapped sphere mesh (equirectangular / lat-long mapping).
+    Returns points, normals, UVs, face counts and face indices suitable
+    for a UsdGeom.Mesh with 'faceVarying' UV interpolation.
+    """
+    points = []
+    normals = []
+
+    # Generate vertex positions (rings+1 rows × segments+1 cols for UV seam)
+    for r in range(rings + 1):
+        phi = math.pi * r / rings          # 0 → π  (north pole → south pole)
+        for s in range(segments + 1):
+            theta = 2.0 * math.pi * s / segments  # 0 → 2π
+            x = math.sin(phi) * math.cos(theta)
+            y = math.cos(phi)
+            z = math.sin(phi) * math.sin(theta)
+            points.append(Gf.Vec3f(x * radius, y * radius, z * radius))
+            normals.append(Gf.Vec3f(x, y, z))
+
+    faceVertexCounts = []
+    faceVertexIndices = []
+    uvs = []
+
+    cols = segments + 1
+
+    for r in range(rings):
+        for s in range(segments):
+            # Quad vertex indices (CCW winding)
+            v0 = r * cols + s
+            v1 = r * cols + (s + 1)
+            v2 = (r + 1) * cols + (s + 1)
+            v3 = (r + 1) * cols + s
+
+            faceVertexCounts.append(4)
+            faceVertexIndices.extend([v0, v1, v2, v3])
+
+            # UV coords (faceVarying — one per face-vertex)
+            u0 = s / segments
+            u1 = (s + 1) / segments
+            v_top = 1.0 - r / rings           # V=1 at north pole, V=0 at south
+            v_bot = 1.0 - (r + 1) / rings
+
+            uvs.append(Gf.Vec2f(u0, v_top))
+            uvs.append(Gf.Vec2f(u1, v_top))
+            uvs.append(Gf.Vec2f(u1, v_bot))
+            uvs.append(Gf.Vec2f(u0, v_bot))
+
+    return points, normals, uvs, faceVertexCounts, faceVertexIndices
 
 # ── Scene constants ─────────────────────────────────────────
 EARTH_RADIUS = 200.0            # scene units (cm in Kit default)
@@ -84,37 +145,50 @@ def build_earth_scene(stage: "Usd.Stage", root_path: str = "/World") -> None:
     # Ensure root Xform
     root = UsdGeom.Xform.Define(stage, root_path)
 
-    # ── Earth Sphere ────────────────────────────────────────
+    # ── Earth Mesh (with UV coordinates for texture mapping) ──
     earth_path = f"{root_path}/Earth"
-    earth = UsdGeom.Sphere.Define(stage, earth_path)
-    earth.GetRadiusAttr().Set(EARTH_RADIUS)
-    earth.GetDisplayColorAttr().Set([Gf.Vec3f(0.1, 0.3, 0.6)])
+    pts, nrm, uvs, fvc, fvi = _generate_sphere_mesh(EARTH_RADIUS, rings=64, segments=128)
 
-    # Apply OmniPBR material for Earth (placeholder — real shader needs MDL)
+    earth_mesh = UsdGeom.Mesh.Define(stage, earth_path)
+    earth_mesh.GetPointsAttr().Set(Vt.Vec3fArray(pts))
+    earth_mesh.GetNormalsAttr().Set(Vt.Vec3fArray(nrm))
+    earth_mesh.SetNormalsInterpolation(UsdGeom.Tokens.vertex)
+    earth_mesh.GetFaceVertexCountsAttr().Set(Vt.IntArray(fvc))
+    earth_mesh.GetFaceVertexIndicesAttr().Set(Vt.IntArray(fvi))
+    earth_mesh.GetSubdivisionSchemeAttr().Set("none")   # don't subdivide
+
+    # Set UV primvar 'st' as faceVarying so texture mapping works
+    pv_api = UsdGeom.PrimvarsAPI(earth_mesh.GetPrim())
+    st_pv = pv_api.CreatePrimvar("st", Sdf.ValueTypeNames.TexCoord2fArray,
+                                  UsdGeom.Tokens.faceVarying)
+    st_pv.Set(Vt.Vec2fArray(uvs))
+
+    # NOTE: No DisplayColor — the material texture will provide the color.
+    # Apply Blue Marble material
     _create_earth_material(stage, earth_path)
 
-    # ── Clouds ──────────────────────────────────────────────
-    clouds_path = f"{root_path}/Clouds"
-    clouds = UsdGeom.Sphere.Define(stage, clouds_path)
-    clouds.GetRadiusAttr().Set(EARTH_RADIUS * 1.009)
-    clouds.GetDisplayColorAttr().Set([Gf.Vec3f(1.0, 1.0, 1.0)])
-    clouds.GetPrim().GetAttribute("primvars:displayOpacity").Set(Vt.FloatArray([0.3]))
+    # ── Clouds (disabled — implicit Sphere has no transparency in RTX) ──
+    # clouds_path = f"{root_path}/Clouds"
+    # clouds = UsdGeom.Sphere.Define(stage, clouds_path)
+    # clouds.GetRadiusAttr().Set(EARTH_RADIUS * 1.009)
+    # clouds.GetDisplayColorAttr().Set([Gf.Vec3f(1.0, 1.0, 1.0)])
+    # clouds.GetPrim().GetAttribute("primvars:displayOpacity").Set(Vt.FloatArray([0.3]))
 
-    # ── Atmosphere glow layers ──────────────────────────────
-    atmos_scales = [1.015, 1.04, 1.08, 1.14]
-    atmos_colors = [
-        Gf.Vec3f(0.55, 0.78, 1.0),
-        Gf.Vec3f(0.40, 0.65, 1.0),
-        Gf.Vec3f(0.30, 0.55, 1.0),
-        Gf.Vec3f(0.20, 0.40, 0.9),
-    ]
-    atmos_opacities = [0.15, 0.08, 0.04, 0.02]
-    for i, (s, c, a) in enumerate(zip(atmos_scales, atmos_colors, atmos_opacities)):
-        apath = f"{root_path}/Atmosphere/Layer{i}"
-        atmo = UsdGeom.Sphere.Define(stage, apath)
-        atmo.GetRadiusAttr().Set(EARTH_RADIUS * s)
-        atmo.GetDisplayColorAttr().Set([c])
-        atmo.GetPrim().GetAttribute("primvars:displayOpacity").Set(Vt.FloatArray([a]))
+    # ── Atmosphere glow layers (disabled — would obscure textured Earth) ──
+    # atmos_scales = [1.015, 1.04, 1.08, 1.14]
+    # atmos_colors = [
+    #     Gf.Vec3f(0.55, 0.78, 1.0),
+    #     Gf.Vec3f(0.40, 0.65, 1.0),
+    #     Gf.Vec3f(0.30, 0.55, 1.0),
+    #     Gf.Vec3f(0.20, 0.40, 0.9),
+    # ]
+    # atmos_opacities = [0.15, 0.08, 0.04, 0.02]
+    # for i, (s, c, a) in enumerate(zip(atmos_scales, atmos_colors, atmos_opacities)):
+    #     apath = f"{root_path}/Atmosphere/Layer{i}"
+    #     atmo = UsdGeom.Sphere.Define(stage, apath)
+    #     atmo.GetRadiusAttr().Set(EARTH_RADIUS * s)
+    #     atmo.GetDisplayColorAttr().Set([c])
+    #     atmo.GetPrim().GetAttribute("primvars:displayOpacity").Set(Vt.FloatArray([a]))
 
     # ── Orbit ring (BasisCurves) ────────────────────────────
     orbit_path = f"{root_path}/OrbitRing"
