@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import math
 import os
+import random
 from typing import Optional
 
 try:
@@ -27,6 +28,23 @@ try:
     HAS_USD = True
 except ImportError:
     HAS_USD = False
+
+
+def _get_texture_dir() -> str:
+    """Resolve absolute path to extension data/textures/ folder."""
+    # Walk up from this file: scene/ → digital_twin/ → spacedc/ → ext root
+    this_dir = os.path.dirname(os.path.abspath(__file__))
+    ext_root = os.path.normpath(os.path.join(this_dir, "..", "..", ".."))
+    tex_dir = os.path.join(ext_root, "data", "textures")
+    if os.path.isdir(tex_dir):
+        return tex_dir
+    # Fallback: try SPACEDC_ROOT env var
+    env_root = os.environ.get("SPACEDC_ROOT", "")
+    if env_root:
+        alt = os.path.join(env_root, "data", "textures")
+        if os.path.isdir(alt):
+            return alt
+    return tex_dir  # return anyway, will just get placeholder material
 
 # ── Scene constants ─────────────────────────────────────────
 EARTH_RADIUS = 200.0            # scene units (cm in Kit default)
@@ -165,19 +183,52 @@ def build_earth_scene(stage: "Usd.Stage", root_path: str = "/World") -> None:
 
 def _create_earth_material(stage: "Usd.Stage", earth_prim_path: str) -> None:
     """
-    Create a basic OmniPBR material for Earth and bind it.
-    Real deployment should use full MDL with day/night shader.
+    Create a UsdPreviewSurface material with Blue Marble texture for Earth.
+    Falls back to solid color if texture file is not found.
     """
     mat_path = f"{earth_prim_path}/Material"
     mat = UsdShade.Material.Define(stage, mat_path)
     shader = UsdShade.Shader.Define(stage, f"{mat_path}/Shader")
     shader.CreateIdAttr("UsdPreviewSurface")
-    shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(
-        Gf.Vec3f(0.12, 0.38, 0.65)
-    )
-    shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.7)
+    shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.85)
     shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
+    shader.CreateInput("specularColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0.02, 0.02, 0.02))
     mat.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), "surface")
+
+    # Try to bind Blue Marble texture
+    tex_dir = _get_texture_dir()
+    day_path = os.path.join(tex_dir, "earth_day.jpg")
+
+    if os.path.isfile(day_path):
+        # Create UsdUVTexture reader node
+        tex_reader = UsdShade.Shader.Define(stage, f"{mat_path}/DayTexture")
+        tex_reader.CreateIdAttr("UsdUVTexture")
+        tex_reader.CreateInput("file", Sdf.ValueTypeNames.Asset).Set(day_path.replace("\\", "/"))
+        tex_reader.CreateInput("wrapS", Sdf.ValueTypeNames.Token).Set("repeat")
+        tex_reader.CreateInput("wrapT", Sdf.ValueTypeNames.Token).Set("repeat")
+        tex_reader.CreateOutput("rgb", Sdf.ValueTypeNames.Float3)
+
+        # Create ST (UV) reader — sphere prims have built-in UVs
+        st_reader = UsdShade.Shader.Define(stage, f"{mat_path}/UVReader")
+        st_reader.CreateIdAttr("UsdPrimvarReader_float2")
+        st_reader.CreateInput("varname", Sdf.ValueTypeNames.Token).Set("st")
+        st_reader.CreateOutput("result", Sdf.ValueTypeNames.Float2)
+
+        # Connect UV → texture → shader
+        tex_reader.CreateInput("st", Sdf.ValueTypeNames.Float2).ConnectToSource(
+            st_reader.ConnectableAPI(), "result"
+        )
+        shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).ConnectToSource(
+            tex_reader.ConnectableAPI(), "rgb"
+        )
+        print(f"[SpaceDC] Earth texture bound: {day_path}")
+    else:
+        # Fallback: solid ocean blue
+        shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(
+            Gf.Vec3f(0.12, 0.38, 0.65)
+        )
+        print(f"[SpaceDC] Earth texture not found at {day_path}, using solid color")
+
     UsdShade.MaterialBindingAPI(
         stage.GetPrimAtPath(earth_prim_path)
     ).Bind(mat)

@@ -18,8 +18,9 @@ $ErrorActionPreference = "Stop"
 # ── Paths ──────────────────────────────────────────────────
 $SpaceDCRoot  = $PSScriptRoot
 $KitRoot      = "C:\Workspace\kit-app-template"
-$ExtSrc       = Join-Path $SpaceDCRoot "exts\spacedc.digital_twin\spacedc\digital_twin"
-$ExtDst       = Join-Path $KitRoot     "source\extensions\spacedc.digital_twin\spacedc\digital_twin"
+$ExtSrc       = Join-Path $SpaceDCRoot "exts\spacedc.digital_twin"
+$ExtDstSource = Join-Path $KitRoot     "source\extensions\spacedc.digital_twin"
+$ExtDstBuild  = Join-Path $KitRoot     "_build\windows-x86_64\release\exts\spacedc.digital_twin"
 $KitBat       = Join-Path $KitRoot     "_build\windows-x86_64\release\spacedc.editor.bat"
 
 # ── Banner ─────────────────────────────────────────────────
@@ -77,11 +78,22 @@ Write-Host "Syncing extension files..."
 if ($SkipSync) {
     Write-Host "        Skipped (-SkipSync)." -ForegroundColor DarkGray
 } else {
-    if (-not (Test-Path $ExtDst)) {
-        New-Item -ItemType Directory -Path $ExtDst -Force | Out-Null
+    if (-not (Test-Path $ExtDstSource)) {
+        New-Item -ItemType Directory -Path $ExtDstSource -Force | Out-Null
     }
-    # Copy everything recursively
-    Copy-Item -Path "$ExtSrc\*" -Destination $ExtDst -Recurse -Force
+    # Copy entire extension (Python code, config, data/textures) to source dir
+    Copy-Item -Path "$ExtSrc\*" -Destination $ExtDstSource -Recurse -Force
+
+    # Also copy data/textures to build dir (not covered by junction)
+    $dataSrc = Join-Path $ExtSrc "data"
+    $dataDst = Join-Path $ExtDstBuild "data"
+    if (Test-Path $dataSrc) {
+        if (-not (Test-Path $dataDst)) {
+            New-Item -ItemType Directory -Path $dataDst -Force | Out-Null
+        }
+        Copy-Item -Path "$dataSrc\*" -Destination $dataDst -Recurse -Force
+        Write-Host "        Textures synced to build dir." -ForegroundColor DarkGray
+    }
 
     # Count synced files
     $count = (Get-ChildItem -Path $ExtSrc -Recurse -File).Count

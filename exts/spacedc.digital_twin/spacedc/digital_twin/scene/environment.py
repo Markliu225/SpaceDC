@@ -6,11 +6,28 @@
 """
 from __future__ import annotations
 
+import os
+
 try:
-    from pxr import Usd, UsdLux, UsdGeom, Gf
+    from pxr import Usd, UsdLux, UsdGeom, Gf, Sdf
     HAS_USD = True
 except ImportError:
     HAS_USD = False
+
+
+def _get_texture_dir() -> str:
+    """Resolve absolute path to extension data/textures/ folder."""
+    this_dir = os.path.dirname(os.path.abspath(__file__))
+    ext_root = os.path.normpath(os.path.join(this_dir, "..", "..", ".."))
+    tex_dir = os.path.join(ext_root, "data", "textures")
+    if os.path.isdir(tex_dir):
+        return tex_dir
+    env_root = os.environ.get("SPACEDC_ROOT", "")
+    if env_root:
+        alt = os.path.join(env_root, "data", "textures")
+        if os.path.isdir(alt):
+            return alt
+    return tex_dir
 
 
 # ── Lighting presets ────────────────────────────────────────
@@ -35,11 +52,25 @@ def setup_environment(stage: "Usd.Stage", root_path: str = "/World") -> None:
     amb.GetIntensityAttr().Set(200.0)
     amb.GetColorAttr().Set(Gf.Vec3f(0.04, 0.08, 0.19))
 
-    # Optional: HDRI dome light for star-field environment
+    # Dome light with starfield HDRI for space background
     dome_path = f"{root_path}/Lights/DomeLight"
     dome = UsdLux.DomeLight.Define(stage, dome_path)
-    dome.GetIntensityAttr().Set(100.0)
-    dome.GetColorAttr().Set(Gf.Vec3f(0.01, 0.02, 0.05))
+    dome.GetIntensityAttr().Set(500.0)
+    dome.GetColorAttr().Set(Gf.Vec3f(1.0, 1.0, 1.0))
+
+    # Bind starfield HDR texture
+    tex_dir = _get_texture_dir()
+    hdr_path = os.path.join(tex_dir, "starfield.hdr")
+    if os.path.isfile(hdr_path):
+        # Use forward slashes for USD asset paths
+        hdr_asset = hdr_path.replace("\\", "/")
+        dome.GetTextureFileAttr().Set(hdr_asset)
+        dome.GetTextureFormatAttr().Set("latlong")
+        print(f"[SpaceDC] Starfield HDRI bound: {hdr_asset}")
+    else:
+        # Fallback: very dark blue — no starfield
+        dome.GetColorAttr().Set(Gf.Vec3f(0.01, 0.02, 0.05))
+        print(f"[SpaceDC] Starfield HDR not found at {hdr_path}, using dark color")
 
 
 def update_environment_for_eclipse(

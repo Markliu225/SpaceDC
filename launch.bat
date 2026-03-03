@@ -11,8 +11,9 @@ echo.
 :: ── 路径配置 ──────────────────────────────────────────────
 set "SPACEDC_ROOT=%~dp0"
 set "KIT_ROOT=C:\Workspace\kit-app-template"
-set "EXT_SRC=%SPACEDC_ROOT%exts\spacedc.digital_twin\spacedc\digital_twin"
-set "EXT_DST=%KIT_ROOT%\source\extensions\spacedc.digital_twin\spacedc\digital_twin"
+set "EXT_SRC=%SPACEDC_ROOT%exts\spacedc.digital_twin"
+set "EXT_DST=%KIT_ROOT%\source\extensions\spacedc.digital_twin"
+set "EXT_BUILD=%KIT_ROOT%\_build\windows-x86_64\release\exts\spacedc.digital_twin"
 set "KIT_BAT=%KIT_ROOT%\_build\windows-x86_64\release\spacedc.editor.bat"
 
 :: ── 检查 kit-app-template 是否存在 ─────────────────────────
@@ -52,6 +53,12 @@ if errorlevel 1 (
     echo [ERROR] File sync failed!
     pause
     exit /b 1
+)
+:: Also sync data/textures to build dir (not covered by junction)
+if exist "%EXT_SRC%\data" (
+    if not exist "%EXT_BUILD%\data" mkdir "%EXT_BUILD%\data"
+    xcopy "%EXT_SRC%\data\*" "%EXT_BUILD%\data\" /E /Y /Q >nul
+    echo       Textures synced to build dir.
 )
 echo       Extension synced OK.
 

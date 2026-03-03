@@ -17,11 +17,8 @@ preview_image = "data/preview.png"
 "omni.kit.commands" = {}
 "omni.kit.window.property" = {}
 
-[python.module]
+[[python.module]]
 name = "spacedc.digital_twin"
-
-[[python.module.env]]
-SPACEDC_ROOT = "${ext}"
 
 [settings]
 exts."spacedc.digital_twin".sim_speed = 60
