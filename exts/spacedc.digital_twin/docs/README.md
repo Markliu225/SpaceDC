@@ -6,7 +6,7 @@
 
 ---
 
-## 📁 项目结构
+## 项目结构
 
 ```
 exts/spacedc.digital_twin/
