@@ -122,6 +122,11 @@ def _prepare_imported_subtree(root_prim) -> None:
         if prim.IsA(UsdGeom.Gprim):
             gprim = UsdGeom.Gprim(prim)
             gprim.GetDoubleSidedAttr().Set(True)
+            prim.CreateAttribute(
+                "primvars:doNotCastShadows",
+                Sdf.ValueTypeNames.Bool,
+                custom=False,
+            ).Set(True)
 
 
 def _create_preview_material(
@@ -490,6 +495,18 @@ def _bind(stage, prim_path: str, mat: "UsdShade.Material"):
     prim = stage.GetPrimAtPath(prim_path)
     if prim.IsValid():
         UsdShade.MaterialBindingAPI(prim).Bind(mat)
+        _disable_cast_shadows(stage, prim_path)
+
+
+def _disable_cast_shadows(stage, prim_path: str):
+    """Disable RTX cast shadows on a geometry prim."""
+    prim = stage.GetPrimAtPath(prim_path)
+    if prim.IsValid():
+        prim.CreateAttribute(
+            "primvars:doNotCastShadows",
+            Sdf.ValueTypeNames.Bool,
+            custom=False,
+        ).Set(True)
 
 
 # ── Bus ─────────────────────────────────────────────────────

@@ -144,6 +144,19 @@ def _set_light_shadows(light_schema_or_prim, enabled: bool) -> None:
     shadow_api.CreateShadowEnableAttr().Set(enabled)
 
 
+def _disable_cast_shadows(prim) -> None:
+    """Disable RTX cast shadows on a geometry prim."""
+    if hasattr(prim, "GetPrim"):
+        prim = prim.GetPrim()
+    if not prim or not prim.IsValid():
+        return
+    prim.CreateAttribute(
+        "primvars:doNotCastShadows",
+        Sdf.ValueTypeNames.Bool,
+        custom=False,
+    ).Set(True)
+
+
 def build_earth_scene(stage: "Usd.Stage", root_path: str = "/World") -> None:
     """
     Construct the full Earth orbit scene on the given USD stage.
@@ -214,6 +227,7 @@ def build_earth_scene(stage: "Usd.Stage", root_path: str = "/World") -> None:
     curves.GetCurveVertexCountsAttr().Set(Vt.IntArray([n_pts + 1]))
     curves.GetTypeAttr().Set(UsdGeom.Tokens.linear)
     curves.GetDisplayColorAttr().Set([Gf.Vec3f(0.0, 0.55, 1.0)])
+    _disable_cast_shadows(curves)
     # Apply orbit tilt — must match get_orbit_position() which uses
     # inclination directly as RotateX angle in the XZ plane.
     xf = UsdGeom.Xformable(curves.GetPrim())
