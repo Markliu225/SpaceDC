@@ -24,6 +24,7 @@
 from __future__ import annotations
 
 import math
+import os
 from typing import Optional
 
 try:
@@ -37,6 +38,13 @@ except ImportError:
 # JS original: bus 0.14×0.10×0.16 with earth r=2.0
 # Omniverse: uniform ×100 → bus 14×10×16 cm, earth r=200 cm
 BUS_X, BUS_Y, BUS_Z = 14.0, 10.0, 16.0    # cm (Kit default unit)
+
+# Ship a higher-fidelity USDZ asset and fall back to the procedural model if it
+# is missing or cannot be referenced. These values are intentionally easy to tune.
+BEAUTY_MODEL_FILE = "mars_reconnaissance_orbiter/MRO.usdc"
+BEAUTY_MODEL_PRIMS = ("/Meshes", "/_root/Meshes", "/_root")
+BEAUTY_MODEL_ROTATE = (0.0, 180.0, 0.0)
+BEAUTY_MODEL_TARGET_SIZE = 1500.0  # cm, longest side after auto-fit
 
 
 # ── Xform helper (Kit-safe, replaces XformCommonAPI) ───────
@@ -55,6 +63,336 @@ def _xform(schema_or_prim, translate=None, rotate=None, scale=None):
         xf.AddRotateXYZOp().Set(Gf.Vec3f(*rotate))
     if scale is not None:
         xf.AddScaleOp().Set(Gf.Vec3d(*scale))
+
+
+def _get_model_path(filename: str) -> str:
+    """Resolve an absolute path inside data/models/."""
+    this_dir = os.path.dirname(os.path.abspath(__file__))
+    ext_root = os.path.normpath(os.path.join(this_dir, "..", "..", ".."))
+    rel_path = filename.replace("/", os.sep)
+    return os.path.join(ext_root, "data", "models", rel_path)
+
+
+def _compute_local_bbox(prim) -> Optional["Gf.Range3d"]:
+    """Return an aligned local-space bbox for a prim, or None if empty."""
+    bbox_cache = UsdGeom.BBoxCache(
+        Usd.TimeCode.Default(),
+        [UsdGeom.Tokens.default_, UsdGeom.Tokens.render, UsdGeom.Tokens.proxy],
+    )
+    bbox = bbox_cache.ComputeLocalBound(prim)
+    aligned = bbox.ComputeAlignedRange()
+    if aligned.IsEmpty():
+        return None
+    return aligned
+
+
+def _find_first_bbox_in_subtree(root_prim):
+    """Return the first non-empty bbox found in a referenced subtree."""
+    direct = _compute_local_bbox(root_prim)
+    if direct is not None:
+        return str(root_prim.GetPath()), direct
+
+    for prim in Usd.PrimRange(root_prim):
+        if not prim.IsValid():
+            continue
+        bbox = _compute_local_bbox(prim)
+        if bbox is not None:
+            return str(prim.GetPath()), bbox
+    return None, None
+
+
+def _prepare_imported_subtree(root_prim) -> None:
+    """Force referenced geometry to be render-visible in the current stage."""
+    for prim in Usd.PrimRange(root_prim):
+        if not prim.IsValid():
+            continue
+        if prim.IsA(UsdGeom.Xformable):
+            xformable = UsdGeom.Xformable(prim)
+            try:
+                if xformable.GetResetXformStack():
+                    xformable.SetResetXformStack(False)
+            except Exception:
+                pass
+        if prim.IsA(UsdGeom.Imageable):
+            imageable = UsdGeom.Imageable(prim)
+            imageable.MakeVisible()
+            purpose_attr = imageable.GetPurposeAttr()
+            if purpose_attr:
+                purpose_attr.Set(UsdGeom.Tokens.default_)
+        if prim.IsA(UsdGeom.Gprim):
+            gprim = UsdGeom.Gprim(prim)
+            gprim.GetDoubleSidedAttr().Set(True)
+
+
+def _create_preview_material(
+    stage,
+    path: str,
+    color,
+    metallic=0.35,
+    roughness=0.45,
+    specular_color=None,
+    clearcoat=None,
+    clearcoat_roughness=None,
+):
+    mat = UsdShade.Material.Define(stage, path)
+    shader = UsdShade.Shader.Define(stage, f"{path}/Shader")
+    shader.CreateIdAttr("UsdPreviewSurface")
+    shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(*color))
+    shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(metallic)
+    shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(roughness)
+    if specular_color is not None:
+        shader.CreateInput("specularColor", Sdf.ValueTypeNames.Color3f).Set(
+            Gf.Vec3f(*specular_color)
+        )
+    if clearcoat is not None:
+        shader.CreateInput("clearcoat", Sdf.ValueTypeNames.Float).Set(clearcoat)
+    if clearcoat_roughness is not None:
+        shader.CreateInput("clearcoatRoughness", Sdf.ValueTypeNames.Float).Set(clearcoat_roughness)
+    mat.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), "surface")
+    return mat
+
+
+def _srgb_channel_to_linear(channel: float) -> float:
+    if channel <= 0.04045:
+        return channel / 12.92
+    return ((channel + 0.055) / 1.055) ** 2.4
+
+
+def _hex_color(hex_value: str):
+    """Convert an sRGB #RRGGBB color string to linear 0-1 RGB."""
+    hex_value = hex_value.strip().lstrip("#")
+    if len(hex_value) != 6:
+        raise ValueError(f"Expected 6 hex digits, got: {hex_value}")
+    rgb = tuple(
+        _srgb_channel_to_linear(int(hex_value[i:i + 2], 16) / 255.0)
+        for i in range(0, 6, 2)
+    )
+    return rgb
+
+
+def _get_direct_binding_targets(prim) -> list[str]:
+    try:
+        rel = UsdShade.MaterialBindingAPI(prim).GetDirectBindingRel()
+        if not rel:
+            return []
+        return [str(t).lower() for t in rel.GetTargets()]
+    except Exception:
+        return []
+
+
+def _get_imported_context_text(prim, stop_prim) -> str:
+    """Collect names + direct bindings from a prim and its ancestor chain."""
+    tokens = []
+    current = prim
+    stop_path = stop_prim.GetPath() if stop_prim and stop_prim.IsValid() else None
+
+    while current and current.IsValid():
+        tokens.append(current.GetName().lower())
+        tokens.extend(_get_direct_binding_targets(current))
+        if stop_path and current.GetPath() == stop_path:
+            break
+        parent = current.GetParent()
+        if not parent or not parent.IsValid() or parent == current:
+            break
+        current = parent
+
+    return " ".join(tokens)
+
+
+def _classify_imported_material(prim_path: str, binding_text: str) -> str:
+    text = (binding_text or prim_path).lower()
+    if any(token in text for token in ("transparent", "clear")):
+        return "transparent"
+    if any(token in text for token in ("shiny_panel", "shiny panel", "tex_01", "tex 01", "tex_02", "tex 02", "solar", "panel", "array")):
+        return "solar"
+    if any(token in text for token in ("black_krinkle", "black krinkle", "krinkle", "black")):
+        return "black"
+    if any(token in text for token in ("foil_gold", "foil gold", "gold", "mli", "blanket", "body", "bus", "core")):
+        return "gold"
+    if any(token in text for token in ("foil_silver2", "foil silver antenna", "antenna", "dish", "boom", "hinge")):
+        return "silver"
+    if any(token in text for token in ("foil_silver", "foil silver", "silver")):
+        return "metal"
+    return "metal"
+
+
+def _apply_fallback_imported_colors(stage: "Usd.Stage", root_path: str, root_prim) -> None:
+    """Apply simple preview materials when the source asset materials don't bind."""
+    mat_root = f"{root_path}/ImportedFallbackMaterials"
+    mats = {
+        "solar": _create_preview_material(
+            stage,
+            f"{mat_root}/Solar",
+            _hex_color("#0E3E63"),
+            0.9,
+            0.10,
+            specular_color=_hex_color("#6D8FB5"),
+            clearcoat=0.82,
+            clearcoat_roughness=0.08,
+        ),
+        # Kapton-style MLI: bright amber-gold base with stronger metallic sheen.
+        "gold": _create_preview_material(
+            stage,
+            f"{mat_root}/Gold",
+            _hex_color("#EC8714"),
+            0.89,
+            0.02,
+            specular_color=_hex_color("#E9AE0B"),
+            clearcoat=0.9,
+            clearcoat_roughness=0.5,
+        ),
+        "silver": _create_preview_material(
+            stage,
+            f"{mat_root}/Silver",
+            _hex_color("#D0D3D8"),
+            0.82,
+            0.10,
+            specular_color=_hex_color("#FFF1A0"),
+            clearcoat=0.18,
+            clearcoat_roughness=0.06,
+        ),
+        "black": _create_preview_material(
+            stage,
+            f"{mat_root}/Black",
+            _hex_color("#1A1A1A"),
+            0.9,
+            0.02,
+            specular_color=_hex_color("#5C6470"),
+            clearcoat=0.88,
+            clearcoat_roughness=0.5,
+        ),
+        "metal": _create_preview_material(
+            stage,
+            f"{mat_root}/Metal",
+            _hex_color("#8B9098"),
+            0.74,
+            0.12,
+            specular_color=_hex_color("#E8ECF0"),
+            clearcoat=0.14,
+            clearcoat_roughness=0.07,
+        ),
+        "transparent": _create_preview_material(stage, f"{mat_root}/Transparent", (0.0, 0.0, 0.0), 0.0, 1.0),
+    }
+    transparent_shader = UsdShade.Shader.Get(stage, f"{mat_root}/Transparent/Shader")
+    transparent_shader.CreateInput("opacity", Sdf.ValueTypeNames.Float).Set(0.02)
+
+    bound_subset_count = 0
+    bound_gprim_count = 0
+    class_counts = {}
+    samples = []
+
+    for prim in Usd.PrimRange(root_prim):
+        if not prim.IsValid():
+            continue
+
+        prim_path = str(prim.GetPath()).lower()
+        binding_text = _get_imported_context_text(prim, root_prim)
+
+        # Preserve sub-mesh material splits by binding fallback materials to
+        # subsets first, then only tint bare gprims that don't already have
+        # more specific material-bound children.
+        if prim.IsA(UsdGeom.Subset) and _get_direct_binding_targets(prim):
+            mat_key = _classify_imported_material(prim_path, binding_text)
+            UsdShade.MaterialBindingAPI(prim).Bind(mats[mat_key])
+            bound_subset_count += 1
+            class_counts[mat_key] = class_counts.get(mat_key, 0) + 1
+            if len(samples) < 6:
+                samples.append(f"{prim.GetName()}->{mat_key}")
+            continue
+
+        if not prim.IsA(UsdGeom.Gprim):
+            continue
+
+        has_bound_subset_child = False
+        for child in prim.GetChildren():
+            if child.IsA(UsdGeom.Subset) and _get_direct_binding_targets(child):
+                has_bound_subset_child = True
+                break
+        if has_bound_subset_child:
+            continue
+
+        mat_key = _classify_imported_material(prim_path, binding_text)
+        UsdShade.MaterialBindingAPI(prim).Bind(mats[mat_key])
+        bound_gprim_count += 1
+        class_counts[mat_key] = class_counts.get(mat_key, 0) + 1
+        if len(samples) < 6:
+            samples.append(f"{prim.GetName()}->{mat_key}")
+
+    print(
+        "[SpaceDC] Applied imported fallback colors:",
+        f"subsets={bound_subset_count}",
+        f"gprims={bound_gprim_count}",
+        "classes=" + ",".join(f"{k}:{v}" for k, v in sorted(class_counts.items())),
+        "samples=" + ",".join(samples),
+    )
+
+
+def _build_imported_satellite(stage: "Usd.Stage", root_path: str) -> bool:
+    """
+    Reference a packaged spacecraft asset under /World/Satellite/Bus.
+
+    The imported asset is treated as a higher-fidelity full spacecraft model.
+    When it loads successfully, the procedural satellite geometry is skipped.
+    """
+    if os.environ.get("SPACEDC_DISABLE_BEAUTY_MODEL", "").lower() in {"1", "true", "yes"}:
+        return False
+
+    model_path = _get_model_path(BEAUTY_MODEL_FILE)
+    if not os.path.isfile(model_path):
+        return False
+
+    beauty_root = UsdGeom.Xform.Define(stage, f"{root_path}/Bus")
+    fit_xf = UsdGeom.Xform.Define(stage, f"{root_path}/Bus/Fit")
+    asset_root = UsdGeom.Xform.Define(stage, f"{root_path}/Bus/Fit/AssetRoot")
+    ref_prim = asset_root.GetPrim()
+
+    bbox = None
+    chosen_prim = None
+    bbox_source = None
+    for prim_path in BEAUTY_MODEL_PRIMS:
+        ref_prim.GetReferences().ClearReferences()
+        try:
+            ref_prim.GetReferences().AddReference(
+                model_path.replace("\\", "/"),
+                primPath=Sdf.Path(prim_path),
+            )
+        except Exception:
+            continue
+
+        _prepare_imported_subtree(ref_prim)
+        bbox_source, bbox = _find_first_bbox_in_subtree(ref_prim)
+        if bbox is not None:
+            chosen_prim = prim_path
+            break
+
+    if bbox is None:
+        print(f"[SpaceDC] WARNING: Imported model bbox is empty for all prim candidates: {model_path}")
+        return False
+
+    _prepare_imported_subtree(asset_root.GetPrim())
+    _apply_fallback_imported_colors(stage, root_path, asset_root.GetPrim())
+
+    size = bbox.GetSize()
+    center = bbox.GetMidpoint()
+    longest = max(size[0], size[1], size[2], 1e-5)
+    fit_scale = BEAUTY_MODEL_TARGET_SIZE / longest
+
+    # Center the imported geometry under /World/Satellite so the orbit
+    # translation, micro camera and zoom all share the same local origin.
+    _xform(asset_root, translate=(-center[0], -center[1], -center[2]))
+    _xform(fit_xf, scale=(fit_scale, fit_scale, fit_scale))
+    _xform(beauty_root, rotate=BEAUTY_MODEL_ROTATE)
+
+    print(
+        "[SpaceDC] Imported beauty model bbox:",
+        f"prim={chosen_prim}",
+        f"bbox_source={bbox_source}",
+        f"size=({size[0]:.3f}, {size[1]:.3f}, {size[2]:.3f})",
+        f"center=({center[0]:.3f}, {center[1]:.3f}, {center[2]:.3f})",
+        f"scale={fit_scale:.3f}",
+        "materials_mode=fallback_preview",
+    )
+    return True
 
 
 def build_satellite(
@@ -89,15 +427,24 @@ def build_satellite(
 
     root = UsdGeom.Xform.Define(stage, root_path)
 
+    beauty_loaded = False
+    try:
+        beauty_loaded = _build_imported_satellite(stage, root_path)
+        if beauty_loaded:
+            print(f"[SpaceDC] Beauty satellite asset loaded: {BEAUTY_MODEL_FILE}")
+    except Exception as exc:
+        print(f"[SpaceDC] WARNING: Failed to load beauty satellite asset: {exc}")
+
     mats = _create_materials(stage, root_path)
 
-    _build_bus(stage, root_path, mats)
-    _build_solar_wings(stage, root_path, mats, wing_count, wing_area)
-    _build_radiators(stage, root_path, mats, rad_count, rad_area)
-    _build_antenna(stage, root_path, mats)
-    _build_star_trackers(stage, root_path, mats)
-    _build_thrusters(stage, root_path, mats)
-    _build_docking_ring(stage, root_path, mats)
+    if not beauty_loaded:
+        _build_bus(stage, root_path, mats)
+        _build_solar_wings(stage, root_path, mats, wing_count, wing_area)
+        _build_radiators(stage, root_path, mats, rad_count, rad_area)
+        _build_antenna(stage, root_path, mats)
+        _build_star_trackers(stage, root_path, mats)
+        _build_thrusters(stage, root_path, mats)
+        _build_docking_ring(stage, root_path, mats)
 
 
 # ── Materials ───────────────────────────────────────────────
@@ -122,9 +469,9 @@ def _create_materials(stage, root_path: str) -> dict:
     return {
         "bus":     _mat("BusMat",     (0.10, 0.11, 0.13), 0.55, 0.45),
         "busEdge": _mat("BusEdgeMat", (0.16, 0.18, 0.20), 0.60, 0.38),
-        "gold":    _mat("GoldMat",    (0.78, 0.65, 0.19), 0.72, 0.28),
+        "gold":    _mat("GoldMat",    _hex_color("#ECA414"), 0.46, 0.12),
         "grille":  _mat("GrilleMat",  (0.06, 0.06, 0.08), 0.40, 0.70),
-        "solar":   _mat("SolarMat",   (0.03, 0.03, 0.16), 0.42, 0.24),
+        "solar":   _mat("SolarMat",   _hex_color("#0B3B60"), 0.18, 0.10),
         "frame":   _mat("FrameMat",   (0.33, 0.34, 0.37), 0.60, 0.35),
         "rad":     _mat("RadMat",     (0.89, 0.89, 0.93), 0.05, 0.85),
         "copper":  _mat("CopperMat",  (0.72, 0.45, 0.20), 0.80, 0.32),

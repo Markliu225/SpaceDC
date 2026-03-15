@@ -59,7 +59,6 @@ _MACRO_ONLY_PRIMS = [
     "/World/Sun",
     "/World/Stars",
     "/World/InfoLabel",
-    "/World/Lights/DomeLight",
     "/World/Lights/Ambient",
 ]
 
@@ -67,8 +66,8 @@ _MACRO_ONLY_PRIMS = [
 MICRO_CAM_PATH = "/World/Satellite/MicroCam"
 
 # Camera local offset from bus centre (in satellite-local cm)
-# Bus = 14×10×16 cm, wings ~80 cm; camera ~65 cm away for nice framing
-MICRO_CAM_LOCAL_POS = Gf.Vec3d(40, 28, 50) if HAS_USD else (40, 28, 50)
+# Works for both the original procedural craft and the larger imported model.
+MICRO_CAM_LOCAL_POS = Gf.Vec3d(140, 96, 180) if HAS_USD else (140, 96, 180)
 
 # Local light paths (children of Satellite so they move with it)
 MICRO_LIGHT_PATH = "/World/Satellite/MicroKeyLight"
@@ -76,6 +75,17 @@ MICRO_FILL_PATH  = "/World/Satellite/MicroFillLight"
 
 # Prims to frame when returning to orbit view
 ORBIT_FRAME_PRIMS = ["/World/Earth", "/World/Satellite"]
+
+
+def _camera_rotation_for_offset(offset):
+    """Aim the camera's -Z axis back toward the satellite local origin."""
+    x, y, z = float(offset[0]), float(offset[1]), float(offset[2])
+    yaw = math.degrees(math.atan2(x, z))
+    horiz = math.sqrt(x * x + z * z)
+    pitch = -math.degrees(math.atan2(y, max(horiz, 1e-6)))
+    if HAS_USD:
+        return Gf.Vec3f(pitch, yaw, 0.0)
+    return (pitch, yaw, 0.0)
 
 
 class ViewSwitcher:
@@ -203,12 +213,7 @@ class ViewSwitcher:
             xf.AddTranslateOp().Set(MICRO_CAM_LOCAL_POS)
 
             # Rotate to look back at the satellite centre (origin in local)
-            # The offset (40,28,50) means the camera is to the right, above,
-            # and behind.  We rotate so -Z (camera forward) points back
-            # toward (0,0,0) in local space.
-            # atan2(40, 50) ≈ 38.7°  rotation around Y
-            # atan2(28, sqrt(40²+50²)) ≈ 23.6°  rotation around X (tilt down)
-            xf.AddRotateXYZOp().Set(Gf.Vec3f(-23.0, 38.0, 0.0))
+            xf.AddRotateXYZOp().Set(_camera_rotation_for_offset(MICRO_CAM_LOCAL_POS))
 
             print(f"[SpaceDC] Created child camera: {MICRO_CAM_PATH}")
 
@@ -291,8 +296,8 @@ class ViewSwitcher:
         fill_prim = stage.GetPrimAtPath(MICRO_FILL_PATH)
         if not fill_prim.IsValid():
             fill = UsdLux.DistantLight.Define(stage, MICRO_FILL_PATH)
-            fill.GetIntensityAttr().Set(2000.0)
-            fill.GetColorAttr().Set(Gf.Vec3f(0.6, 0.7, 1.0))
+            fill.GetIntensityAttr().Set(1200.0)
+            fill.GetColorAttr().Set(Gf.Vec3f(0.96, 0.95, 0.92))
             xf = UsdGeom.Xformable(fill.GetPrim())
             xf.ClearXformOpOrder()
             xf.AddRotateXYZOp().Set(Gf.Vec3f(20, -135, 0))

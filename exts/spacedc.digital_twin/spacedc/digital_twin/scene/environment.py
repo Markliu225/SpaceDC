@@ -41,6 +41,15 @@ AMBIENT_SUNLIT = 0.35
 AMBIENT_ECLIPSE = 0.05
 
 
+def _set_light_shadows(light_schema_or_prim, enabled: bool) -> None:
+    """Enable or disable shadow casting for a light prim."""
+    prim = light_schema_or_prim.GetPrim() if hasattr(light_schema_or_prim, "GetPrim") else light_schema_or_prim
+    if not prim or not prim.IsValid():
+        return
+    shadow_api = UsdLux.ShadowAPI.Apply(prim)
+    shadow_api.CreateShadowEnableAttr().Set(enabled)
+
+
 def setup_environment(stage: "Usd.Stage", root_path: str = "/World") -> None:
     """Create ambient and dome lights for the scene."""
     if not HAS_USD:
@@ -50,7 +59,8 @@ def setup_environment(stage: "Usd.Stage", root_path: str = "/World") -> None:
     amb_path = f"{root_path}/Lights/Ambient"
     amb = UsdLux.DistantLight.Define(stage, amb_path)
     amb.GetIntensityAttr().Set(200.0)
-    amb.GetColorAttr().Set(Gf.Vec3f(0.04, 0.08, 0.19))
+    amb.GetColorAttr().Set(Gf.Vec3f(0.08, 0.08, 0.09))
+    _set_light_shadows(amb, False)
 
     # Dome light with starfield HDRI for space background
     dome_path = f"{root_path}/Lights/DomeLight"

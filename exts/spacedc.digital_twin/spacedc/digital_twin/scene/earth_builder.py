@@ -135,6 +135,15 @@ def _xform(schema_or_prim, translate=None, rotate=None, scale=None):
         xf.AddScaleOp().Set(Gf.Vec3d(*scale))
 
 
+def _set_light_shadows(light_schema_or_prim, enabled: bool) -> None:
+    """Enable or disable shadow casting for a light prim."""
+    prim = light_schema_or_prim.GetPrim() if hasattr(light_schema_or_prim, "GetPrim") else light_schema_or_prim
+    if not prim or not prim.IsValid():
+        return
+    shadow_api = UsdLux.ShadowAPI.Apply(prim)
+    shadow_api.CreateShadowEnableAttr().Set(enabled)
+
+
 def build_earth_scene(stage: "Usd.Stage", root_path: str = "/World") -> None:
     """
     Construct the full Earth orbit scene on the given USD stage.
@@ -225,6 +234,7 @@ def build_earth_scene(stage: "Usd.Stage", root_path: str = "/World") -> None:
     sun_light = UsdLux.DistantLight.Define(stage, f"{sun_path}/SunLight")
     sun_light.GetIntensityAttr().Set(5000.0)
     sun_light.GetColorAttr().Set(Gf.Vec3f(1.0, 0.96, 0.88))
+    _set_light_shadows(sun_light, False)
     # Aim toward origin
     _xform(sun_light, rotate=(160.0, -35.0, 0.0))
 
