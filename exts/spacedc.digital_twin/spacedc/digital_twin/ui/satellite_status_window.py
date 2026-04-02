@@ -136,6 +136,9 @@ class SatelliteStatusWindow:
         # ── Live label references ───────
         # Orbit & Phase
         self._lbl_phase: Optional["ui.Label"] = None
+        self._lbl_target_name: Optional["ui.Label"] = None
+        self._lbl_target_id: Optional["ui.Label"] = None
+        self._lbl_target_source: Optional["ui.Label"] = None
         self._lbl_altitude: Optional["ui.Label"] = None
         self._lbl_inclination: Optional["ui.Label"] = None
         self._lbl_period: Optional["ui.Label"] = None
@@ -227,6 +230,9 @@ class SatelliteStatusWindow:
     def _build_orbit_section(self):
         ui.Label("ORBIT", name="section", height=20)
         with ui.VStack(spacing=2):
+            self._lbl_target_name = self._kv_row("Target", "ORBITAL DC-1")
+            self._lbl_target_id = self._kv_row("Target ID", "SIM-001")
+            self._lbl_target_source = self._kv_row("Source", "Internal Orbit Model")
             self._lbl_altitude = self._kv_row("Altitude", "550.0 km")
             self._lbl_inclination = self._kv_row("Inclination", "97.6°")
             self._lbl_period = self._kv_row("Period", "95.7 min")
@@ -369,12 +375,18 @@ class SatelliteStatusWindow:
                 self._lbl_phase.name = "phase_sunlit"
 
         # Orbit
+        if self._lbl_target_name:
+            self._lbl_target_name.text = s.tracked_satellite_name
+        if self._lbl_target_id:
+            self._lbl_target_id.text = s.tracked_satellite_id
+        if self._lbl_target_source:
+            self._lbl_target_source.text = s.tracked_satellite_source
         if self._lbl_altitude:
-            self._lbl_altitude.text = f"{s.orbit_altitude:.1f} km"
+            self._lbl_altitude.text = f"{s.tracked_altitude_km:.1f} km"
         if self._lbl_inclination:
-            self._lbl_inclination.text = f"{s.orbit_inclination:.1f}°"
+            self._lbl_inclination.text = f"{s.tracked_inclination_deg:.1f}°"
         if self._lbl_period:
-            self._lbl_period.text = f"{s.orbit_period / 60:.1f} min"
+            self._lbl_period.text = f"{s.tracked_period_s / 60:.1f} min"
         if self._lbl_eclipse_frac:
             self._lbl_eclipse_frac.text = f"{s.eclipse_fraction * 100:.1f}%"
         if self._lbl_orbit_count:

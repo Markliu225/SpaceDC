@@ -59,11 +59,19 @@ class DigitalTwinPanel:
         on_rebuild: Optional[Callable] = None,
         on_state_change: Optional[Callable] = None,
         on_view_toggle: Optional[Callable] = None,
+        on_load_constellation: Optional[Callable] = None,
+        on_load_sdc_demo: Optional[Callable] = None,
+        on_clear_constellation: Optional[Callable] = None,
+        default_constellation_path: str = "",
     ):
         self._state = state
         self._on_rebuild = on_rebuild        # called when 3D model needs rebuild
         self._on_state_change = on_state_change
         self._on_view_toggle = on_view_toggle  # called to switch orbit/satellite view
+        self._on_load_constellation = on_load_constellation
+        self._on_load_sdc_demo = on_load_sdc_demo
+        self._on_clear_constellation = on_clear_constellation
+        self._default_constellation_path = default_constellation_path
         self._window: Optional["ui.Window"] = None
 
         # Value label references for live update
@@ -84,6 +92,7 @@ class DigitalTwinPanel:
         self._speed_labels = {}
         # View toggle button reference
         self._view_btn = None
+        self._constellation_path_field = None
 
     def build(self):
         if not HAS_OMNI_UI:
@@ -105,6 +114,8 @@ class DigitalTwinPanel:
                     self._build_speed_controls()
                     ui.Separator(height=2)
                     self._build_orbit_section()  # <--- 新增
+                    ui.Separator(height=2)
+                    self._build_constellation_section()
                     ui.Separator(height=2)
                     self._build_solar_section()
                     ui.Separator(height=2)
@@ -154,6 +165,28 @@ class DigitalTwinPanel:
                 else:
                     self._view_btn.text = "Satellite Close-up  >>"
 
+    def _get_constellation_path(self) -> str:
+        if not self._constellation_path_field:
+            return self._default_constellation_path
+        try:
+            return self._constellation_path_field.model.get_value_as_string()
+        except Exception:
+            return self._default_constellation_path
+
+    def _on_load_constellation_clicked(self):
+        if self._on_load_constellation:
+            path = self._get_constellation_path().strip()
+            if path:
+                self._on_load_constellation(path)
+
+    def _on_load_sample_constellation_clicked(self):
+        if self._on_load_sdc_demo:
+            self._on_load_sdc_demo()
+
+    def _on_clear_constellation_clicked(self):
+        if self._on_clear_constellation:
+            self._on_clear_constellation()
+
     def _build_speed_controls(self):
         ui.Label("SIMULATION SPEED", name="header", height=20)
         with ui.HStack(height=24, spacing=4):
@@ -197,6 +230,26 @@ class DigitalTwinPanel:
 
         # Initialise readouts
         self._refresh_orbit_readouts()
+
+    def _build_constellation_section(self):
+        ui.Label("CONSTELLATION TLE", name="header", height=24)
+
+        with ui.HStack(height=22, spacing=4):
+            ui.Label("TLE File:", width=70)
+            if hasattr(ui, "StringField"):
+                self._constellation_path_field = ui.StringField(height=22, width=ui.Percent(100))
+                if self._default_constellation_path:
+                    self._constellation_path_field.model.set_value(self._default_constellation_path)
+            else:
+                ui.Label(
+                    self._default_constellation_path or "Use Load Sample",
+                    name="muted",
+                )
+
+        with ui.HStack(height=26, spacing=4):
+            ui.Button("Load File", clicked_fn=self._on_load_constellation_clicked)
+            ui.Button("Load SDC Demo", clicked_fn=self._on_load_sample_constellation_clicked)
+            ui.Button("Clear", clicked_fn=self._on_clear_constellation_clicked)
 
     def _build_solar_section(self):
         ui.Label("SOLAR ARRAY", name="header", height=24)

@@ -48,6 +48,8 @@ try:
 except ImportError:
     HAS_VP = False
 
+from ..scene.environment import set_view_lighting_mode
+
 # ── Constants ───────────────────────────────────────────────
 
 # Prims to **hide** in satellite (micro) view
@@ -56,6 +58,7 @@ _MACRO_ONLY_PRIMS = [
     "/World/Clouds",
     "/World/Atmosphere",
     "/World/OrbitRing",
+    "/World/Constellation",
     "/World/Sun",
     "/World/Stars",
     "/World/InfoLabel",
@@ -120,6 +123,7 @@ class ViewSwitcher:
             return
         self._mode = "orbit"
         self._show_macro_prims(stage, True)
+        set_view_lighting_mode(stage, micro_view=False)
         self._set_micro_lights(stage, False)
         self._set_micro_cam_visible(stage, False)
 
@@ -141,6 +145,7 @@ class ViewSwitcher:
         self._ensure_micro_cam(stage)
 
         self._show_macro_prims(stage, False)
+        set_view_lighting_mode(stage, micro_view=True)
         self._ensure_micro_lights(stage)
         self._set_micro_lights(stage, True)
         self._set_micro_cam_visible(stage, True)

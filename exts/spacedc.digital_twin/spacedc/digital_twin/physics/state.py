@@ -156,6 +156,14 @@ class SimState:
     orbit_period: float = 5742.0   # s
     eclipse_fraction: float = 0.36 # 0.0 to 1.0
 
+    # Selected detail target metadata (macro constellation -> micro detail)
+    tracked_satellite_name: str = "ORBITAL DC-1"
+    tracked_satellite_id: str = "SIM-001"
+    tracked_satellite_source: str = "Internal Orbit Model"
+    tracked_altitude_km: float = 550.0
+    tracked_inclination_deg: float = 97.6
+    tracked_period_s: float = 5742.0
+
     def update_orbit_params(self, altitude_km: float, inclination_deg: float):
         """Recalculate dynamic orbital physics on parameter change."""
         self.orbit_altitude = altitude_km
@@ -163,6 +171,9 @@ class SimState:
         from .constants import compute_orbit_period, compute_eclipse_fraction
         self.orbit_period = compute_orbit_period(altitude_km)
         self.eclipse_fraction = compute_eclipse_fraction(altitude_km)
+        self.tracked_altitude_km = altitude_km
+        self.tracked_inclination_deg = inclination_deg
+        self.tracked_period_s = self.orbit_period
 
     def rebuild_wings(self):
         self.wings = SolarWing.build_fleet(
@@ -178,3 +189,6 @@ class SimState:
         """Build initial arrays — call once at startup."""
         self.rebuild_wings()
         self.rebuild_rad_panels()
+        self.tracked_altitude_km = self.orbit_altitude
+        self.tracked_inclination_deg = self.orbit_inclination
+        self.tracked_period_s = self.orbit_period

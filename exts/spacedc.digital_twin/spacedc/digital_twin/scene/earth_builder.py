@@ -288,9 +288,9 @@ def _create_earth_material(stage: "Usd.Stage", earth_prim_path: str) -> None:
     mat = UsdShade.Material.Define(stage, mat_path)
     shader = UsdShade.Shader.Define(stage, f"{mat_path}/Shader")
     shader.CreateIdAttr("UsdPreviewSurface")
-    shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.85)
+    shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.98)
     shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
-    shader.CreateInput("specularColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0.02, 0.02, 0.02))
+    shader.CreateInput("specularColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0.0, 0.0, 0.0))
     mat.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), "surface")
 
     # Try to bind Blue Marble texture
@@ -349,7 +349,20 @@ def update_satellite_position(
     from ..physics.orbital_mechanics import get_orbit_position
 
     x, y, z = get_orbit_position(sim_time, orbit_radius=orbit_radius, tilt_deg=orbit_inclination, orbit_period=orbit_period)
-    prim = stage.GetPrimAtPath(sat_prim_path)
+    set_prim_translation(stage, sat_prim_path, x, y, z)
+
+
+def set_prim_translation(
+    stage: "Usd.Stage",
+    prim_path: str,
+    x: float,
+    y: float,
+    z: float,
+) -> None:
+    """Set or replace the first translate op on a prim."""
+    if not HAS_USD:
+        return
+    prim = stage.GetPrimAtPath(prim_path)
     if prim.IsValid():
         xf = UsdGeom.Xformable(prim)
         ops = xf.GetOrderedXformOps()

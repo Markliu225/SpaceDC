@@ -37,8 +37,15 @@ ECLIPSE_INTENSITY = 50.0
 SUNLIT_COLOR = Gf.Vec3f(1.0, 0.96, 0.88) if HAS_USD else (1.0, 0.96, 0.88)
 ECLIPSE_COLOR = Gf.Vec3f(0.2, 0.25, 0.5) if HAS_USD else (0.2, 0.25, 0.5)
 
-AMBIENT_SUNLIT = 0.35
-AMBIENT_ECLIPSE = 0.05
+# Keep macro lighting as close as possible to a single solar key light so the
+# terminator stays crisp and the night side does not pick up stray HDRI fill.
+ORBIT_AMBIENT_INTENSITY = 0.0
+ORBIT_DOME_INTENSITY = 0.0
+
+# Micro view still benefits from environment reflections on metallic surfaces.
+MICRO_DOME_INTENSITY = 260.0
+ECLIPSE_AMBIENT_INTENSITY = 0.0
+ECLIPSE_DOME_INTENSITY = 8.0
 
 
 def _set_light_shadows(light_schema_or_prim, enabled: bool) -> None:
@@ -58,14 +65,14 @@ def setup_environment(stage: "Usd.Stage", root_path: str = "/World") -> None:
     # Ambient light
     amb_path = f"{root_path}/Lights/Ambient"
     amb = UsdLux.DistantLight.Define(stage, amb_path)
-    amb.GetIntensityAttr().Set(200.0)
+    amb.GetIntensityAttr().Set(ORBIT_AMBIENT_INTENSITY)
     amb.GetColorAttr().Set(Gf.Vec3f(0.08, 0.08, 0.09))
     _set_light_shadows(amb, False)
 
     # Dome light with starfield HDRI for space background
     dome_path = f"{root_path}/Lights/DomeLight"
     dome = UsdLux.DomeLight.Define(stage, dome_path)
-    dome.GetIntensityAttr().Set(500.0)
+    dome.GetIntensityAttr().Set(ORBIT_DOME_INTENSITY)
     dome.GetColorAttr().Set(Gf.Vec3f(1.0, 1.0, 1.0))
 
     # Bind starfield HDR texture
@@ -88,6 +95,7 @@ def update_environment_for_eclipse(
     eclipse: bool,
     sun_light_path: str = "/World/Sun/SunLight",
     ambient_path: str = "/World/Lights/Ambient",
+    dome_path: str = "/World/Lights/DomeLight",
 ) -> None:
     """
     Transition lighting between eclipse and sunlit states.
@@ -108,7 +116,33 @@ def update_environment_for_eclipse(
     amb_prim = stage.GetPrimAtPath(ambient_path)
     if amb_prim.IsValid():
         amb = UsdLux.DistantLight(amb_prim)
-        amb.GetIntensityAttr().Set(20.0 if eclipse else 200.0)
+        amb.GetIntensityAttr().Set(ECLIPSE_AMBIENT_INTENSITY if eclipse else ORBIT_AMBIENT_INTENSITY)
+
+    dome_prim = stage.GetPrimAtPath(dome_path)
+    if dome_prim.IsValid():
+        dome = UsdLux.DomeLight(dome_prim)
+        dome.GetIntensityAttr().Set(ECLIPSE_DOME_INTENSITY if eclipse else ORBIT_DOME_INTENSITY)
+
+
+def set_view_lighting_mode(
+    stage: "Usd.Stage",
+    micro_view: bool,
+    ambient_path: str = "/World/Lights/Ambient",
+    dome_path: str = "/World/Lights/DomeLight",
+) -> None:
+    """Switch lighting balance between crisp macro Earth view and reflective micro detail view."""
+    if not HAS_USD:
+        return
+
+    amb_prim = stage.GetPrimAtPath(ambient_path)
+    if amb_prim.IsValid():
+        amb = UsdLux.DistantLight(amb_prim)
+        amb.GetIntensityAttr().Set(0.0)
+
+    dome_prim = stage.GetPrimAtPath(dome_path)
+    if dome_prim.IsValid():
+        dome = UsdLux.DomeLight(dome_prim)
+        dome.GetIntensityAttr().Set(MICRO_DOME_INTENSITY if micro_view else ORBIT_DOME_INTENSITY)
 
 
 def update_earth_rotation(
