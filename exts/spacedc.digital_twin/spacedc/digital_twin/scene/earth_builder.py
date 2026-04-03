@@ -107,6 +107,53 @@ def _generate_sphere_mesh(
 
     return points, normals, uvs, faceVertexCounts, faceVertexIndices
 
+
+def _generate_hemisphere_mesh(
+    radius: float,
+    rings: int = 40,
+    segments: int = 96,
+) -> Tuple[
+    List[Gf.Vec3f],   # points
+    List[Gf.Vec3f],   # normals
+    List[int],         # faceVertexCounts
+    List[int],         # faceVertexIndices
+]:
+    """
+    Generate an outward-facing hemisphere centered on the origin.
+
+    The hemisphere is aligned so its pole points along +X. This makes it easy
+    to rotate toward the anti-sun direction and use it as a stable night-side
+    darkening shell around Earth.
+    """
+    points = []
+    normals = []
+
+    for r in range(rings + 1):
+        alpha = (0.5 * math.pi) * r / rings  # 0 -> pi/2
+        x = math.cos(alpha)
+        rr = math.sin(alpha)
+        for s in range(segments + 1):
+            beta = 2.0 * math.pi * s / segments
+            y = rr * math.cos(beta)
+            z = rr * math.sin(beta)
+            points.append(Gf.Vec3f(x * radius, y * radius, z * radius))
+            normals.append(Gf.Vec3f(x, y, z))
+
+    face_vertex_counts = []
+    face_vertex_indices = []
+    cols = segments + 1
+
+    for r in range(rings):
+        for s in range(segments):
+            v0 = r * cols + s
+            v1 = r * cols + (s + 1)
+            v2 = (r + 1) * cols + (s + 1)
+            v3 = (r + 1) * cols + s
+            face_vertex_counts.append(4)
+            face_vertex_indices.extend([v0, v1, v2, v3])
+
+    return points, normals, face_vertex_counts, face_vertex_indices
+
 # ── Scene constants ─────────────────────────────────────────
 EARTH_RADIUS = 200.0            # scene units (cm in Kit default)
 ORBIT_RADIUS = EARTH_RADIUS * 1.7
@@ -157,6 +204,62 @@ def _disable_cast_shadows(prim) -> None:
     ).Set(True)
 
 
+def _set_orient_from_x_axis(prim, direction: Tuple[float, float, float]) -> None:
+    """Rotate a prim so its local +X axis points toward ``direction``."""
+    if hasattr(prim, "GetPrim"):
+        prim = prim.GetPrim()
+    if not prim or not prim.IsValid():
+        return
+
+    vec = Gf.Vec3d(*direction)
+    if vec.GetLength() < 1e-6:
+        return
+    vec.Normalize()
+
+    rotation = Gf.Rotation(Gf.Vec3d(1.0, 0.0, 0.0), vec)
+    quat = rotation.GetQuat()
+    orient = Gf.Quatf(
+        float(quat.GetReal()),
+        Gf.Vec3f(
+            float(quat.GetImaginary()[0]),
+            float(quat.GetImaginary()[1]),
+            float(quat.GetImaginary()[2]),
+        ),
+    )
+
+    xf = UsdGeom.Xformable(prim)
+    xf.ClearXformOpOrder()
+    xf.AddOrientOp().Set(orient)
+
+
+def _set_orient_from_neg_z_axis(prim, direction: Tuple[float, float, float]) -> None:
+    """Rotate a prim so its local -Z axis points toward ``direction``."""
+    if hasattr(prim, "GetPrim"):
+        prim = prim.GetPrim()
+    if not prim or not prim.IsValid():
+        return
+
+    vec = Gf.Vec3d(*direction)
+    if vec.GetLength() < 1e-6:
+        return
+    vec.Normalize()
+
+    rotation = Gf.Rotation(Gf.Vec3d(0.0, 0.0, -1.0), vec)
+    quat = rotation.GetQuat()
+    orient = Gf.Quatf(
+        float(quat.GetReal()),
+        Gf.Vec3f(
+            float(quat.GetImaginary()[0]),
+            float(quat.GetImaginary()[1]),
+            float(quat.GetImaginary()[2]),
+        ),
+    )
+
+    xf = UsdGeom.Xformable(prim)
+    xf.ClearXformOpOrder()
+    xf.AddOrientOp().Set(orient)
+
+
 def build_earth_scene(stage: "Usd.Stage", root_path: str = "/World") -> None:
     """
     Construct the full Earth orbit scene on the given USD stage.
@@ -188,6 +291,7 @@ def build_earth_scene(stage: "Usd.Stage", root_path: str = "/World") -> None:
     # NOTE: No DisplayColor — the material texture will provide the color.
     # Apply Blue Marble material
     _create_earth_material(stage, earth_path)
+    stage.RemovePrim(f"{root_path}/EarthNightMask")
 
     # ── Clouds (disabled — implicit Sphere has no transparency in RTX) ──
     # clouds_path = f"{root_path}/Clouds"
@@ -249,13 +353,17 @@ def build_earth_scene(stage: "Usd.Stage", root_path: str = "/World") -> None:
     sun_light.GetIntensityAttr().Set(5000.0)
     sun_light.GetColorAttr().Set(Gf.Vec3f(1.0, 0.96, 0.88))
     _set_light_shadows(sun_light, False)
-    # Aim toward origin
-    _xform(sun_light, rotate=(160.0, -35.0, 0.0))
+    # Aim toward the Earth origin so the illumination direction matches the
+    # visible Sun sphere position in the scene.
+    _set_orient_from_neg_z_axis(
+        sun_light,
+        (SUN_DISTANCE, -SUN_DISTANCE * 0.33, -SUN_DISTANCE * 0.53),
+    )
 
     # ── Stars (Points prim) ─────────────────────────────────
     import random
     stars_path = f"{root_path}/Stars"
-    star_count = 5000
+    star_count = 1200
     star_pts = []
     for _ in range(star_count):
         r = 8000.0 + random.random() * 8000.0
@@ -268,9 +376,9 @@ def build_earth_scene(stage: "Usd.Stage", root_path: str = "/World") -> None:
 
     stars = UsdGeom.Points.Define(stage, stars_path)
     stars.GetPointsAttr().Set(Vt.Vec3fArray(star_pts))
-    widths = Vt.FloatArray([1.0 + random.random() * 1.5 for _ in range(star_count)])
+    widths = Vt.FloatArray([0.45 + random.random() * 0.65 for _ in range(star_count)])
     stars.GetWidthsAttr().Set(widths)
-    stars.GetDisplayColorAttr().Set([Gf.Vec3f(0.92, 0.94, 1.0)])
+    stars.GetDisplayColorAttr().Set([Gf.Vec3f(0.52, 0.54, 0.60)])
 
     # ── Info label (text) ───────────────────────────────────
     # (Omniverse text requires omni.kit; placeholder Xform with metadata)
@@ -330,6 +438,92 @@ def _create_earth_material(stage: "Usd.Stage", earth_prim_path: str) -> None:
     UsdShade.MaterialBindingAPI(
         stage.GetPrimAtPath(earth_prim_path)
     ).Bind(mat)
+
+
+def _create_earth_night_mask(stage: "Usd.Stage", root_path: str) -> None:
+    """
+    Add a stable night-side overlay so Earth keeps a clean terminator without
+    looking like a flat gray shell. The overlay uses the shipped night texture
+    plus a dark blue base to suggest city lights and true night color.
+    """
+    mask_path = f"{root_path}/EarthNightMask"
+    pts, nrm, uvs, fvc, fvi = _generate_sphere_mesh(EARTH_RADIUS * 1.0002, rings=64, segments=128)
+
+    mask = UsdGeom.Mesh.Define(stage, mask_path)
+    mask.GetPointsAttr().Set(Vt.Vec3fArray(pts))
+    mask.GetNormalsAttr().Set(Vt.Vec3fArray(nrm))
+    mask.SetNormalsInterpolation(UsdGeom.Tokens.vertex)
+    mask.GetFaceVertexCountsAttr().Set(Vt.IntArray(fvc))
+    mask.GetFaceVertexIndicesAttr().Set(Vt.IntArray(fvi))
+    mask.GetSubdivisionSchemeAttr().Set("none")
+    mask.GetDoubleSidedAttr().Set(False)
+    _disable_cast_shadows(mask)
+
+    pv_api = UsdGeom.PrimvarsAPI(mask.GetPrim())
+    st_pv = pv_api.CreatePrimvar("st", Sdf.ValueTypeNames.TexCoord2fArray, UsdGeom.Tokens.faceVarying)
+    st_pv.Set(Vt.Vec2fArray(uvs))
+
+    sun_dir = (-SUN_DISTANCE, SUN_DISTANCE * 0.33, SUN_DISTANCE * 0.53)
+    sun_vec = Gf.Vec3f(*sun_dir)
+    sun_len = max(sun_vec.GetLength(), 1e-6)
+    sun_vec = Gf.Vec3f(sun_vec[0] / sun_len, sun_vec[1] / sun_len, sun_vec[2] / sun_len)
+
+    opacities = []
+    for normal in nrm:
+        ndotl = (normal[0] * sun_vec[0]) + (normal[1] * sun_vec[1]) + (normal[2] * sun_vec[2])
+        # Sharper twilight band so the lit hemisphere reads clearly.
+        t = max(0.0, min(1.0, (-ndotl + 0.04) / 0.42))
+        smooth = t * t * (3.0 - 2.0 * t)
+        alpha = 0.72 * smooth
+        opacities.append(alpha)
+    opacity_pv = pv_api.CreatePrimvar("nightMaskOpacity", Sdf.ValueTypeNames.FloatArray, UsdGeom.Tokens.vertex)
+    opacity_pv.Set(Vt.FloatArray(opacities))
+
+    mat_path = f"{mask_path}/Material"
+    mat = UsdShade.Material.Define(stage, mat_path)
+    shader = UsdShade.Shader.Define(stage, f"{mat_path}/Shader")
+    shader.CreateIdAttr("UsdPreviewSurface")
+    shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0.015, 0.025, 0.06))
+    shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(1.0)
+    shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
+    shader.CreateInput("specularColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0.0, 0.0, 0.0))
+
+    op_reader = UsdShade.Shader.Define(stage, f"{mat_path}/OpacityReader")
+    op_reader.CreateIdAttr("UsdPrimvarReader_float")
+    op_reader.CreateInput("varname", Sdf.ValueTypeNames.Token).Set("nightMaskOpacity")
+    op_reader.CreateOutput("result", Sdf.ValueTypeNames.Float)
+    shader.CreateInput("opacity", Sdf.ValueTypeNames.Float).ConnectToSource(
+        op_reader.ConnectableAPI(), "result"
+    )
+
+    tex_dir = _get_texture_dir()
+    night_path = os.path.join(tex_dir, "earth_night.jpg")
+    if os.path.isfile(night_path):
+        st_reader = UsdShade.Shader.Define(stage, f"{mat_path}/UVReader")
+        st_reader.CreateIdAttr("UsdPrimvarReader_float2")
+        st_reader.CreateInput("varname", Sdf.ValueTypeNames.Token).Set("st")
+        st_reader.CreateOutput("result", Sdf.ValueTypeNames.Float2)
+
+        tex_reader = UsdShade.Shader.Define(stage, f"{mat_path}/NightTexture")
+        tex_reader.CreateIdAttr("UsdUVTexture")
+        tex_reader.CreateInput("file", Sdf.ValueTypeNames.Asset).Set(night_path.replace("\\", "/"))
+        tex_reader.CreateInput("wrapS", Sdf.ValueTypeNames.Token).Set("repeat")
+        tex_reader.CreateInput("wrapT", Sdf.ValueTypeNames.Token).Set("repeat")
+        tex_reader.CreateInput("st", Sdf.ValueTypeNames.Float2).ConnectToSource(
+            st_reader.ConnectableAPI(), "result"
+        )
+        tex_reader.CreateOutput("rgb", Sdf.ValueTypeNames.Float3)
+
+        shader.CreateInput("emissiveColor", Sdf.ValueTypeNames.Color3f).ConnectToSource(
+            tex_reader.ConnectableAPI(), "rgb"
+        )
+        print(f"[SpaceDC] Earth night texture bound: {night_path}")
+    else:
+        shader.CreateInput("emissiveColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0.0, 0.0, 0.0))
+        print(f"[SpaceDC] Earth night texture not found at {night_path}, using dark night mask")
+
+    mat.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), "surface")
+    UsdShade.MaterialBindingAPI(mask.GetPrim()).Bind(mat)
 
 
 def update_satellite_position(

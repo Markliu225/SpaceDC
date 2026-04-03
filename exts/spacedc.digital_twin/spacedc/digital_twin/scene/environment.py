@@ -38,14 +38,15 @@ SUNLIT_COLOR = Gf.Vec3f(1.0, 0.96, 0.88) if HAS_USD else (1.0, 0.96, 0.88)
 ECLIPSE_COLOR = Gf.Vec3f(0.2, 0.25, 0.5) if HAS_USD else (0.2, 0.25, 0.5)
 
 # Keep macro lighting as close as possible to a single solar key light so the
-# terminator stays crisp and the night side does not pick up stray HDRI fill.
+# terminator stays crisp while still allowing a very dark background texture.
 ORBIT_AMBIENT_INTENSITY = 0.0
-ORBIT_DOME_INTENSITY = 0.0
+ORBIT_DOME_INTENSITY = 0.35
 
 # Micro view still benefits from environment reflections on metallic surfaces.
 MICRO_DOME_INTENSITY = 260.0
 ECLIPSE_AMBIENT_INTENSITY = 0.0
 ECLIPSE_DOME_INTENSITY = 8.0
+BACKGROUND_TEXTURE_FILES = ("starfield_subtle.png", "starfield.hdr")
 
 
 def _set_light_shadows(light_schema_or_prim, enabled: bool) -> None:
@@ -69,25 +70,29 @@ def setup_environment(stage: "Usd.Stage", root_path: str = "/World") -> None:
     amb.GetColorAttr().Set(Gf.Vec3f(0.08, 0.08, 0.09))
     _set_light_shadows(amb, False)
 
-    # Dome light with starfield HDRI for space background
+    # Dome light with a very dark starfield for space background
     dome_path = f"{root_path}/Lights/DomeLight"
     dome = UsdLux.DomeLight.Define(stage, dome_path)
     dome.GetIntensityAttr().Set(ORBIT_DOME_INTENSITY)
     dome.GetColorAttr().Set(Gf.Vec3f(1.0, 1.0, 1.0))
 
-    # Bind starfield HDR texture
+    # Bind background texture, preferring the subtle black starfield variant.
     tex_dir = _get_texture_dir()
-    hdr_path = os.path.join(tex_dir, "starfield.hdr")
-    if os.path.isfile(hdr_path):
-        # Use forward slashes for USD asset paths
-        hdr_asset = hdr_path.replace("\\", "/")
-        dome.GetTextureFileAttr().Set(hdr_asset)
+    background_path = None
+    for candidate in BACKGROUND_TEXTURE_FILES:
+        candidate_path = os.path.join(tex_dir, candidate)
+        if os.path.isfile(candidate_path):
+            background_path = candidate_path
+            break
+
+    if background_path:
+        texture_asset = background_path.replace("\\", "/")
+        dome.GetTextureFileAttr().Set(texture_asset)
         dome.GetTextureFormatAttr().Set("latlong")
-        print(f"[SpaceDC] Starfield HDRI bound: {hdr_asset}")
+        print(f"[SpaceDC] Background dome texture bound: {texture_asset}")
     else:
-        # Fallback: very dark blue — no starfield
-        dome.GetColorAttr().Set(Gf.Vec3f(0.01, 0.02, 0.05))
-        print(f"[SpaceDC] Starfield HDR not found at {hdr_path}, using dark color")
+        dome.GetColorAttr().Set(Gf.Vec3f(0.0, 0.0, 0.0))
+        print(f"[SpaceDC] Background dome texture not found in {tex_dir}, using black color")
 
 
 def update_environment_for_eclipse(
