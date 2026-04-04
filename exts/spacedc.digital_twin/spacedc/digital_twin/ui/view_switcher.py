@@ -31,7 +31,7 @@ import math
 from typing import Optional
 
 try:
-    from pxr import Usd, UsdGeom, UsdLux, Gf, Sdf
+    from pxr import Usd, UsdGeom, UsdLux, UsdShade, Gf, Sdf, Vt
     HAS_USD = True
 except ImportError:
     HAS_USD = False
@@ -48,7 +48,7 @@ try:
 except ImportError:
     HAS_VP = False
 
-from ..scene.environment import set_view_lighting_mode
+from ..scene.environment import get_background_texture_path, set_view_lighting_mode
 
 # ── Constants ───────────────────────────────────────────────
 
@@ -78,6 +78,13 @@ MICRO_FILL_PATH  = "/World/Satellite/MicroFillLight"
 
 # Prims to frame when returning to orbit view
 ORBIT_FRAME_PRIMS = ["/World/Earth", "/World/Satellite"]
+ORBIT_CAM_PATH = "/World/OrbitCam"
+BACKDROP_CARD_NAME = "CameraBackdrop"
+BACKDROP_DISTANCE = 9000.0
+BACKDROP_WIDTH = 22000.0
+BACKDROP_HEIGHT = 11000.0
+ORBIT_CAM_DEFAULT_POS = Gf.Vec3d(0.0, 0.0, 980.0) if HAS_USD else (0.0, 0.0, 980.0)
+ORBIT_CAM_DEFAULT_FOCAL = 42.0
 
 
 def _camera_rotation_for_offset(offset):
@@ -89,6 +96,74 @@ def _camera_rotation_for_offset(offset):
     if HAS_USD:
         return Gf.Vec3f(pitch, yaw, 0.0)
     return (pitch, yaw, 0.0)
+
+
+def _create_camera_backdrop(stage: "Usd.Stage", camera_path: str, texture_asset: str):
+    """Create a textured quad as a child of the camera so it stays fixed in view."""
+    card_path = f"{camera_path}/{BACKDROP_CARD_NAME}"
+    mesh = UsdGeom.Mesh.Define(stage, card_path)
+    half_w = BACKDROP_WIDTH * 0.5
+    half_h = BACKDROP_HEIGHT * 0.5
+    z = -BACKDROP_DISTANCE
+
+    mesh.GetPointsAttr().Set(Vt.Vec3fArray([
+        Gf.Vec3f(-half_w, -half_h, z),
+        Gf.Vec3f(half_w, -half_h, z),
+        Gf.Vec3f(half_w, half_h, z),
+        Gf.Vec3f(-half_w, half_h, z),
+    ]))
+    mesh.GetFaceVertexCountsAttr().Set(Vt.IntArray([4]))
+    mesh.GetFaceVertexIndicesAttr().Set(Vt.IntArray([0, 1, 2, 3]))
+    mesh.GetSubdivisionSchemeAttr().Set("none")
+    mesh.GetDoubleSidedAttr().Set(True)
+    mesh.CreateExtentAttr().Set(Vt.Vec3fArray([
+        Gf.Vec3f(-half_w, -half_h, z),
+        Gf.Vec3f(half_w, half_h, z),
+    ]))
+
+    primvars = UsdGeom.PrimvarsAPI(mesh.GetPrim())
+    st = primvars.CreatePrimvar("st", Sdf.ValueTypeNames.TexCoord2fArray, UsdGeom.Tokens.faceVarying)
+    st.Set(Vt.Vec2fArray([
+        Gf.Vec2f(0.0, 1.0),
+        Gf.Vec2f(1.0, 1.0),
+        Gf.Vec2f(1.0, 0.0),
+        Gf.Vec2f(0.0, 0.0),
+    ]))
+    mesh.GetPrim().CreateAttribute(
+        "primvars:doNotCastShadows",
+        Sdf.ValueTypeNames.Bool,
+        custom=False,
+    ).Set(True)
+
+    mat_path = f"{card_path}/Material"
+    material = UsdShade.Material.Define(stage, mat_path)
+    shader = UsdShade.Shader.Define(stage, f"{mat_path}/Shader")
+    shader.CreateIdAttr("UsdPreviewSurface")
+    shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0.0, 0.0, 0.0))
+    shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(1.0)
+    shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
+    shader.CreateInput("specularColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0.0, 0.0, 0.0))
+
+    uv_reader = UsdShade.Shader.Define(stage, f"{mat_path}/UVReader")
+    uv_reader.CreateIdAttr("UsdPrimvarReader_float2")
+    uv_reader.CreateInput("varname", Sdf.ValueTypeNames.Token).Set("st")
+    uv_reader.CreateOutput("result", Sdf.ValueTypeNames.Float2)
+
+    tex_reader = UsdShade.Shader.Define(stage, f"{mat_path}/Texture")
+    tex_reader.CreateIdAttr("UsdUVTexture")
+    tex_reader.CreateInput("file", Sdf.ValueTypeNames.Asset).Set(texture_asset)
+    tex_reader.CreateInput("wrapS", Sdf.ValueTypeNames.Token).Set("repeat")
+    tex_reader.CreateInput("wrapT", Sdf.ValueTypeNames.Token).Set("repeat")
+    tex_reader.CreateInput("st", Sdf.ValueTypeNames.Float2).ConnectToSource(
+        uv_reader.ConnectableAPI(), "result"
+    )
+    tex_reader.CreateOutput("rgb", Sdf.ValueTypeNames.Float3)
+
+    shader.CreateInput("emissiveColor", Sdf.ValueTypeNames.Color3f).ConnectToSource(
+        tex_reader.ConnectableAPI(), "rgb"
+    )
+    material.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), "surface")
+    UsdShade.MaterialBindingAPI(mesh.GetPrim()).Bind(material)
 
 
 class ViewSwitcher:
@@ -110,6 +185,7 @@ class ViewSwitcher:
         self._micro_lights_exist: bool = False
         self._micro_cam_created: bool = False
         self._original_cam_path: Optional[str] = None
+        self._orbit_cam_initialized: bool = False
 
     @property
     def mode(self) -> str:
@@ -119,18 +195,19 @@ class ViewSwitcher:
 
     def switch_to_orbit(self, stage: "Usd.Stage"):
         """Switch back to macro orbit view."""
-        if self._mode == "orbit":
-            return
         self._mode = "orbit"
+        self.ensure_background_cards(stage)
         self._show_macro_prims(stage, True)
         set_view_lighting_mode(stage, micro_view=False)
         self._set_micro_lights(stage, False)
         self._set_micro_cam_visible(stage, False)
+        self._set_backdrop_visible(stage, ORBIT_CAM_PATH, False)
+        self._set_backdrop_visible(stage, MICRO_CAM_PATH, False)
 
-        # Restore viewport to the original camera
-        restore = self._original_cam_path or "/OmniverseKit_Persp"
-        self._set_viewport_camera(restore)
-        print(f"[SpaceDC] View → ORBIT  (camera={restore})")
+        # Always use our own macro camera so backdrop, framing, and lighting
+        # stay stable regardless of Kit's default editor camera state.
+        self._set_viewport_camera(ORBIT_CAM_PATH)
+        print(f"[SpaceDC] View → ORBIT  (camera={ORBIT_CAM_PATH})")
 
     def switch_to_satellite(self, stage: "Usd.Stage", sat_pos: "Gf.Vec3d" = None):
         """Switch to micro satellite detail view."""
@@ -143,12 +220,15 @@ class ViewSwitcher:
 
         # Create the child camera under /World/Satellite (once)
         self._ensure_micro_cam(stage)
+        self.ensure_background_cards(stage)
 
         self._show_macro_prims(stage, False)
         set_view_lighting_mode(stage, micro_view=True)
         self._ensure_micro_lights(stage)
         self._set_micro_lights(stage, True)
         self._set_micro_cam_visible(stage, True)
+        self._set_backdrop_visible(stage, ORBIT_CAM_PATH, False)
+        self._set_backdrop_visible(stage, MICRO_CAM_PATH, True)
 
         # Switch viewport to render through our child camera
         self._set_viewport_camera(MICRO_CAM_PATH)
@@ -170,6 +250,15 @@ class ViewSwitcher:
         camera positioning needed.
         """
         pass
+
+    def ensure_background_cards(self, stage: "Usd.Stage"):
+        """Create background cards for the orbit and micro cameras if needed."""
+        if not HAS_USD:
+            return
+        self._remember_original_camera()
+        self._ensure_orbit_camera(stage)
+        self._ensure_micro_cam(stage)
+        self._ensure_camera_backdrop(stage, MICRO_CAM_PATH)
 
     def on_satellite_rebuilt(self, stage: "Usd.Stage"):
         """
@@ -239,6 +328,22 @@ class ViewSwitcher:
         if not self._original_cam_path:
             self._original_cam_path = "/OmniverseKit_Persp"
 
+    def _ensure_orbit_camera(self, stage: "Usd.Stage"):
+        """Create and initialize a dedicated macro camera for the orbit view."""
+        if self._orbit_cam_initialized or not HAS_USD:
+            return
+
+        cam = UsdGeom.Camera.Define(stage, ORBIT_CAM_PATH)
+        cam.GetFocalLengthAttr().Set(ORBIT_CAM_DEFAULT_FOCAL)
+        cam.GetClippingRangeAttr().Set(Gf.Vec2f(1.0, 50000.0))
+
+        xf = UsdGeom.Xformable(cam.GetPrim())
+        xf.ClearXformOpOrder()
+        xf.AddTranslateOp().Set(Gf.Vec3d(*ORBIT_CAM_DEFAULT_POS))
+        xf.AddRotateXYZOp().Set(_camera_rotation_for_offset(ORBIT_CAM_DEFAULT_POS))
+        self._orbit_cam_initialized = True
+        print(f"[SpaceDC] Orbit camera initialized: pos={tuple(float(v) for v in ORBIT_CAM_DEFAULT_POS)}")
+
     def _set_viewport_camera(self, cam_prim_path: str):
         """Switch the active Viewport to render through a specific camera."""
         if not HAS_VP:
@@ -253,6 +358,36 @@ class ViewSwitcher:
                 print("[SpaceDC] WARNING: No active viewport found")
         except Exception as e:
             print(f"[SpaceDC] ERROR setting viewport camera: {e}")
+
+    def _ensure_camera_backdrop(self, stage: "Usd.Stage", camera_path: str):
+        """Create a textured backdrop card as a child of the given camera."""
+        texture_asset = get_background_texture_path()
+        if not texture_asset:
+            return
+
+        camera_prim = stage.GetPrimAtPath(camera_path)
+        if not camera_prim.IsValid():
+            return
+
+        card_path = f"{camera_path}/{BACKDROP_CARD_NAME}"
+        if stage.GetPrimAtPath(card_path).IsValid():
+            return
+
+        _create_camera_backdrop(stage, camera_path, texture_asset)
+        print(f"[SpaceDC] Camera backdrop created: {card_path}")
+
+    def _set_backdrop_visible(self, stage: "Usd.Stage", camera_path: str, visible: bool):
+        """Show or hide the camera backdrop card without deleting it."""
+        if not HAS_USD:
+            return
+        card_prim = stage.GetPrimAtPath(f"{camera_path}/{BACKDROP_CARD_NAME}")
+        if not card_prim.IsValid():
+            return
+        img = UsdGeom.Imageable(card_prim)
+        if visible:
+            img.MakeVisible()
+        else:
+            img.MakeInvisible()
 
     # ── Scene visibility ────────────────────────────────────
 

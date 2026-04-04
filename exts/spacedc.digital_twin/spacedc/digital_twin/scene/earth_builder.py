@@ -160,6 +160,7 @@ ORBIT_RADIUS = EARTH_RADIUS * 1.7
 ORBIT_INCLINATION_DEG = 97.6    # default SSO inclination (used by RotateX on orbit ring)
 ORBIT_TILT_DEG = ORBIT_INCLINATION_DEG   # alias kept for backward compat
 SUN_DISTANCE = 1500.0
+SUN_POSITION = (-SUN_DISTANCE, 0.0, 0.0)
 
 # NASA texture URLs (to be downloaded or shipped as assets)
 TEX_DAY   = "earth_day_blue_marble.jpg"
@@ -260,6 +261,20 @@ def _set_orient_from_neg_z_axis(prim, direction: Tuple[float, float, float]) -> 
     xf.AddOrientOp().Set(orient)
 
 
+def _create_orbit_ring_material(stage: "Usd.Stage", orbit_prim_path: str) -> None:
+    """Bind a lightly emissive material so the orbit remains legible on the night side."""
+    mat_path = f"{orbit_prim_path}/Material"
+    mat = UsdShade.Material.Define(stage, mat_path)
+    shader = UsdShade.Shader.Define(stage, f"{mat_path}/Shader")
+    shader.CreateIdAttr("UsdPreviewSurface")
+    shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0.0, 0.55, 1.0))
+    shader.CreateInput("emissiveColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0.0, 0.20, 0.34))
+    shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
+    shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(0.18)
+    mat.CreateSurfaceOutput().ConnectToSource(shader.ConnectableAPI(), "surface")
+    UsdShade.MaterialBindingAPI(stage.GetPrimAtPath(orbit_prim_path)).Bind(mat)
+
+
 def build_earth_scene(stage: "Usd.Stage", root_path: str = "/World") -> None:
     """
     Construct the full Earth orbit scene on the given USD stage.
@@ -332,6 +347,7 @@ def build_earth_scene(stage: "Usd.Stage", root_path: str = "/World") -> None:
     curves.GetTypeAttr().Set(UsdGeom.Tokens.linear)
     curves.GetDisplayColorAttr().Set([Gf.Vec3f(0.0, 0.55, 1.0)])
     _disable_cast_shadows(curves)
+    _create_orbit_ring_material(stage, orbit_path)
     # Apply orbit tilt — must match get_orbit_position() which uses
     # inclination directly as RotateX angle in the XZ plane.
     xf = UsdGeom.Xformable(curves.GetPrim())
@@ -341,8 +357,7 @@ def build_earth_scene(stage: "Usd.Stage", root_path: str = "/World") -> None:
     # ── Sun ─────────────────────────────────────────────────
     sun_path = f"{root_path}/Sun"
     sun_xform = UsdGeom.Xform.Define(stage, sun_path)
-    _xform(sun_xform,
-           translate=(-SUN_DISTANCE, SUN_DISTANCE * 0.33, SUN_DISTANCE * 0.53))
+    _xform(sun_xform, translate=SUN_POSITION)
 
     sun_sphere = UsdGeom.Sphere.Define(stage, f"{sun_path}/Sphere")
     sun_sphere.GetRadiusAttr().Set(42.0)
@@ -357,7 +372,7 @@ def build_earth_scene(stage: "Usd.Stage", root_path: str = "/World") -> None:
     # visible Sun sphere position in the scene.
     _set_orient_from_neg_z_axis(
         sun_light,
-        (SUN_DISTANCE, -SUN_DISTANCE * 0.33, -SUN_DISTANCE * 0.53),
+        (-SUN_POSITION[0], -SUN_POSITION[1], -SUN_POSITION[2]),
     )
 
     # ── Stars (Points prim) ─────────────────────────────────
@@ -379,6 +394,7 @@ def build_earth_scene(stage: "Usd.Stage", root_path: str = "/World") -> None:
     widths = Vt.FloatArray([0.45 + random.random() * 0.65 for _ in range(star_count)])
     stars.GetWidthsAttr().Set(widths)
     stars.GetDisplayColorAttr().Set([Gf.Vec3f(0.52, 0.54, 0.60)])
+    UsdGeom.Imageable(stars.GetPrim()).MakeInvisible()
 
     # ── Info label (text) ───────────────────────────────────
     # (Omniverse text requires omni.kit; placeholder Xform with metadata)
@@ -463,7 +479,7 @@ def _create_earth_night_mask(stage: "Usd.Stage", root_path: str) -> None:
     st_pv = pv_api.CreatePrimvar("st", Sdf.ValueTypeNames.TexCoord2fArray, UsdGeom.Tokens.faceVarying)
     st_pv.Set(Vt.Vec2fArray(uvs))
 
-    sun_dir = (-SUN_DISTANCE, SUN_DISTANCE * 0.33, SUN_DISTANCE * 0.53)
+    sun_dir = SUN_POSITION
     sun_vec = Gf.Vec3f(*sun_dir)
     sun_len = max(sun_vec.GetLength(), 1e-6)
     sun_vec = Gf.Vec3f(sun_vec[0] / sun_len, sun_vec[1] / sun_len, sun_vec[2] / sun_len)
@@ -615,6 +631,7 @@ def update_orbit_ring(
 
     curves = UsdGeom.BasisCurves(prim)
     curves.GetPointsAttr().Set(Vt.Vec3fArray(points))
+    _create_orbit_ring_material(stage, orbit_path)
 
     # Update tilt — RotateX must match get_orbit_position() which uses
     # inclination_deg directly: sin(incl) → Y component, cos(incl) → Z component.

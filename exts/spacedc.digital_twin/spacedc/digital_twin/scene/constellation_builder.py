@@ -125,13 +125,13 @@ def build_constellation(
             stage,
             f"{mats_root}/Orbit_{sat.catalog_number}",
             base_color,
-            1.1,
+            0.42,
         )
         orbit_selected = _create_preview_material(
             stage,
             f"{mats_root}/Orbit_{sat.catalog_number}_Selected",
             selected_color,
-            1.2,
+            0.58,
         )
 
         sat_path = f"{root_path}/Markers/{sat.safe_id}"
@@ -183,6 +183,9 @@ def build_constellation(
             Sdf.ValueTypeNames.Bool,
             custom=False,
         ).Set(True)
+        UsdShade.MaterialBindingAPI(orbit_points_prim.GetPrim()).Bind(
+            orbit_selected if sat.catalog_number == selected_catalog_number else orbit_default
+        )
         _set_constellation_metadata(orbit_points_prim.GetPrim(), sat)
 
 

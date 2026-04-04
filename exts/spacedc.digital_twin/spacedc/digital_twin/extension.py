@@ -30,6 +30,12 @@ try:
 except ImportError:
     HAS_KIT = False
 
+try:
+    import carb
+    HAS_CARB = True
+except ImportError:
+    HAS_CARB = False
+
 from .physics.state import SimState
 from .physics.constellation import (
     HAS_SGP4,
@@ -37,6 +43,15 @@ from .physics.constellation import (
     build_dawn_dusk_constellation,
     load_tle_file,
     scene_position_for_satellite,
+)
+from .physics.topology import (
+    TopologyLink,
+    add_link,
+    available_satellite_text,
+    link_summary_text,
+    preset_links,
+    remove_link,
+    resolve_satellite_reference,
 )
 from .physics.telemetry import TelemetryLogger
 from .simulation_engine import SimulationEngine
@@ -52,6 +67,11 @@ try:
         build_constellation,
         update_constellation_positions,
         get_selected_catalog_number_from_path,
+    )
+    from .scene.topology_builder import (
+        build_topology_links,
+        clear_topology_links,
+        update_topology_links,
     )
     from .scene.satellite_builder import build_satellite
     from .scene.environment import (
@@ -78,10 +98,19 @@ from .ui.component_info_popup import ComponentInfoPopup
 WORLD_ROOT = "/World"
 SATELLITE_PATH = "/World/Satellite"
 CONSTELLATION_PATH = "/World/Constellation"
+TOPOLOGY_PATH = "/World/Constellation/Topology"
 SUN_LIGHT_PATH = "/World/Sun/SunLight"
 AMBIENT_PATH = "/World/Lights/Ambient"
 EARTH_PATH = "/World/Earth"
 CLOUDS_PATH = "/World/Clouds"
+DOME_PATH = "/World/Lights/DomeLight"
+KNOWN_LIGHT_PATHS = {
+    SUN_LIGHT_PATH,
+    AMBIENT_PATH,
+    DOME_PATH,
+    "/World/Satellite/MicroKeyLight",
+    "/World/Satellite/MicroFillLight",
+}
 
 
 class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
@@ -110,16 +139,20 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         self._component_popup: Optional[ComponentInfoPopup] = None
         self._constellation: Optional[ConstellationData] = None
         self._selected_catalog_number: Optional[str] = None
+        self._topology_links: list[TopologyLink] = []
+        self._topology_status_text: str = "Load a constellation to author topology links."
         self._constellation_epoch_base = datetime.now(timezone.utc)
 
         # Kit subscription
         self._update_sub = None
         self._selection_sub = None
+        self._viewport_style_applied = False
 
     # ── Lifecycle ───────────────────────────────────────────
 
     def on_startup(self, ext_id: str = ""):
         print(f"[SpaceDC] Extension starting up... HAS_KIT={HAS_KIT}, HAS_SCENE={HAS_SCENE}")
+        self._apply_viewport_style()
 
         # 1. Create state & logger
         self._state = SimState()
@@ -146,6 +179,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
                         self._state.rad_count, self._state.rad_area,
                     )
                     setup_environment(stage, WORLD_ROOT)
+                    self._disable_non_spacedc_lights(stage)
                     self._scene_built = True
                     print("[SpaceDC] USD scene built OK")
                 except Exception as e:
@@ -156,6 +190,11 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
 
         # 4. Create view switcher
         self._view_switcher = ViewSwitcher()
+        if self._scene_built and HAS_SCENE and HAS_KIT:
+            stage = omni.usd.get_context().get_stage()
+            if stage:
+                self._view_switcher.ensure_background_cards(stage)
+                self._view_switcher.switch_to_orbit(stage)
 
         # 5. Build UI panels
         self._dt_panel = DigitalTwinPanel(
@@ -166,9 +205,14 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
             on_load_constellation=self._load_constellation_from_path,
             on_load_sdc_demo=self._load_sdc_demo_constellation,
             on_clear_constellation=self._clear_constellation,
+            on_apply_topology_preset=self._apply_topology_preset,
+            on_add_topology_link=self._add_topology_link,
+            on_remove_topology_link=self._remove_topology_link,
+            on_clear_topology=self._clear_topology,
             default_constellation_path=self._get_default_constellation_path(),
         )
         self._dt_panel.build()
+        self._sync_topology_ui()
 
         self._telem_panel = TelemetryPanel(self._logger)
         self._telem_panel.build()
@@ -238,8 +282,187 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         ext_root = os.path.normpath(os.path.join(this_dir, "..", "..", ".."))
         return os.path.join(ext_root, "data", "orbits", "sample_tle.tle")
 
+    def _apply_viewport_style(self) -> None:
+        """Hide Kit editor overlays so the scene reads like a clean simulation view."""
+        if not HAS_CARB:
+            return
+        try:
+            settings = carb.settings.get_settings()
+            bool_settings = {
+                "/app/viewport/grid/enabled": False,
+                "/app/viewport/outline/enabled": False,
+                "/app/viewport/defaults/guide/grid/visible": False,
+                "/app/viewport/defaults/guide/axis/visible": False,
+                "/app/viewport/defaults/hud/visible": False,
+                "/app/viewport/defaults/scene/cameras/visible": False,
+                "/app/viewport/defaults/scene/lights/visible": False,
+                "/persistent/app/viewport/grid/enabled": False,
+                "/persistent/app/viewport/outline/enabled": False,
+                "/persistent/app/viewport/defaults/guide/grid/visible": False,
+                "/persistent/app/viewport/defaults/guide/axis/visible": False,
+                "/persistent/app/viewport/defaults/hud/visible": False,
+                "/persistent/app/viewport/defaults/scene/cameras/visible": False,
+                "/persistent/app/viewport/defaults/scene/lights/visible": False,
+            }
+            for key, value in bool_settings.items():
+                settings.set_bool(key, value)
+            auto_rig_settings = [
+                "/exts/omni.kit.viewport.menubar.lighting/autoLightRig/enabled",
+                "/exts/omni.kit.viewport.menubar.lighting/autoLightRig/enableWithoutMenu",
+                "/persistent/exts/omni.kit.viewport.menubar.lighting/autoLightRig/enabled",
+                "/persistent/exts/omni.kit.viewport.menubar.lighting/autoLightRig/enableWithoutMenu",
+            ]
+            for key in auto_rig_settings:
+                settings.set_bool(key, False)
+            if not self._viewport_style_applied:
+                print("[SpaceDC] Viewport overlays disabled (grid/axis/hud/outline)")
+                self._viewport_style_applied = True
+        except Exception as e:
+            print(f"[SpaceDC] WARNING: Failed to apply viewport style: {e}")
+
     def _current_constellation_time(self) -> datetime:
         return self._constellation_epoch_base + timedelta(seconds=self._state.met_seconds)
+
+    def _sync_topology_ui(self) -> None:
+        if not self._dt_panel:
+            return
+        self._dt_panel.update_topology_info(
+            available_satellite_text(self._constellation),
+            link_summary_text(self._topology_links, self._constellation),
+            self._topology_status_text,
+            len(self._topology_links),
+        )
+
+    def _refresh_topology_scene(self, stage=None) -> None:
+        if not HAS_SCENE or not HAS_KIT:
+            return
+        if stage is None:
+            stage = omni.usd.get_context().get_stage()
+        if not stage:
+            return
+
+        from .scene.earth_builder import EARTH_RADIUS
+
+        if not self._constellation or not self._topology_links:
+            clear_topology_links(stage, TOPOLOGY_PATH)
+            return
+
+        build_topology_links(
+            stage,
+            TOPOLOGY_PATH,
+            self._topology_links,
+            self._constellation,
+            EARTH_RADIUS,
+            self._current_constellation_time(),
+            self._selected_catalog_number,
+        )
+
+    def _clear_topology_state(self, status_text: str) -> None:
+        self._topology_links = []
+        self._topology_status_text = status_text
+        self._sync_topology_ui()
+        if HAS_SCENE and HAS_KIT:
+            stage = omni.usd.get_context().get_stage()
+            if stage:
+                clear_topology_links(stage, TOPOLOGY_PATH)
+
+    def _apply_topology_preset(self, preset_key: str) -> None:
+        if not self._constellation or not self._constellation.satellites:
+            self._topology_status_text = "Load a constellation first."
+            self._sync_topology_ui()
+            return
+        self._topology_links = preset_links(self._constellation.satellites, preset_key)
+        self._topology_status_text = f"Applied {preset_key} topology preset."
+        self._sync_topology_ui()
+        self._refresh_topology_scene()
+        if self._logger:
+            self._logger.add_log("info", f"[Topology] Applied {preset_key} preset ({len(self._topology_links)} links).", self._state.met_seconds)
+
+    def _add_topology_link(self, source_ref: str, target_ref: str) -> None:
+        if not self._constellation:
+            self._topology_status_text = "Load a constellation first."
+            self._sync_topology_ui()
+            return
+        source_id = resolve_satellite_reference(source_ref, self._constellation)
+        target_id = resolve_satellite_reference(target_ref, self._constellation)
+        if not source_id or not target_id:
+            self._topology_status_text = "Could not resolve one or both satellite IDs."
+            self._sync_topology_ui()
+            return
+        self._topology_links, added = add_link(self._topology_links, source_id, target_id)
+        self._topology_status_text = (
+            f"Added link {source_id} ↔ {target_id}."
+            if added else
+            f"Link {source_id} ↔ {target_id} already exists or is invalid."
+        )
+        self._sync_topology_ui()
+        self._refresh_topology_scene()
+        if self._logger:
+            self._logger.add_log("info" if added else "warn", f"[Topology] {self._topology_status_text}", self._state.met_seconds)
+
+    def _remove_topology_link(self, source_ref: str, target_ref: str) -> None:
+        if not self._constellation:
+            self._topology_status_text = "Load a constellation first."
+            self._sync_topology_ui()
+            return
+        source_id = resolve_satellite_reference(source_ref, self._constellation)
+        target_id = resolve_satellite_reference(target_ref, self._constellation)
+        if not source_id or not target_id:
+            self._topology_status_text = "Could not resolve one or both satellite IDs."
+            self._sync_topology_ui()
+            return
+        self._topology_links, removed = remove_link(self._topology_links, source_id, target_id)
+        self._topology_status_text = (
+            f"Removed link {source_id} ↔ {target_id}."
+            if removed else
+            f"No active link found for {source_id} ↔ {target_id}."
+        )
+        self._sync_topology_ui()
+        self._refresh_topology_scene()
+        if self._logger:
+            self._logger.add_log("info" if removed else "warn", f"[Topology] {self._topology_status_text}", self._state.met_seconds)
+
+    def _clear_topology(self) -> None:
+        self._clear_topology_state("Cleared all topology links.")
+        if self._logger:
+            self._logger.add_log("info", "[Topology] Cleared all topology links.", self._state.met_seconds)
+
+    def _disable_non_spacedc_lights(self, stage) -> None:
+        """Turn off stage lights we did not create, such as auto-inserted light rigs."""
+        if not stage:
+            return
+        try:
+            from pxr import UsdGeom
+        except ImportError:
+            return
+
+        disabled = 0
+        light_types = {"DistantLight", "DomeLight", "SphereLight", "RectLight", "DiskLight", "CylinderLight"}
+        for prim in stage.Traverse():
+            if prim.GetTypeName() not in light_types:
+                continue
+            path_str = str(prim.GetPath())
+            if path_str in KNOWN_LIGHT_PATHS:
+                continue
+            changed = False
+            intensity_attr = prim.GetAttribute("inputs:intensity")
+            if intensity_attr and intensity_attr.IsValid():
+                current = intensity_attr.Get()
+                if current is None or abs(float(current)) > 1e-6:
+                    intensity_attr.Set(0.0)
+                    changed = True
+            try:
+                imageable = UsdGeom.Imageable(prim)
+                if imageable.ComputeVisibility() != UsdGeom.Tokens.invisible:
+                    imageable.MakeInvisible()
+                    changed = True
+            except Exception:
+                pass
+            if changed:
+                disabled += 1
+
+        if disabled:
+            print(f"[SpaceDC] Disabled {disabled} non-SpaceDC stage light(s)")
 
     def _set_detail_satellite_visible(self, stage, visible: bool) -> None:
         if not HAS_SCENE or not stage:
@@ -267,7 +490,11 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
     def _load_default_constellation(self) -> None:
         if self._constellation is not None:
             return
-        self._load_sdc_demo_constellation(auto=True)
+        default_path = self._get_default_constellation_path()
+        if os.path.isfile(default_path):
+            self._load_constellation_from_path(default_path, auto=True)
+        else:
+            self._load_sdc_demo_constellation(auto=True)
 
     def _load_sdc_demo_constellation(self, auto: bool = False) -> None:
         if not HAS_SCENE or not HAS_KIT:
@@ -290,6 +517,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         self._constellation = constellation
         self._selected_catalog_number = None
         self._constellation_epoch_base = datetime.now(timezone.utc)
+        self._clear_topology_state("Loaded SDC demo. Use NETWORK TOPOLOGY to add links.")
         build_constellation(stage, CONSTELLATION_PATH, constellation.satellites, EARTH_RADIUS, None)
         update_constellation_positions(
             stage,
@@ -348,6 +576,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         self._constellation = constellation
         self._selected_catalog_number = None
         self._constellation_epoch_base = datetime.now(timezone.utc)
+        self._clear_topology_state(f"Loaded {len(constellation.satellites)} satellites. Add links or apply a preset.")
         build_constellation(stage, CONSTELLATION_PATH, constellation.satellites, EARTH_RADIUS, None)
         update_constellation_positions(
             stage,
@@ -381,6 +610,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         stage = omni.usd.get_context().get_stage()
         if stage:
             stage.RemovePrim(CONSTELLATION_PATH)
+            stage.RemovePrim(TOPOLOGY_PATH)
             orbit_prim = stage.GetPrimAtPath(f"{WORLD_ROOT}/OrbitRing")
             if orbit_prim and orbit_prim.IsValid():
                 try:
@@ -392,6 +622,9 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
 
         self._constellation = None
         self._selected_catalog_number = None
+        self._topology_links = []
+        self._topology_status_text = "Topology cleared with constellation."
+        self._sync_topology_ui()
         self._set_default_tracked_target()
         if self._logger:
             self._logger.add_log("info", "[Constellation] Cleared loaded TLE satellites.", self._state.met_seconds)
@@ -423,6 +656,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         from .scene.earth_builder import EARTH_RADIUS
 
         build_constellation(stage, CONSTELLATION_PATH, self._constellation.satellites, EARTH_RADIUS, catalog_number)
+        self._refresh_topology_scene(stage)
         update_constellation_positions(
             stage,
             CONSTELLATION_PATH,
@@ -471,6 +705,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
 
     def _on_kit_update(self, event):
         """Called every frame by Omniverse Kit."""
+        self._apply_viewport_style()
         # Deferred scene build if stage wasn't ready at startup
         if not self._scene_built and HAS_SCENE and HAS_KIT:
             stage = omni.usd.get_context().get_stage()
@@ -483,6 +718,10 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
                         self._state.rad_count, self._state.rad_area,
                     )
                     setup_environment(stage, WORLD_ROOT)
+                    self._disable_non_spacedc_lights(stage)
+                    if self._view_switcher:
+                        self._view_switcher.ensure_background_cards(stage)
+                        self._view_switcher.switch_to_orbit(stage)
                     print("[SpaceDC] USD scene built OK (deferred)")
                     self._load_default_constellation()
                 except Exception as e:
@@ -505,6 +744,9 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         stage = omni.usd.get_context().get_stage()
         if not stage:
             return
+        if self._view_switcher:
+            self._view_switcher.ensure_background_cards(stage)
+        self._disable_non_spacedc_lights(stage)
 
         # Dynamic orbit radius in scene units: EARTH_RADIUS * (Re + alt) / Re
         from .scene.earth_builder import EARTH_RADIUS
@@ -518,6 +760,15 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
                 self._constellation.satellites,
                 EARTH_RADIUS,
                 self._current_constellation_time(),
+            )
+            update_topology_links(
+                stage,
+                TOPOLOGY_PATH,
+                self._topology_links,
+                self._constellation,
+                EARTH_RADIUS,
+                self._current_constellation_time(),
+                self._selected_catalog_number,
             )
             if self._selected_catalog_number:
                 self._sync_detail_satellite_to_selected(stage)

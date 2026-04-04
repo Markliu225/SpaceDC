@@ -43,6 +43,7 @@ class SimulationEngine:
         # Callbacks for scene / UI updates
         self._on_scene_update: Optional[Callable] = None
         self._on_ui_update: Optional[Callable] = None
+        self._earth_rotation_deg_per_sec: float = 8.0
 
     def set_callbacks(
         self,
@@ -140,7 +141,8 @@ class SimulationEngine:
             s.log_idx += 1
 
         # ── Earth rotation ──────────────────────────────────
-        self._earth_rot_y += 0.07  # degrees per tick (visual only)
+        # Keep Earth rotation visually alive even on lower frame rates.
+        self._earth_rot_y = (self._earth_rot_y + dt * self._earth_rotation_deg_per_sec) % 360.0
 
         # ── Build result dict ───────────────────────────────
         result = {

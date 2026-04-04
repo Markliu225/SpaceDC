@@ -62,6 +62,10 @@ class DigitalTwinPanel:
         on_load_constellation: Optional[Callable] = None,
         on_load_sdc_demo: Optional[Callable] = None,
         on_clear_constellation: Optional[Callable] = None,
+        on_apply_topology_preset: Optional[Callable] = None,
+        on_add_topology_link: Optional[Callable] = None,
+        on_remove_topology_link: Optional[Callable] = None,
+        on_clear_topology: Optional[Callable] = None,
         default_constellation_path: str = "",
     ):
         self._state = state
@@ -71,6 +75,10 @@ class DigitalTwinPanel:
         self._on_load_constellation = on_load_constellation
         self._on_load_sdc_demo = on_load_sdc_demo
         self._on_clear_constellation = on_clear_constellation
+        self._on_apply_topology_preset = on_apply_topology_preset
+        self._on_add_topology_link = on_add_topology_link
+        self._on_remove_topology_link = on_remove_topology_link
+        self._on_clear_topology = on_clear_topology
         self._default_constellation_path = default_constellation_path
         self._window: Optional["ui.Window"] = None
 
@@ -93,6 +101,16 @@ class DigitalTwinPanel:
         # View toggle button reference
         self._view_btn = None
         self._constellation_path_field = None
+        self._topology_source_field = None
+        self._topology_target_field = None
+        self._lbl_topology_available = None
+        self._lbl_topology_links = None
+        self._lbl_topology_status = None
+        self._lbl_topology_count = None
+        self._topology_available_text = "Load a constellation to author topology links."
+        self._topology_links_text = "No active links."
+        self._topology_status_text = "Topology idle."
+        self._topology_link_count = 0
 
     def build(self):
         if not HAS_OMNI_UI:
@@ -116,6 +134,8 @@ class DigitalTwinPanel:
                     self._build_orbit_section()  # <--- 新增
                     ui.Separator(height=2)
                     self._build_constellation_section()
+                    ui.Separator(height=2)
+                    self._build_topology_section()
                     ui.Separator(height=2)
                     self._build_solar_section()
                     ui.Separator(height=2)
@@ -250,6 +270,45 @@ class DigitalTwinPanel:
             ui.Button("Load File", clicked_fn=self._on_load_constellation_clicked)
             ui.Button("Load SDC Demo", clicked_fn=self._on_load_sample_constellation_clicked)
             ui.Button("Clear", clicked_fn=self._on_clear_constellation_clicked)
+
+    def _build_topology_section(self):
+        ui.Label("NETWORK TOPOLOGY", name="header", height=24)
+
+        with ui.HStack(height=20):
+            ui.Label("Available:", width=68)
+            self._lbl_topology_available = ui.Label(self._topology_available_text, name="muted")
+
+        with ui.HStack(height=24, spacing=4):
+            ui.Button("Ring", width=70, clicked_fn=lambda: self._on_topology_preset_clicked("ring"))
+            ui.Button("Chain", width=70, clicked_fn=lambda: self._on_topology_preset_clicked("chain"))
+            ui.Button("Star", width=70, clicked_fn=lambda: self._on_topology_preset_clicked("star"))
+            ui.Button("Mesh", width=70, clicked_fn=lambda: self._on_topology_preset_clicked("mesh"))
+
+        if hasattr(ui, "StringField"):
+            with ui.HStack(height=24, spacing=4):
+                ui.Label("A:", width=16)
+                self._topology_source_field = ui.StringField(width=ui.Percent(50), height=22)
+                ui.Label("B:", width=16)
+                self._topology_target_field = ui.StringField(width=ui.Percent(50), height=22)
+        else:
+            ui.Label("Manual link entry unavailable in this UI build.", name="warn", height=20)
+
+        with ui.HStack(height=24, spacing=4):
+            ui.Button("Add Link", clicked_fn=self._on_add_topology_link_clicked)
+            ui.Button("Remove Link", clicked_fn=self._on_remove_topology_link_clicked)
+            ui.Button("Clear All", clicked_fn=self._on_clear_topology_clicked)
+
+        with ui.HStack(height=18):
+            ui.Label("Link Count:", width=80)
+            self._lbl_topology_count = ui.Label(str(self._topology_link_count), name="value")
+
+        with ui.HStack(height=32):
+            ui.Label("Links:", width=45)
+            self._lbl_topology_links = ui.Label(self._topology_links_text, name="muted")
+
+        with ui.HStack(height=18):
+            ui.Label("Status:", width=45)
+            self._lbl_topology_status = ui.Label(self._topology_status_text, name="value")
 
     def _build_solar_section(self):
         ui.Label("SOLAR ARRAY", name="header", height=24)
@@ -466,6 +525,56 @@ class DigitalTwinPanel:
             self._lbl_sunlight.text = f"{sunlight_pct:.1f}%"
 
     # ── Helpers ──────────────────────────────────────────────
+
+    def update_topology_info(
+        self,
+        available_text: str,
+        links_text: str,
+        status_text: str,
+        link_count: int,
+    ):
+        self._topology_available_text = available_text
+        self._topology_links_text = links_text
+        self._topology_status_text = status_text
+        self._topology_link_count = link_count
+        if self._lbl_topology_available:
+            self._lbl_topology_available.text = available_text
+        if self._lbl_topology_links:
+            self._lbl_topology_links.text = links_text
+        if self._lbl_topology_status:
+            self._lbl_topology_status.text = status_text
+        if self._lbl_topology_count:
+            self._lbl_topology_count.text = str(link_count)
+
+    def _get_topology_field_value(self, field) -> str:
+        if not field:
+            return ""
+        try:
+            return field.model.get_value_as_string().strip()
+        except Exception:
+            return ""
+
+    def _on_topology_preset_clicked(self, preset_key: str):
+        if self._on_apply_topology_preset:
+            self._on_apply_topology_preset(preset_key)
+
+    def _on_add_topology_link_clicked(self):
+        if self._on_add_topology_link:
+            self._on_add_topology_link(
+                self._get_topology_field_value(self._topology_source_field),
+                self._get_topology_field_value(self._topology_target_field),
+            )
+
+    def _on_remove_topology_link_clicked(self):
+        if self._on_remove_topology_link:
+            self._on_remove_topology_link(
+                self._get_topology_field_value(self._topology_source_field),
+                self._get_topology_field_value(self._topology_target_field),
+            )
+
+    def _on_clear_topology_clicked(self):
+        if self._on_clear_topology:
+            self._on_clear_topology()
 
     def _trigger_rebuild(self):
         self._notify_change()
