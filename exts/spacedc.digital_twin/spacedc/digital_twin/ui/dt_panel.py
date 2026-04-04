@@ -95,9 +95,15 @@ class DigitalTwinPanel:
         self._lbl_period = None
         self._lbl_eclipse_frac = None
         self._lbl_sunlight = None
+        self._lbl_phase = None
+        self._lbl_target = None
+        self._lbl_source = None
+        self._lbl_met = None
+        self._lbl_speed = None
+        self._lbl_battery = None
+        self._lbl_solar_live = None
+        self._lbl_gpu = None
 
-        # Speed button references
-        self._speed_labels = {}
         # View toggle button reference
         self._view_btn = None
         self._constellation_path_field = None
@@ -119,17 +125,17 @@ class DigitalTwinPanel:
 
         self._window = ui.Window(
             "SpaceDC Digital Twin",
-            width=380,
-            height=720,
+            width=420,
+            height=680,
         )
         with self._window.frame:
             with ui.ScrollingFrame():
                 with ui.VStack(spacing=6, style=PANEL_STYLE):
                     self._build_header()
                     ui.Separator(height=2)
-                    self._build_view_toggle()
+                    self._build_overview_section()
                     ui.Separator(height=2)
-                    self._build_speed_controls()
+                    self._build_controls_section()
                     ui.Separator(height=2)
                     self._build_orbit_section()  # <--- 新增
                     ui.Separator(height=2)
@@ -166,14 +172,52 @@ class DigitalTwinPanel:
             height=20,
         )
 
-    def _build_view_toggle(self):
-        ui.Label("CAMERA VIEW", name="header", height=20)
+    def _build_overview_section(self):
+        ui.Label("MISSION OVERVIEW", name="header", height=20)
+        with ui.VStack(spacing=3):
+            with ui.HStack(height=18):
+                ui.Label("Phase:", width=68)
+                self._lbl_phase = ui.Label("SUNLIT PASS", name="value")
+            with ui.HStack(height=18):
+                ui.Label("Target:", width=68)
+                self._lbl_target = ui.Label(self._state.tracked_satellite_name, name="value")
+            with ui.HStack(height=18):
+                ui.Label("Source:", width=68)
+                self._lbl_source = ui.Label(self._state.tracked_satellite_source, name="muted")
+            with ui.HStack(height=18):
+                ui.Label("MET:", width=68)
+                self._lbl_met = ui.Label(self._format_met(self._state.met_seconds), name="value")
+            with ui.HStack(height=18):
+                ui.Label("Speed:", width=68)
+                self._lbl_speed = ui.Label(f"{self._state.speed}x", name="value")
+            with ui.HStack(height=18):
+                ui.Label("Battery:", width=68)
+                self._lbl_battery = ui.Label(f"{self._state.bat_soc:.0f}%", name="value")
+            with ui.HStack(height=18):
+                ui.Label("Solar:", width=68)
+                self._lbl_solar_live = ui.Label(f"{self._state.solar_pwr:.0f} kW", name="value")
+            with ui.HStack(height=18):
+                ui.Label("Compute:", width=68)
+                self._lbl_gpu = ui.Label(
+                    f"{self._state.gpu_util}% / {self._state.gpu_temp:.0f} C",
+                    name="value",
+                )
+
+    def _build_controls_section(self):
+        ui.Label("MISSION CONTROLS", name="header", height=20)
         with ui.HStack(height=28, spacing=4):
             self._view_btn = ui.Button(
-                "Satellite Close-up  >>",
+                "Satellite Close-up",
                 height=26,
+                width=220,
                 clicked_fn=self._on_view_btn_clicked,
             )
+            for spd in [1, 10, 60]:
+                ui.Button(
+                    f"{spd}x",
+                    width=52,
+                    clicked_fn=lambda s=spd: self._set_speed(s),
+                )
 
     def _on_view_btn_clicked(self):
         """Handle view toggle button click."""
@@ -181,9 +225,9 @@ class DigitalTwinPanel:
             new_mode = self._on_view_toggle()
             if self._view_btn and new_mode:
                 if new_mode == "satellite":
-                    self._view_btn.text = "<<  Orbit Overview"
+                    self._view_btn.text = "Orbit Overview"
                 else:
-                    self._view_btn.text = "Satellite Close-up  >>"
+                    self._view_btn.text = "Satellite Close-up"
 
     def _get_constellation_path(self) -> str:
         if not self._constellation_path_field:
@@ -218,7 +262,7 @@ class DigitalTwinPanel:
                 )
 
     def _build_orbit_section(self):
-        ui.Label("ORBITAL CONFIGURATION", name="header", height=24)
+        return
 
         # Altitude input
         with ui.HStack(height=24, spacing=4):
@@ -252,7 +296,7 @@ class DigitalTwinPanel:
         self._refresh_orbit_readouts()
 
     def _build_constellation_section(self):
-        ui.Label("CONSTELLATION TLE", name="header", height=24)
+        ui.Label("CONSTELLATION", name="header", height=24)
 
         with ui.HStack(height=22, spacing=4):
             ui.Label("TLE File:", width=70)
@@ -268,7 +312,7 @@ class DigitalTwinPanel:
 
         with ui.HStack(height=26, spacing=4):
             ui.Button("Load File", clicked_fn=self._on_load_constellation_clicked)
-            ui.Button("Load SDC Demo", clicked_fn=self._on_load_sample_constellation_clicked)
+            ui.Button("Reload Sample", clicked_fn=self._on_load_sample_constellation_clicked)
             ui.Button("Clear", clicked_fn=self._on_clear_constellation_clicked)
 
     def _build_topology_section(self):
@@ -311,7 +355,8 @@ class DigitalTwinPanel:
             self._lbl_topology_status = ui.Label(self._topology_status_text, name="value")
 
     def _build_solar_section(self):
-        ui.Label("SOLAR ARRAY", name="header", height=24)
+        ui.Label("SATELLITE DESIGN", name="header", height=24)
+        ui.Label("Solar Array", name="muted", height=18)
 
         # Wing count slider
         with ui.HStack(height=22):
@@ -348,7 +393,7 @@ class DigitalTwinPanel:
         )
 
     def _build_radiator_section(self):
-        ui.Label("RADIATIVE COOLING", name="header", height=24)
+        ui.Label("Thermal Control", name="muted", height=18)
 
         # Rad panel count
         with ui.HStack(height=22):
@@ -395,7 +440,7 @@ class DigitalTwinPanel:
         )
 
     def _build_workload_section(self):
-        ui.Label("COMPUTE WORKLOAD", name="header", height=24)
+        ui.Label("Compute Workload", name="muted", height=18)
 
         wl_names = [WORKLOADS[k]["name"] for k in WORKLOADS]
         wl_keys = list(WORKLOADS.keys())
@@ -411,7 +456,7 @@ class DigitalTwinPanel:
         self._lbl_thermal = ui.Label("", name="value", height=20)
 
     def _build_summary_section(self):
-        ui.Label("SYSTEM SUMMARY", name="header", height=24)
+        ui.Label("DESIGN SUMMARY", name="header", height=24)
 
         with ui.VStack(spacing=3):
             with ui.HStack(height=18):
@@ -430,6 +475,8 @@ class DigitalTwinPanel:
 
     def _set_speed(self, speed: int):
         self._state.speed = speed
+        if self._lbl_speed:
+            self._lbl_speed.text = f"{speed}x"
         self._notify_change()
 
     def _on_wing_count_changed(self, model):
@@ -584,6 +631,42 @@ class DigitalTwinPanel:
     def _notify_change(self):
         if self._on_state_change:
             self._on_state_change()
+
+    def update_live_status(self):
+        if not HAS_OMNI_UI or not self._window:
+            return
+
+        s = self._state
+        if self._lbl_phase:
+            self._lbl_phase.text = "ECLIPSE PASS" if s.eclipse else "SUNLIT PASS"
+            self._lbl_phase.name = "warn" if s.eclipse else "value"
+        if self._lbl_target:
+            label = s.tracked_satellite_name or "ORBITAL DC-1"
+            if s.tracked_satellite_id and s.tracked_satellite_id != "SIM-001":
+                label = f"{label} ({s.tracked_satellite_id})"
+            self._lbl_target.text = label
+        if self._lbl_source:
+            self._lbl_source.text = s.tracked_satellite_source
+        if self._lbl_met:
+            self._lbl_met.text = self._format_met(s.met_seconds)
+        if self._lbl_speed:
+            self._lbl_speed.text = f"{s.speed}x"
+        if self._lbl_battery:
+            self._lbl_battery.text = f"{s.bat_soc:.0f}%"
+            self._lbl_battery.name = "danger" if s.bat_soc < 20 else ("warn" if s.bat_soc < 35 else "value")
+        if self._lbl_solar_live:
+            self._lbl_solar_live.text = f"{s.solar_pwr:.0f} kW"
+        if self._lbl_gpu:
+            self._lbl_gpu.text = f"{s.gpu_util}% / {s.gpu_temp:.0f} C"
+            self._lbl_gpu.name = "danger" if s.gpu_temp > 95 else ("warn" if s.gpu_temp > 85 else "value")
+
+    @staticmethod
+    def _format_met(seconds: float) -> str:
+        total = max(0, int(seconds))
+        hours = total // 3600
+        minutes = (total % 3600) // 60
+        secs = total % 60
+        return f"T+{hours:03d}:{minutes:02d}:{secs:02d}"
 
     def _update_summary(self):
         s = self._state

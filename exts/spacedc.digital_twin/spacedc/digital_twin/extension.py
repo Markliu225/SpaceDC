@@ -87,11 +87,8 @@ except Exception as e:
     print(f"[SpaceDC] WARNING: Scene modules error: {e}")
 
 from .ui.dt_panel import DigitalTwinPanel
-from .ui.telemetry_panel import TelemetryPanel, HUDOverlay
 from .ui.trend_chart import TrendChartPanel
-from .ui.satellite_status_window import SatelliteStatusWindow
 from .ui.view_switcher import ViewSwitcher
-from .ui.component_info_popup import ComponentInfoPopup
 
 
 # ── Prim paths ──────────────────────────────────────────────
@@ -119,7 +116,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
 
     When running inside Omniverse Kit:
       - Creates the full USD scene (Earth, satellite, lighting)
-      - Opens Digital Twin control panel, HUD, telemetry log, trend chart
+      - Opens a single consolidated Digital Twin control panel
       - Subscribes to the Kit update loop for simulation ticks
     """
 
@@ -131,12 +128,8 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
 
         # UI panels
         self._dt_panel: Optional[DigitalTwinPanel] = None
-        self._telem_panel: Optional[TelemetryPanel] = None
-        self._hud: Optional[HUDOverlay] = None
         self._trend: Optional[TrendChartPanel] = None
-        self._sat_status: Optional[SatelliteStatusWindow] = None
         self._view_switcher: Optional[ViewSwitcher] = None
-        self._component_popup: Optional[ComponentInfoPopup] = None
         self._constellation: Optional[ConstellationData] = None
         self._selected_catalog_number: Optional[str] = None
         self._topology_links: list[TopologyLink] = []
@@ -203,7 +196,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
             on_state_change=lambda: None,
             on_view_toggle=self._on_view_toggle,
             on_load_constellation=self._load_constellation_from_path,
-            on_load_sdc_demo=self._load_sdc_demo_constellation,
+            on_load_sdc_demo=lambda: self._load_constellation_from_path(self._get_default_constellation_path()),
             on_clear_constellation=self._clear_constellation,
             on_apply_topology_preset=self._apply_topology_preset,
             on_add_topology_link=self._add_topology_link,
@@ -212,23 +205,10 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
             default_constellation_path=self._get_default_constellation_path(),
         )
         self._dt_panel.build()
+        self._dt_panel.update_live_status()
         self._sync_topology_ui()
-
-        self._telem_panel = TelemetryPanel(self._logger)
-        self._telem_panel.build()
-
-        self._hud = HUDOverlay(self._state, self._logger)
-        self._hud.build()
-
         self._trend = TrendChartPanel(self._state)
         self._trend.build()
-
-        self._sat_status = SatelliteStatusWindow(self._state)
-        self._sat_status.build()
-
-        # 5b. Component click-to-inspect popup
-        self._component_popup = ComponentInfoPopup(self._state)
-        self._component_popup.start()
 
         # 6. Subscribe to Kit update loop
         if HAS_KIT:
@@ -262,18 +242,10 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         # Destroy UI
         if self._dt_panel:
             self._dt_panel.destroy()
-        if self._telem_panel:
-            self._telem_panel.destroy()
-        if self._hud:
-            self._hud.destroy()
         if self._trend:
             self._trend.destroy()
-        if self._sat_status:
-            self._sat_status.destroy()
         if self._view_switcher:
             self._view_switcher.destroy()
-        if self._component_popup:
-            self._component_popup.destroy()
 
         print("[SpaceDC] Extension shutdown complete")
 
@@ -813,15 +785,11 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
     # ── UI update callback ──────────────────────────────────
 
     def _on_ui_tick(self, result: dict):
-        """Refresh HUD and trend chart."""
-        if self._hud:
-            self._hud.update()
+        """Refresh the consolidated control panel."""
+        if self._dt_panel:
+            self._dt_panel.update_live_status()
         if self._trend:
             self._trend.update()
-        if self._sat_status:
-            self._sat_status.update()
-        if self._component_popup:
-            self._component_popup.update()
 
     # ── Satellite rebuild (DT parameter change) ─────────────
 
