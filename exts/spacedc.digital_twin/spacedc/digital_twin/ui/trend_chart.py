@@ -54,8 +54,8 @@ class TrendChartPanel:
 
         self._window = ui.Window(
             "Telemetry Trends",
-            width=460,
-            height=320,
+            width=340,
+            height=300,
         )
 
         with self._window.frame:

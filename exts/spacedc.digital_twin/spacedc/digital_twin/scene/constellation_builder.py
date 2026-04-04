@@ -33,6 +33,7 @@ CONSTELLATION_PALETTE = (
     (1.00, 0.00, 0.82),  # magenta
 )
 PALETTE_STRIDE = 3
+BUSINESS_BLUE = (0.06, 0.42, 1.0)
 
 
 def _xform(schema_or_prim, translate=None, rotate=None, scale=None):
@@ -94,6 +95,7 @@ def build_constellation(
     satellites,
     earth_radius_scene_units: float,
     selected_catalog_number: str | None = None,
+    uniform_color: tuple[float, float, float] | None = None,
 ) -> None:
     if not HAS_USD:
         raise RuntimeError("pxr (OpenUSD) not available - run inside Omniverse Kit")
@@ -107,7 +109,7 @@ def build_constellation(
 
     mats_root = f"{root_path}/Materials"
     for index, sat in enumerate(satellites):
-        base_color = _palette_color(index)
+        base_color = uniform_color or _palette_color(index)
         selected_color = _brighten(base_color)
         marker_default = _create_preview_material(
             stage,

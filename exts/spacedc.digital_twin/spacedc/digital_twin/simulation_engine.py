@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import time
 import math
+import traceback
 from typing import Optional, Callable
 
 from .physics.state import SimState
@@ -165,8 +166,16 @@ class SimulationEngine:
 
         # ── Invoke callbacks ────────────────────────────────
         if self._on_scene_update:
-            self._on_scene_update(result)
+            try:
+                self._on_scene_update(result)
+            except Exception as e:
+                print(f"[SpaceDC] ERROR in scene update callback: {e}")
+                traceback.print_exc()
         if self._on_ui_update:
-            self._on_ui_update(result)
+            try:
+                self._on_ui_update(result)
+            except Exception as e:
+                print(f"[SpaceDC] ERROR in UI update callback: {e}")
+                traceback.print_exc()
 
         return result

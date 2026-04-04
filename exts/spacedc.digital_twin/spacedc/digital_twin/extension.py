@@ -53,6 +53,19 @@ from .physics.topology import (
     remove_link,
     resolve_satellite_reference,
 )
+from .physics.business_network import (
+    BUSINESS_WORKLOADS,
+    BusinessSatelliteConfig,
+    DemandAssignment,
+    ComputeNodeState,
+    analyze_business_demands,
+    business_assignment_text,
+    business_available_text,
+    clear_business_workload,
+    compute_status_text,
+    default_business_configs,
+    set_business_workload,
+)
 from .physics.telemetry import TelemetryLogger
 from .simulation_engine import SimulationEngine
 
@@ -64,6 +77,7 @@ try:
         update_orbit_ring,
     )
     from .scene.constellation_builder import (
+        BUSINESS_BLUE,
         build_constellation,
         update_constellation_positions,
         get_selected_catalog_number_from_path,
@@ -72,6 +86,13 @@ try:
         build_topology_links,
         clear_topology_links,
         update_topology_links,
+    )
+    from .scene.business_orchestration_builder import (
+        apply_business_workload_styles,
+        apply_compute_node_status,
+        build_business_demand_links,
+        clear_business_demand_links,
+        update_business_demand_links,
     )
     from .scene.satellite_builder import build_satellite
     from .scene.environment import (
@@ -95,7 +116,9 @@ from .ui.view_switcher import ViewSwitcher
 WORLD_ROOT = "/World"
 SATELLITE_PATH = "/World/Satellite"
 CONSTELLATION_PATH = "/World/Constellation"
+BUSINESS_CONSTELLATION_PATH = "/World/BusinessConstellation"
 TOPOLOGY_PATH = "/World/Constellation/Topology"
+DEMAND_LINKS_PATH = "/World/Mission/DemandLinks"
 SUN_LIGHT_PATH = "/World/Sun/SunLight"
 AMBIENT_PATH = "/World/Lights/Ambient"
 EARTH_PATH = "/World/Earth"
@@ -131,9 +154,14 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         self._trend: Optional[TrendChartPanel] = None
         self._view_switcher: Optional[ViewSwitcher] = None
         self._constellation: Optional[ConstellationData] = None
+        self._business_constellation: Optional[ConstellationData] = None
         self._selected_catalog_number: Optional[str] = None
         self._topology_links: list[TopologyLink] = []
+        self._business_configs: dict[str, BusinessSatelliteConfig] = {}
+        self._business_assignments: list[DemandAssignment] = []
+        self._compute_node_states: dict[str, ComputeNodeState] = {}
         self._topology_status_text: str = "Load a constellation to author topology links."
+        self._business_status_text: str = "Load business satellites to start demand routing."
         self._constellation_epoch_base = datetime.now(timezone.utc)
 
         # Kit subscription
@@ -198,15 +226,24 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
             on_load_constellation=self._load_constellation_from_path,
             on_load_sdc_demo=lambda: self._load_constellation_from_path(self._get_default_constellation_path()),
             on_clear_constellation=self._clear_constellation,
+            on_load_business_constellation=self._load_business_constellation_from_path,
+            on_clear_business_constellation=self._clear_business_constellation,
+            on_assign_business_workload=self._assign_business_workload,
+            on_clear_business_workload=self._clear_business_workload,
             on_apply_topology_preset=self._apply_topology_preset,
             on_add_topology_link=self._add_topology_link,
             on_remove_topology_link=self._remove_topology_link,
             on_clear_topology=self._clear_topology,
             default_constellation_path=self._get_default_constellation_path(),
+            default_business_path=self._get_default_business_path(),
         )
         self._dt_panel.build()
+        print(f"[SpaceDC] Orbits dir resolved: {self._get_orbits_dir()}")
+        print(f"[SpaceDC] Default compute TLE: {self._get_default_constellation_path()}")
+        print(f"[SpaceDC] Default business TLE: {self._get_default_business_path()}")
         self._dt_panel.update_live_status()
         self._sync_topology_ui()
+        self._sync_business_ui()
         self._trend = TrendChartPanel(self._state)
         self._trend.build()
 
@@ -226,6 +263,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
 
         if self._scene_built:
             self._load_default_constellation()
+            self._load_default_business_constellation()
 
         self._logger.add_log("ok", "SpaceDC Digital Twin initialized.", 0)
         print("[SpaceDC] Extension startup complete ✓")
@@ -250,9 +288,85 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         print("[SpaceDC] Extension shutdown complete")
 
     def _get_default_constellation_path(self) -> str:
+        path = self._resolve_tle_path("", "sample_tle.tle")
+        if path:
+            return path
+        return os.path.join(self._get_orbits_dir(), "sample_tle.tle")
+
+    def _get_default_business_path(self) -> str:
+        path = self._resolve_tle_path("", "sample_business_tle.tle")
+        if path:
+            return path
+        return os.path.join(self._get_orbits_dir(), "sample_business_tle.tle")
+
+    def _get_orbits_dir_candidates(self) -> list[str]:
+        candidates: list[str] = []
+
+        env_orbits_dir = str(os.environ.get("SPACEDC_ORBITS_DIR", "")).strip()
+        if env_orbits_dir:
+            candidates.append(env_orbits_dir)
+
+        env_source_root = str(os.environ.get("SPACEDC_SOURCE_ROOT", "")).strip()
+        if env_source_root:
+            candidates.append(os.path.join(env_source_root, "exts", "spacedc.digital_twin", "data", "orbits"))
+
+        cwd = os.getcwd()
+        if cwd:
+            candidates.append(os.path.join(cwd, "..", "SpaceDC", "exts", "spacedc.digital_twin", "data", "orbits"))
+            candidates.append(os.path.join(cwd, "exts", "spacedc.digital_twin", "data", "orbits"))
+
         this_dir = os.path.dirname(os.path.abspath(__file__))
         ext_root = os.path.normpath(os.path.join(this_dir, "..", "..", ".."))
-        return os.path.join(ext_root, "data", "orbits", "sample_tle.tle")
+        candidates.append(os.path.join(ext_root, "data", "orbits"))
+
+        deduped: list[str] = []
+        seen: set[str] = set()
+        for candidate in candidates:
+            normalized = os.path.normpath(candidate)
+            folded = normalized.casefold()
+            if folded in seen:
+                continue
+            seen.add(folded)
+            deduped.append(normalized)
+        return deduped
+
+    def _get_orbits_dir(self) -> str:
+        candidates = self._get_orbits_dir_candidates()
+        for candidate in candidates:
+            if os.path.isdir(candidate):
+                return candidate
+        return candidates[0] if candidates else ""
+
+    def _resolve_tle_path(self, path: str, default_filename: str) -> str:
+        raw = str(path or "").strip()
+        candidates: list[str] = []
+
+        if not raw:
+            for base_dir in self._get_orbits_dir_candidates():
+                candidates.append(os.path.join(base_dir, default_filename))
+        else:
+            if os.path.isdir(raw):
+                candidates.append(os.path.join(raw, default_filename))
+            else:
+                candidates.append(raw)
+                if not os.path.isabs(raw):
+                    for base_dir in self._get_orbits_dir_candidates():
+                        candidates.append(os.path.join(base_dir, raw))
+
+        deduped: list[str] = []
+        seen: set[str] = set()
+        for candidate in candidates:
+            normalized = os.path.normpath(candidate)
+            folded = normalized.casefold()
+            if folded in seen:
+                continue
+            seen.add(folded)
+            deduped.append(normalized)
+
+        for candidate in deduped:
+            if os.path.isfile(candidate):
+                return candidate
+        return deduped[0] if deduped else ""
 
     def _apply_viewport_style(self) -> None:
         """Hide Kit editor overlays so the scene reads like a clean simulation view."""
@@ -305,6 +419,20 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
             len(self._topology_links),
         )
 
+    def _sync_business_ui(self) -> None:
+        if not self._dt_panel:
+            return
+        self._dt_panel.update_business_info(
+            business_available_text(self._business_constellation, self._business_configs),
+            business_assignment_text(
+                self._business_assignments,
+                self._business_constellation,
+                self._constellation,
+            ),
+            self._business_status_text if self._business_status_text else compute_status_text(self._compute_node_states, self._constellation),
+            len(self._business_assignments),
+        )
+
     def _refresh_topology_scene(self, stage=None) -> None:
         if not HAS_SCENE or not HAS_KIT:
             return
@@ -328,6 +456,77 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
             self._current_constellation_time(),
             self._selected_catalog_number,
         )
+
+    def _refresh_business_scene(self, stage=None) -> None:
+        if not HAS_SCENE or not HAS_KIT:
+            return
+        if stage is None:
+            stage = omni.usd.get_context().get_stage()
+        if not stage:
+            return
+
+        from .scene.earth_builder import EARTH_RADIUS
+
+        try:
+            if self._business_constellation:
+                update_constellation_positions(
+                    stage,
+                    BUSINESS_CONSTELLATION_PATH,
+                    self._business_constellation.satellites,
+                    EARTH_RADIUS,
+                    self._current_constellation_time(),
+                )
+                apply_business_workload_styles(
+                    stage,
+                    BUSINESS_CONSTELLATION_PATH,
+                    self._business_constellation,
+                    self._business_configs,
+                )
+
+            self._business_assignments, self._compute_node_states = analyze_business_demands(
+                self._business_constellation,
+                self._business_configs,
+                self._constellation,
+                self._current_constellation_time(),
+            )
+
+            if self._constellation:
+                apply_compute_node_status(
+                    stage,
+                    CONSTELLATION_PATH,
+                    self._constellation,
+                    self._compute_node_states,
+                )
+
+            update_business_demand_links(
+                stage,
+                DEMAND_LINKS_PATH,
+                self._business_assignments,
+                self._business_constellation,
+                self._constellation,
+                EARTH_RADIUS,
+                self._current_constellation_time(),
+            )
+
+            compute_text = compute_status_text(self._compute_node_states, self._constellation)
+            if self._business_constellation and self._constellation:
+                self._business_status_text = compute_text
+            elif self._business_constellation:
+                self._business_status_text = "Business satellites loaded. Waiting for compute constellation."
+            else:
+                self._business_status_text = "Load business satellites to start demand routing."
+        except Exception as e:
+            import traceback
+
+            print(f"[SpaceDC] ERROR refreshing business scene: {e}")
+            traceback.print_exc()
+            self._business_assignments = []
+            self._compute_node_states = {}
+            clear_business_demand_links(stage, DEMAND_LINKS_PATH)
+            if self._constellation:
+                apply_compute_node_status(stage, CONSTELLATION_PATH, self._constellation, {})
+            self._business_status_text = f"Business routing error: {type(e).__name__}"
+        self._sync_business_ui()
 
     def _clear_topology_state(self, status_text: str) -> None:
         self._topology_links = []
@@ -398,6 +597,120 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         self._clear_topology_state("Cleared all topology links.")
         if self._logger:
             self._logger.add_log("info", "[Topology] Cleared all topology links.", self._state.met_seconds)
+
+    def _load_default_business_constellation(self) -> None:
+        if self._business_constellation is not None:
+            return
+        default_path = self._get_default_business_path()
+        if os.path.isfile(default_path):
+            self._load_business_constellation_from_path(default_path, auto=True)
+
+    def _load_business_constellation_from_path(self, path: str, auto: bool = False) -> None:
+        if not HAS_SCENE or not HAS_KIT:
+            return
+        path = self._resolve_tle_path(path, "sample_business_tle.tle")
+        if not path or not os.path.isfile(path):
+            self._business_status_text = f"Business TLE file not found: {path}"
+            self._sync_business_ui()
+            if self._logger and not auto:
+                self._logger.add_log("warn", f"[Business] File not found: {path}", self._state.met_seconds)
+            return
+
+        try:
+            constellation = load_tle_file(path)
+        except Exception as e:
+            self._business_status_text = f"Failed to load business TLE: {e}"
+            self._sync_business_ui()
+            if self._logger:
+                self._logger.add_log("danger", f"[Business] Failed to load TLE: {e}", self._state.met_seconds)
+            return
+
+        if not constellation.satellites:
+            self._business_status_text = "No valid business TLE records found."
+            self._sync_business_ui()
+            return
+
+        stage = omni.usd.get_context().get_stage()
+        if not stage:
+            return
+
+        from .scene.earth_builder import EARTH_RADIUS
+
+        self._business_constellation = constellation
+        self._business_configs = default_business_configs(constellation)
+        self._business_status_text = f"Loaded {len(constellation.satellites)} business satellites."
+
+        build_constellation(
+            stage,
+            BUSINESS_CONSTELLATION_PATH,
+            constellation.satellites,
+            EARTH_RADIUS,
+            None,
+            uniform_color=BUSINESS_BLUE,
+        )
+        self._refresh_business_scene(stage)
+
+        if self._logger and not auto:
+            self._logger.add_log(
+                "ok",
+                f"[Business] Loaded {len(constellation.satellites)} satellites from {os.path.basename(path)}.",
+                self._state.met_seconds,
+            )
+
+    def _clear_business_constellation(self) -> None:
+        if HAS_SCENE and HAS_KIT:
+            stage = omni.usd.get_context().get_stage()
+            if stage:
+                stage.RemovePrim(BUSINESS_CONSTELLATION_PATH)
+                clear_business_demand_links(stage, DEMAND_LINKS_PATH)
+                if self._constellation:
+                    apply_compute_node_status(stage, CONSTELLATION_PATH, self._constellation, {})
+
+        self._business_constellation = None
+        self._business_configs = {}
+        self._business_assignments = []
+        self._compute_node_states = {}
+        self._business_status_text = "Business satellites cleared."
+        self._sync_business_ui()
+        if self._logger:
+            self._logger.add_log("info", "[Business] Cleared business satellites.", self._state.met_seconds)
+
+    def _assign_business_workload(self, business_ref: str, workload_key: str) -> None:
+        if not self._business_constellation:
+            self._business_status_text = "Load business satellites first."
+            self._sync_business_ui()
+            return
+        business_id = resolve_satellite_reference(business_ref, self._business_constellation)
+        if not business_id:
+            self._business_status_text = "Could not resolve business satellite ID."
+            self._sync_business_ui()
+            return
+        if workload_key not in BUSINESS_WORKLOADS:
+            self._business_status_text = f"Unknown workload: {workload_key}"
+            self._sync_business_ui()
+            return
+
+        self._business_configs = set_business_workload(self._business_configs, business_id, workload_key)
+        self._business_status_text = f"Assigned {BUSINESS_WORKLOADS[workload_key].name} to {business_id}."
+        self._refresh_business_scene()
+        if self._logger:
+            self._logger.add_log("info", f"[Business] {self._business_status_text}", self._state.met_seconds)
+
+    def _clear_business_workload(self, business_ref: str) -> None:
+        if not self._business_constellation:
+            self._business_status_text = "Load business satellites first."
+            self._sync_business_ui()
+            return
+        business_id = resolve_satellite_reference(business_ref, self._business_constellation)
+        if not business_id:
+            self._business_status_text = "Could not resolve business satellite ID."
+            self._sync_business_ui()
+            return
+        self._business_configs = clear_business_workload(self._business_configs, business_id)
+        self._business_status_text = f"Cleared workload assignment for {business_id}."
+        self._refresh_business_scene()
+        if self._logger:
+            self._logger.add_log("info", f"[Business] {self._business_status_text}", self._state.met_seconds)
 
     def _disable_non_spacedc_lights(self, stage) -> None:
         """Turn off stage lights we did not create, such as auto-inserted light rigs."""
@@ -498,6 +811,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
             EARTH_RADIUS,
             self._current_constellation_time(),
         )
+        self._refresh_business_scene(stage)
         self._set_detail_satellite_visible(stage, False)
         self._set_default_tracked_target()
 
@@ -519,6 +833,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
     def _load_constellation_from_path(self, path: str, auto: bool = False) -> None:
         if not HAS_SCENE or not HAS_KIT:
             return
+        path = self._resolve_tle_path(path, "sample_tle.tle")
         if not path or not os.path.isfile(path):
             if self._logger and not auto:
                 self._logger.add_log("warn", f"[Constellation] File not found: {path}", self._state.met_seconds)
@@ -557,6 +872,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
             EARTH_RADIUS,
             self._current_constellation_time(),
         )
+        self._refresh_business_scene(stage)
         self._set_detail_satellite_visible(stage, False)
         self._set_default_tracked_target()
 
@@ -597,7 +913,12 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         self._topology_links = []
         self._topology_status_text = "Topology cleared with constellation."
         self._sync_topology_ui()
+        if HAS_SCENE and HAS_KIT:
+            stage = omni.usd.get_context().get_stage()
+            if stage:
+                clear_business_demand_links(stage, DEMAND_LINKS_PATH)
         self._set_default_tracked_target()
+        self._refresh_business_scene()
         if self._logger:
             self._logger.add_log("info", "[Constellation] Cleared loaded TLE satellites.", self._state.met_seconds)
 
@@ -629,6 +950,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
 
         build_constellation(stage, CONSTELLATION_PATH, self._constellation.satellites, EARTH_RADIUS, catalog_number)
         self._refresh_topology_scene(stage)
+        self._refresh_business_scene(stage)
         update_constellation_positions(
             stage,
             CONSTELLATION_PATH,
@@ -696,6 +1018,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
                         self._view_switcher.switch_to_orbit(stage)
                     print("[SpaceDC] USD scene built OK (deferred)")
                     self._load_default_constellation()
+                    self._load_default_business_constellation()
                 except Exception as e:
                     print(f"[SpaceDC] ERROR building scene (deferred): {e}")
                     import traceback; traceback.print_exc()
@@ -753,6 +1076,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
                 orbit_inclination=self._state.orbit_inclination,
                 orbit_period=self._state.orbit_period
             )
+        self._refresh_business_scene(stage)
         # Keep the global Earth lighting stable. The previous behavior tied the
         # whole scene's sun/dome balance to whether the currently simulated
         # satellite was in eclipse, which made the terminator wobble and caused

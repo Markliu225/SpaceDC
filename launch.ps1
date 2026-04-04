@@ -108,8 +108,11 @@ Write-Host "        Kit:       $KitBat" -ForegroundColor DarkGray
 Write-Host "        Extension: spacedc.digital_twin" -ForegroundColor DarkGray
 Write-Host ""
 
+$env:SPACEDC_SOURCE_ROOT = $SpaceDCRoot
+$env:SPACEDC_ORBITS_DIR = Join-Path $ExtSrc "data\orbits"
+
 Push-Location $KitRoot
-Start-Process -FilePath $KitBat -ArgumentList "--enable", "spacedc.digital_twin"
+Start-Process -FilePath $KitBat -WorkingDirectory $KitRoot -ArgumentList "--enable", "spacedc.digital_twin"
 Pop-Location
 
 Write-Host "  ✅ SpaceDC launched! Viewport will appear in ~15 seconds." -ForegroundColor Green

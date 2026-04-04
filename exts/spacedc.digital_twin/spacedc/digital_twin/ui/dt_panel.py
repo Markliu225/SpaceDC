@@ -19,6 +19,7 @@ except ImportError:
     HAS_OMNI_UI = False
 
 from ..physics.constants import CELL_TECHS, COOLANTS, WORKLOADS, SIGMA
+from ..physics.business_network import BUSINESS_WORKLOADS
 from ..physics.state import SimState
 from ..physics.thermal_model import compute_peak_rad_capacity, check_thermal_feasibility
 from ..physics.solar_array_model import compute_peak_solar
@@ -62,11 +63,16 @@ class DigitalTwinPanel:
         on_load_constellation: Optional[Callable] = None,
         on_load_sdc_demo: Optional[Callable] = None,
         on_clear_constellation: Optional[Callable] = None,
+        on_load_business_constellation: Optional[Callable] = None,
+        on_clear_business_constellation: Optional[Callable] = None,
+        on_assign_business_workload: Optional[Callable] = None,
+        on_clear_business_workload: Optional[Callable] = None,
         on_apply_topology_preset: Optional[Callable] = None,
         on_add_topology_link: Optional[Callable] = None,
         on_remove_topology_link: Optional[Callable] = None,
         on_clear_topology: Optional[Callable] = None,
         default_constellation_path: str = "",
+        default_business_path: str = "",
     ):
         self._state = state
         self._on_rebuild = on_rebuild        # called when 3D model needs rebuild
@@ -75,11 +81,16 @@ class DigitalTwinPanel:
         self._on_load_constellation = on_load_constellation
         self._on_load_sdc_demo = on_load_sdc_demo
         self._on_clear_constellation = on_clear_constellation
+        self._on_load_business_constellation = on_load_business_constellation
+        self._on_clear_business_constellation = on_clear_business_constellation
+        self._on_assign_business_workload = on_assign_business_workload
+        self._on_clear_business_workload = on_clear_business_workload
         self._on_apply_topology_preset = on_apply_topology_preset
         self._on_add_topology_link = on_add_topology_link
         self._on_remove_topology_link = on_remove_topology_link
         self._on_clear_topology = on_clear_topology
         self._default_constellation_path = default_constellation_path
+        self._default_business_path = default_business_path
         self._window: Optional["ui.Window"] = None
 
         # Value label references for live update
@@ -107,13 +118,25 @@ class DigitalTwinPanel:
         # View toggle button reference
         self._view_btn = None
         self._constellation_path_field = None
+        self._business_path_field = None
+        self._business_sat_field = None
+        self._business_workload_combo = None
         self._topology_source_field = None
         self._topology_target_field = None
+        self._lbl_business_available = None
+        self._lbl_business_links = None
+        self._lbl_business_status = None
+        self._lbl_business_count = None
         self._lbl_topology_available = None
         self._lbl_topology_links = None
         self._lbl_topology_status = None
         self._lbl_topology_count = None
-        self._topology_available_text = "Load a constellation to author topology links."
+        self._business_workload_keys = list(BUSINESS_WORKLOADS.keys())
+        self._business_available_text = "Load business TLE to configure workloads."
+        self._business_links_text = "No active demand links."
+        self._business_status_text = "Business orchestration idle."
+        self._business_link_count = 0
+        self._topology_available_text = "Load a constellation to author topology."
         self._topology_links_text = "No active links."
         self._topology_status_text = "Topology idle."
         self._topology_link_count = 0
@@ -125,7 +148,7 @@ class DigitalTwinPanel:
 
         self._window = ui.Window(
             "SpaceDC Digital Twin",
-            width=420,
+            width=340,
             height=680,
         )
         with self._window.frame:
@@ -140,6 +163,8 @@ class DigitalTwinPanel:
                     self._build_orbit_section()  # <--- 新增
                     ui.Separator(height=2)
                     self._build_constellation_section()
+                    ui.Separator(height=2)
+                    self._build_business_section()
                     ui.Separator(height=2)
                     self._build_topology_section()
                     ui.Separator(height=2)
@@ -176,28 +201,28 @@ class DigitalTwinPanel:
         ui.Label("MISSION OVERVIEW", name="header", height=20)
         with ui.VStack(spacing=3):
             with ui.HStack(height=18):
-                ui.Label("Phase:", width=68)
+                ui.Label("Phase:", width=58)
                 self._lbl_phase = ui.Label("SUNLIT PASS", name="value")
             with ui.HStack(height=18):
-                ui.Label("Target:", width=68)
+                ui.Label("Target:", width=58)
                 self._lbl_target = ui.Label(self._state.tracked_satellite_name, name="value")
             with ui.HStack(height=18):
-                ui.Label("Source:", width=68)
+                ui.Label("Source:", width=58)
                 self._lbl_source = ui.Label(self._state.tracked_satellite_source, name="muted")
             with ui.HStack(height=18):
-                ui.Label("MET:", width=68)
+                ui.Label("MET:", width=58)
                 self._lbl_met = ui.Label(self._format_met(self._state.met_seconds), name="value")
             with ui.HStack(height=18):
-                ui.Label("Speed:", width=68)
+                ui.Label("Speed:", width=58)
                 self._lbl_speed = ui.Label(f"{self._state.speed}x", name="value")
             with ui.HStack(height=18):
-                ui.Label("Battery:", width=68)
+                ui.Label("Battery:", width=58)
                 self._lbl_battery = ui.Label(f"{self._state.bat_soc:.0f}%", name="value")
             with ui.HStack(height=18):
-                ui.Label("Solar:", width=68)
+                ui.Label("Solar:", width=58)
                 self._lbl_solar_live = ui.Label(f"{self._state.solar_pwr:.0f} kW", name="value")
             with ui.HStack(height=18):
-                ui.Label("Compute:", width=68)
+                ui.Label("Compute:", width=58)
                 self._lbl_gpu = ui.Label(
                     f"{self._state.gpu_util}% / {self._state.gpu_temp:.0f} C",
                     name="value",
@@ -209,13 +234,13 @@ class DigitalTwinPanel:
             self._view_btn = ui.Button(
                 "Satellite Close-up",
                 height=26,
-                width=220,
+                width=150,
                 clicked_fn=self._on_view_btn_clicked,
             )
             for spd in [1, 10, 60]:
                 ui.Button(
                     f"{spd}x",
-                    width=52,
+                    width=38,
                     clicked_fn=lambda s=spd: self._set_speed(s),
                 )
 
@@ -250,6 +275,47 @@ class DigitalTwinPanel:
     def _on_clear_constellation_clicked(self):
         if self._on_clear_constellation:
             self._on_clear_constellation()
+
+    def _get_business_path(self) -> str:
+        if not self._business_path_field:
+            return self._default_business_path
+        try:
+            return self._business_path_field.model.get_value_as_string()
+        except Exception:
+            return self._default_business_path
+
+    def _on_load_business_constellation_clicked(self):
+        if self._on_load_business_constellation:
+            path = self._get_business_path().strip()
+            if path:
+                self._on_load_business_constellation(path)
+
+    def _on_clear_business_constellation_clicked(self):
+        if self._on_clear_business_constellation:
+            self._on_clear_business_constellation()
+
+    def _get_selected_business_workload_key(self) -> str:
+        if not self._business_workload_combo or not self._business_workload_keys:
+            return self._business_workload_keys[0] if self._business_workload_keys else ""
+        try:
+            index = self._business_workload_combo.model.get_item_value_model().as_int
+        except Exception:
+            index = 0
+        index = max(0, min(index, len(self._business_workload_keys) - 1))
+        return self._business_workload_keys[index]
+
+    def _on_assign_business_workload_clicked(self):
+        if self._on_assign_business_workload:
+            self._on_assign_business_workload(
+                self._get_topology_field_value(self._business_sat_field),
+                self._get_selected_business_workload_key(),
+            )
+
+    def _on_clear_business_workload_clicked(self):
+        if self._on_clear_business_workload:
+            self._on_clear_business_workload(
+                self._get_topology_field_value(self._business_sat_field),
+            )
 
     def _build_speed_controls(self):
         ui.Label("SIMULATION SPEED", name="header", height=20)
@@ -297,62 +363,92 @@ class DigitalTwinPanel:
 
     def _build_constellation_section(self):
         ui.Label("CONSTELLATION", name="header", height=24)
-
-        with ui.HStack(height=22, spacing=4):
-            ui.Label("TLE File:", width=70)
-            if hasattr(ui, "StringField"):
-                self._constellation_path_field = ui.StringField(height=22, width=ui.Percent(100))
-                if self._default_constellation_path:
-                    self._constellation_path_field.model.set_value(self._default_constellation_path)
-            else:
-                ui.Label(
-                    self._default_constellation_path or "Use Load Sample",
-                    name="muted",
-                )
+        ui.Label("Compute TLE", name="muted", height=18)
+        if hasattr(ui, "StringField"):
+            self._constellation_path_field = ui.StringField(height=22, width=300)
+            if self._default_constellation_path:
+                self._constellation_path_field.model.set_value(self._default_constellation_path)
+        else:
+            ui.Label(
+                self._clip_text(self._default_constellation_path or "Use Load Sample", 40),
+                name="muted",
+            )
 
         with ui.HStack(height=26, spacing=4):
-            ui.Button("Load File", clicked_fn=self._on_load_constellation_clicked)
-            ui.Button("Reload Sample", clicked_fn=self._on_load_sample_constellation_clicked)
-            ui.Button("Clear", clicked_fn=self._on_clear_constellation_clicked)
+            ui.Button("Load File", width=96, clicked_fn=self._on_load_constellation_clicked)
+            ui.Button("Sample", width=96, clicked_fn=self._on_load_sample_constellation_clicked)
+            ui.Button("Clear", width=96, clicked_fn=self._on_clear_constellation_clicked)
+
+    def _build_business_section(self):
+        ui.Label("BUSINESS SATELLITES", name="header", height=24)
+        ui.Label("Business TLE", name="muted", height=18)
+        if hasattr(ui, "StringField"):
+            self._business_path_field = ui.StringField(height=22, width=300)
+            if self._default_business_path:
+                self._business_path_field.model.set_value(self._default_business_path)
+        else:
+            ui.Label(self._clip_text(self._default_business_path or "Use sample business TLE", 40), name="muted")
+
+        with ui.HStack(height=26, spacing=4):
+            ui.Button("Load Biz TLE", width=148, clicked_fn=self._on_load_business_constellation_clicked)
+            ui.Button("Clear Biz", width=148, clicked_fn=self._on_clear_business_constellation_clicked)
+
+        ui.Label("Business Nodes", name="muted", height=18)
+        self._lbl_business_available = ui.Label(self._business_available_text, name="muted", height=18)
+
+        if hasattr(ui, "StringField"):
+            ui.Label("Satellite ID", name="muted", height=18)
+            self._business_sat_field = ui.StringField(width=300, height=22)
+            ui.Label("Workload", name="muted", height=18)
+            workload_names = [BUSINESS_WORKLOADS[key].name for key in self._business_workload_keys]
+            self._business_workload_combo = ui.ComboBox(0, *workload_names, width=300, height=22)
+        else:
+            ui.Label("Manual business workload assignment unavailable in this UI build.", name="warn", height=20)
+
+        with ui.HStack(height=24, spacing=4):
+            ui.Button("Set Workload", width=148, clicked_fn=self._on_assign_business_workload_clicked)
+            ui.Button("Clear Workload", width=148, clicked_fn=self._on_clear_business_workload_clicked)
+
+        with ui.HStack(height=18):
+            ui.Label("Links:", width=48)
+            self._lbl_business_count = ui.Label(str(self._business_link_count), name="value")
+        ui.Label("Routing", name="muted", height=18)
+        self._lbl_business_links = ui.Label(self._business_links_text, name="muted", height=32)
+        ui.Label("Status", name="muted", height=18)
+        self._lbl_business_status = ui.Label(self._business_status_text, name="value", height=18)
 
     def _build_topology_section(self):
         ui.Label("NETWORK TOPOLOGY", name="header", height=24)
-
-        with ui.HStack(height=20):
-            ui.Label("Available:", width=68)
-            self._lbl_topology_available = ui.Label(self._topology_available_text, name="muted")
+        ui.Label("Available", name="muted", height=18)
+        self._lbl_topology_available = ui.Label(self._topology_available_text, name="muted", height=18)
 
         with ui.HStack(height=24, spacing=4):
-            ui.Button("Ring", width=70, clicked_fn=lambda: self._on_topology_preset_clicked("ring"))
-            ui.Button("Chain", width=70, clicked_fn=lambda: self._on_topology_preset_clicked("chain"))
-            ui.Button("Star", width=70, clicked_fn=lambda: self._on_topology_preset_clicked("star"))
-            ui.Button("Mesh", width=70, clicked_fn=lambda: self._on_topology_preset_clicked("mesh"))
+            ui.Button("Ring", width=148, clicked_fn=lambda: self._on_topology_preset_clicked("ring"))
+            ui.Button("Chain", width=148, clicked_fn=lambda: self._on_topology_preset_clicked("chain"))
+        with ui.HStack(height=24, spacing=4):
+            ui.Button("Star", width=148, clicked_fn=lambda: self._on_topology_preset_clicked("star"))
+            ui.Button("Mesh", width=148, clicked_fn=lambda: self._on_topology_preset_clicked("mesh"))
 
         if hasattr(ui, "StringField"):
-            with ui.HStack(height=24, spacing=4):
-                ui.Label("A:", width=16)
-                self._topology_source_field = ui.StringField(width=ui.Percent(50), height=22)
-                ui.Label("B:", width=16)
-                self._topology_target_field = ui.StringField(width=ui.Percent(50), height=22)
+            ui.Label("Link Endpoint A", name="muted", height=18)
+            self._topology_source_field = ui.StringField(width=300, height=22)
+            ui.Label("Link Endpoint B", name="muted", height=18)
+            self._topology_target_field = ui.StringField(width=300, height=22)
         else:
             ui.Label("Manual link entry unavailable in this UI build.", name="warn", height=20)
 
         with ui.HStack(height=24, spacing=4):
-            ui.Button("Add Link", clicked_fn=self._on_add_topology_link_clicked)
-            ui.Button("Remove Link", clicked_fn=self._on_remove_topology_link_clicked)
-            ui.Button("Clear All", clicked_fn=self._on_clear_topology_clicked)
+            ui.Button("Add Link", width=148, clicked_fn=self._on_add_topology_link_clicked)
+            ui.Button("Remove Link", width=148, clicked_fn=self._on_remove_topology_link_clicked)
+        ui.Button("Clear All", width=300, height=24, clicked_fn=self._on_clear_topology_clicked)
 
         with ui.HStack(height=18):
-            ui.Label("Link Count:", width=80)
+            ui.Label("Count:", width=48)
             self._lbl_topology_count = ui.Label(str(self._topology_link_count), name="value")
-
-        with ui.HStack(height=32):
-            ui.Label("Links:", width=45)
-            self._lbl_topology_links = ui.Label(self._topology_links_text, name="muted")
-
-        with ui.HStack(height=18):
-            ui.Label("Status:", width=45)
-            self._lbl_topology_status = ui.Label(self._topology_status_text, name="value")
+        ui.Label("Links", name="muted", height=18)
+        self._lbl_topology_links = ui.Label(self._topology_links_text, name="muted", height=32)
+        ui.Label("Status", name="muted", height=18)
+        self._lbl_topology_status = ui.Label(self._topology_status_text, name="value", height=18)
 
     def _build_solar_section(self):
         ui.Label("SATELLITE DESIGN", name="header", height=24)
@@ -580,18 +676,38 @@ class DigitalTwinPanel:
         status_text: str,
         link_count: int,
     ):
-        self._topology_available_text = available_text
-        self._topology_links_text = links_text
-        self._topology_status_text = status_text
+        self._topology_available_text = self._clip_text(available_text, 42)
+        self._topology_links_text = self._clip_text(links_text, 42)
+        self._topology_status_text = self._clip_text(status_text, 42)
         self._topology_link_count = link_count
         if self._lbl_topology_available:
-            self._lbl_topology_available.text = available_text
+            self._lbl_topology_available.text = self._topology_available_text
         if self._lbl_topology_links:
-            self._lbl_topology_links.text = links_text
+            self._lbl_topology_links.text = self._topology_links_text
         if self._lbl_topology_status:
-            self._lbl_topology_status.text = status_text
+            self._lbl_topology_status.text = self._topology_status_text
         if self._lbl_topology_count:
             self._lbl_topology_count.text = str(link_count)
+
+    def update_business_info(
+        self,
+        available_text: str,
+        links_text: str,
+        status_text: str,
+        link_count: int,
+    ):
+        self._business_available_text = self._clip_text(available_text, 42)
+        self._business_links_text = self._clip_text(links_text, 42)
+        self._business_status_text = self._clip_text(status_text, 42)
+        self._business_link_count = link_count
+        if self._lbl_business_available:
+            self._lbl_business_available.text = self._business_available_text
+        if self._lbl_business_links:
+            self._lbl_business_links.text = self._business_links_text
+        if self._lbl_business_status:
+            self._lbl_business_status.text = self._business_status_text
+        if self._lbl_business_count:
+            self._lbl_business_count.text = str(link_count)
 
     def _get_topology_field_value(self, field) -> str:
         if not field:
@@ -644,9 +760,9 @@ class DigitalTwinPanel:
             label = s.tracked_satellite_name or "ORBITAL DC-1"
             if s.tracked_satellite_id and s.tracked_satellite_id != "SIM-001":
                 label = f"{label} ({s.tracked_satellite_id})"
-            self._lbl_target.text = label
+            self._lbl_target.text = self._clip_text(label, 34)
         if self._lbl_source:
-            self._lbl_source.text = s.tracked_satellite_source
+            self._lbl_source.text = self._clip_text(s.tracked_satellite_source, 34)
         if self._lbl_met:
             self._lbl_met.text = self._format_met(s.met_seconds)
         if self._lbl_speed:
@@ -667,6 +783,13 @@ class DigitalTwinPanel:
         minutes = (total % 3600) // 60
         secs = total % 60
         return f"T+{hours:03d}:{minutes:02d}:{secs:02d}"
+
+    @staticmethod
+    def _clip_text(text: str, limit: int) -> str:
+        value = str(text or "").strip()
+        if len(value) <= limit:
+            return value
+        return value[: max(0, limit - 1)] + "…"
 
     def _update_summary(self):
         s = self._state
