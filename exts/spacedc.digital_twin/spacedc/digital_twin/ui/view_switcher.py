@@ -55,6 +55,7 @@ from ..scene.environment import get_background_texture_path, set_view_lighting_m
 # Prims to **hide** in satellite (micro) view
 _MACRO_ONLY_PRIMS = [
     "/World/Earth",
+    "/World/EarthNightMask",
     "/World/Clouds",
     "/World/Atmosphere",
     "/World/OrbitRing",
@@ -303,13 +304,20 @@ class ViewSwitcher:
         prim = stage.GetPrimAtPath(MICRO_CAM_PATH)
         if not prim.IsValid():
             return
-        cam = UsdGeom.Camera(prim)
+        cam = UsdGeom.Camera.Define(stage, MICRO_CAM_PATH)
         offset = MICRO_CAM_INSPECT_POS if enabled else _get_dynamic_micro_offset(stage)
-        xf = UsdGeom.Xformable(prim)
+        xf = UsdGeom.Xformable(cam.GetPrim())
         xf.ClearXformOpOrder()
         xf.AddTranslateOp().Set(offset)
         xf.AddRotateXYZOp().Set(_camera_rotation_for_offset(offset))
-        cam.GetFocalLengthAttr().Set(24.0 if enabled else 8.0)
+        focal_attr = cam.GetFocalLengthAttr()
+        if not focal_attr or not focal_attr.IsValid():
+            focal_attr = cam.GetPrim().CreateAttribute(
+                "focalLength",
+                Sdf.ValueTypeNames.Float,
+                custom=False,
+            )
+        focal_attr.Set(24.0 if enabled else 8.0)
         print(
             "[SpaceDC] Micro camera frame:",
             f"inspection={enabled}",
@@ -357,23 +365,34 @@ class ViewSwitcher:
         if self._micro_cam_created or not HAS_USD:
             return
 
-        prim = stage.GetPrimAtPath(MICRO_CAM_PATH)
-        if not prim.IsValid():
-            cam = UsdGeom.Camera.Define(stage, MICRO_CAM_PATH)
-            cam.GetFocalLengthAttr().Set(8.0)
-            cam.GetClippingRangeAttr().Set(Gf.Vec2f(0.1, 10000.0))
+        existed = stage.GetPrimAtPath(MICRO_CAM_PATH).IsValid()
+        cam = UsdGeom.Camera.Define(stage, MICRO_CAM_PATH)
 
-            # Position the camera in satellite-local space
-            # looking roughly toward the bus centre
-            xf = UsdGeom.Xformable(cam.GetPrim())
-            xf.ClearXformOpOrder()
+        focal_attr = cam.GetFocalLengthAttr()
+        if not focal_attr or not focal_attr.IsValid():
+            focal_attr = cam.GetPrim().CreateAttribute(
+                "focalLength",
+                Sdf.ValueTypeNames.Float,
+                custom=False,
+            )
+        focal_attr.Set(8.0)
 
-            # Translate to offset position
-            xf.AddTranslateOp().Set(_get_dynamic_micro_offset(stage))
+        clip_attr = cam.GetClippingRangeAttr()
+        if not clip_attr or not clip_attr.IsValid():
+            clip_attr = cam.GetPrim().CreateAttribute(
+                "clippingRange",
+                Sdf.ValueTypeNames.Float2,
+                custom=False,
+            )
+        clip_attr.Set(Gf.Vec2f(0.1, 10000.0))
 
-            # Rotate to look back at the satellite centre (origin in local)
-            xf.AddRotateXYZOp().Set(_camera_rotation_for_offset(_get_dynamic_micro_offset(stage)))
+        # Position the camera in satellite-local space looking toward the bus centre.
+        xf = UsdGeom.Xformable(cam.GetPrim())
+        xf.ClearXformOpOrder()
+        xf.AddTranslateOp().Set(_get_dynamic_micro_offset(stage))
+        xf.AddRotateXYZOp().Set(_camera_rotation_for_offset(_get_dynamic_micro_offset(stage)))
 
+        if not existed:
             print(f"[SpaceDC] Created child camera: {MICRO_CAM_PATH}")
 
         self._micro_cam_created = True
@@ -434,6 +453,7 @@ class ViewSwitcher:
             vp = vp_util.get_active_viewport()
             if vp:
                 vp.camera_path = cam_prim_path
+                self._mode = "satellite" if cam_prim_path == MICRO_CAM_PATH else "orbit"
                 print(f"[SpaceDC] Viewport camera → {cam_prim_path}")
             else:
                 print("[SpaceDC] WARNING: No active viewport found")
@@ -484,6 +504,25 @@ class ViewSwitcher:
                     img.MakeVisible()
                 else:
                     img.MakeInvisible()
+
+    def sync_scene_visibility(self, stage: "Usd.Stage"):
+        """
+        Enforce visibility from the *actual* active viewport camera.
+
+        Some scene updates can rebuild or restyle prims after a view switch.
+        Re-applying the visibility contract each frame keeps close-up mode
+        deterministic: MicroCam means Earth/orbits/constellations stay hidden.
+        """
+        if not HAS_USD:
+            return
+        active_cam = self._get_viewport_camera_path()
+        in_micro = active_cam == MICRO_CAM_PATH or self._mode == "satellite"
+        self._mode = "satellite" if in_micro else "orbit"
+        self._show_macro_prims(stage, not in_micro)
+        self._set_micro_lights(stage, in_micro)
+        self._set_micro_cam_visible(stage, in_micro)
+        self._set_backdrop_visible(stage, ORBIT_CAM_PATH, False)
+        self._set_backdrop_visible(stage, MICRO_CAM_PATH, in_micro)
 
     def _set_micro_cam_visible(self, stage: "Usd.Stage", visible: bool):
         """Hide the MicroCam prim so its wireframe doesn't show in orbit view."""

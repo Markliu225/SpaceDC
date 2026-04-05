@@ -1128,6 +1128,9 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         update_environment_for_eclipse(stage, False, SUN_LIGHT_PATH, AMBIENT_PATH)
         update_earth_rotation(stage, EARTH_PATH, CLOUDS_PATH, result["earth_rot_y"])
 
+        if self._view_switcher:
+            self._view_switcher.sync_scene_visibility(stage)
+
         # Track satellite with camera in micro view
         if self._view_switcher and self._view_switcher.mode == "satellite":
             from pxr import Gf as _Gf
