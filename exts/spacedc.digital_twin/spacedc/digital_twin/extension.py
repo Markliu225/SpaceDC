@@ -131,6 +131,12 @@ KNOWN_LIGHT_PATHS = {
     "/World/Satellite/MicroKeyLight",
     "/World/Satellite/MicroFillLight",
 }
+PAYLOAD_INSPECTION_HIDE_PRIMS = (
+    "BodyShell",
+    "TopDetailDark",
+    "TopDetailMetal",
+    "TopDetailGlass",
+)
 
 
 class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
@@ -163,6 +169,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         self._topology_status_text: str = "Load a constellation to author topology links."
         self._business_status_text: str = "Load business satellites to start demand routing."
         self._constellation_epoch_base = datetime.now(timezone.utc)
+        self._payload_inspection_open: bool = False
 
         # Kit subscription
         self._update_sub = None
@@ -764,6 +771,35 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
             else:
                 imageable.MakeInvisible()
 
+    def _set_payload_inspection(self, stage, enabled: bool) -> None:
+        if not HAS_SCENE or not HAS_KIT or not stage:
+            return
+        try:
+            from pxr import UsdGeom
+        except ImportError:
+            return
+
+        asset_root = stage.GetPrimAtPath(f"{SATELLITE_PATH}/Bus/Fit/AssetRoot")
+        if asset_root and asset_root.IsValid():
+            for prim_name in PAYLOAD_INSPECTION_HIDE_PRIMS:
+                prim = stage.GetPrimAtPath(f"{SATELLITE_PATH}/Bus/Fit/AssetRoot/{prim_name}")
+                if prim and prim.IsValid():
+                    imageable = UsdGeom.Imageable(prim)
+                    if enabled:
+                        imageable.MakeInvisible()
+                    else:
+                        imageable.MakeVisible()
+
+        self._payload_inspection_open = enabled
+        if self._view_switcher:
+            self._view_switcher.set_micro_camera_inspection(stage, enabled)
+
+    def _handle_detail_satellite_selection(self, prim_path: str) -> bool:
+        # Payload inspection via direct click is temporarily disabled because
+        # the current selection-driven interaction is not stable enough.
+        # Keep returning False so constellation marker selection still works.
+        return False
+
     def _set_default_tracked_target(self) -> None:
         self._state.tracked_satellite_name = "ORBITAL DC-1"
         self._state.tracked_satellite_id = "SIM-001"
@@ -791,6 +827,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         from .scene.earth_builder import EARTH_RADIUS
 
         if self._view_switcher and self._view_switcher.mode == "satellite":
+            self._set_payload_inspection(stage, False)
             self._view_switcher.switch_to_orbit(stage)
 
         constellation = build_dawn_dusk_constellation(
@@ -858,6 +895,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         from .scene.earth_builder import EARTH_RADIUS
 
         if self._view_switcher and self._view_switcher.mode == "satellite":
+            self._set_payload_inspection(stage, False)
             self._view_switcher.switch_to_orbit(stage)
 
         self._constellation = constellation
@@ -907,6 +945,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
                 except Exception:
                     pass
             self._set_detail_satellite_visible(stage, True)
+            self._set_payload_inspection(stage, False)
 
         self._constellation = None
         self._selected_catalog_number = None
@@ -935,6 +974,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
             else "TLE / Constellation Layer"
         )
         self._selected_catalog_number = catalog_number
+        self._payload_inspection_open = False
         self._state.tracked_satellite_name = sat.name
         self._state.tracked_satellite_id = sat.catalog_number or sat.safe_id
         self._state.tracked_satellite_source = source_label
@@ -959,6 +999,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
             self._current_constellation_time(),
         )
         self._sync_detail_satellite_to_selected(stage)
+        self._set_payload_inspection(stage, False)
         self._set_detail_satellite_visible(stage, True)
 
         if self._logger:
@@ -990,6 +1031,8 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
         sel = ctx.get_selection()
         paths = sel.get_selected_prim_paths()
         if not paths:
+            return
+        if self._handle_detail_satellite_selection(paths[0]):
             return
         catalog_number = get_selected_catalog_number_from_path(paths[0])
         if catalog_number:
@@ -1127,6 +1170,7 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
             # Switch viewport away from MicroCam BEFORE the prim is deleted
             if self._view_switcher:
                 self._view_switcher.before_satellite_rebuild()
+            self._payload_inspection_open = False
 
             build_satellite(
                 stage, SATELLITE_PATH,
@@ -1201,6 +1245,8 @@ class SpaceDCExtension(omni.ext.IExt if HAS_KIT else object):
 
         self._view_switcher.toggle(stage, sat_pos)
         new_mode = self._view_switcher.mode
+        if new_mode == "orbit":
+            self._set_payload_inspection(stage, False)
         if self._constellation:
             self._set_detail_satellite_visible(stage, new_mode == "satellite" and bool(self._selected_catalog_number))
         self._logger.add_log(

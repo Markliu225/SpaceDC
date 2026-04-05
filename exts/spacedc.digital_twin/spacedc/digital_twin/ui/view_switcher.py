@@ -59,6 +59,9 @@ _MACRO_ONLY_PRIMS = [
     "/World/Atmosphere",
     "/World/OrbitRing",
     "/World/Constellation",
+    "/World/BusinessConstellation",
+    "/World/Mission",
+    "/World/Mission/DemandLinks",
     "/World/Sun",
     "/World/Stars",
     "/World/InfoLabel",
@@ -70,7 +73,8 @@ MICRO_CAM_PATH = "/World/Satellite/MicroCam"
 
 # Camera local offset from bus centre (in satellite-local cm)
 # Works for both the original procedural craft and the larger imported model.
-MICRO_CAM_LOCAL_POS = Gf.Vec3d(140, 96, 180) if HAS_USD else (140, 96, 180)
+MICRO_CAM_LOCAL_POS = Gf.Vec3d(220, 340, 6200) if HAS_USD else (220, 340, 6200)
+MICRO_CAM_INSPECT_POS = Gf.Vec3d(0, 8, 148) if HAS_USD else (0, 8, 148)
 
 # Local light paths (children of Satellite so they move with it)
 MICRO_LIGHT_PATH = "/World/Satellite/MicroKeyLight"
@@ -96,6 +100,41 @@ def _camera_rotation_for_offset(offset):
     if HAS_USD:
         return Gf.Vec3f(pitch, yaw, 0.0)
     return (pitch, yaw, 0.0)
+
+
+def _get_detail_bus_prim(stage: "Usd.Stage"):
+    if not HAS_USD:
+        return None
+    for path in ("/World/Satellite/Bus", "/World/Satellite/Bus/Fit", "/World/Satellite/Bus/Fit/AssetRoot"):
+        prim = stage.GetPrimAtPath(path)
+        if prim and prim.IsValid():
+            return prim
+    return None
+
+
+def _get_dynamic_micro_offset(stage: "Usd.Stage"):
+    if not HAS_USD:
+        return MICRO_CAM_LOCAL_POS
+    prim = _get_detail_bus_prim(stage)
+    if not prim:
+        return MICRO_CAM_LOCAL_POS
+    try:
+        half_x = float(prim.GetAttribute("spacedc:model_half_x").Get() or 0.0)
+        half_y = float(prim.GetAttribute("spacedc:model_half_y").Get() or 0.0)
+        half_z = float(prim.GetAttribute("spacedc:model_half_z").Get() or 0.0)
+    except Exception:
+        return MICRO_CAM_LOCAL_POS
+    if half_x <= 0.0 or half_z <= 0.0:
+        return MICRO_CAM_LOCAL_POS
+
+    # Frame the full spacecraft width, not just the bus core.
+    # The mesh asset has extremely long solar wings; the previous camera was
+    # still too close, which made the body shell fill the whole frame and left
+    # the wings effectively invisible in close-up.
+    x = max(half_x * 0.14, 220.0)
+    y = max(half_y * 0.34, 260.0)
+    z = max(half_x * 4.8, half_z * 5.4, 6200.0)
+    return Gf.Vec3d(x, y, z)
 
 
 def _create_camera_backdrop(stage: "Usd.Stage", camera_path: str, texture_asset: str):
@@ -211,15 +250,17 @@ class ViewSwitcher:
 
     def switch_to_satellite(self, stage: "Usd.Stage", sat_pos: "Gf.Vec3d" = None):
         """Switch to micro satellite detail view."""
-        if self._mode == "satellite":
-            return
         self._mode = "satellite"
 
         # Remember current camera so we can restore on switch-back
         self._remember_original_camera()
 
-        # Create the child camera under /World/Satellite (once)
-        self._ensure_micro_cam(stage)
+        # Always recreate the micro camera when entering close-up. Reusing the
+        # previous camera prim let stale orbit-controller transforms linger,
+        # which is why the user kept seeing the same giant bus shell even
+        # after the asset and framing math changed.
+        self._recreate_micro_cam(stage)
+        self.set_micro_camera_inspection(stage, False)
         self.ensure_background_cards(stage)
 
         self._show_macro_prims(stage, False)
@@ -236,10 +277,13 @@ class ViewSwitcher:
 
     def toggle(self, stage: "Usd.Stage", sat_pos: "Gf.Vec3d" = None):
         """Toggle between the two view modes."""
-        if self._mode == "orbit":
-            self.switch_to_satellite(stage, sat_pos)
-        else:
+        current_cam = self._get_viewport_camera_path()
+        if current_cam == MICRO_CAM_PATH:
+            self._mode = "satellite"
             self.switch_to_orbit(stage)
+        else:
+            self._mode = "orbit"
+            self.switch_to_satellite(stage, sat_pos)
 
     def update_micro_camera(self, stage: "Usd.Stage", sat_pos: "Gf.Vec3d"):
         """
@@ -250,6 +294,27 @@ class ViewSwitcher:
         camera positioning needed.
         """
         pass
+
+    def set_micro_camera_inspection(self, stage: "Usd.Stage", enabled: bool):
+        """Swap between the default close-up camera and a front-on payload inspection view."""
+        if not HAS_USD:
+            return
+        self._ensure_micro_cam(stage)
+        prim = stage.GetPrimAtPath(MICRO_CAM_PATH)
+        if not prim.IsValid():
+            return
+        cam = UsdGeom.Camera(prim)
+        offset = MICRO_CAM_INSPECT_POS if enabled else _get_dynamic_micro_offset(stage)
+        xf = UsdGeom.Xformable(prim)
+        xf.ClearXformOpOrder()
+        xf.AddTranslateOp().Set(offset)
+        xf.AddRotateXYZOp().Set(_camera_rotation_for_offset(offset))
+        cam.GetFocalLengthAttr().Set(24.0 if enabled else 8.0)
+        print(
+            "[SpaceDC] Micro camera frame:",
+            f"inspection={enabled}",
+            f"offset=({float(offset[0]):.1f}, {float(offset[1]):.1f}, {float(offset[2]):.1f})",
+        )
 
     def ensure_background_cards(self, stage: "Usd.Stage"):
         """Create background cards for the orbit and micro cameras if needed."""
@@ -295,7 +360,7 @@ class ViewSwitcher:
         prim = stage.GetPrimAtPath(MICRO_CAM_PATH)
         if not prim.IsValid():
             cam = UsdGeom.Camera.Define(stage, MICRO_CAM_PATH)
-            cam.GetFocalLengthAttr().Set(24.0)
+            cam.GetFocalLengthAttr().Set(8.0)
             cam.GetClippingRangeAttr().Set(Gf.Vec2f(0.1, 10000.0))
 
             # Position the camera in satellite-local space
@@ -304,29 +369,45 @@ class ViewSwitcher:
             xf.ClearXformOpOrder()
 
             # Translate to offset position
-            xf.AddTranslateOp().Set(MICRO_CAM_LOCAL_POS)
+            xf.AddTranslateOp().Set(_get_dynamic_micro_offset(stage))
 
             # Rotate to look back at the satellite centre (origin in local)
-            xf.AddRotateXYZOp().Set(_camera_rotation_for_offset(MICRO_CAM_LOCAL_POS))
+            xf.AddRotateXYZOp().Set(_camera_rotation_for_offset(_get_dynamic_micro_offset(stage)))
 
             print(f"[SpaceDC] Created child camera: {MICRO_CAM_PATH}")
 
         self._micro_cam_created = True
 
+    def _recreate_micro_cam(self, stage: "Usd.Stage"):
+        """Force a fresh micro camera so stale local view transforms can't persist."""
+        if not HAS_USD:
+            return
+        if stage.GetPrimAtPath(MICRO_CAM_PATH).IsValid():
+            stage.RemovePrim(MICRO_CAM_PATH)
+        self._micro_cam_created = False
+        self._ensure_micro_cam(stage)
+
     def _remember_original_camera(self):
         """Save the current viewport camera path so we can restore it."""
         if self._original_cam_path:
             return
-        if HAS_VP:
-            try:
-                vp = vp_util.get_active_viewport()
-                if vp:
-                    self._original_cam_path = vp.camera_path
-                    print(f"[SpaceDC] Remembered original camera: {self._original_cam_path}")
-            except Exception:
-                pass
+        cam_path = self._get_viewport_camera_path()
+        if cam_path:
+            self._original_cam_path = cam_path
+            print(f"[SpaceDC] Remembered original camera: {self._original_cam_path}")
         if not self._original_cam_path:
             self._original_cam_path = "/OmniverseKit_Persp"
+
+    def _get_viewport_camera_path(self) -> Optional[str]:
+        if not HAS_VP:
+            return None
+        try:
+            vp = vp_util.get_active_viewport()
+            if vp:
+                return vp.camera_path
+        except Exception:
+            return None
+        return None
 
     def _ensure_orbit_camera(self, stage: "Usd.Stage"):
         """Create and initialize a dedicated macro camera for the orbit view."""

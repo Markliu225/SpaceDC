@@ -37,14 +37,17 @@ except ImportError:
 # ── Visual scaling ──────────────────────────────────────────
 # JS original: bus 0.14×0.10×0.16 with earth r=2.0
 # Omniverse: uniform ×100 → bus 14×10×16 cm, earth r=200 cm
-BUS_X, BUS_Y, BUS_Z = 14.0, 10.0, 16.0    # cm (Kit default unit)
+BUS_X, BUS_Y, BUS_Z = 24.0, 16.0, 32.0
 
 # Ship a higher-fidelity USDZ asset and fall back to the procedural model if it
 # is missing or cannot be referenced. These values are intentionally easy to tune.
-BEAUTY_MODEL_FILE = "mars_reconnaissance_orbiter/MRO.usdc"
-BEAUTY_MODEL_PRIMS = ("/Meshes", "/_root/Meshes", "/_root")
-BEAUTY_MODEL_ROTATE = (0.0, 180.0, 0.0)
-BEAUTY_MODEL_TARGET_SIZE = 1500.0  # cm, longest side after auto-fit
+BEAUTY_MODEL_FILE = "compute_satellite_hero_blender.usda"
+BEAUTY_MODEL_PRIMS = ("/ComputeSatelliteHero",)
+BEAUTY_MODEL_ROTATE = (0.0, 0.0, 0.0)
+BEAUTY_MODEL_TARGET_SIZE = 3000.0  # cm, longest side after auto-fit
+BEAUTY_MODEL_HIDE_TOKENS = ()
+BEAUTY_MODEL_USE_SOURCE_MATERIALS = True
+BEAUTY_MODEL_BODY_HALF = (92.0, 56.0, 72.0)  # cm, used for close-up framing
 
 
 # ── Xform helper (Kit-safe, replaces XformCommonAPI) ───────
@@ -127,6 +130,38 @@ def _prepare_imported_subtree(root_prim) -> None:
                 Sdf.ValueTypeNames.Bool,
                 custom=False,
             ).Set(True)
+
+
+def _hide_imported_prims_by_name(root_prim, tokens) -> None:
+    token_set = tuple(t.lower() for t in tokens)
+    for prim in Usd.PrimRange(root_prim):
+        if not prim.IsValid():
+            continue
+        name = prim.GetName().lower()
+        if any(token in name for token in token_set) and prim.IsA(UsdGeom.Imageable):
+            try:
+                UsdGeom.Imageable(prim).MakeInvisible()
+            except Exception:
+                pass
+
+
+def _compute_filtered_local_bbox(root_prim, hidden_tokens) -> Optional["Gf.Range3d"]:
+    hidden_tokens = tuple(t.lower() for t in hidden_tokens)
+    combined = None
+    for prim in Usd.PrimRange(root_prim):
+        if not prim.IsValid() or not prim.IsA(UsdGeom.Gprim):
+            continue
+        name = prim.GetName().lower()
+        if any(token in name for token in hidden_tokens):
+            continue
+        bbox = _compute_local_bbox(prim)
+        if bbox is None:
+            continue
+        if combined is None:
+            combined = Gf.Range3d(bbox.GetMin(), bbox.GetMax())
+        else:
+            combined.UnionWith(bbox)
+    return combined
 
 
 def _create_preview_material(
@@ -341,12 +376,15 @@ def _build_imported_satellite(stage: "Usd.Stage", root_path: str) -> bool:
     """
     if os.environ.get("SPACEDC_DISABLE_BEAUTY_MODEL", "").lower() in {"1", "true", "yes"}:
         return False
+    if not BEAUTY_MODEL_FILE:
+        return False
 
     model_path = _get_model_path(BEAUTY_MODEL_FILE)
     if not os.path.isfile(model_path):
         return False
 
     beauty_root = UsdGeom.Xform.Define(stage, f"{root_path}/Bus")
+    beauty_prim = beauty_root.GetPrim()
     fit_xf = UsdGeom.Xform.Define(stage, f"{root_path}/Bus/Fit")
     asset_root = UsdGeom.Xform.Define(stage, f"{root_path}/Bus/Fit/AssetRoot")
     ref_prim = asset_root.GetPrim()
@@ -365,7 +403,9 @@ def _build_imported_satellite(stage: "Usd.Stage", root_path: str) -> bool:
             continue
 
         _prepare_imported_subtree(ref_prim)
-        bbox_source, bbox = _find_first_bbox_in_subtree(ref_prim)
+        _hide_imported_prims_by_name(ref_prim, BEAUTY_MODEL_HIDE_TOKENS)
+        bbox = _compute_filtered_local_bbox(ref_prim, BEAUTY_MODEL_HIDE_TOKENS)
+        bbox_source = str(ref_prim.GetPath())
         if bbox is not None:
             chosen_prim = prim_path
             break
@@ -375,7 +415,11 @@ def _build_imported_satellite(stage: "Usd.Stage", root_path: str) -> bool:
         return False
 
     _prepare_imported_subtree(asset_root.GetPrim())
-    _apply_fallback_imported_colors(stage, root_path, asset_root.GetPrim())
+    _hide_imported_prims_by_name(asset_root.GetPrim(), BEAUTY_MODEL_HIDE_TOKENS)
+    materials_mode = "source_materials"
+    if not BEAUTY_MODEL_USE_SOURCE_MATERIALS:
+        _apply_fallback_imported_colors(stage, root_path, asset_root.GetPrim())
+        materials_mode = "fallback_preview"
 
     size = bbox.GetSize()
     center = bbox.GetMidpoint()
@@ -388,6 +432,22 @@ def _build_imported_satellite(stage: "Usd.Stage", root_path: str) -> bool:
     _xform(fit_xf, scale=(fit_scale, fit_scale, fit_scale))
     _xform(beauty_root, rotate=BEAUTY_MODEL_ROTATE)
 
+    body_half_x = size[0] * fit_scale * 0.5
+    body_half_y = size[1] * fit_scale * 0.5
+    body_half_z = size[2] * fit_scale * 0.5
+    model_half_x = body_half_x
+    model_half_y = body_half_y
+    model_half_z = body_half_z
+    if BEAUTY_MODEL_BODY_HALF is not None:
+        body_half_x, body_half_y, body_half_z = BEAUTY_MODEL_BODY_HALF
+
+    beauty_prim.CreateAttribute("spacedc:body_half_x", Sdf.ValueTypeNames.Float).Set(body_half_x)
+    beauty_prim.CreateAttribute("spacedc:body_half_y", Sdf.ValueTypeNames.Float).Set(body_half_y)
+    beauty_prim.CreateAttribute("spacedc:body_half_z", Sdf.ValueTypeNames.Float).Set(body_half_z)
+    beauty_prim.CreateAttribute("spacedc:model_half_x", Sdf.ValueTypeNames.Float).Set(model_half_x)
+    beauty_prim.CreateAttribute("spacedc:model_half_y", Sdf.ValueTypeNames.Float).Set(model_half_y)
+    beauty_prim.CreateAttribute("spacedc:model_half_z", Sdf.ValueTypeNames.Float).Set(model_half_z)
+
     print(
         "[SpaceDC] Imported beauty model bbox:",
         f"prim={chosen_prim}",
@@ -395,7 +455,8 @@ def _build_imported_satellite(stage: "Usd.Stage", root_path: str) -> bool:
         f"size=({size[0]:.3f}, {size[1]:.3f}, {size[2]:.3f})",
         f"center=({center[0]:.3f}, {center[1]:.3f}, {center[2]:.3f})",
         f"scale={fit_scale:.3f}",
-        "materials_mode=fallback_preview",
+        f"model_half=({model_half_x:.3f}, {model_half_y:.3f}, {model_half_z:.3f})",
+        f"materials_mode={materials_mode}",
     )
     return True
 
@@ -472,18 +533,22 @@ def _create_materials(stage, root_path: str) -> dict:
         return m
 
     return {
-        "bus":     _mat("BusMat",     (0.10, 0.11, 0.13), 0.55, 0.45),
-        "busEdge": _mat("BusEdgeMat", (0.16, 0.18, 0.20), 0.60, 0.38),
-        "gold":    _mat("GoldMat",    _hex_color("#ECA414"), 0.46, 0.12),
-        "grille":  _mat("GrilleMat",  (0.06, 0.06, 0.08), 0.40, 0.70),
-        "solar":   _mat("SolarMat",   _hex_color("#0B3B60"), 0.18, 0.10),
-        "frame":   _mat("FrameMat",   (0.33, 0.34, 0.37), 0.60, 0.35),
-        "rad":     _mat("RadMat",     (0.89, 0.89, 0.93), 0.05, 0.85),
-        "copper":  _mat("CopperMat",  (0.72, 0.45, 0.20), 0.80, 0.32),
-        "dark":    _mat("DarkMat",    (0.07, 0.07, 0.07), 0.50, 0.60),
-        "antenna": _mat("AntennaMat", (0.73, 0.73, 0.73), 0.55, 0.35),
-        "nozzle":  _mat("NozzleMat",  (0.23, 0.23, 0.24), 0.65, 0.40),
-        "accent":  _mat("AccentMat",  (0.11, 0.20, 0.28), 0.50, 0.40),
+        "bus":     _mat("BusMat",     (0.09, 0.10, 0.12), 0.62, 0.34),
+        "busEdge": _mat("BusEdgeMat", (0.18, 0.20, 0.22), 0.68, 0.22),
+        "shell":   _mat("ShellMat",   (0.12, 0.13, 0.16), 0.58, 0.30),
+        "gold":    _mat("GoldMat",    _hex_color("#ECA414"), 0.52, 0.10),
+        "grille":  _mat("GrilleMat",  (0.05, 0.05, 0.06), 0.25, 0.74),
+        "solar":   _mat("SolarMat",   _hex_color("#0B3B60"), 0.18, 0.08),
+        "frame":   _mat("FrameMat",   (0.34, 0.35, 0.38), 0.68, 0.22),
+        "rad":     _mat("RadMat",     (0.88, 0.89, 0.92), 0.12, 0.48),
+        "radDark": _mat("RadDarkMat", (0.60, 0.64, 0.70), 0.18, 0.34),
+        "copper":  _mat("CopperMat",  (0.72, 0.45, 0.20), 0.84, 0.24),
+        "dark":    _mat("DarkMat",    (0.07, 0.07, 0.07), 0.54, 0.46),
+        "rack":    _mat("RackMat",    (0.13, 0.15, 0.18), 0.58, 0.26),
+        "glass":   _mat("GlassMat",   (0.18, 0.34, 0.46), 0.05, 0.08),
+        "antenna": _mat("AntennaMat", (0.73, 0.73, 0.73), 0.55, 0.28),
+        "nozzle":  _mat("NozzleMat",  (0.23, 0.23, 0.24), 0.72, 0.28),
+        "accent":  _mat("AccentMat",  (0.12, 0.22, 0.32), 0.56, 0.24),
         "led_green": _mat("LedGreen", (0.2, 0.93, 0.4),   0.0,  0.1),
         "led_blue":  _mat("LedBlue",  (0.0, 0.73, 1.0),   0.0,  0.1),
         "led_amber": _mat("LedAmber", (1.0, 0.67, 0.13),  0.0,  0.1),
@@ -509,130 +574,718 @@ def _disable_cast_shadows(stage, prim_path: str):
         ).Set(True)
 
 
+def _box(stage, path: str, translate, scale, mat, rotate=None):
+    cube = UsdGeom.Cube.Define(stage, path)
+    cube.GetSizeAttr().Set(1.0)
+    _xform(cube, translate=translate, rotate=rotate, scale=scale)
+    _bind(stage, path, mat)
+    return cube
+
+
+def _cylinder(stage, path: str, radius: float, height: float, translate, mat, rotate=None):
+    cyl = UsdGeom.Cylinder.Define(stage, path)
+    cyl.GetRadiusAttr().Set(radius)
+    cyl.GetHeightAttr().Set(height)
+    _xform(cyl, translate=translate, rotate=rotate)
+    _bind(stage, path, mat)
+    return cyl
+
+
+def _sphere(stage, path: str, radius: float, translate, mat, rotate=None):
+    sphere = UsdGeom.Sphere.Define(stage, path)
+    sphere.GetRadiusAttr().Set(radius)
+    _xform(sphere, translate=translate, rotate=rotate)
+    _bind(stage, path, mat)
+    return sphere
+
+
+def _cone(stage, path: str, radius: float, height: float, translate, mat, rotate=None):
+    cone = UsdGeom.Cone.Define(stage, path)
+    cone.GetRadiusAttr().Set(radius)
+    cone.GetHeightAttr().Set(height)
+    _xform(cone, translate=translate, rotate=rotate)
+    _bind(stage, path, mat)
+    return cone
+
+
+def _wing_profile(wing_count: int, wing_area: float) -> dict:
+    segments = max(6, min(12, int(max(wing_count, 1))))
+    area_scale = max(0.75, min(1.65, math.sqrt(max(wing_area, 80.0) / 350.0)))
+    segment_len = 5.4 * area_scale
+    panel_chord = 8.8 * area_scale
+    panel_gap = 0.34
+    boom_len = BUS_X * 0.78
+    mast_height = BUS_Y * 0.26
+    root_x = BUS_X / 2 + boom_len
+    total_span = segments * segment_len + (segments - 1) * panel_gap
+    return {
+        "segments": segments,
+        "segment_len": segment_len,
+        "panel_chord": panel_chord,
+        "panel_gap": panel_gap,
+        "boom_len": boom_len,
+        "mast_height": mast_height,
+        "root_x": root_x,
+        "total_span": total_span,
+        "panel_thickness": BUS_Y * 0.018,
+        "radiator_thickness": BUS_Y * 0.014,
+    }
+
+
+def _long_sail_profile(count_hint: int, area_hint: float) -> dict:
+    segments = max(18, min(28, int(max(count_hint, 8)) * 2 + 2))
+    area_scale = max(1.00, min(1.55, math.sqrt(max(area_hint, 360.0) / 520.0)))
+    panel_gap = 1.10
+    target_span = BUS_X * 36.0 * area_scale
+    segment_len = max(18.0, (target_span - (segments - 1) * panel_gap) / segments)
+    panel_chord = BUS_Z * 1.45 * area_scale
+    boom_len = BUS_X * 1.28
+    mast_height = BUS_Y * 0.54
+    root_x = BUS_X / 2 + boom_len
+    total_span = segments * segment_len + (segments - 1) * panel_gap
+    return {
+        "segments": segments,
+        "segment_len": segment_len,
+        "panel_chord": panel_chord,
+        "panel_gap": panel_gap,
+        "boom_len": boom_len,
+        "mast_height": mast_height,
+        "root_x": root_x,
+        "total_span": total_span,
+        "panel_thickness": BUS_Y * 0.008,
+        "radiator_thickness": BUS_Y * 0.012,
+    }
+
+
+def _build_compute_core(stage, root_path: str, mats: dict):
+    core_root = f"{root_path}/ComputeCore"
+    UsdGeom.Xform.Define(stage, core_root)
+
+    bus_prim = stage.GetPrimAtPath(f"{root_path}/Bus")
+    body_half_x = BUS_X * 0.5
+    body_half_y = BUS_Y * 0.5
+    body_half_z = BUS_Z * 0.5
+    if bus_prim and bus_prim.IsValid():
+        try:
+            body_half_x = float(bus_prim.GetAttribute("spacedc:body_half_x").Get() or body_half_x)
+            body_half_y = float(bus_prim.GetAttribute("spacedc:body_half_y").Get() or body_half_y)
+            body_half_z = float(bus_prim.GetAttribute("spacedc:body_half_z").Get() or body_half_z)
+        except Exception:
+            pass
+
+    deck_y = -body_half_y * 0.22
+    rack_z = body_half_z * 0.46
+    bay_depth = body_half_z * 0.42
+    rack_w = max(10.0, body_half_x * 0.18)
+    rack_h = max(8.0, body_half_y * 0.22)
+    rack_d = max(8.0, bay_depth * 0.65)
+
+    _box(
+        stage,
+        f"{core_root}/BaseDeck",
+        (0, deck_y - body_half_y * 0.34, body_half_z * 0.02),
+        (body_half_x * 1.05, BUS_Y * 0.06, body_half_z * 0.84),
+        mats["frame"],
+    )
+    _box(
+        stage,
+        f"{core_root}/UpperCanopy",
+        (0, deck_y + body_half_y * 0.48, body_half_z * 0.00),
+        (body_half_x * 1.00, BUS_Y * 0.04, body_half_z * 0.76),
+        mats["dark"],
+    )
+    _box(
+        stage,
+        f"{core_root}/RearBulkhead",
+        (0, deck_y, rack_z - bay_depth * 0.62),
+        (body_half_x * 0.98, body_half_y * 0.82, BUS_Y * 0.05),
+        mats["shell"],
+    )
+    for side_name, sx in (("Port", -1), ("Starboard", 1)):
+        _box(
+            stage,
+            f"{core_root}/{side_name}Rail",
+            (sx * body_half_x * 0.96, deck_y, rack_z - bay_depth * 0.02),
+            (BUS_Y * 0.04, body_half_y * 0.78, bay_depth * 0.98),
+            mats["frame"],
+        )
+
+    cols = 4
+    rows = 3
+    col_spacing = body_half_x * 0.52 / max(cols - 1, 1)
+    row_spacing = body_half_y * 0.48 / max(rows - 1, 1)
+    start_x = -col_spacing * 1.5
+    start_y = deck_y - row_spacing
+
+    rack_index = 0
+    for row in range(rows):
+        for col in range(cols):
+            x_pos = start_x + col * col_spacing
+            y_pos = start_y + row * row_spacing
+            rack_root = f"{core_root}/ServerRack_{rack_index}"
+            UsdGeom.Xform.Define(stage, rack_root)
+            _box(stage, f"{rack_root}/Cabinet", (x_pos, y_pos, rack_z), (rack_w, rack_h, rack_d), mats["rack"])
+            _box(stage, f"{rack_root}/DoorFrame", (x_pos, y_pos, rack_z + rack_d * 0.53), (rack_w * 0.94, rack_h * 0.94, BUS_Y * 0.010), mats["frame"])
+            _box(stage, f"{rack_root}/Glass", (x_pos, y_pos, rack_z + rack_d * 0.55), (rack_w * 0.76, rack_h * 0.80, BUS_Y * 0.006), mats["glass"])
+            for blade in range(8):
+                blade_y = y_pos - rack_h * 0.34 + blade * rack_h * 0.10
+                _box(
+                    stage,
+                    f"{rack_root}/Blade_{blade}",
+                    (x_pos, blade_y, rack_z + rack_d * 0.28),
+                    (rack_w * 0.72, rack_h * 0.038, BUS_Y * 0.007),
+                    mats["dark"],
+                )
+            for led_idx in range(6):
+                led_y = y_pos - rack_h * 0.30 + led_idx * rack_h * 0.12
+                led_mat = mats["led_blue"] if led_idx % 2 == 0 else mats["led_amber"]
+                _box(
+                    stage,
+                    f"{rack_root}/Led_{led_idx}",
+                    (x_pos - rack_w * 0.26, led_y, rack_z + rack_d * 0.58),
+                    (rack_w * 0.05, rack_h * 0.03, BUS_Y * 0.006),
+                    led_mat,
+                )
+            _box(
+                stage,
+                f"{rack_root}/ColdPlate",
+                (x_pos, y_pos - rack_h * 0.38, rack_z - rack_d * 0.16),
+                (rack_w * 0.88, rack_h * 0.05, rack_d * 0.76),
+                mats["radDark"],
+            )
+            rack_index += 1
+
+    for side_name, sx in (("Port", -1), ("Starboard", 1)):
+        manifold_x = sx * body_half_x * 0.72
+        _cylinder(
+            stage,
+            f"{core_root}/{side_name}CoolantManifold",
+            BUS_Y * 0.018,
+            body_half_y * 1.05,
+            (manifold_x, deck_y, rack_z - bay_depth * 0.02),
+            mats["copper"],
+        )
+        for row in range(rows):
+            y_pos = start_y + row * row_spacing
+            _cylinder(
+                stage,
+                f"{core_root}/{side_name}Branch_{row}",
+                BUS_Y * 0.008,
+                body_half_x * 0.78,
+                (0, y_pos, rack_z - bay_depth * 0.20),
+                mats["copper"],
+                rotate=(0, 0, 90),
+            )
+
+    _box(
+        stage,
+        f"{core_root}/FrontHeader",
+        (0, deck_y + body_half_y * 0.50, rack_z + rack_d * 0.32),
+        (body_half_x * 0.86, BUS_Y * 0.028, BUS_Y * 0.030),
+        mats["frame"],
+    )
+    _sphere(
+        stage,
+        f"{core_root}/StatusNode",
+        BUS_Y * 0.030,
+        (0, deck_y + body_half_y * 0.50, rack_z + rack_d * 0.56),
+        mats["led_green"],
+    )
+
+
 # ── Bus ─────────────────────────────────────────────────────
 
 def _build_bus(stage, root_path: str, mats: dict):
-    bus_path = f"{root_path}/Bus"
-    bus = UsdGeom.Cube.Define(stage, bus_path)
-    bus.GetSizeAttr().Set(1.0)
-    _xform(bus, scale=(BUS_X, BUS_Y, BUS_Z))
-    _bind(stage, bus_path, mats["bus"])
+    bus_root = f"{root_path}/Bus"
+    UsdGeom.Xform.Define(stage, bus_root)
+    deck_t = BUS_Y * 0.030
+    rail_t = BUS_Y * 0.020
+    frame_r = BUS_Y * 0.024
+    cavity_x = BUS_X * 0.72
+    cavity_y = BUS_Y * 0.70
+    cavity_z = BUS_Z * 0.82
+    half_x = cavity_x * 0.5
+    half_y = cavity_y * 0.5
+    half_z = cavity_z * 0.5
+    open_z = BUS_Z / 2 - BUS_Z * 0.045
+    aft_z = -BUS_Z / 2 + BUS_Z * 0.06
 
-    # Gold MLI band (2.5% of bus height)
-    band_path = f"{root_path}/GoldBand"
-    band = UsdGeom.Cube.Define(stage, band_path)
-    band.GetSizeAttr().Set(1.0)
-    bh = BUS_Y * 0.18
-    _xform(band,
-           translate=(0, BUS_Y / 2 - bh, 0),
-           scale=(BUS_X * 1.02, bh, BUS_Z * 1.02))
-    _bind(stage, band_path, mats["gold"])
+    _box(stage, f"{bus_root}/TopDeck", (0, half_y, -BUS_Z * 0.04), (BUS_X * 0.88, deck_t, BUS_Z * 0.74), mats["shell"])
+    _box(stage, f"{bus_root}/BottomDeck", (0, -half_y, -BUS_Z * 0.02), (BUS_X * 0.90, deck_t, BUS_Z * 0.82), mats["bus"])
+    _box(stage, f"{bus_root}/MidKeel", (0, -BUS_Y * 0.06, -BUS_Z * 0.06), (BUS_X * 0.16, BUS_Y * 0.52, BUS_Z * 0.78), mats["busEdge"])
 
-    # Server face grille
-    grille_path = f"{root_path}/ServerFace"
-    grille = UsdGeom.Cube.Define(stage, grille_path)
-    grille.GetSizeAttr().Set(1.0)
-    _xform(grille,
-           translate=(0, -BUS_Y * 0.04, BUS_Z / 2 + BUS_Z * 0.01),
-           scale=(BUS_X * 0.88, BUS_Y * 0.75, BUS_Z * 0.015))
-    _bind(stage, grille_path, mats["grille"])
+    for ix, sx in enumerate((-1, 1)):
+        for iz, sz in enumerate((-1, 1)):
+            _cylinder(
+                stage,
+                f"{bus_root}/Longeron_{ix}_{iz}",
+                frame_r,
+                cavity_y,
+                (sx * half_x, 0, sz * half_z),
+                mats["frame"],
+            )
 
-    # Rack-unit LED strips (8 units)
-    led_w = BUS_X * 0.04
-    led_h = BUS_Y * 0.02
-    led_d = BUS_Z * 0.004
-    for ru in range(8):
-        ry = -BUS_Y * 0.35 + (ru / 7) * BUS_Y * 0.70
-        led_path = f"{root_path}/ServerFace/RackLed_{ru}"
-        led = UsdGeom.Cube.Define(stage, led_path)
-        led.GetSizeAttr().Set(1.0)
-        _xform(led,
-               translate=(-BUS_X * 0.36, ry + BUS_Y * 0.03, BUS_Z / 2 + BUS_Z * 0.02),
-               scale=(led_w, led_h, led_d))
-        color_mat = mats["led_green"] if ru % 3 != 2 else mats["led_blue"]
-        _bind(stage, led_path, color_mat)
+    for iy, sy in enumerate((-1, 1)):
+        y_pos = sy * half_y
+        for iz, sz in enumerate((-1, 1)):
+            _cylinder(
+                stage,
+                f"{bus_root}/CrossTube_{iy}_{iz}",
+                frame_r * 0.88,
+                cavity_x,
+                (0, y_pos, sz * half_z),
+                mats["frame"],
+                rotate=(0, 0, 90),
+            )
+        for ix, sx in enumerate((-1, 1)):
+            _cylinder(
+                stage,
+                f"{bus_root}/SideRail_{iy}_{ix}",
+                frame_r * 0.88,
+                cavity_z,
+                (sx * half_x, y_pos, 0),
+                mats["frame"],
+                rotate=(90, 0, 0),
+            )
+
+    for side_name, sx in (("Port", -1), ("Starboard", 1)):
+        for idx, sy in enumerate((-1, 1)):
+            angle = -28 * sx * sy
+            _box(
+                stage,
+                f"{bus_root}/{side_name}Facet_{idx}",
+                (sx * (BUS_X * 0.47), sy * (BUS_Y * 0.15), -BUS_Z * 0.02),
+                (BUS_X * 0.03, BUS_Y * 0.34, BUS_Z * 0.70),
+                mats["gold"],
+                rotate=(0, 0, angle),
+            )
+    _box(stage, f"{bus_root}/AftBlanket", (0, 0, aft_z), (BUS_X * 0.78, BUS_Y * 0.70, BUS_Z * 0.028), mats["gold"])
+    _box(stage, f"{bus_root}/TopBlanket", (0, BUS_Y * 0.34, -BUS_Z * 0.02), (BUS_X * 0.82, BUS_Y * 0.06, BUS_Z * 0.64), mats["gold"])
+    _box(stage, f"{bus_root}/LowerChine", (0, -BUS_Y * 0.28, BUS_Z * 0.02), (BUS_X * 0.82, BUS_Y * 0.05, BUS_Z * 0.70), mats["shell"], rotate=(10, 0, 0))
+
+    band_root = f"{root_path}/GoldBand"
+    UsdGeom.Xform.Define(stage, band_root)
+    _box(stage, f"{band_root}/SunCanopy", (0, BUS_Y * 0.38, BUS_Z * 0.06), (BUS_X * 0.74, BUS_Y * 0.030, BUS_Z * 0.42), mats["gold"], rotate=(-12, 0, 0))
+    _box(stage, f"{band_root}/PortSkirt", (-BUS_X * 0.44, 0, -BUS_Z * 0.02), (BUS_X * 0.018, BUS_Y * 0.56, BUS_Z * 0.62), mats["gold"], rotate=(0, 0, -22))
+    _box(stage, f"{band_root}/StarboardSkirt", (BUS_X * 0.44, 0, -BUS_Z * 0.02), (BUS_X * 0.018, BUS_Y * 0.56, BUS_Z * 0.62), mats["gold"], rotate=(0, 0, 22))
+    for seam_idx, z_pos in enumerate((-BUS_Z * 0.20, 0.0, BUS_Z * 0.20)):
+        _box(
+            stage,
+            f"{band_root}/BlanketSeam_{seam_idx}",
+            (0, BUS_Y * 0.34, z_pos),
+            (BUS_X * 0.72, BUS_Y * 0.010, BUS_Y * 0.018),
+            mats["frame"],
+        )
+
+    for side_name, sx in (("Port", -1), ("Starboard", 1)):
+        root_root = f"{bus_root}/{side_name}ArrayRoot"
+        UsdGeom.Xform.Define(stage, root_root)
+        root_x = sx * (BUS_X * 0.40)
+        _box(stage, f"{root_root}/Base", (root_x, 0, -BUS_Z * 0.06), (BUS_X * 0.08, BUS_Y * 0.28, BUS_Z * 0.26), mats["busEdge"])
+        _cylinder(stage, f"{root_root}/Pivot", BUS_Y * 0.05, BUS_Y * 0.34, (root_x + sx * BUS_X * 0.02, BUS_Y * 0.04, 0), mats["frame"], rotate=(0, 0, 90))
+        _box(stage, f"{root_root}/UpperFork", (root_x + sx * BUS_X * 0.06, BUS_Y * 0.14, 0), (BUS_X * 0.10, BUS_Y * 0.018, BUS_Z * 0.58), mats["frame"], rotate=(0, 0, sx * 10))
+        _box(stage, f"{root_root}/LowerFork", (root_x + sx * BUS_X * 0.06, -BUS_Y * 0.14, 0), (BUS_X * 0.10, BUS_Y * 0.018, BUS_Z * 0.58), mats["frame"], rotate=(0, 0, -sx * 10))
+        _cylinder(stage, f"{root_root}/Actuator", BUS_Y * 0.014, BUS_X * 0.20, (root_x + sx * BUS_X * 0.10, 0, -BUS_Z * 0.10), mats["copper"], rotate=(0, 0, 90))
+        _sphere(stage, f"{root_root}/JointNode", BUS_Y * 0.026, (root_x + sx * BUS_X * 0.11, 0, 0), mats["frame"])
+
+    top_pod_root = f"{bus_root}/TopPallet"
+    UsdGeom.Xform.Define(stage, top_pod_root)
+    _box(stage, f"{top_pod_root}/Deck", (0, BUS_Y * 0.26, -BUS_Z * 0.06), (BUS_X * 0.34, BUS_Y * 0.028, BUS_Z * 0.26), mats["frame"])
+    for idx, sx in enumerate((-1, 1)):
+        _cylinder(
+            stage,
+            f"{top_pod_root}/Tank_{idx}",
+            BUS_Y * 0.050,
+            BUS_Z * 0.22,
+            (sx * BUS_X * 0.10, BUS_Y * 0.34, -BUS_Z * 0.06),
+            mats["busEdge"],
+            rotate=(90, 0, 0),
+        )
+    _box(stage, f"{top_pod_root}/Electronics", (0, BUS_Y * 0.31, BUS_Z * 0.08), (BUS_X * 0.22, BUS_Y * 0.10, BUS_Z * 0.12), mats["rack"])
+    _cylinder(stage, f"{top_pod_root}/SensorBoom", BUS_Y * 0.010, BUS_Y * 0.44, (0, BUS_Y * 0.50, BUS_Z * 0.16), mats["frame"])
+    _sphere(stage, f"{top_pod_root}/SensorHead", BUS_Y * 0.032, (0, BUS_Y * 0.73, BUS_Z * 0.16), mats["glass"])
+
+    face_root = f"{root_path}/ServerFace"
+    UsdGeom.Xform.Define(stage, face_root)
+    _box(stage, f"{face_root}/TopRail", (0, BUS_Y * 0.22, open_z), (BUS_X * 0.66, rail_t, BUS_Z * 0.020), mats["frame"])
+    _box(stage, f"{face_root}/BottomRail", (0, -BUS_Y * 0.22, open_z), (BUS_X * 0.66, rail_t, BUS_Z * 0.020), mats["frame"])
+    _box(stage, f"{face_root}/PortRail", (-BUS_X * 0.33, 0, open_z), (rail_t, BUS_Y * 0.52, BUS_Z * 0.020), mats["frame"])
+    _box(stage, f"{face_root}/StarboardRail", (BUS_X * 0.33, 0, open_z), (rail_t, BUS_Y * 0.52, BUS_Z * 0.020), mats["frame"])
+    _box(stage, f"{face_root}/UpperVisor", (0, BUS_Y * 0.30, BUS_Z * 0.33), (BUS_X * 0.48, BUS_Y * 0.032, BUS_Z * 0.10), mats["accent"], rotate=(-20, 0, 0))
+    _box(stage, f"{face_root}/LowerVisor", (0, -BUS_Y * 0.26, BUS_Z * 0.26), (BUS_X * 0.42, BUS_Y * 0.025, BUS_Z * 0.08), mats["accent"], rotate=(18, 0, 0))
+    for idx, sx in enumerate((-1, 1)):
+        _box(
+            stage,
+            f"{face_root}/Brace_{idx}",
+            (sx * BUS_X * 0.22, 0, BUS_Z * 0.28),
+            (BUS_Y * 0.04, BUS_Y * 0.46, BUS_Z * 0.02),
+            mats["frame"],
+            rotate=(0, 0, -sx * 24),
+        )
+    for slat_idx in range(8):
+        slat_y = -BUS_Y * 0.18 + slat_idx * BUS_Y * 0.055
+        _box(
+            stage,
+            f"{face_root}/GrilleSlat_{slat_idx}",
+            (0, slat_y, BUS_Z * 0.48),
+            (BUS_X * 0.58, BUS_Y * 0.010, BUS_Z * 0.010),
+            mats["grille"],
+        )
+    for seam_idx in range(6):
+        seam_x = -BUS_X * 0.24 + seam_idx * BUS_X * 0.096
+        _box(
+            stage,
+            f"{face_root}/FaceMullion_{seam_idx}",
+            (seam_x, 0, BUS_Z * 0.48),
+            (BUS_Y * 0.008, BUS_Y * 0.40, BUS_Z * 0.010),
+            mats["frame"],
+        )
+
+    payload_root = f"{bus_root}/PayloadBay"
+    UsdGeom.Xform.Define(stage, payload_root)
+    rack_w = BUS_X * 0.14
+    rack_h = BUS_Y * 0.12
+    rack_d = BUS_Z * 0.14
+    x_positions = (-BUS_X * 0.17, BUS_X * 0.17)
+    y_positions = (-BUS_Y * 0.27, -BUS_Y * 0.09, BUS_Y * 0.09, BUS_Y * 0.27)
+
+    _box(stage, f"{payload_root}/ServiceTunnel", (0, 0, -BUS_Z * 0.12), (BUS_X * 0.11, BUS_Y * 0.62, BUS_Z * 0.60), mats["frame"])
+    _box(stage, f"{payload_root}/CableBridge", (0, BUS_Y * 0.19, BUS_Z * 0.00), (BUS_X * 0.48, BUS_Y * 0.03, BUS_Z * 0.44), mats["frame"])
+    for brace_idx, sx in enumerate((-1, 1)):
+        _box(
+            stage,
+            f"{payload_root}/CatwalkBrace_{brace_idx}",
+            (sx * BUS_X * 0.18, BUS_Y * 0.14, BUS_Z * 0.06),
+            (BUS_X * 0.22, BUS_Y * 0.012, BUS_Y * 0.02),
+            mats["frame"],
+            rotate=(0, 0, -sx * 26),
+        )
+
+    rack_index = 0
+    for x_pos in x_positions:
+        for y_pos in y_positions:
+            rack_root = f"{payload_root}/ServerRack_{rack_index}"
+            UsdGeom.Xform.Define(stage, rack_root)
+            _box(stage, f"{rack_root}/Cabinet", (x_pos, y_pos, -BUS_Z * 0.02), (rack_w, rack_h, rack_d), mats["rack"])
+            _box(stage, f"{rack_root}/FrontFrame", (x_pos, y_pos, rack_d * 0.52), (rack_w * 0.92, rack_h * 0.92, BUS_Z * 0.010), mats["grille"])
+            _box(stage, f"{rack_root}/ColdPlate", (x_pos, y_pos, -rack_d * 0.40), (rack_w * 0.88, rack_h * 0.08, rack_d * 0.72), mats["radDark"])
+            for blade in range(6):
+                blade_y = y_pos - rack_h * 0.34 + blade * rack_h * 0.135
+                _box(
+                    stage,
+                    f"{rack_root}/Blade_{blade}",
+                    (x_pos, blade_y, rack_d * 0.36),
+                    (rack_w * 0.76, rack_h * 0.05, BUS_Z * 0.010),
+                    mats["dark"],
+                )
+            for handle_idx, handle_x in enumerate((-rack_w * 0.34, rack_w * 0.34)):
+                _cylinder(
+                    stage,
+                    f"{rack_root}/Handle_{handle_idx}",
+                    BUS_Y * 0.006,
+                    rack_h * 0.76,
+                    (x_pos + handle_x, y_pos, rack_d * 0.54),
+                    mats["frame"],
+                )
+            for led_idx in range(4):
+                led_y = y_pos - rack_h * 0.24 + led_idx * rack_h * 0.17
+                led_mat = mats["led_blue"] if led_idx % 2 == 0 else mats["led_amber"]
+                _box(
+                    stage,
+                    f"{rack_root}/Led_{led_idx}",
+                    (x_pos - rack_w * 0.24, led_y, rack_d * 0.56),
+                    (rack_w * 0.06, rack_h * 0.04, BUS_Z * 0.008),
+                    led_mat,
+                )
+            _cylinder(
+                stage,
+                f"{rack_root}/CoolantPipe",
+                BUS_Y * 0.010,
+                rack_h * 1.16,
+                (x_pos + rack_w * 0.30, y_pos, -BUS_Z * 0.02),
+                mats["copper"],
+                rotate=(0, 0, 90),
+            )
+            rack_index += 1
+
+    _cylinder(stage, f"{payload_root}/PortManifold", BUS_Y * 0.020, cavity_z * 0.72, (-BUS_X * 0.28, BUS_Y * 0.18, -BUS_Z * 0.04), mats["copper"], rotate=(90, 0, 0))
+    _cylinder(stage, f"{payload_root}/StarboardManifold", BUS_Y * 0.020, cavity_z * 0.72, (BUS_X * 0.28, BUS_Y * 0.18, -BUS_Z * 0.04), mats["copper"], rotate=(90, 0, 0))
+    _box(stage, f"{payload_root}/ServiceGantry", (0, BUS_Y * 0.29, -BUS_Z * 0.04), (BUS_X * 0.40, BUS_Y * 0.032, BUS_Z * 0.46), mats["frame"])
+    _box(stage, f"{payload_root}/ServiceGlass", (0, BUS_Y * 0.22, BUS_Z * 0.18), (BUS_X * 0.16, BUS_Y * 0.05, BUS_Z * 0.06), mats["glass"])
+    _sphere(stage, f"{payload_root}/CoreNode", BUS_Y * 0.034, (0, 0, BUS_Z * 0.08), mats["led_green"])
 
 
 # ── Solar Wings ─────────────────────────────────────────────
 
 def _build_solar_wings(stage, root_path: str, mats: dict, wing_count: int, wing_area: float):
     wings_root = f"{root_path}/SolarWings"
-    UsdGeom.Xform.Define(stage, wings_root)
+    wings_prim = UsdGeom.Xform.Define(stage, wings_root).GetPrim()
+    profile = _long_sail_profile(max(wing_count, 8), max(wing_area, 520.0))
+    bus_prim = stage.GetPrimAtPath(f"{root_path}/Bus")
+    body_half_x = BUS_X * 0.5
+    body_half_y = BUS_Y * 0.5
+    if bus_prim and bus_prim.IsValid():
+        try:
+            body_half_x = float(bus_prim.GetAttribute("spacedc:body_half_x").Get() or body_half_x)
+            body_half_y = float(bus_prim.GetAttribute("spacedc:body_half_y").Get() or body_half_y)
+        except Exception:
+            pass
+    for key, value_type in (
+        ("segments", Sdf.ValueTypeNames.Int),
+        ("segment_len", Sdf.ValueTypeNames.Float),
+        ("panel_chord", Sdf.ValueTypeNames.Float),
+        ("panel_gap", Sdf.ValueTypeNames.Float),
+        ("root_x", Sdf.ValueTypeNames.Float),
+        ("panel_thickness", Sdf.ValueTypeNames.Float),
+        ("radiator_thickness", Sdf.ValueTypeNames.Float),
+    ):
+        wings_prim.CreateAttribute(f"spacedc:{key}", value_type).Set(profile[key])
 
-    # JS ref: single panel 0.34×0.12 at earth r=2 → ×100 = 34×12
-    # Scale panel size from wing_area parameter (default 350 m²)
-    wing_scale = 0.16
-    single_w = max(3, min(18, math.sqrt(wing_area) * wing_scale * 1.4))
-    single_h = max(2, min(12, math.sqrt(wing_area) * wing_scale * 1.0))
-    sub_panels_per_wing = 3
-    arm_len = BUS_X * 0.4
-    gap = BUS_Z * 0.06
+    panel_y = max(BUS_Y * 0.11, body_half_y * 0.18)
+    truss_y = BUS_Y * 0.02
+    cable_y = BUS_Y * 0.06
+    frame_t = BUS_Y * 0.018
+    brace_t = BUS_Y * 0.010
 
-    left_count = math.ceil(wing_count / 2)
-    right_count = wing_count - left_count
-
-    def layout_side(count, side, side_name):
+    def layout_side(side: int, side_name: str):
         side_root = f"{wings_root}/{side_name}"
         UsdGeom.Xform.Define(stage, side_root)
+        wing_root = f"{side_root}/Wing_0"
+        UsdGeom.Xform.Define(stage, wing_root)
 
-        cols = 1 if count <= 2 else (2 if count <= 6 else 3)
-        rows = math.ceil(count / cols)
+        hinge_x = side * (body_half_x + BUS_X * 0.05)
+        _cylinder(
+            stage,
+            f"{wing_root}/Hinge",
+            BUS_Y * 0.055,
+            BUS_Y * 0.44,
+            (hinge_x, panel_y, 0),
+            mats["frame"],
+        )
+        _sphere(
+            stage,
+            f"{wing_root}/RootHub",
+            BUS_Y * 0.06,
+            (hinge_x, panel_y, 0),
+            mats["busEdge"],
+        )
+        _cylinder(
+            stage,
+            f"{wing_root}/PrimaryBoom",
+            BUS_Y * 0.026,
+            profile["boom_len"],
+            (side * (BUS_X / 2 + profile["boom_len"] * 0.5), truss_y, 0),
+            mats["frame"],
+            rotate=(0, 0, 90),
+        )
+        _cylinder(
+            stage,
+            f"{wing_root}/UpperBoom",
+            BUS_Y * 0.014,
+            profile["boom_len"] * 0.92,
+            (side * (BUS_X / 2 + profile["boom_len"] * 0.46), truss_y + BUS_Y * 0.07, profile["panel_chord"] * 0.44),
+            mats["frame"],
+            rotate=(0, 0, 90),
+        )
+        _cylinder(
+            stage,
+            f"{wing_root}/LowerBoom",
+            BUS_Y * 0.014,
+            profile["boom_len"] * 0.92,
+            (side * (BUS_X / 2 + profile["boom_len"] * 0.46), truss_y + BUS_Y * 0.07, -profile["panel_chord"] * 0.44),
+            mats["frame"],
+            rotate=(0, 0, 90),
+        )
+        _box(
+            stage,
+            f"{wing_root}/DataTrunk",
+            (side * (BUS_X / 2 + profile["boom_len"] * 0.52), cable_y, 0),
+            (profile["boom_len"] * 0.96, BUS_Y * 0.018, BUS_Y * 0.024),
+            mats["copper"],
+        )
+        for fork_idx, z_pos in enumerate((-profile["panel_chord"] * 0.24, profile["panel_chord"] * 0.24)):
+            _box(
+                stage,
+                f"{wing_root}/RootFork_{fork_idx}",
+                (side * (body_half_x + profile["boom_len"] * 0.14), panel_y, z_pos),
+                (profile["boom_len"] * 0.28, BUS_Y * 0.014, BUS_Y * 0.020),
+                mats["frame"],
+                rotate=(0, 0, side * (10 if fork_idx == 0 else -10)),
+            )
 
-        for idx in range(count):
-            col = idx // rows
-            row = idx % rows
+        mast_x = side * (profile["root_x"] - profile["segment_len"] * 0.08)
+        _cylinder(
+            stage,
+            f"{wing_root}/UpperMast",
+            BUS_Y * 0.018,
+            profile["mast_height"],
+            (mast_x, panel_y, profile["panel_chord"] * 0.48),
+            mats["frame"],
+        )
+        _cylinder(
+            stage,
+            f"{wing_root}/LowerMast",
+            BUS_Y * 0.018,
+            profile["mast_height"],
+            (mast_x, panel_y, -profile["panel_chord"] * 0.48),
+            mats["frame"],
+        )
 
-            wing_path = f"{side_root}/Wing_{idx}"
-            wing_xf = UsdGeom.Xform.Define(stage, wing_path)
+        brace_len = profile["boom_len"] * 0.82
+        brace_center_x = side * (BUS_X / 2 + brace_len * 0.5)
+        for brace_idx, z_pos in enumerate(
+            (-profile["panel_chord"] * 0.38, -profile["panel_chord"] * 0.12, profile["panel_chord"] * 0.12, profile["panel_chord"] * 0.38)
+        ):
+            _box(
+                stage,
+                f"{wing_root}/Brace_{brace_idx}",
+                (brace_center_x, panel_y + BUS_Y * 0.03, z_pos),
+                (brace_len, brace_t, BUS_Y * 0.03),
+                mats["frame"],
+            )
 
-            col_offset = col * (single_w * sub_panels_per_wing + gap)
-            wing_start_x = BUS_X / 2 + arm_len + 0.2 + col_offset
-            total_wing_w = single_w * sub_panels_per_wing
+        for seg in range(profile["segments"]):
+            center_x = side * (
+                profile["root_x"]
+                + seg * (profile["segment_len"] + profile["panel_gap"])
+                + profile["segment_len"] * 0.5
+            )
+            seg_root = f"{wing_root}/Segment_{seg}"
+            UsdGeom.Xform.Define(stage, seg_root)
 
-            # Arm
-            arm_path = f"{wing_path}/Arm"
-            arm = UsdGeom.Cube.Define(stage, arm_path)
-            arm.GetSizeAttr().Set(1.0)
-            full_arm = arm_len + col_offset
-            arm_thick = BUS_Y * 0.06
-            _xform(arm,
-                   translate=(side * (BUS_X / 2 + full_arm / 2), 0, 0),
-                   scale=(full_arm, arm_thick, arm_thick))
-            _bind(stage, arm_path, mats["frame"])
+            _box(
+                stage,
+                f"{seg_root}/Panel",
+                (center_x, panel_y, 0),
+                (profile["segment_len"], profile["panel_thickness"], profile["panel_chord"]),
+                mats["solar"],
+            )
+            _box(
+                stage,
+                f"{seg_root}/Backplane",
+                (center_x, panel_y - profile["panel_thickness"] * 0.65, 0),
+                (profile["segment_len"] * 0.98, profile["panel_thickness"] * 0.40, profile["panel_chord"] * 0.95),
+                mats["dark"],
+            )
+            _box(
+                stage,
+                f"{seg_root}/FrameTop",
+                (center_x, panel_y + profile["panel_thickness"] * 0.5, profile["panel_chord"] * 0.5 - frame_t * 0.5),
+                (profile["segment_len"] + 0.18, frame_t, frame_t),
+                mats["frame"],
+            )
+            _box(
+                stage,
+                f"{seg_root}/FrameBottom",
+                (center_x, panel_y + profile["panel_thickness"] * 0.5, -profile["panel_chord"] * 0.5 + frame_t * 0.5),
+                (profile["segment_len"] + 0.18, frame_t, frame_t),
+                mats["frame"],
+            )
+            _box(
+                stage,
+                f"{seg_root}/FrameInboard",
+                (center_x - side * (profile["segment_len"] * 0.5 - frame_t * 0.5), panel_y, 0),
+                (frame_t, frame_t, profile["panel_chord"] + 0.18),
+                mats["frame"],
+            )
+            _box(
+                stage,
+                f"{seg_root}/FrameOutboard",
+                (center_x + side * (profile["segment_len"] * 0.5 - frame_t * 0.5), panel_y, 0),
+                (frame_t, frame_t, profile["panel_chord"] + 0.18),
+                mats["frame"],
+            )
+            for strip in range(10):
+                strip_z = -profile["panel_chord"] * 0.40 + strip * (profile["panel_chord"] * 0.088)
+                _box(
+                    stage,
+                    f"{seg_root}/CellStrip_{strip}",
+                    (center_x, panel_y + profile["panel_thickness"] * 0.62, strip_z),
+                    (profile["segment_len"] * 0.94, BUS_Y * 0.003, profile["panel_chord"] * 0.042),
+                    mats["accent"],
+                )
+            for batten_idx in range(4):
+                batten_x = center_x - side * (profile["segment_len"] * 0.30) + side * batten_idx * (profile["segment_len"] * 0.20)
+                _box(
+                    stage,
+                    f"{seg_root}/Batten_{batten_idx}",
+                    (batten_x, panel_y + profile["panel_thickness"] * 0.82, 0),
+                    (BUS_Y * 0.007, BUS_Y * 0.007, profile["panel_chord"] * 0.94),
+                    mats["frame"],
+                )
+            for stringer_idx, z_pos in enumerate(
+                (
+                    -profile["panel_chord"] * 0.46,
+                    -profile["panel_chord"] * 0.18,
+                    profile["panel_chord"] * 0.18,
+                    profile["panel_chord"] * 0.46,
+                )
+            ):
+                _box(
+                    stage,
+                    f"{seg_root}/Stringer_{stringer_idx}",
+                    (center_x, panel_y + profile["panel_thickness"] * 0.30, z_pos),
+                    (profile["segment_len"] * 0.95, BUS_Y * 0.004, BUS_Y * 0.012),
+                    mats["frame"],
+                )
+            _box(
+                stage,
+                f"{seg_root}/Spine",
+                (center_x, panel_y + profile["panel_thickness"], 0),
+                (profile["segment_len"] * 0.96, BUS_Y * 0.012, BUS_Y * 0.05),
+                mats["frame"],
+            )
+            _cylinder(
+                stage,
+                f"{seg_root}/ServiceLine",
+                BUS_Y * 0.004,
+                profile["segment_len"] * 0.90,
+                (center_x, panel_y + profile["panel_thickness"] * 1.1, 0),
+                mats["copper"],
+                rotate=(0, 0, 90),
+            )
+            _sphere(
+                stage,
+                f"{seg_root}/Node",
+                BUS_Y * 0.024,
+                (center_x, panel_y + profile["panel_thickness"] * 1.2, 0),
+                mats["led_blue"],
+            )
+            if seg < profile["segments"] - 1:
+                seam_x = side * (
+                    profile["root_x"]
+                    + seg * (profile["segment_len"] + profile["panel_gap"])
+                    + profile["segment_len"]
+                    + profile["panel_gap"] * 0.5
+                )
+                _box(
+                    stage,
+                    f"{wing_root}/Seam_{seg}",
+                    (seam_x, panel_y + profile["panel_thickness"] * 0.5, 0),
+                    (profile["panel_gap"] * 0.70, profile["panel_thickness"], profile["panel_chord"] * 0.92),
+                    mats["frame"],
+                )
 
-            # Sub-panels
-            for pi in range(sub_panels_per_wing):
-                panel_path = f"{wing_path}/Panel_{pi}"
-                panel = UsdGeom.Cube.Define(stage, panel_path)
-                panel.GetSizeAttr().Set(1.0)
-                px = side * (wing_start_x + pi * single_w + single_w / 2)
-                panel_thick = BUS_Y * 0.03
-                _xform(panel,
-                       translate=(px, 0, 0),
-                       scale=(single_w - 0.2, panel_thick, single_h))
-                _bind(stage, panel_path, mats["solar"])
+        tip_x = side * (profile["root_x"] + profile["total_span"] + BUS_Y * 0.12)
+        _cylinder(
+            stage,
+            f"{wing_root}/TipCanister",
+            BUS_Y * 0.030,
+            BUS_Y * 0.22,
+            (tip_x - side * BUS_Y * 0.10, panel_y, 0),
+            mats["frame"],
+            rotate=(0, 0, 90),
+        )
+        _sphere(
+            stage,
+            f"{wing_root}/TipBeacon",
+            BUS_Y * 0.030,
+            (tip_x, panel_y + BUS_Y * 0.02, 0),
+            mats["led_amber"],
+        )
 
-            # Frame rails
-            rail_thick = BUS_Y * 0.05
-            rail_depth = BUS_Y * 0.04
-            for rs in [-1, 1]:
-                rail_path = f"{wing_path}/Rail_{0 if rs == -1 else 1}"
-                rail = UsdGeom.Cube.Define(stage, rail_path)
-                rail.GetSizeAttr().Set(1.0)
-                _xform(rail,
-                       translate=(side * (wing_start_x + total_wing_w / 2), 0,
-                                  rs * single_h / 2),
-                       scale=(total_wing_w + 0.4, rail_thick, rail_depth))
-                _bind(stage, rail_path, mats["frame"])
-
-            # Position row along Z
-            total_z = rows * single_h + (rows - 1) * gap
-            start_z = -total_z / 2 + single_h / 2
-            z_pos = start_z + row * (single_h + gap)
-            _xform(wing_xf, translate=(0, 0, z_pos))
-
-    layout_side(left_count,  -1, "Left")
-    layout_side(right_count,  1, "Right")
+    layout_side(-1, "Left")
+    layout_side(1, "Right")
 
 
 # ── Radiators ───────────────────────────────────────────────
@@ -640,59 +1293,120 @@ def _build_solar_wings(stage, root_path: str, mats: dict, wing_count: int, wing_
 def _build_radiators(stage, root_path: str, mats: dict, rad_count: int, rad_area: float):
     rad_root = f"{root_path}/Radiators"
     UsdGeom.Xform.Define(stage, rad_root)
+    solar_root = stage.GetPrimAtPath(f"{root_path}/SolarWings")
+    profile = None
+    if solar_root and solar_root.IsValid():
+        try:
+            profile = {
+                "segments": int(solar_root.GetAttribute("spacedc:segments").Get() or 0),
+                "segment_len": float(solar_root.GetAttribute("spacedc:segment_len").Get() or 0.0),
+                "panel_chord": float(solar_root.GetAttribute("spacedc:panel_chord").Get() or 0.0),
+                "panel_gap": float(solar_root.GetAttribute("spacedc:panel_gap").Get() or 0.0),
+                "root_x": float(solar_root.GetAttribute("spacedc:root_x").Get() or 0.0),
+                "panel_thickness": float(solar_root.GetAttribute("spacedc:panel_thickness").Get() or 0.0),
+                "radiator_thickness": float(solar_root.GetAttribute("spacedc:radiator_thickness").Get() or 0.0),
+            }
+        except Exception:
+            profile = None
 
-    # JS ref: single rad 0.04×0.10 → ×100 = 4×10
-    rad_scale = 0.28
-    single_w = max(2, min(10, math.sqrt(rad_area) * rad_scale * 1.2))
-    single_h = max(1.5, min(8, math.sqrt(rad_area) * rad_scale * 0.9))
-    rad_gap = BUS_Z * 0.05
-    y_offset = -BUS_Y / 2 - BUS_Y * 0.08
+    if not profile or profile["segments"] <= 0:
+        profile = _long_sail_profile(max(rad_count, 8), max(rad_area * 3.0, 520.0))
 
-    left_count = math.ceil(rad_count / 2)
-    right_count = rad_count - left_count
+    panel_y = BUS_Y * 0.11
+    radiator_y = panel_y - (profile["panel_thickness"] + profile["radiator_thickness"]) * 1.8
+    frame_t = BUS_Y * 0.022
+    louver_count = max(5, min(8, rad_count + 2))
 
-    def layout_side(count, side, side_name):
+    def layout_side(side: int, side_name: str):
         side_root = f"{rad_root}/{side_name}"
         UsdGeom.Xform.Define(stage, side_root)
 
-        cols = 1 if count <= 2 else (2 if count <= 6 else 3)
-        rows = max(1, math.ceil(count / cols))
+        manifold_len = BUS_X * 0.42
+        manifold_x = side * (BUS_X / 2 + manifold_len * 0.54)
+        for idx, z_pos in enumerate(
+            (-profile["panel_chord"] * 0.42, profile["panel_chord"] * 0.42)
+        ):
+            _cylinder(
+                stage,
+                f"{side_root}/RootManifold_{idx}",
+                BUS_Y * 0.015,
+                manifold_len,
+                (manifold_x, radiator_y, z_pos),
+                mats["copper"],
+                rotate=(0, 0, 90),
+            )
 
-        for idx in range(count):
-            col = idx // rows
-            row = idx % rows
+        for seg in range(profile["segments"]):
+            center_x = side * (
+                profile["root_x"]
+                + seg * (profile["segment_len"] + profile["panel_gap"])
+                + profile["segment_len"] * 0.5
+            )
+            panel_root = f"{side_root}/Panel_{seg}"
+            UsdGeom.Xform.Define(stage, panel_root)
 
-            panel_path = f"{side_root}/Panel_{idx}"
-            panel = UsdGeom.Cube.Define(stage, panel_path)
-            panel.GetSizeAttr().Set(1.0)
+            _box(
+                stage,
+                f"{panel_root}/Skin",
+                (center_x, radiator_y, 0),
+                (profile["segment_len"] * 0.98, profile["radiator_thickness"], profile["panel_chord"] * 0.95),
+                mats["rad"],
+            )
+            _box(
+                stage,
+                f"{panel_root}/FrameTop",
+                (center_x, radiator_y + profile["radiator_thickness"] * 0.25, profile["panel_chord"] * 0.5 - frame_t * 0.5),
+                (profile["segment_len"] + 0.10, frame_t, frame_t),
+                mats["frame"],
+            )
+            _box(
+                stage,
+                f"{panel_root}/FrameBottom",
+                (center_x, radiator_y + profile["radiator_thickness"] * 0.25, -profile["panel_chord"] * 0.5 + frame_t * 0.5),
+                (profile["segment_len"] + 0.10, frame_t, frame_t),
+                mats["frame"],
+            )
+            for pipe_idx, z_pos in enumerate(
+                (-profile["panel_chord"] * 0.28, 0.0, profile["panel_chord"] * 0.28)
+            ):
+                _cylinder(
+                    stage,
+                    f"{panel_root}/HeatPipe_{pipe_idx}",
+                    BUS_Y * 0.013,
+                    profile["segment_len"] * 0.92,
+                    (center_x, radiator_y + profile["radiator_thickness"] * 0.28, z_pos),
+                    mats["copper"],
+                    rotate=(0, 0, 90),
+                )
+            for louver_idx in range(louver_count):
+                louver_z = (
+                    -profile["panel_chord"] * 0.40
+                    + louver_idx * (profile["panel_chord"] * 0.80 / max(louver_count - 1, 1))
+                )
+                _box(
+                    stage,
+                    f"{panel_root}/Louver_{louver_idx}",
+                    (center_x, radiator_y + profile["radiator_thickness"] * 0.95, louver_z),
+                    (profile["segment_len"] * 0.82, BUS_Y * 0.008, BUS_Y * 0.05),
+                    mats["radDark"],
+                    rotate=(12, 0, 0),
+                )
+            for stand_idx, stand_x in enumerate(
+                (
+                    center_x - side * (profile["segment_len"] * 0.34),
+                    center_x + side * (profile["segment_len"] * 0.34),
+                )
+            ):
+                _box(
+                    stage,
+                    f"{panel_root}/StandOff_{stand_idx}",
+                    (stand_x, (panel_y + radiator_y) * 0.5, 0),
+                    (BUS_Y * 0.030, panel_y - radiator_y, BUS_Y * 0.030),
+                    mats["frame"],
+                )
 
-            col_offset = col * (single_w + rad_gap)
-            rx = side * (BUS_X / 2 + single_w / 2 + 0.6 + col_offset)
-
-            total_z = rows * single_h + (rows - 1) * rad_gap
-            start_z = -total_z / 2 + single_h / 2
-            rz = start_z + row * (single_h + rad_gap)
-
-            panel_thick = BUS_Y * 0.02
-            _xform(panel,
-                   translate=(rx, y_offset, rz),
-                   scale=(single_w, panel_thick, single_h))
-            _bind(stage, panel_path, mats["rad"])
-
-            # Heat pipes (3 per panel)
-            pipe_r = BUS_Y * 0.012
-            for hi in range(3):
-                pipe_path = f"{side_root}/Panel_{idx}/Pipe_{hi}"
-                pipe = UsdGeom.Cylinder.Define(stage, pipe_path)
-                pipe.GetRadiusAttr().Set(pipe_r)
-                pipe.GetHeightAttr().Set(single_h - 0.4)
-                _xform(pipe,
-                       translate=(rx + (hi - 1) * single_w * 0.28, y_offset, rz),
-                       rotate=(90, 0, 0))
-                _bind(stage, pipe_path, mats["copper"])
-
-    layout_side(left_count,  -1, "Left")
-    layout_side(right_count,  1, "Right")
+    layout_side(-1, "Left")
+    layout_side(1, "Right")
 
 
 # ── Antenna ─────────────────────────────────────────────────
