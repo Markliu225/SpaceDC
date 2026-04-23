@@ -1,0 +1,11 @@
+[package]
+title = "SpaceDC Maritime Task"
+version = "0.1.0"
+description = "Maritime case scene overlays: sea area, detection boxes, ground-sat link."
+category = "Simulation"
+
+[dependencies]
+"omni.usd" = {}
+
+[[python.module]]
+name = "space.demo.task_maritime"

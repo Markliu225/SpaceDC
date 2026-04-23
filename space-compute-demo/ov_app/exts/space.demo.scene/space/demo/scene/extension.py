@@ -1,0 +1,194 @@
+"""space.demo.scene — two-stage orchestrator.
+
+Stages:
+    usd/overview.usda  — Earth + orbit line + moving cyan SatelliteIcon
+    usd/satellite.usda — standalone DGX close-up (no Earth)
+
+On preset change we call ``omni.usd.get_context().open_stage()`` to swap
+the active stage. Keeps the two scenes fully decoupled.
+
+In the overview stage we update /World/SatelliteIcon's translation every
+render frame using the SAME circular-orbit formula the backend uses, so
+the icon rides exactly along the orbit line.
+"""
+from __future__ import annotations
+
+import asyncio
+import json
+import math
+import os
+import time
+import urllib.request
+from typing import Optional
+
+try:
+    import omni.ext  # type: ignore
+    import omni.kit.app  # type: ignore
+    import omni.usd  # type: ignore
+    from pxr import Gf, UsdGeom  # type: ignore
+    _HAS_KIT = True
+except ImportError:
+    _HAS_KIT = False
+
+try:
+    import carb  # type: ignore
+    _HAS_CARB = True
+except ImportError:
+    _HAS_CARB = False
+
+
+def _log(msg: str) -> None:
+    print(f"[space.demo.scene] {msg}", flush=True)
+    if _HAS_CARB:
+        carb.log_info(f"[space.demo.scene] {msg}")
+
+
+BACKEND_URL = os.environ.get("SPACE_DEMO_BACKEND_HTTP", "http://localhost:8001/state")
+POLL_HZ = 5.0
+
+ORBIT_RADIUS_UNITS = 69.21
+ORBIT_INCLINATION_RAD = math.radians(60.0)
+ORBIT_PERIOD_S = 90.0
+
+USD_ROOT_ENV = "SPACE_DEMO_USD_ROOT"
+SAT_ICON_PATH = "/World/SatelliteIcon"
+
+
+def _stage_paths() -> dict[str, str]:
+    base = os.environ.get(USD_ROOT_ENV, "C:/Workspace/SpaceDC/space-compute-demo/usd")
+    return {
+        "overview":  os.path.join(base, "overview.usda"),
+        "satellite": os.path.join(base, "satellite.usda"),
+    }
+
+
+def _orbit_xyz(sim_time_s: float) -> tuple[float, float, float]:
+    theta = 2.0 * math.pi * sim_time_s / ORBIT_PERIOD_S
+    cos_a = math.cos(ORBIT_INCLINATION_RAD)
+    sin_a = math.sin(ORBIT_INCLINATION_RAD)
+    return (
+        ORBIT_RADIUS_UNITS * math.cos(theta),
+        ORBIT_RADIUS_UNITS * math.sin(theta) * cos_a,
+        ORBIT_RADIUS_UNITS * math.sin(theta) * sin_a,
+    )
+
+
+def fetch_state() -> Optional[dict]:
+    try:
+        with urllib.request.urlopen(BACKEND_URL, timeout=0.5) as r:
+            return json.loads(r.read().decode("utf-8"))
+    except Exception:
+        return None
+
+
+def set_icon_position(stage, x: float, y: float, z: float) -> None:
+    prim = stage.GetPrimAtPath(SAT_ICON_PATH)
+    if not prim or not prim.IsValid():
+        return
+    xform = UsdGeom.Xformable(prim)
+    tr = None
+    for op in xform.GetOrderedXformOps():
+        if op.GetOpType() == UsdGeom.XformOp.TypeTranslate:
+            tr = op
+            break
+    if tr is None:
+        tr = xform.AddTranslateOp()
+    tr.Set(Gf.Vec3d(x, y, z))
+
+
+def swap_stage(path: str) -> bool:
+    try:
+        omni.usd.get_context().open_stage(path)
+        _log(f"opened stage {path}")
+        return True
+    except Exception as exc:  # noqa: BLE001
+        _log(f"failed to open {path}: {exc}")
+        return False
+
+
+if _HAS_KIT:
+    class SpaceDemoSceneExtension(omni.ext.IExt):  # type: ignore[misc]
+        def on_startup(self, ext_id: str) -> None:
+            _log(f"startup {ext_id} polling {BACKEND_URL}")
+            self._running = True
+            self._stages = _stage_paths()
+            self._current_stage: Optional[str] = self._stages.get("overview")
+            self._last_preset: Optional[str] = None
+            self._anchor_sim_s: Optional[float] = None
+            self._anchor_wall_s: float = time.monotonic()
+            self._backend_running: bool = True
+
+            self._poll_task: Optional[asyncio.Task] = asyncio.ensure_future(self._run_poll_loop())
+            app = omni.kit.app.get_app()
+            self._update_sub = app.get_update_event_stream().create_subscription_to_pop(
+                self._on_update, name="space.demo.scene.update"
+            )
+
+        def on_shutdown(self) -> None:
+            _log("shutdown")
+            self._running = False
+            if self._poll_task and not self._poll_task.done():
+                self._poll_task.cancel()
+            self._update_sub = None
+
+        async def _run_poll_loop(self) -> None:
+            app = omni.kit.app.get_app()
+            dt = 1.0 / POLL_HZ
+            for _ in range(30):
+                await app.next_update_async()
+            while self._running:
+                try:
+                    state = await asyncio.to_thread(fetch_state)
+                    if state is not None:
+                        self._on_poll(state)
+                except Exception as exc:  # noqa: BLE001
+                    _log(f"poll error: {exc}")
+                await asyncio.sleep(dt)
+
+        def _on_poll(self, state: dict) -> None:
+            backend_sim = float(state.get("sim_time_s", 0.0))
+            backend_running = bool(state.get("running", True))
+
+            local_sim = (
+                self._anchor_sim_s + (time.monotonic() - self._anchor_wall_s)
+                if self._anchor_sim_s is not None
+                else None
+            )
+            needs_resync = (
+                self._anchor_sim_s is None
+                or self._backend_running != backend_running
+                or (local_sim is not None and abs(backend_sim - local_sim) > 1.5)
+            )
+            if needs_resync:
+                self._anchor_sim_s = backend_sim
+                self._anchor_wall_s = time.monotonic()
+            self._backend_running = backend_running
+
+            preset = state.get("camera_preset", "overview")
+            if preset not in ("overview", "satellite"):
+                preset = "overview"
+            if preset != self._last_preset:
+                _log(f"preset -> {preset}")
+                self._last_preset = preset
+                target = self._stages.get(preset)
+                if target and target != self._current_stage:
+                    if swap_stage(target):
+                        self._current_stage = target
+
+        def _on_update(self, _event) -> None:
+            if self._current_stage != self._stages.get("overview"):
+                return
+            if self._anchor_sim_s is None:
+                return
+            ctx = omni.usd.get_context()
+            stage = ctx.get_stage()
+            if stage is None:
+                return
+            sim_now = self._anchor_sim_s + (
+                (time.monotonic() - self._anchor_wall_s) if self._backend_running else 0.0
+            )
+            x, y, z = _orbit_xyz(sim_now)
+            set_icon_position(stage, x, y, z)
+else:
+    class SpaceDemoSceneExtension:  # type: ignore[no-redef]
+        pass

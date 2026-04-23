@@ -1,0 +1,11 @@
+[package]
+title = "SpaceDC Selection"
+version = "0.1.0"
+description = "Object pick handling; forwards selection to backend + web."
+category = "Simulation"
+
+[dependencies]
+"omni.usd" = {}
+
+[[python.module]]
+name = "space.demo.selection"

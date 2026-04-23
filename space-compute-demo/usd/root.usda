@@ -1,0 +1,287 @@
+#usda 1.0
+(
+    defaultPrim = "World"
+    upAxis = "Z"
+    metersPerUnit = 100000
+    doc = "space-compute-demo / Phase 1 placeholder. 1 unit = 100 km. Earth day+night textures from NASA Blue Marble (public domain)."
+    subLayers = [
+        @./earth_mesh.usda@,
+        @./orbit_line.usda@
+    ]
+    customLayerData = {
+        dictionary cameraSettings = {
+            string boundCamera = "/World/Cameras/Overview"
+        }
+        dictionary renderSettings = {
+            int "rtx:post:tonemap:op" = 7
+            float "rtx:post:tonemap:cameraShutter" = 1.0
+        }
+    }
+)
+
+def Xform "World"
+{
+    # --------------------------------------------------------------------
+    # Environment: starfield backdrop + sun + dim ambient fill
+    # --------------------------------------------------------------------
+    def Xform "Environment"
+    {
+        def DistantLight "Sun"
+        {
+            float inputs:angle = 0.53
+            float inputs:intensity = 35.0
+            color3f inputs:color = (1.0, 0.97, 0.92)
+            bool inputs:enableColorTemperature = false
+            # Sun toward the +X -Y +Z octant so the Earth hemisphere facing the Overview camera is lit.
+            float3 xformOp:rotateXYZ = (30, 0, -135)
+            uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
+        }
+
+        def DomeLight "Sky"
+        {
+            color3f inputs:color = (0.05, 0.06, 0.09)
+            float inputs:intensity = 1.5
+            token inputs:texture:format = "latlong"
+        }
+
+        # Fill light from the opposite side so the satellite never goes pitch black during eclipse
+        def DistantLight "Fill"
+        {
+            float inputs:angle = 10.0
+            float inputs:intensity = 12.0
+            color3f inputs:color = (0.4, 0.55, 0.75)
+            float3 xformOp:rotateXYZ = (-20, 0, 45)
+            uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
+        }
+
+        # Second fill from below to reveal underside of satellite during eclipse pass
+        def DistantLight "FillUnder"
+        {
+            float inputs:angle = 15.0
+            float inputs:intensity = 5.0
+            color3f inputs:color = (0.3, 0.35, 0.5)
+            float3 xformOp:rotateXYZ = (30, 0, -30)
+            uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
+        }
+    }
+
+    # Earth mesh + material contributed by subLayer ./earth_mesh.usda at /World/Earth
+
+    # --------------------------------------------------------------------
+    # Satellite assembly (6 components)
+    # --------------------------------------------------------------------
+    def Xform "Satellite" (
+        prepend apiSchemas = ["PrimvarsAPI"]
+    )
+    {
+        double3 xformOp:translate = (69.21, 0, 0)
+        float3 xformOp:rotateXYZ = (0, 0, -90)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        uniform bool primvars:doNotCastShadows = 1
+
+        # --- Tiny emissive sphere used as the "satellite icon" in the Overview
+        # (far-away) view. Scene ext toggles its visibility vs. PayloadBay so
+        # far view sees a bright dot, close view sees real DGX geometry.
+        # Pure self-emission: does NOT illuminate Earth (only the surface glows).
+        def Sphere "SatelliteIcon" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            double radius = 1.6
+            uniform bool primvars:doNotCastShadows = 1
+            rel material:binding = </World/Satellite/SatelliteIcon/Mat>
+
+            def Material "Mat"
+            {
+                token outputs:surface.connect = </World/Satellite/SatelliteIcon/Mat/Shader.outputs:surface>
+                def Shader "Shader"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0, 0, 0)
+                    color3f inputs:emissiveColor = (0.3, 2.5, 3.0)
+                    float inputs:metallic = 0
+                    float inputs:roughness = 1
+                    int inputs:useSpecularWorkflow = 0
+                    token outputs:surface
+                }
+            }
+        }
+
+        # --- Payload bay: bare stack of 4 NVIDIA DGX A100 servers (close-up view only).
+        def Xform "PayloadBay"
+        {
+            double3 xformOp:translate = (0, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+
+            def "DGX_A100_01" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                float3 xformOp:scale = (0.018, 0.018, 0.018)
+                double3 xformOp:translate = (0.75, -0.3, -0.75)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+            }
+            def "DGX_A100_02" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                float3 xformOp:scale = (0.018, 0.018, 0.018)
+                double3 xformOp:translate = (0.75, -0.3, -0.25)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+            }
+            def "DGX_A100_03" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                float3 xformOp:scale = (0.018, 0.018, 0.018)
+                double3 xformOp:translate = (0.75, -0.3, 0.25)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+            }
+            def "DGX_A100_04" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                float3 xformOp:scale = (0.018, 0.018, 0.018)
+                double3 xformOp:translate = (0.75, -0.3, 0.75)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+            }
+        }
+
+        # --- Chase camera: child of Satellite so it orbits with the sat automatically
+        # and the user can drag to rotate it without Python overriding the pose.
+        # Matrix computed from look-at(eye=(0, 28, 10), target=(0, 0, 0), up=(0, 0, 1))
+        # in sat-local frame. After sat's own rotateZ=-90, this places the camera
+        # 30ish units "east" of the sat in world, looking at the DGX stack.
+        # ChaseCam positioned close to the DGX stack so a tight clip-far reliably
+        # culls Earth in the background. Matrix from look-at(eye=(0,12,4),
+        # target=(0,0,0.2), up=(0,0,1)) in sat-local frame.
+        def Camera "ChaseCam"
+        {
+            float focalLength = 35
+            float focusDistance = 12.6
+            float2 clippingRange = (0.3, 17)
+            matrix4d xformOp:transform = (
+                (-1,      0,           0,         0),
+                ( 0,     -0.3019,      0.9533,    0),
+                ( 0,      0.9533,      0.3019,    0),
+                ( 0,     12,           4,         1)
+            )
+            uniform token[] xformOpOrder = ["xformOp:transform"]
+        }
+    }
+
+    # --------------------------------------------------------------------
+    # Cameras
+    # --------------------------------------------------------------------
+    def Xform "Cameras"
+    {
+        def Camera "Overview"
+        {
+            float focalLength = 35
+            float focusDistance = 250
+            float2 clippingRange = (1, 5000)
+            double3 xformOp:translate = (180, -180, 120)
+            float3 xformOp:rotateXYZ = (-22, 0, 45)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+
+        def Camera "Satellite"
+        {
+            # FL 80 = narrow FOV (~8.6 deg half-angle) so Earth doesn't sneak into frame edges.
+            float focalLength = 80
+            float focusDistance = 25
+            float2 clippingRange = (0.1, 45)
+            matrix4d xformOp:transform = ( (1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (0, 0, 0, 1) )
+            uniform token[] xformOpOrder = ["xformOp:transform"]
+        }
+    }
+
+    # --------------------------------------------------------------------
+    # Materials — PBR via UsdPreviewSurface
+    # --------------------------------------------------------------------
+    def Scope "Materials"
+    {
+        def Material "BusMetal"
+        {
+            token outputs:surface.connect = </World/Materials/BusMetal/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.82, 0.78, 0.62)
+                float inputs:metallic = 0.75
+                float inputs:roughness = 0.35
+                token outputs:surface
+            }
+        }
+
+        def Material "ServerBlack"
+        {
+            token outputs:surface.connect = </World/Materials/ServerBlack/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.06, 0.06, 0.08)
+                float inputs:metallic = 0.5
+                float inputs:roughness = 0.5
+                token outputs:surface
+            }
+        }
+
+        def Material "GpuBlade"
+        {
+            token outputs:surface.connect = </World/Materials/GpuBlade/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.12, 0.12, 0.15)
+                color3f inputs:emissiveColor = (0.0, 0.7, 0.4)
+                float inputs:metallic = 0.6
+                float inputs:roughness = 0.3
+                token outputs:surface
+            }
+        }
+
+        def Material "SolarPanel"
+        {
+            token outputs:surface.connect = </World/Materials/SolarPanel/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.05, 0.08, 0.2)
+                float inputs:metallic = 0.4
+                float inputs:roughness = 0.5
+                token outputs:surface
+            }
+        }
+
+        def Material "Radiator"
+        {
+            token outputs:surface.connect = </World/Materials/Radiator/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.92, 0.92, 0.94)
+                float inputs:metallic = 0.2
+                float inputs:roughness = 0.55
+                token outputs:surface
+            }
+        }
+
+        def Material "Dish"
+        {
+            token outputs:surface.connect = </World/Materials/Dish/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.88, 0.86, 0.82)
+                float inputs:metallic = 0.6
+                float inputs:roughness = 0.4
+                token outputs:surface
+            }
+        }
+    }
+}

@@ -1,0 +1,12 @@
+[package]
+title = "SpaceDC Core"
+version = "0.1.0"
+description = "Bootstrap + scene loader + message bus registration."
+category = "Simulation"
+authors = ["SpaceDC"]
+
+[dependencies]
+"omni.usd" = {}
+
+[[python.module]]
+name = "space.demo.core"

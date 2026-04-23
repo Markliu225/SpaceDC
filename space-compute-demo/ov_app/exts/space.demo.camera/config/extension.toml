@@ -1,0 +1,12 @@
+[package]
+title = "SpaceDC Camera"
+version = "0.1.0"
+description = "Named camera presets: overview / satellite / task / compare."
+category = "Simulation"
+
+[dependencies]
+"omni.usd" = {}
+"omni.kit.viewport.utility" = {}
+
+[[python.module]]
+name = "space.demo.camera"

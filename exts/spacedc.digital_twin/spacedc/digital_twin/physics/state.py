@@ -1,3 +1,4 @@
+
 """
 ============================================================
   state.py — Simulation state, dynamic data models, trend buffer

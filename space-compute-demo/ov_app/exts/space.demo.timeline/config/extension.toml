@@ -1,0 +1,10 @@
+[package]
+title = "SpaceDC Timeline"
+version = "0.1.0"
+description = "Subscribes to state_update; advances sim clock for other extensions."
+category = "Simulation"
+
+[dependencies]
+
+[[python.module]]
+name = "space.demo.timeline"

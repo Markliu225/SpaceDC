@@ -1,0 +1,109 @@
+#usda 1.0
+(
+    defaultPrim = "World"
+    upAxis = "Z"
+    metersPerUnit = 100000
+    doc = "Overview stage: Earth + orbit line + moving cyan satellite icon. No detailed sat geometry."
+    subLayers = [
+        @./earth_mesh.usda@,
+        @./orbit_line.usda@
+    ]
+    customLayerData = {
+        dictionary cameraSettings = {
+            string boundCamera = "/World/Cameras/Overview"
+        }
+    }
+)
+
+def Xform "World"
+{
+    # --------------------------------------------------------------------
+    # Lights — Earth lit; satellite icon is self-emissive (no extra light on it).
+    # --------------------------------------------------------------------
+    def Xform "Environment"
+    {
+        # Strong sun pointing into the camera hemisphere (+X -Y +Z octant) so the
+        # Earth face toward the Overview camera is well-lit.
+        def DistantLight "Sun"
+        {
+            float inputs:angle = 0.53
+            float inputs:intensity = 3500.0
+            color3f inputs:color = (1.0, 0.97, 0.92)
+            float3 xformOp:rotateXYZ = (-30, 0, 45)
+            uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
+        }
+        def DistantLight "Fill"
+        {
+            float inputs:angle = 10.0
+            float inputs:intensity = 400.0
+            color3f inputs:color = (0.5, 0.65, 0.9)
+            float3 xformOp:rotateXYZ = (20, 0, -140)
+            uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
+        }
+        def DomeLight "Sky"
+        {
+            color3f inputs:color = (0.05, 0.07, 0.12)
+            float inputs:intensity = 60.0
+            token inputs:texture:format = "latlong"
+        }
+    }
+
+    # Earth + Orbit come from subLayers.
+
+    # --------------------------------------------------------------------
+    # Satellite as a bright cyan dot — position updated every frame by
+    # space.demo.scene from the unified orbit formula.
+    # --------------------------------------------------------------------
+    def Xform "SatelliteIcon" (
+        prepend apiSchemas = ["MaterialBindingAPI"]
+    )
+    {
+        double3 xformOp:translate = (69.21, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+        uniform bool primvars:doNotCastShadows = 1
+
+        def Sphere "Glow"
+        {
+            double radius = 2.2
+            rel material:binding = </World/SatelliteIcon/Glow/Mat>
+
+            def Material "Mat"
+            {
+                token outputs:surface.connect = </World/SatelliteIcon/Glow/Mat/Shader.outputs:surface>
+                def Shader "Shader"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0, 0, 0)
+                    color3f inputs:emissiveColor = (0.2, 2.5, 3.0)
+                    float inputs:metallic = 0
+                    float inputs:roughness = 1
+                    int inputs:useSpecularWorkflow = 0
+                    token outputs:surface
+                }
+            }
+        }
+    }
+
+    # --------------------------------------------------------------------
+    # Camera
+    # --------------------------------------------------------------------
+    def Xform "Cameras"
+    {
+        # Look-at: eye=(180, -180, 120), target=(0, 0, 0), up=(0, 0, 1).
+        # Row basis: right=(0.7071, 0.7071, 0); up'=(-0.3015, 0.3015, 0.9044);
+        # back (-forward)=(0.6396, -0.6396, 0.4264); translate=(180, -180, 120).
+        def Camera "Overview"
+        {
+            float focalLength = 35
+            float focusDistance = 283
+            float2 clippingRange = (1, 5000)
+            matrix4d xformOp:transform = (
+                ( 0.7071,  0.7071,  0,      0),
+                (-0.3015,  0.3015,  0.9044, 0),
+                ( 0.6396, -0.6396,  0.4264, 0),
+                ( 180,    -180,     120,    1)
+            )
+            uniform token[] xformOpOrder = ["xformOp:transform"]
+        }
+    }
+}

@@ -1,0 +1,11 @@
+[package]
+title = "SpaceDC Scene"
+version = "0.1.0"
+description = "Prim attribute writes, variant switches, visibility/color mapping."
+category = "Simulation"
+
+[dependencies]
+"omni.usd" = {}
+
+[[python.module]]
+name = "space.demo.scene"

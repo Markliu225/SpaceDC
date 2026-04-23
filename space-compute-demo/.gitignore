@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+.turbo/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+*.swp
+
+# Omniverse
+_build/
+_compiler/
+_repo/
+.vscode-test/
+
+# Assets (large binaries — keep in LFS or external store)
+assets_raw/**/*.step
+assets_raw/**/*.stp
+assets_raw/**/*.iges
+assets_raw/**/*.igs
+assets_raw/**/*.sldprt
+assets_raw/**/*.sldasm
+assets_raw/**/*.fbx
+assets_raw/**/*.glb
+assets_usd/**/*.usdz
+!assets_raw/README.md
+!assets_raw/MANIFEST.md
+
+# Logs
+*.log

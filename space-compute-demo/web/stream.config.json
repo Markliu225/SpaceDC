@@ -1,0 +1,21 @@
+{
+    "$comment": "AppStreamer config. source = 'local' | 'gfn' | 'stream'. 'local' = Kit running on this machine.",
+    "source": "local",
+    "local": {
+        "server": "127.0.0.1",
+        "signalingPort": 49100,
+        "mediaPort": null,
+        "width": 1280,
+        "height": 720,
+        "fps": 30
+    },
+    "stream": {
+        "appServer": "",
+        "streamServer": ""
+    },
+    "gfn": {
+        "catalogClientId": "",
+        "clientId": "",
+        "cmsId": 0
+    }
+}

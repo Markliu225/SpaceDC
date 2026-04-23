@@ -1,0 +1,63 @@
+# space.demo.viewer_streaming.kit
+#
+# Streaming layer over space.demo.viewer — enables WebRTC livestream.
+# Hand-authored (the `template new` flow was scripted with "No to layers"; we
+# add the streaming layer here manually, following default_stream.kit from the
+# USD Viewer template).
+
+[package]
+title = "Space Compute Demo Streaming"
+version = "0.1.0"
+description = "Streaming configuration for Space Compute Demo"
+keywords = ["experience", "app", "dev", "streaming"]
+template_name = "omni.streaming_configuration"
+
+[dependencies]
+"space.demo.viewer" = {}
+"omni.kit.livestream.app" = {}
+
+[settings.app]
+# fastShutdown=false so the Kit process survives browser disconnect/reload during dev.
+fastShutdown = false
+name = "Space Compute Demo Streaming"
+# 720p streaming = lower GPU + encoder load, smoother playback on dev laptops.
+renderer.resolution.height = 720
+renderer.resolution.width = 1280
+window.height = 720
+window.width = 1280
+quitOnCtrlC = false
+
+[settings.exts."omni.kit.livestream.app"]
+# Keep the app alive between client sessions.
+killOnClientDisconnect = false
+
+[settings.exts."omni.kit.livestream.webrtc"]
+# Allow frame resolution to change after client connects (prevents
+# "Software caused connection abort" when OS resizes the Kit window).
+dynamicResize = true
+
+[settings]
+rtx.post.aa.op = 3
+rtx.verifyDriverVersion.enabled = false
+
+[settings.app.extensions]
+registryEnabled = true
+supportedTargets.platform = []
+
+exclude = [
+    "omni.kit.developer.bundle",
+    "omni.kit.widget.cache_indicator",
+]
+
+[settings.app.exts]
+folders.'++' = [
+    "${app}/../exts",
+    "${app}/../apps",
+    "${app}/../extscache"
+]
+
+[settings.app.file]
+ignoreUnsavedOnExit = true
+
+[template]
+type = "ApplicationLayerTemplate"

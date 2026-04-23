@@ -1,0 +1,14 @@
+[omni_usd_viewer]
+application_name = "space.demo.viewer"
+application_display_name = "Space Compute Demo"
+version = "0.1.0"
+
+[omni_usd_viewer.extensions.omni_usd_viewer_messaging]
+extension_name = "space.demo.messaging"
+extension_display_name = "Space Demo Messaging"
+version = "0.1.0"
+
+[omni_usd_viewer.extensions.omni_usd_viewer_setup]
+extension_name = "space.demo.setup"
+extension_display_name = "Space Demo Setup"
+version = "0.1.0"
