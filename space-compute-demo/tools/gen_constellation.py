@@ -1,15 +1,15 @@
-"""Generate usd/constellation.usda — fancy Omniverse-side equivalent of the
-Three.js fallback Earth: 24 multi-colored orbit rings + 24 emissive satellites
-+ a Fresnel-style atmosphere shell.
+"""Generate usd/constellation.usda — minimal orbital-dynamics layer:
+24 THIN orbit lines + 24 small bright satellite points.
 
-Matches the web fallback's geometry:
+Design intent (per user feedback): no atmosphere shell, no fat ribbons,
+no bloom-washout. Orbit lines are subtle hairlines that just define the
+trajectory geometry; satellites are small but bright emissive points
+that read as moving dots against the earth.
+
   ring i:  inclination = 50 + (i % 4) * 8 deg   (50, 58, 66, 74)
            RAAN        = (i / 24) * 360 deg     (15 deg spacing)
            hue         = i % 6                  (magenta/cyan/amber/emerald/violet/rose)
-  sat i sits on ring i at phase = (i/24)*2*pi.
-
-Output is sublayered into usd/overview.usda alongside earth_mesh.usda.
-Units match the rest of the overview stage: metersPerUnit=100000, 1 unit=100km.
+  sat i sits on ring i at phase = (i / 24) * 2*pi.
 
 Run:
     backend/.venv/Scripts/python.exe tools/gen_constellation.py
@@ -21,17 +21,20 @@ from pathlib import Path
 
 OUT = Path(__file__).resolve().parent.parent / "usd" / "constellation.usda"
 
-EARTH_R_UNITS    = 63.71     # 6371 km
-ORBIT_R_UNITS    = 69.21     # 550 km altitude
-ATMO_R_UNITS     = 65.20     # ~150 km above surface — fits "scattering" thickness
+EARTH_R_UNITS    = 63.71
+ORBIT_R_UNITS    = 69.21
 RING_COUNT       = 24
-RING_VERTS       = 96         # smoothness of the orbit polyline
-SAT_RADIUS_UNITS = 0.85       # 85 km diameter ball; small but visible at overview FOV
-RING_WIDTH_UNITS = 0.30       # thickness for BasisCurves stroke
+RING_VERTS       = 96
 
-# 6-hue palette matching web/src/design/tokens.ts colors.ribbons.
-# Emissive value = base * EMIT_GAIN so Bloom (in Kit's RTX post stack) lights up.
-EMIT_GAIN = 2.8
+# Thin orbit line + small but bright sat point.
+RING_WIDTH_UNITS = 0.04        # 4 km — hairline at overview camera distance
+SAT_RADIUS_UNITS = 0.35        # 35 km diameter — small dot that still picks up bloom
+
+# Two-tier emissive: rings are subtle so they don't bloom-wash; sats are
+# pushed past 1.0 so they punch through and read as light points.
+RING_EMIT_GAIN   = 0.65
+SAT_EMIT_GAIN    = 3.5
+
 PALETTE_HEX = [
     "E879F9",   # magenta
     "22D3EE",   # cyan
@@ -51,20 +54,14 @@ def hex_to_rgb01(hexstr: str) -> tuple[float, float, float]:
 
 
 def ring_orient(i: int) -> tuple[float, float]:
-    """Return (inclination_rad, raan_rad) for ring `i`."""
     inc = math.radians(50.0 + (i % 4) * 8.0)
     raan = math.radians((i / RING_COUNT) * 360.0)
     return inc, raan
 
 
-def transform_point(
-    x: float, y: float, z: float, inc: float, raan: float,
-) -> tuple[float, float, float]:
-    """Apply ring's inclination (about X) then RAAN (about Z)."""
-    # Rotate about X by inclination
+def transform_point(x, y, z, inc, raan):
     cy, sy = math.cos(inc), math.sin(inc)
     x1, y1, z1 = x, y * cy - z * sy, y * sy + z * cy
-    # Rotate about Z by RAAN
     cz, sz = math.cos(raan), math.sin(raan)
     x2 = x1 * cz - y1 * sz
     y2 = x1 * sz + y1 * cz
@@ -72,20 +69,18 @@ def transform_point(
     return x2, y2, z2
 
 
-def orbit_points(i: int) -> list[tuple[float, float, float]]:
+def orbit_points(i):
     inc, raan = ring_orient(i)
-    pts: list[tuple[float, float, float]] = []
+    pts = []
     for k in range(RING_VERTS):
         theta = (k / (RING_VERTS - 1)) * 2.0 * math.pi
         x = math.cos(theta) * ORBIT_R_UNITS
         y = math.sin(theta) * ORBIT_R_UNITS
-        z = 0.0
-        pts.append(transform_point(x, y, z, inc, raan))
+        pts.append(transform_point(x, y, 0.0, inc, raan))
     return pts
 
 
-def sat_position(i: int) -> tuple[float, float, float]:
-    """Phase-locked sat position on its ring."""
+def sat_position(i):
     inc, raan = ring_orient(i)
     phase = (i / RING_COUNT) * 2.0 * math.pi
     x = math.cos(phase) * ORBIT_R_UNITS
@@ -93,10 +88,10 @@ def sat_position(i: int) -> tuple[float, float, float]:
     return transform_point(x, y, 0.0, inc, raan)
 
 
-def emit_orbit_curve(i: int, color: tuple[float, float, float]) -> str:
+def emit_ring(i, color):
     pts = orbit_points(i)
     pts_str = ", ".join(f"({p[0]:.4f}, {p[1]:.4f}, {p[2]:.4f})" for p in pts)
-    er, eg, eb = (color[0] * EMIT_GAIN, color[1] * EMIT_GAIN, color[2] * EMIT_GAIN)
+    er, eg, eb = (color[0] * RING_EMIT_GAIN, color[1] * RING_EMIT_GAIN, color[2] * RING_EMIT_GAIN)
     return f"""
         def BasisCurves "Ring_{i:02d}" (
             prepend apiSchemas = ["MaterialBindingAPI"]
@@ -117,7 +112,7 @@ def emit_orbit_curve(i: int, color: tuple[float, float, float]) -> str:
         }}"""
 
 
-def emit_sat(i: int, color: tuple[float, float, float]) -> str:
+def emit_sat(i):
     x, y, z = sat_position(i)
     return f"""
         def Sphere "Sat_{i:02d}" (
@@ -132,8 +127,8 @@ def emit_sat(i: int, color: tuple[float, float, float]) -> str:
         }}"""
 
 
-def emit_material(name: str, color: tuple[float, float, float]) -> str:
-    er, eg, eb = color[0] * EMIT_GAIN, color[1] * EMIT_GAIN, color[2] * EMIT_GAIN
+def emit_material(name, color, gain):
+    er, eg, eb = color[0] * gain, color[1] * gain, color[2] * gain
     path = f"/World/Constellation/Looks/{name}"
     return f"""
         def Material "{name}"
@@ -152,50 +147,16 @@ def emit_material(name: str, color: tuple[float, float, float]) -> str:
         }}"""
 
 
-def emit_atmo_material() -> str:
-    return """
-        def Material "AtmoMat"
-        {
-            token outputs:surface.connect = </World/Constellation/Looks/AtmoMat/Shader.outputs:surface>
-            def Shader "Shader"
-            {
-                uniform token info:id = "UsdPreviewSurface"
-                color3f inputs:diffuseColor = (0.0, 0.0, 0.0)
-                color3f inputs:emissiveColor = (0.20, 0.65, 1.20)
-                float inputs:opacity = 0.06
-                float inputs:metallic = 0.0
-                float inputs:roughness = 1.0
-                int inputs:useSpecularWorkflow = 0
-                token outputs:surface
-            }
-        }"""
-
-
-def emit_atmo_shell() -> str:
-    return f"""
-        def Sphere "AtmosphereShell" (
-            prepend apiSchemas = ["MaterialBindingAPI"]
-        )
-        {{
-            double radius = {ATMO_R_UNITS}
-            uniform bool primvars:doNotCastShadows = 1
-            rel material:binding = </World/Constellation/Looks/AtmoMat>
-        }}"""
-
-
-def main() -> None:
+def main():
     palette = [hex_to_rgb01(h) for h in PALETTE_HEX]
 
-    # Materials reused across rings + sats of the same hue (6 total + atmo).
     materials = []
     for hue in range(len(PALETTE_HEX)):
-        materials.append(emit_material(f"RingMat_{hue}", palette[hue]))
-        materials.append(emit_material(f"SatMat_{hue}", palette[hue]))
-    materials.append(emit_atmo_material())
+        materials.append(emit_material(f"RingMat_{hue}", palette[hue], RING_EMIT_GAIN))
+        materials.append(emit_material(f"SatMat_{hue}",  palette[hue], SAT_EMIT_GAIN))
 
-    # Curves + sats.
-    rings = [emit_orbit_curve(i, palette[i % len(PALETTE_HEX)]) for i in range(RING_COUNT)]
-    sats  = [emit_sat(i, palette[i % len(PALETTE_HEX)]) for i in range(RING_COUNT)]
+    rings = [emit_ring(i, palette[i % len(PALETTE_HEX)]) for i in range(RING_COUNT)]
+    sats  = [emit_sat(i) for i in range(RING_COUNT)]
 
     body = "\n".join(
         [
@@ -203,7 +164,7 @@ def main() -> None:
             "(",
             "    metersPerUnit = 100000",
             "    upAxis = \"Z\"",
-            "    doc = \"Constellation: 24 colored orbit rings + 24 emissive sats + atmosphere shell. Generated by tools/gen_constellation.py.\"",
+            "    doc = \"Constellation: 24 hairline orbit rings + 24 small bright sat points. Generated by tools/gen_constellation.py.\"",
             ")",
             "",
             "def Xform \"World\"",
@@ -214,7 +175,6 @@ def main() -> None:
             "        {",
             "".join(materials),
             "        }",
-            emit_atmo_shell(),
             "".join(rings),
             "",
             "".join(sats),
@@ -226,7 +186,7 @@ def main() -> None:
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(body, encoding="utf-8")
-    print(f"wrote {OUT} — {RING_COUNT} rings × {RING_VERTS} verts + {RING_COUNT} sats + 1 atmosphere shell + {2*len(PALETTE_HEX)} mats")
+    print(f"wrote {OUT} - {RING_COUNT} hairline rings + {RING_COUNT} sat points (no atmo shell)")
 
 
 if __name__ == "__main__":
