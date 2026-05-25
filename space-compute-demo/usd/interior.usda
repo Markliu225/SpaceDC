@@ -1,0 +1,1728 @@
+#usda 1.0
+(
+    defaultPrim = "World"
+    upAxis = "Z"
+    metersPerUnit = 0.01
+    doc = "Inside the satellite -- corridor with NVIDIA Datacenter racks/servers/switches/CDU on both sides of a central aisle. Equipment refs come from the Datacenter_NVD asset pack; only the corridor shell + AIR WALL fan grid are procedural."
+    customLayerData = { dictionary cameraSettings = { string boundCamera = "/World/Cameras/Aisle" } }
+)
+
+def Xform "World"
+{
+    def Scope "Looks"
+    {
+        def Material "PanelWhite"
+        {
+            token outputs:surface.connect = </World/Looks/PanelWhite/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.92, 0.93, 0.95)
+                float inputs:metallic = 0.1
+                float inputs:roughness = 0.35
+                token outputs:surface
+            }
+        }
+        def Material "FloorTile"
+        {
+            token outputs:surface.connect = </World/Looks/FloorTile/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.82, 0.83, 0.86)
+                float inputs:metallic = 0.1
+                float inputs:roughness = 0.4
+                token outputs:surface
+            }
+        }
+        def Material "FanRing"
+        {
+            token outputs:surface.connect = </World/Looks/FanRing/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.55, 0.57, 0.6)
+                float inputs:metallic = 0.65
+                float inputs:roughness = 0.35
+                token outputs:surface
+            }
+        }
+        def Material "FanBlade"
+        {
+            token outputs:surface.connect = </World/Looks/FanBlade/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.18, 0.2, 0.24)
+                float inputs:metallic = 0.3
+                float inputs:roughness = 0.55
+                token outputs:surface
+            }
+        }
+        def Material "FanHub"
+        {
+            token outputs:surface.connect = </World/Looks/FanHub/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.45, 0.47, 0.52)
+                float inputs:metallic = 0.75
+                float inputs:roughness = 0.3
+                token outputs:surface
+            }
+        }
+        def Material "Conduit"
+        {
+            token outputs:surface.connect = </World/Looks/Conduit/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.18, 0.42, 0.85)
+                float inputs:metallic = 0.1
+                float inputs:roughness = 0.45
+                token outputs:surface
+            }
+        }
+        def Material "EmitWhite"
+        {
+            token outputs:surface.connect = </World/Looks/EmitWhite/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (1.0, 0.97, 0.94)
+                color3f inputs:emissiveColor = (1.0, 0.97, 0.94)
+                float inputs:metallic = 0.0
+                float inputs:roughness = 0.6
+                token outputs:surface
+            }
+        }
+    }
+
+    def Xform "Shell"
+    {
+        def Cube "Floor" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/FloorTile>
+            double3 xformOp:translate = (0, -145, -2)
+            double3 xformOp:scale = (560, 580, 4)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+        def Cube "Ceiling" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/PanelWhite>
+            double3 xformOp:translate = (0, -145, 322)
+            double3 xformOp:scale = (560, 580, 4)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+        def Cube "WallLeft" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/PanelWhite>
+            double3 xformOp:translate = (-262, -145, 160)
+            double3 xformOp:scale = (4, 580, 320)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+        def Cube "WallRight" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/PanelWhite>
+            double3 xformOp:translate = (262, -145, 160)
+            double3 xformOp:scale = (4, 580, 320)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+    }
+
+    def Xform "Racks"
+    {
+        def "Rack_L1" (
+            prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Racks/Rack_42U_A/Rack_42U_A_01.usd@
+        )
+        {
+            double3 xformOp:translate = (-110, -340, 0)
+            float3 xformOp:rotateXYZ = (0, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+            def "PDU_L1" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Power_Distribution/Controllers/PDU_A/rPDU_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -340, 8.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_a_L1" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -340, 18.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv1U_a_L1" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_1U_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -340, 48.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_b_L1" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -340, 53.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv2UB_L1" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_2U_B_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -340, 83.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_c_L1" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -340, 93.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv1U_b_L1" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_1U_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -340, 123.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "SwSN_L1" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Network_Switches/NVIDIA/SN4600/SN4600C-CS2FC_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -340, 128.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+        def "Rack_L2" (
+            prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Racks/Rack_42U_A/Rack_42U_A_01.usd@
+        )
+        {
+            double3 xformOp:translate = (-110, -270, 0)
+            float3 xformOp:rotateXYZ = (0, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+            def "PDU_L2" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Power_Distribution/Controllers/PDU_A/rPDU_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -270, 8.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_a_L2" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -270, 18.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv1U_a_L2" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_1U_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -270, 48.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_b_L2" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -270, 53.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv2UB_L2" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_2U_B_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -270, 83.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_c_L2" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -270, 93.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv1U_b_L2" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_1U_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -270, 123.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "SwSN_L2" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Network_Switches/NVIDIA/SN4600/SN4600C-CS2FC_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -270, 128.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+        def "Rack_L3" (
+            prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Racks/Rack_42U_A/Rack_42U_A_01.usd@
+        )
+        {
+            double3 xformOp:translate = (-110, -200, 0)
+            float3 xformOp:rotateXYZ = (0, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+            def "PDU_L3" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Power_Distribution/Controllers/PDU_A/rPDU_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -200, 8.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_a_L3" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -200, 18.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv1U_a_L3" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_1U_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -200, 48.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_b_L3" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -200, 53.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv2UB_L3" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_2U_B_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -200, 83.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_c_L3" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -200, 93.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv1U_b_L3" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_1U_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -200, 123.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "SwSN_L3" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Network_Switches/NVIDIA/SN4600/SN4600C-CS2FC_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -200, 128.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+        def "Rack_L4" (
+            prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Racks/Rack_42U_A/Rack_42U_A_01.usd@
+        )
+        {
+            double3 xformOp:translate = (-110, -130, 0)
+            float3 xformOp:rotateXYZ = (0, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+            def "PDU_L4" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Power_Distribution/Controllers/PDU_A/rPDU_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -130, 8.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_a_L4" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -130, 18.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv1U_a_L4" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_1U_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -130, 48.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_b_L4" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -130, 53.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv2UB_L4" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_2U_B_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -130, 83.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_c_L4" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -130, 93.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv1U_b_L4" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_1U_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -130, 123.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "SwSN_L4" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Network_Switches/NVIDIA/SN4600/SN4600C-CS2FC_01.usd@
+            )
+            {
+                double3 xformOp:translate = (-115, -130, 128.0)
+                float3 xformOp:rotateXYZ = (0, 0, 0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+        def "Rack_R1" (
+            prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Racks/Rack_42U_A/Rack_42U_A_01.usd@
+        )
+        {
+            double3 xformOp:translate = (110, -340, 0)
+            float3 xformOp:rotateXYZ = (0, 0, 180)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+            def "PDU_R1" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Power_Distribution/Controllers/PDU_A/rPDU_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -340, 8.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_a_R1" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -340, 18.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv1U_a_R1" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_1U_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -340, 48.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_b_R1" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -340, 53.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv2UB_R1" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_2U_B_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -340, 83.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_c_R1" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -340, 93.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv1U_b_R1" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_1U_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -340, 123.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "SwSN_R1" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Network_Switches/NVIDIA/SN4600/SN4600C-CS2FC_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -340, 128.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+        def "Rack_R2" (
+            prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Racks/Rack_42U_A/Rack_42U_A_01.usd@
+        )
+        {
+            double3 xformOp:translate = (110, -270, 0)
+            float3 xformOp:rotateXYZ = (0, 0, 180)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+            def "PDU_R2" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Power_Distribution/Controllers/PDU_A/rPDU_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -270, 8.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_a_R2" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -270, 18.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv1U_a_R2" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_1U_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -270, 48.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_b_R2" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -270, 53.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv2UB_R2" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_2U_B_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -270, 83.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_c_R2" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -270, 93.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv1U_b_R2" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_1U_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -270, 123.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "SwSN_R2" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Network_Switches/NVIDIA/SN4600/SN4600C-CS2FC_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -270, 128.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+        def "Rack_R3" (
+            prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Racks/Rack_42U_A/Rack_42U_A_01.usd@
+        )
+        {
+            double3 xformOp:translate = (110, -200, 0)
+            float3 xformOp:rotateXYZ = (0, 0, 180)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+            def "PDU_R3" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Power_Distribution/Controllers/PDU_A/rPDU_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -200, 8.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_a_R3" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -200, 18.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv1U_a_R3" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_1U_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -200, 48.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_b_R3" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -200, 53.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv2UB_R3" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_2U_B_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -200, 83.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_c_R3" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -200, 93.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv1U_b_R3" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_1U_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -200, 123.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "SwSN_R3" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Network_Switches/NVIDIA/SN4600/SN4600C-CS2FC_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -200, 128.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+        def "Rack_R4" (
+            prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Racks/Rack_42U_A/Rack_42U_A_01.usd@
+        )
+        {
+            double3 xformOp:translate = (110, -130, 0)
+            float3 xformOp:rotateXYZ = (0, 0, 180)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+            def "PDU_R4" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Power_Distribution/Controllers/PDU_A/rPDU_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -130, 8.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_a_R4" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -130, 18.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv1U_a_R4" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_1U_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -130, 48.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_b_R4" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -130, 53.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv2UB_R4" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_2U_B_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -130, 83.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "DGX_c_R4" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -130, 93.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "Srv1U_b_R4" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/Servers/Server_1U_A_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -130, 123.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+            def "SwSN_R4" (
+                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Network_Switches/NVIDIA/SN4600/SN4600C-CS2FC_01.usd@
+            )
+            {
+                double3 xformOp:translate = (115, -130, 128.0)
+                float3 xformOp:rotateXYZ = (0, 0, 180)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            }
+    }
+
+    def "DCP" (
+        prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Liquid_Cooling/Data_Hall/DCP_A/DCP_A_01.usd@
+    )
+    {
+        double3 xformOp:translate = (130, 70, 0)
+        float3 xformOp:rotateXYZ = (0, 0, 180)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+    }
+
+    def Xform "AirWall"
+    {
+        def Cube "Backplate" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/PanelWhite>
+            double3 xformOp:translate = (-130, 105, 160)
+            double3 xformOp:scale = (220, 8, 320)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+        def Cylinder "Ring_00" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 18
+            double height = 6
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanRing>
+            double3 xformOp:translate = (-200, 100, 55)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Blade_00" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 16
+            double height = 3
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-200, 98, 55)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Hub_00" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 4
+            double height = 4
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanHub>
+            double3 xformOp:translate = (-200, 96, 55)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Ring_01" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 18
+            double height = 6
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanRing>
+            double3 xformOp:translate = (-160, 100, 55)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Blade_01" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 16
+            double height = 3
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-160, 98, 55)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Hub_01" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 4
+            double height = 4
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanHub>
+            double3 xformOp:translate = (-160, 96, 55)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Ring_02" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 18
+            double height = 6
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanRing>
+            double3 xformOp:translate = (-120, 100, 55)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Blade_02" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 16
+            double height = 3
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-120, 98, 55)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Hub_02" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 4
+            double height = 4
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanHub>
+            double3 xformOp:translate = (-120, 96, 55)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Ring_03" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 18
+            double height = 6
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanRing>
+            double3 xformOp:translate = (-80, 100, 55)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Blade_03" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 16
+            double height = 3
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-80, 98, 55)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Hub_03" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 4
+            double height = 4
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanHub>
+            double3 xformOp:translate = (-80, 96, 55)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Ring_10" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 18
+            double height = 6
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanRing>
+            double3 xformOp:translate = (-200, 100, 130)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Blade_10" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 16
+            double height = 3
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-200, 98, 130)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Hub_10" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 4
+            double height = 4
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanHub>
+            double3 xformOp:translate = (-200, 96, 130)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Ring_11" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 18
+            double height = 6
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanRing>
+            double3 xformOp:translate = (-160, 100, 130)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Blade_11" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 16
+            double height = 3
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-160, 98, 130)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Hub_11" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 4
+            double height = 4
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanHub>
+            double3 xformOp:translate = (-160, 96, 130)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Ring_12" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 18
+            double height = 6
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanRing>
+            double3 xformOp:translate = (-120, 100, 130)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Blade_12" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 16
+            double height = 3
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-120, 98, 130)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Hub_12" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 4
+            double height = 4
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanHub>
+            double3 xformOp:translate = (-120, 96, 130)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Ring_13" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 18
+            double height = 6
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanRing>
+            double3 xformOp:translate = (-80, 100, 130)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Blade_13" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 16
+            double height = 3
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-80, 98, 130)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Hub_13" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 4
+            double height = 4
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanHub>
+            double3 xformOp:translate = (-80, 96, 130)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Ring_20" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 18
+            double height = 6
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanRing>
+            double3 xformOp:translate = (-200, 100, 205)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Blade_20" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 16
+            double height = 3
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-200, 98, 205)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Hub_20" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 4
+            double height = 4
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanHub>
+            double3 xformOp:translate = (-200, 96, 205)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Ring_21" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 18
+            double height = 6
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanRing>
+            double3 xformOp:translate = (-160, 100, 205)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Blade_21" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 16
+            double height = 3
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-160, 98, 205)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Hub_21" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 4
+            double height = 4
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanHub>
+            double3 xformOp:translate = (-160, 96, 205)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Ring_22" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 18
+            double height = 6
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanRing>
+            double3 xformOp:translate = (-120, 100, 205)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Blade_22" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 16
+            double height = 3
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-120, 98, 205)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Hub_22" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 4
+            double height = 4
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanHub>
+            double3 xformOp:translate = (-120, 96, 205)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Ring_23" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 18
+            double height = 6
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanRing>
+            double3 xformOp:translate = (-80, 100, 205)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Blade_23" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 16
+            double height = 3
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-80, 98, 205)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Hub_23" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 4
+            double height = 4
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanHub>
+            double3 xformOp:translate = (-80, 96, 205)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Ring_30" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 18
+            double height = 6
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanRing>
+            double3 xformOp:translate = (-200, 100, 275)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Blade_30" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 16
+            double height = 3
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-200, 98, 275)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Hub_30" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 4
+            double height = 4
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanHub>
+            double3 xformOp:translate = (-200, 96, 275)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Ring_31" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 18
+            double height = 6
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanRing>
+            double3 xformOp:translate = (-160, 100, 275)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Blade_31" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 16
+            double height = 3
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-160, 98, 275)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Hub_31" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 4
+            double height = 4
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanHub>
+            double3 xformOp:translate = (-160, 96, 275)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Ring_32" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 18
+            double height = 6
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanRing>
+            double3 xformOp:translate = (-120, 100, 275)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Blade_32" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 16
+            double height = 3
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-120, 98, 275)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Hub_32" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 4
+            double height = 4
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanHub>
+            double3 xformOp:translate = (-120, 96, 275)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Ring_33" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 18
+            double height = 6
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanRing>
+            double3 xformOp:translate = (-80, 100, 275)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Blade_33" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 16
+            double height = 3
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-80, 98, 275)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def Cylinder "Hub_33" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double radius = 4
+            double height = 4
+            uniform token axis = "Y"
+            rel material:binding = </World/Looks/FanHub>
+            double3 xformOp:translate = (-80, 96, 275)
+            float3 xformOp:rotateXYZ = (0, 0, 0.0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+    }
+
+    def Xform "CableTrays"
+    {
+        def "Tray_1_1" (
+            prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Facilities/Cable_Tray/Cable_Tray_61x299x5cm_A01_01.usd@
+        )
+        {
+            double3 xformOp:translate = (-160, -410, 305)
+            float3 xformOp:rotateXYZ = (0, 0, 90)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def "Tray_1_2" (
+            prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Facilities/Cable_Tray/Cable_Tray_61x299x5cm_A01_01.usd@
+        )
+        {
+            double3 xformOp:translate = (-160, -110, 305)
+            float3 xformOp:rotateXYZ = (0, 0, 90)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def "Tray_2_1" (
+            prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Facilities/Cable_Tray/Cable_Tray_61x299x5cm_A01_01.usd@
+        )
+        {
+            double3 xformOp:translate = (160, -410, 305)
+            float3 xformOp:rotateXYZ = (0, 0, 90)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def "Tray_2_2" (
+            prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Facilities/Cable_Tray/Cable_Tray_61x299x5cm_A01_01.usd@
+        )
+        {
+            double3 xformOp:translate = (160, -110, 305)
+            float3 xformOp:rotateXYZ = (0, 0, 90)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+    }
+
+    def Xform "Lighting"
+    {
+        def RectLight "Panel_1"
+        {
+            float inputs:width = 100
+            float inputs:height = 70
+            float inputs:intensity = 90000
+            color3f inputs:color = (1.0, 0.97, 0.94)
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (0, -380, 318)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def Cube "Lens_1" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/EmitWhite>
+            double3 xformOp:translate = (0, -380, 320)
+            double3 xformOp:scale = (110, 80, 4)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+        def RectLight "Panel_2"
+        {
+            float inputs:width = 100
+            float inputs:height = 70
+            float inputs:intensity = 90000
+            color3f inputs:color = (1.0, 0.97, 0.94)
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (0, -310, 318)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def Cube "Lens_2" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/EmitWhite>
+            double3 xformOp:translate = (0, -310, 320)
+            double3 xformOp:scale = (110, 80, 4)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+        def RectLight "Panel_3"
+        {
+            float inputs:width = 100
+            float inputs:height = 70
+            float inputs:intensity = 90000
+            color3f inputs:color = (1.0, 0.97, 0.94)
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (0, -240, 318)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def Cube "Lens_3" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/EmitWhite>
+            double3 xformOp:translate = (0, -240, 320)
+            double3 xformOp:scale = (110, 80, 4)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+        def RectLight "Panel_4"
+        {
+            float inputs:width = 100
+            float inputs:height = 70
+            float inputs:intensity = 90000
+            color3f inputs:color = (1.0, 0.97, 0.94)
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (0, -170, 318)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def Cube "Lens_4" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/EmitWhite>
+            double3 xformOp:translate = (0, -170, 320)
+            double3 xformOp:scale = (110, 80, 4)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+        def RectLight "Panel_5"
+        {
+            float inputs:width = 100
+            float inputs:height = 70
+            float inputs:intensity = 90000
+            color3f inputs:color = (1.0, 0.97, 0.94)
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (0, -100, 318)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def Cube "Lens_5" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/EmitWhite>
+            double3 xformOp:translate = (0, -100, 320)
+            double3 xformOp:scale = (110, 80, 4)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+        def RectLight "Panel_6"
+        {
+            float inputs:width = 100
+            float inputs:height = 70
+            float inputs:intensity = 90000
+            color3f inputs:color = (1.0, 0.97, 0.94)
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (0, -30, 318)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def Cube "Lens_6" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/EmitWhite>
+            double3 xformOp:translate = (0, -30, 320)
+            double3 xformOp:scale = (110, 80, 4)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+        def RectLight "Panel_7"
+        {
+            float inputs:width = 100
+            float inputs:height = 70
+            float inputs:intensity = 90000
+            color3f inputs:color = (1.0, 0.97, 0.94)
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (0, 50, 318)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def Cube "Lens_7" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/EmitWhite>
+            double3 xformOp:translate = (0, 50, 320)
+            double3 xformOp:scale = (110, 80, 4)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+        def SphereLight "Strip_1"
+        {
+            float inputs:radius = 8.0
+            float inputs:intensity = 1800000
+            color3f inputs:color = (1.0, 0.97, 0.94)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (0, -360, 290)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Strip_2"
+        {
+            float inputs:radius = 8.0
+            float inputs:intensity = 1800000
+            color3f inputs:color = (1.0, 0.97, 0.94)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (0, -260, 290)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Strip_3"
+        {
+            float inputs:radius = 8.0
+            float inputs:intensity = 1800000
+            color3f inputs:color = (1.0, 0.97, 0.94)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (0, -160, 290)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Strip_4"
+        {
+            float inputs:radius = 8.0
+            float inputs:intensity = 1800000
+            color3f inputs:color = (1.0, 0.97, 0.94)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (0, -60, 290)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Strip_5"
+        {
+            float inputs:radius = 8.0
+            float inputs:intensity = 1800000
+            color3f inputs:color = (1.0, 0.97, 0.94)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (0, 30, 290)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_L1_1"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (-50, -340, 60)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_L1_2"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (-50, -340, 160)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_L1_3"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (-50, -340, 260)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_L2_1"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (-50, -270, 60)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_L2_2"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (-50, -270, 160)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_L2_3"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (-50, -270, 260)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_L3_1"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (-50, -200, 60)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_L3_2"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (-50, -200, 160)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_L3_3"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (-50, -200, 260)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_L4_1"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (-50, -130, 60)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_L4_2"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (-50, -130, 160)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_L4_3"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (-50, -130, 260)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_R1_1"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (50, -340, 60)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_R1_2"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (50, -340, 160)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_R1_3"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (50, -340, 260)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_R2_1"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (50, -270, 60)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_R2_2"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (50, -270, 160)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_R2_3"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (50, -270, 260)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_R3_1"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (50, -200, 60)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_R3_2"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (50, -200, 160)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_R3_3"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (50, -200, 260)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_R4_1"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (50, -130, 60)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_R4_2"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (50, -130, 160)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "Fill_R4_3"
+        {
+            float inputs:radius = 4.0
+            float inputs:intensity = 600000
+            color3f inputs:color = (0.95, 0.97, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (50, -130, 260)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def DomeLight "Ambient"
+        {
+            color3f inputs:color = (0.92, 0.95, 1.0)
+            float inputs:intensity = 1500
+            token inputs:texture:format = "latlong"
+        }
+    }
+
+    def Xform "Cameras"
+    {
+        def Camera "Aisle"
+        {
+            float focalLength = 16
+            float focusDistance = 500
+            float2 clippingRange = (1, 4000)
+            double3 xformOp:translate = (0, -410, 165)
+            float3 xformOp:rotateXYZ = (90, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+    }
+}

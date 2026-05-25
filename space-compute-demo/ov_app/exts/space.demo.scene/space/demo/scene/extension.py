@@ -59,6 +59,7 @@ def _stage_paths() -> dict[str, str]:
     return {
         "overview":  os.path.join(base, "overview.usda"),
         "satellite": os.path.join(base, "satellite.usda"),
+        "interior":  os.path.join(base, "interior.usda"),
     }
 
 
@@ -96,14 +97,47 @@ def set_icon_position(stage, x: float, y: float, z: float) -> None:
     tr.Set(Gf.Vec3d(x, y, z))
 
 
-def swap_stage(path: str) -> bool:
+STAGE_CAMERAS = {
+    "overview":  "/World/Cameras/Overview",
+    "satellite": "/World/Cameras/Closeup",
+    "interior":  "/World/Cameras/Aisle",
+}
+
+
+def _bind_active_camera(cam_path: str) -> None:
+    """Force the viewport to use cam_path. Kit doesn't always honor
+    customLayerData.cameraSettings.boundCamera on stage re-open."""
+    try:
+        from omni.kit.viewport.utility import get_active_viewport_window  # type: ignore
+        win = get_active_viewport_window()
+        if win is not None and hasattr(win, "viewport_api"):
+            vp_api = win.viewport_api
+            if getattr(vp_api, "camera_path", None) != cam_path:
+                vp_api.camera_path = cam_path
+                _log(f"bound viewport camera -> {cam_path}")
+    except Exception as exc:  # noqa: BLE001
+        _log(f"camera bind error ({cam_path}): {exc}")
+
+
+def swap_stage(path: str, preset: str | None = None) -> bool:
     try:
         omni.usd.get_context().open_stage(path)
         _log(f"opened stage {path}")
+        if preset and preset in STAGE_CAMERAS:
+            # Defer the camera bind a few frames so the new stage is fully live
+            asyncio.ensure_future(_deferred_bind(STAGE_CAMERAS[preset]))
         return True
     except Exception as exc:  # noqa: BLE001
         _log(f"failed to open {path}: {exc}")
         return False
+
+
+async def _deferred_bind(cam_path: str) -> None:
+    app = omni.kit.app.get_app()
+    for tick in range(30):
+        await app.next_update_async()
+        if tick in (3, 10, 20):
+            _bind_active_camera(cam_path)
 
 
 if _HAS_KIT:
@@ -165,14 +199,14 @@ if _HAS_KIT:
             self._backend_running = backend_running
 
             preset = state.get("camera_preset", "overview")
-            if preset not in ("overview", "satellite"):
+            if preset not in ("overview", "satellite", "interior"):
                 preset = "overview"
             if preset != self._last_preset:
                 _log(f"preset -> {preset}")
                 self._last_preset = preset
                 target = self._stages.get(preset)
                 if target and target != self._current_stage:
-                    if swap_stage(target):
+                    if swap_stage(target, preset):
                         self._current_stage = target
 
         def _on_update(self, _event) -> None:

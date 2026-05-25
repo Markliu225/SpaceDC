@@ -3,7 +3,10 @@
     defaultPrim = "World"
     upAxis = "Z"
     metersPerUnit = 0.01
-    doc = "Satellite close-up: LUMID cubesat reference model (hollowed by tools/cut_lumid_hatch.py) with the DGX rack mounted directly inside the LUMID bus — no procedural liner, DGX lives in LUMID's own interior cavity."
+    doc = "Satellite close-up — lights + materials. The Satellite assembly (6 procedural bay panels with detail, LUMID solar panels, DGX rack) and the camera are generated into usd/components.usda by tools/apply_assembly.py (reads tools/assembly_config.json, drivable via tools/gui_assemble.py)."
+    subLayers = [
+        @./components.usda@
+    ]
     customLayerData = {
         dictionary cameraSettings = {
             string boundCamera = "/World/Cameras/Closeup"
@@ -13,52 +16,87 @@
 
 def Xform "World"
 {
-    # --------------------------------------------------------------------
-    # Lights — strong to counter the matte-dark interior of the bay and keep
-    # the bright gold exterior from washing out into shadow.
-    # --------------------------------------------------------------------
     def Xform "Environment"
     {
+        # Direct sun — softer than before so PBR specular reads instead of
+        # blowing out the diffuse channel.
         def DistantLight "Key"
         {
             float inputs:angle = 0.53
-            float inputs:intensity = 18000
-            color3f inputs:color = (1.0, 0.95, 0.85)
+            float inputs:intensity = 2800
+            color3f inputs:color = (1.0, 0.96, 0.88)
             float3 xformOp:rotateXYZ = (-35, 0, 40)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
+        # Earth albedo — reflected earthshine from below.
         def DistantLight "EarthBounce"
         {
-            float inputs:angle = 35.0
-            float inputs:intensity = 5500
-            color3f inputs:color = (0.3, 0.45, 0.75)
+            float inputs:angle = 45.0
+            float inputs:intensity = 700
+            color3f inputs:color = (0.30, 0.48, 0.78)
             float3 xformOp:rotateXYZ = (70, 0, 150)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
+        # Sharp rim from the opposite side — gives the solar panels a glassy
+        # specular highlight against deep space.
         def DistantLight "Rim"
         {
-            float inputs:angle = 3.0
-            float inputs:intensity = 4000
-            color3f inputs:color = (0.7, 0.8, 1.0)
+            float inputs:angle = 1.5
+            float inputs:intensity = 900
+            color3f inputs:color = (0.55, 0.7, 0.95)
             float3 xformOp:rotateXYZ = (15, 0, -120)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
-        # Deep-space background — very dark so only the spacecraft reads,
-        # but not pure black so matte surfaces pick up faint ambient.
+        # Deep space — near-black ambient.
         def DomeLight "Space"
         {
-            color3f inputs:color = (0.015, 0.018, 0.028)
-            float inputs:intensity = 80.0
+            color3f inputs:color = (0.012, 0.016, 0.028)
+            float inputs:intensity = 25.0
             token inputs:texture:format = "latlong"
+        }
+
+        # --- Bay interior lights ---
+        # Aimed at the DGX rack INSIDE the bay so you can see it through the
+        # open front panel.  Invisible geometry; treatAsPoint keeps highlights sharp.
+        # Bay cavity is ~40x30x36 cm centered on origin; DGX rack near world origin.
+        def SphereLight "BayLightFront"
+        {
+            float inputs:radius = 0.3
+            float inputs:intensity = 5000.0
+            color3f inputs:color = (1.0, 0.97, 0.92)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (0, -12, 8)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "BayLightTop"
+        {
+            float inputs:radius = 0.3
+            float inputs:intensity = 3500.0
+            color3f inputs:color = (0.92, 0.96, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (0, 0, 14)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+        def SphereLight "BayLightSide"
+        {
+            float inputs:radius = 0.3
+            float inputs:intensity = 2500.0
+            color3f inputs:color = (0.85, 0.9, 1.0)
+            bool inputs:treatAsPoint = 1
+            bool primvars:doNotCastShadows = 1
+            token visibility = "invisible"
+            double3 xformOp:translate = (-12, 3, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
         }
     }
 
-    # --------------------------------------------------------------------
-    # Materials — solid gold MLI for the LUMID shell. No opacity tricks:
-    # the shell is physically cut, so we rely on the real hatch opening.
-    # --------------------------------------------------------------------
     def Scope "Looks"
     {
+        # Main gold MLI blanket — used for panel main plates + solar panels.
         def Material "LumidShell"
         {
             token outputs:surface.connect = </World/Looks/LumidShell/Shader.outputs:surface>
@@ -72,132 +110,103 @@ def Xform "World"
                 token outputs:surface
             }
         }
-    }
-
-    # --------------------------------------------------------------------
-    # Satellite = LUMID (hollowed via face-cut) + DGX rack inside its bay.
-    # --------------------------------------------------------------------
-    def Xform "Satellite"
-    {
-        # --- LUMID shell with a real cut-out hatch ---
-        # Cut slab (LUMID native mm) from tools/cut_lumid_hatch.py:
-        #   X:[-70, 295], Y:[60, 320], Z:[-45, 275]
-        # This removes the -Y front panel plus all internal assemblies that
-        # used to fill the bus; outer side/back/top/bottom walls + solar
-        # panels stay intact.
-        # After scale 0.1 (mm→cm) + translate the shell is centered around
-        # the world origin so DGX placement is easy to reason about.
-        # Bus interior cavity in WORLD cm:
-        #   X:[-18.3, 18.2]  Y:[-11.0, 15.0]  Z:[-15.9, 16.1]
-        #   center (0, 2, 0)   size 36.5 × 26 × 32 cm
-        def Xform "LumidShell" (
-            prepend apiSchemas = ["MaterialBindingAPI"]
-            prepend references = @./assets/LUMID_hollowed.usdc@
-        )
+        # Darker bronze seam stripe between MLI tiles.
+        def Material "LumidShellSeam"
         {
-            rel material:binding = </World/Looks/LumidShell>
-            double3 xformOp:translate = (-11.3, -17.0, -11.4)
-            double3 xformOp:scale = (0.1, 0.1, 0.1)
-            uniform token[] xformOpOrder = ["xformOp:scale", "xformOp:translate"]
-        }
-
-        # --- DGX A100 rack (4 units stacked inside the LUMID bus) ---
-        # Native DGX bbox: X:[-87, 5]  Y:[0, 48]  Z:[0, 26.56].
-        # Raw 4-stack: stacked along Z with 28-cm pitch, so raw bbox is
-        #   X:[-87, 5]  Y:[0, 48]  Z:[0, 110.56]
-        # Scale 0.22 → stack ≈ 20 × 11 × 24 cm.
-        # Cavity is 36.5 × 26 × 32 cm centered at (0, 2, 0) — stack has
-        # 8 cm horizontal clearance on each side, 8 cm vertical clearance,
-        # and sits 7 cm behind the front opening so it never clips the shell.
-        #
-        # Placement derivation (xformOrder = translate, scale):
-        #   world = native * scale + translate
-        # Stack raw center = (-41, 24, 55.3) at scale 0.22 = (-9.02, 5.28, 12.17)
-        # Target world position of stack center: (0, 6, 0)
-        #   translate = target - scaled_center = (9.02, 0.72, -12.17)
-        def Xform "PayloadBay"
-        {
-            double3 xformOp:translate = (9.02, 0.72, -12.17)
-            double3 xformOp:scale = (0.22, 0.22, 0.22)
-            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
-
-            def "DGX_01" (
-                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
-            )
+            token outputs:surface.connect = </World/Looks/LumidShellSeam/Shader.outputs:surface>
+            def Shader "Shader"
             {
-                double3 xformOp:translate = (0, 0, 0)
-                uniform token[] xformOpOrder = ["xformOp:translate"]
-            }
-            def "DGX_02" (
-                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
-            )
-            {
-                double3 xformOp:translate = (0, 0, 28)
-                uniform token[] xformOpOrder = ["xformOp:translate"]
-            }
-            def "DGX_03" (
-                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
-            )
-            {
-                double3 xformOp:translate = (0, 0, 56)
-                uniform token[] xformOpOrder = ["xformOp:translate"]
-            }
-            def "DGX_04" (
-                prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
-            )
-            {
-                double3 xformOp:translate = (0, 0, 84)
-                uniform token[] xformOpOrder = ["xformOp:translate"]
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.38, 0.26, 0.08)
+                float inputs:metallic = 0.7
+                float inputs:roughness = 0.65
+                int inputs:useSpecularWorkflow = 0
+                token outputs:surface
             }
         }
-
-        # --- Invisible bay spotlights (so the DGX inside read clearly even
-        # when the outer key-light is angled away). Positioned just outside
-        # the hatch opening, aimed at the rack. ---
-        def SphereLight "BayLightFront"
+        # Brighter polished gold — used for corner rivets + edge flanges on solar panels.
+        def Material "LumidShellRivet"
         {
-            float inputs:radius = 0.4
-            float inputs:intensity = 55000.0
-            color3f inputs:color = (1.0, 0.96, 0.90)
-            bool inputs:treatAsPoint = 1
-            bool primvars:doNotCastShadows = 1
-            token visibility = "invisible"
-            double3 xformOp:translate = (5, -40, 8)
-            uniform token[] xformOpOrder = ["xformOp:translate"]
+            token outputs:surface.connect = </World/Looks/LumidShellRivet/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.95, 0.76, 0.28)
+                float inputs:metallic = 0.95
+                float inputs:roughness = 0.15
+                int inputs:useSpecularWorkflow = 0
+                token outputs:surface
+            }
         }
-        def SphereLight "BayLightSide"
+        # Deep blue solar-cell face.
+        def Material "SolarCell"
         {
-            float inputs:radius = 0.4
-            float inputs:intensity = 25000.0
-            color3f inputs:color = (0.8, 0.9, 1.0)
-            bool inputs:treatAsPoint = 1
-            bool primvars:doNotCastShadows = 1
-            token visibility = "invisible"
-            double3 xformOp:translate = (-30, -20, -5)
-            uniform token[] xformOpOrder = ["xformOp:translate"]
+            token outputs:surface.connect = </World/Looks/SolarCell/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.06, 0.10, 0.32)
+                float inputs:metallic = 0.35
+                float inputs:roughness = 0.25
+                int inputs:useSpecularWorkflow = 0
+                token outputs:surface
+            }
         }
-    }
-
-    # --------------------------------------------------------------------
-    # Close-up camera — frames the full LUMID silhouette with the hatch
-    # corner as the focal point.
-    # Look-at: eye=(220, -240, 130), target=(0, 2, 0), up=(0, 0, 1).
-    # Distance ≈ 339 cm; fL=28 fits LUMID + solar arrays in frame.
-    # --------------------------------------------------------------------
-    def Xform "Cameras"
-    {
-        def Camera "Closeup"
+        # Silver frame between solar cells.
+        def Material "SolarCellFrame"
         {
-            float focalLength = 28
-            float focusDistance = 339
-            float2 clippingRange = (1, 2000)
-            matrix4d xformOp:transform = (
-                ( 0.737,  0.676,  0,      0),
-                (-0.252,  0.275,  0.928,  0),
-                ( 0.628, -0.684,  0.372,  0),
-                ( 220,   -240,    130,    1)
-            )
-            uniform token[] xformOpOrder = ["xformOp:transform"]
+            token outputs:surface.connect = </World/Looks/SolarCellFrame/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.70, 0.72, 0.78)
+                float inputs:metallic = 0.85
+                float inputs:roughness = 0.35
+                int inputs:useSpecularWorkflow = 0
+                token outputs:surface
+            }
+        }
+        # Mechanical hardware — copper tube / actuator housing.
+        def Material "HardwareCopper"
+        {
+            token outputs:surface.connect = </World/Looks/HardwareCopper/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.72, 0.36, 0.18)
+                float inputs:metallic = 0.95
+                float inputs:roughness = 0.28
+                int inputs:useSpecularWorkflow = 0
+                token outputs:surface
+            }
+        }
+        # Mechanical hardware — matte black bracket plastic / carbon.
+        def Material "HardwareBlack"
+        {
+            token outputs:surface.connect = </World/Looks/HardwareBlack/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.08, 0.085, 0.09)
+                float inputs:metallic = 0.15
+                float inputs:roughness = 0.75
+                int inputs:useSpecularWorkflow = 0
+                token outputs:surface
+            }
+        }
+        # Mechanical hardware — brushed aluminum connector arm.
+        def Material "HardwareAluminum"
+        {
+            token outputs:surface.connect = </World/Looks/HardwareAluminum/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.62, 0.64, 0.68)
+                float inputs:metallic = 0.85
+                float inputs:roughness = 0.42
+                int inputs:useSpecularWorkflow = 0
+                token outputs:surface
+            }
         }
     }
 }

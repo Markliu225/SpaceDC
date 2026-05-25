@@ -1,0 +1,44 @@
+#usda 1.0
+(
+    defaultPrim = "PayloadBay"
+    upAxis = "Z"
+    metersPerUnit = 0.01
+    doc = "DGX rack -- 2x2 grid"
+)
+
+def Xform "PayloadBay"
+{
+    double3 xformOp:translate = (-1.27, 2.33, -4.65)
+    float3 xformOp:rotateXYZ = (0.0, 0.0, 0.0)
+    double3 xformOp:scale = (0.13, 0.13, 0.13)
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+
+    def "DGX_01" (
+        prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+    )
+    {
+        double3 xformOp:translate = (0.0, 0, 0.0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+    def "DGX_02" (
+        prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+    )
+    {
+        double3 xformOp:translate = (100.0, 0, 0.0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+    def "DGX_03" (
+        prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+    )
+    {
+        double3 xformOp:translate = (0.0, 0, 45.0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+    def "DGX_04" (
+        prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@
+    )
+    {
+        double3 xformOp:translate = (100.0, 0, 45.0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+}

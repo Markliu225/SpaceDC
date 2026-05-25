@@ -18,7 +18,9 @@
       "PowerShell(Get-Process kit -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 3; $env:TERM=\"\"; Set-Location C:\\\\Workspace\\\\SpaceDC\\\\space-compute-demo\\\\ov_app; powershell.exe -ExecutionPolicy Bypass -File .\\\\launch_kit.ps1)",
       "Bash(npm run *)",
       "Bash(.venv/Scripts/python.exe -c ' *)",
-      "Bash(node snap_final.mjs)"
+      "Bash(node snap_final.mjs)",
+      "PowerShell($env:SPACE_DEMO_USD_ROOT='C:\\\\Workspace\\\\SpaceDC\\\\space-compute-demo\\\\usd'; Start-Process -FilePath 'C:\\\\Workspace\\\\kit-usd-viewer-template\\\\_build\\\\windows-x86_64\\\\release\\\\space.demo.viewer_streaming.kit.bat' -WorkingDirectory 'C:\\\\Workspace\\\\kit-usd-viewer-template'; Start-Sleep -Seconds 28; \"ready\")",
+      "PowerShell(try { $r = Invoke-RestMethod -Uri 'http://localhost:8001/state' -TimeoutSec 3; \"backend OK - preset=$\\($r.camera_preset\\)\" } catch { \"backend DOWN: $\\($_.Exception.Message\\)\" })"
     ]
   }
 }

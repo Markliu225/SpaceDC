@@ -1,0 +1,59 @@
+#usda 1.0
+(
+    defaultPrim = "World"
+    upAxis = "Z"
+    metersPerUnit = 0.01
+    customLayerData = { dictionary cameraSettings = { string boundCamera = "/World/Cameras/Aisle" } }
+)
+
+def Xform "World"
+{
+    def Xform "Lights"
+    {
+        def DistantLight "Sun"
+        {
+            float inputs:angle = 0.53
+            float inputs:intensity = 5000
+            color3f inputs:color = (1.0, 0.97, 0.92)
+            float3 xformOp:rotateXYZ = (-30, 0, 30)
+            uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
+        }
+        def DomeLight "Ambient"
+        {
+            color3f inputs:color = (0.4, 0.5, 0.7)
+            float inputs:intensity = 200
+            token inputs:texture:format = "latlong"
+        }
+    }
+
+    def Cube "Floor"
+    {
+        double size = 1.0
+        color3f[] primvars:displayColor = [(0.8, 0.8, 0.85)]
+        double3 xformOp:translate = (0, 0, -2)
+        double3 xformOp:scale = (340, 700, 4)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Cube "TestBlock"
+    {
+        double size = 1.0
+        color3f[] primvars:displayColor = [(0.9, 0.4, 0.2)]
+        double3 xformOp:translate = (0, 100, 100)
+        double3 xformOp:scale = (60, 60, 200)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Xform "Cameras"
+    {
+        def Camera "Aisle"
+        {
+            float focalLength = 22
+            float focusDistance = 520
+            float2 clippingRange = (1, 4000)
+            double3 xformOp:translate = (0, -320, 145)
+            float3 xformOp:rotateXYZ = (88.4, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+    }
+}

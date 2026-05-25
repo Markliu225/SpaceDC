@@ -1,0 +1,496 @@
+#usda 1.0
+(
+    defaultPrim = "World"
+    upAxis = "Z"
+    metersPerUnit = 0.01
+    doc = "Inside the satellite -- space-station-style data hall: 8 NVIDIA Rack_42U_A racks (4 per side), NVIDIA DCP_A coolant distribution unit at +Y end, procedural fan air-wall at -Y end, cable trays, ceiling strip lights. Cm units, origin at floor center."
+    customLayerData = { dictionary cameraSettings = { string boundCamera = "/World/Cameras/Aisle" } }
+)
+
+def Xform "World"
+{
+    def Scope "Looks"
+    {
+        def Material "FloorTile"
+        {
+            token outputs:surface.connect = </World/Looks/FloorTile/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.78, 0.79, 0.82)
+                float inputs:metallic = 0.05
+                float inputs:roughness = 0.55
+                token outputs:surface
+            }
+        }
+        def Material "PanelWhite"
+        {
+            token outputs:surface.connect = </World/Looks/PanelWhite/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.86, 0.87, 0.9)
+                float inputs:metallic = 0.1
+                float inputs:roughness = 0.4
+                token outputs:surface
+            }
+        }
+        def Material "Aluminum"
+        {
+            token outputs:surface.connect = </World/Looks/Aluminum/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.62, 0.64, 0.68)
+                float inputs:metallic = 0.85
+                float inputs:roughness = 0.35
+                token outputs:surface
+            }
+        }
+        def Material "FanGray"
+        {
+            token outputs:surface.connect = </World/Looks/FanGray/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.32, 0.34, 0.38)
+                float inputs:metallic = 0.45
+                float inputs:roughness = 0.55
+                token outputs:surface
+            }
+        }
+        def Material "FanBlade"
+        {
+            token outputs:surface.connect = </World/Looks/FanBlade/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.1, 0.11, 0.13)
+                float inputs:metallic = 0.2
+                float inputs:roughness = 0.65
+                token outputs:surface
+            }
+        }
+        def Material "CableBlue"
+        {
+            token outputs:surface.connect = </World/Looks/CableBlue/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.1, 0.3, 0.65)
+                float inputs:metallic = 0.05
+                float inputs:roughness = 0.55
+                token outputs:surface
+            }
+        }
+    }
+
+    def Xform "Shell"
+    {
+        def Cube "Floor" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/FloorTile>
+            double3 xformOp:translate = (0, 0, -2)
+            double3 xformOp:scale = (340, 700, 4)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+        def Cube "Ceiling" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/PanelWhite>
+            double3 xformOp:translate = (0, 0, 282)
+            double3 xformOp:scale = (340, 700, 4)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+        def Cube "WallLeft" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/PanelWhite>
+            double3 xformOp:translate = (-170, 0, 140)
+            double3 xformOp:scale = (4, 700, 280)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+        def Cube "WallRight" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/PanelWhite>
+            double3 xformOp:translate = (170, 0, 140)
+            double3 xformOp:scale = (4, 700, 280)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+    }
+
+    def Xform "RacksLeft"
+    {
+        def "Rack_L1" ( prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Racks/Rack_42U_A/Rack_42U_A_01.usd@ )
+        {
+            double3 xformOp:translate = (-130, -213, 0)
+            float3 xformOp:rotateXYZ = (0, 0, 90)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def "Rack_L2" ( prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Racks/Rack_42U_A/Rack_42U_A_01.usd@ )
+        {
+            double3 xformOp:translate = (-130, -71, 0)
+            float3 xformOp:rotateXYZ = (0, 0, 90)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def "Rack_L3" ( prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Racks/Rack_42U_A/Rack_42U_A_01.usd@ )
+        {
+            double3 xformOp:translate = (-130, 71, 0)
+            float3 xformOp:rotateXYZ = (0, 0, 90)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def "Rack_L4" ( prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Racks/Rack_42U_A/Rack_42U_A_01.usd@ )
+        {
+            double3 xformOp:translate = (-130, 213, 0)
+            float3 xformOp:rotateXYZ = (0, 0, 90)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+    }
+
+    def Xform "RacksRight"
+    {
+        def "Rack_R1" ( prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Racks/Rack_42U_A/Rack_42U_A_01.usd@ )
+        {
+            double3 xformOp:translate = (130, -213, 0)
+            float3 xformOp:rotateXYZ = (0, 0, -90)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def "Rack_R2" ( prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Racks/Rack_42U_A/Rack_42U_A_01.usd@ )
+        {
+            double3 xformOp:translate = (130, -71, 0)
+            float3 xformOp:rotateXYZ = (0, 0, -90)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def "Rack_R3" ( prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Racks/Rack_42U_A/Rack_42U_A_01.usd@ )
+        {
+            double3 xformOp:translate = (130, 71, 0)
+            float3 xformOp:rotateXYZ = (0, 0, -90)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def "Rack_R4" ( prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Racks/Rack_42U_A/Rack_42U_A_01.usd@ )
+        {
+            double3 xformOp:translate = (130, 213, 0)
+            float3 xformOp:rotateXYZ = (0, 0, -90)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+    }
+
+    def Xform "CDU"
+    {
+        def "DCP_A" ( prepend references = @../assets_usd/DigitalTwin/Assets/Datacenter/Liquid_Cooling/Data_Hall/DCP_A/DCP_A_01.usd@ )
+        {
+            double3 xformOp:translate = (0, 320, 0)
+            float3 xformOp:rotateXYZ = (0, 0, 180)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+    }
+
+    def Xform "AirWall"
+    {
+        def Cube "Backplate" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/FanGray>
+            double3 xformOp:translate = (0, -320, 140)
+            double3 xformOp:scale = (310, 6, 280)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+        def Xform "F00" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-105, -316, 60)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            def Cylinder "Disc"
+            {
+                double radius = 28.0
+                double height = 4.0
+                uniform token axis = "Y"
+            }
+        }
+        def Xform "F01" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-35, -316, 60)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            def Cylinder "Disc"
+            {
+                double radius = 28.0
+                double height = 4.0
+                uniform token axis = "Y"
+            }
+        }
+        def Xform "F02" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (35, -316, 60)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            def Cylinder "Disc"
+            {
+                double radius = 28.0
+                double height = 4.0
+                uniform token axis = "Y"
+            }
+        }
+        def Xform "F03" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (105, -316, 60)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            def Cylinder "Disc"
+            {
+                double radius = 28.0
+                double height = 4.0
+                uniform token axis = "Y"
+            }
+        }
+        def Xform "F10" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-105, -316, 130)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            def Cylinder "Disc"
+            {
+                double radius = 28.0
+                double height = 4.0
+                uniform token axis = "Y"
+            }
+        }
+        def Xform "F11" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-35, -316, 130)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            def Cylinder "Disc"
+            {
+                double radius = 28.0
+                double height = 4.0
+                uniform token axis = "Y"
+            }
+        }
+        def Xform "F12" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (35, -316, 130)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            def Cylinder "Disc"
+            {
+                double radius = 28.0
+                double height = 4.0
+                uniform token axis = "Y"
+            }
+        }
+        def Xform "F13" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (105, -316, 130)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            def Cylinder "Disc"
+            {
+                double radius = 28.0
+                double height = 4.0
+                uniform token axis = "Y"
+            }
+        }
+        def Xform "F20" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-105, -316, 200)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            def Cylinder "Disc"
+            {
+                double radius = 28.0
+                double height = 4.0
+                uniform token axis = "Y"
+            }
+        }
+        def Xform "F21" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-35, -316, 200)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            def Cylinder "Disc"
+            {
+                double radius = 28.0
+                double height = 4.0
+                uniform token axis = "Y"
+            }
+        }
+        def Xform "F22" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (35, -316, 200)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            def Cylinder "Disc"
+            {
+                double radius = 28.0
+                double height = 4.0
+                uniform token axis = "Y"
+            }
+        }
+        def Xform "F23" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (105, -316, 200)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            def Cylinder "Disc"
+            {
+                double radius = 28.0
+                double height = 4.0
+                uniform token axis = "Y"
+            }
+        }
+        def Xform "F30" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-105, -316, 270)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            def Cylinder "Disc"
+            {
+                double radius = 28.0
+                double height = 4.0
+                uniform token axis = "Y"
+            }
+        }
+        def Xform "F31" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (-35, -316, 270)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            def Cylinder "Disc"
+            {
+                double radius = 28.0
+                double height = 4.0
+                uniform token axis = "Y"
+            }
+        }
+        def Xform "F32" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (35, -316, 270)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            def Cylinder "Disc"
+            {
+                double radius = 28.0
+                double height = 4.0
+                uniform token axis = "Y"
+            }
+        }
+        def Xform "F33" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            rel material:binding = </World/Looks/FanBlade>
+            double3 xformOp:translate = (105, -316, 270)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            def Cylinder "Disc"
+            {
+                double radius = 28.0
+                double height = 4.0
+                uniform token axis = "Y"
+            }
+        }
+    }
+
+    def Xform "CableTrays"
+    {
+        def Cube "TrayLeft" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/Aluminum>
+            double3 xformOp:translate = (-90, 0, 256)
+            double3 xformOp:scale = (40, 600, 8)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+        def Cube "TrayRight" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/Aluminum>
+            double3 xformOp:translate = (90, 0, 256)
+            double3 xformOp:scale = (40, 600, 8)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+        def Cube "CableLeft" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/CableBlue>
+            double3 xformOp:translate = (-90, 0, 263)
+            double3 xformOp:scale = (32, 580, 6)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+        def Cube "CableRight" ( prepend apiSchemas = ["MaterialBindingAPI"] )
+        {
+            double size = 1.0
+            rel material:binding = </World/Looks/CableBlue>
+            double3 xformOp:translate = (90, 0, 263)
+            double3 xformOp:scale = (32, 580, 6)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        }
+    }
+
+    def Xform "Lighting"
+    {
+        def RectLight "Strip_1"
+        {
+            float inputs:width = 30.0
+            float inputs:height = 100.0
+            float inputs:intensity = 9000.0
+            color3f inputs:color = (1.0, 0.97, 0.95)
+            bool primvars:doNotCastShadows = 1
+            double3 xformOp:translate = (0, -240, 278)
+            float3 xformOp:rotateXYZ = (0, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def RectLight "Strip_2"
+        {
+            float inputs:width = 30.0
+            float inputs:height = 100.0
+            float inputs:intensity = 9000.0
+            color3f inputs:color = (1.0, 0.97, 0.95)
+            bool primvars:doNotCastShadows = 1
+            double3 xformOp:translate = (0, -80, 278)
+            float3 xformOp:rotateXYZ = (0, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def RectLight "Strip_3"
+        {
+            float inputs:width = 30.0
+            float inputs:height = 100.0
+            float inputs:intensity = 9000.0
+            color3f inputs:color = (1.0, 0.97, 0.95)
+            bool primvars:doNotCastShadows = 1
+            double3 xformOp:translate = (0, 80, 278)
+            float3 xformOp:rotateXYZ = (0, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def RectLight "Strip_4"
+        {
+            float inputs:width = 30.0
+            float inputs:height = 100.0
+            float inputs:intensity = 9000.0
+            color3f inputs:color = (1.0, 0.97, 0.95)
+            bool primvars:doNotCastShadows = 1
+            double3 xformOp:translate = (0, 240, 278)
+            float3 xformOp:rotateXYZ = (0, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+        def DomeLight "Ambient"
+        {
+            color3f inputs:color = (0.6, 0.7, 0.85)
+            float inputs:intensity = 80.0
+            token inputs:texture:format = "latlong"
+        }
+    }
+
+    def Xform "Cameras"
+    {
+        def Camera "Aisle"
+        {
+            float focalLength = 22
+            float focusDistance = 520
+            float2 clippingRange = (1, 4000)
+            double3 xformOp:translate = (0, -320, 145)
+            float3 xformOp:rotateXYZ = (88.4, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        }
+    }
+}
