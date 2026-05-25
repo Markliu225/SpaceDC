@@ -14,7 +14,9 @@
         }
         dictionary renderSettings = {
             int "rtx:post:tonemap:op" = 7
-            float "rtx:post:tonemap:cameraShutter" = 1.0
+            # cameraShutter 1.0 was over-exposing the lit hemisphere of Earth to
+            # pure white. 0.4 keeps the day side bright but textured.
+            float "rtx:post:tonemap:cameraShutter" = 0.4
         }
     }
 )
@@ -26,26 +28,30 @@ def Xform "World"
     # --------------------------------------------------------------------
     def Xform "Environment"
     {
+        # Sun toned down from 3000 -> 900. Previous value (with cameraShutter
+        # 1.0) was producing a pure-white blowout on the lit hemisphere of
+        # the Earth. 900 + shutter 0.4 gives roughly the same daylight feel
+        # without saturating the diffuse texture.
         def DistantLight "Sun"
         {
             float inputs:angle = 0.53
-            float inputs:intensity = 3000.0
+            float inputs:intensity = 900.0
             color3f inputs:color = (1.0, 0.97, 0.92)
             float3 xformOp:rotateXYZ = (-35, 0, 50)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
         def DistantLight "Fill"
         {
-            float inputs:angle = 12.0
-            float inputs:intensity = 250.0
+            float inputs:angle = 14.0
+            float inputs:intensity = 120.0
             color3f inputs:color = (0.45, 0.62, 0.95)
             float3 xformOp:rotateXYZ = (20, 0, -135)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
         def DomeLight "Sky"
         {
-            color3f inputs:color = (0.018, 0.024, 0.040)
-            float inputs:intensity = 35.0
+            color3f inputs:color = (0.020, 0.026, 0.045)
+            float inputs:intensity = 24.0
             token inputs:texture:format = "latlong"
         }
     }
@@ -75,7 +81,7 @@ def Xform "World"
             {
                 uniform token info:id = "UsdPreviewSurface"
                 color3f inputs:diffuseColor = (0, 0, 0)
-                color3f inputs:emissiveColor = (0.3, 2.4, 2.8)
+                color3f inputs:emissiveColor = (0.18, 1.5, 1.7)
                 float inputs:metallic = 0
                 float inputs:roughness = 1
                 int inputs:useSpecularWorkflow = 0

@@ -30,10 +30,12 @@ RING_VERTS       = 96
 RING_WIDTH_UNITS = 0.04        # 4 km — hairline at overview camera distance
 SAT_RADIUS_UNITS = 0.35        # 35 km diameter — small dot that still picks up bloom
 
-# Two-tier emissive: rings are subtle so they don't bloom-wash; sats are
-# pushed past 1.0 so they punch through and read as light points.
-RING_EMIT_GAIN   = 0.65
-SAT_EMIT_GAIN    = 3.5
+# Two-tier emissive. Rings stay well under 1.0 so 24 overlapping crossings
+# in the foreground don't accumulate past the bloom threshold (0.85) and
+# bleach out to white. Sats are discrete points so they can sit a bit
+# higher without flooding nearby pixels.
+RING_EMIT_GAIN   = 0.22
+SAT_EMIT_GAIN    = 1.8
 
 PALETTE_HEX = [
     "E879F9",   # magenta
