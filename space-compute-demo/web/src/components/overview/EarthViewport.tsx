@@ -1,9 +1,14 @@
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import {
   getStreamStatus, getStreamMessage, subscribeStreamStatus,
 } from '../StreamMount'
 import StreamConfig from '../../../stream.config.json'
 import { Dot } from '../primitives'
+
+// Lazy-load the Three.js scene so it doesn't bloat the initial JS bundle.
+const FallbackEarth = lazy(() =>
+  import('./earth/FallbackEarth').then((m) => ({ default: m.FallbackEarth })),
+)
 
 /**
  * EarthViewport — the centerpiece slot. In Phase B we are still
@@ -43,10 +48,24 @@ export function EarthViewport() {
         className="absolute inset-0"
       />
 
-      {/* Fallback / connecting placeholder — visible while stream is not ready.
-          Phase C replaces this with the Three.js scene. */}
+      {/* Fallback Three.js scene — mounts only when the stream isn't ready. */}
       {mode !== 'streaming' && (
-        <PlaceholderEarth mode={mode} msg={msg} />
+        <div className="absolute inset-0">
+          <Suspense fallback={<PlaceholderEarth mode={mode} msg={msg} />}>
+            <FallbackEarth />
+          </Suspense>
+          <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 text-center">
+            {mode === 'connecting' ? (
+              <div className="rounded bg-bg-app/60 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-text-md backdrop-blur">
+                connecting to {StreamConfig.local.server}:{StreamConfig.local.signalingPort}…
+              </div>
+            ) : (
+              <div className="rounded bg-bg-app/60 px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-warn backdrop-blur">
+                stream unavailable — local fallback{msg ? ` (${msg})` : ''}
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Top-left status chip */}
@@ -72,61 +91,18 @@ export function EarthViewport() {
   )
 }
 
+// Lightweight Suspense fallback shown for the brief moment before the
+// Three.js scene's chunk finishes downloading.
 function PlaceholderEarth({ mode, msg }: { mode: 'connecting' | 'fallback'; msg: string }) {
-  // A radial vignette + an SVG earth + atmosphere ring + 3 orbit arcs.
+  void mode; void msg
   return (
     <div className="absolute inset-0 grid place-items-center"
       style={{
-        background:
-          'radial-gradient(ellipse at center, #112347 0%, #060912 70%)',
+        background: 'radial-gradient(ellipse at center, #0A1224 0%, #03060E 70%)',
       }}
     >
-      {/* Earth + atmosphere */}
-      <svg width="60%" height="60%" viewBox="-100 -100 200 200" preserveAspectRatio="xMidYMid meet">
-        <defs>
-          <radialGradient id="earth-fill" cx="35%" cy="30%" r="65%">
-            <stop offset="0%"   stopColor="#2B5694" />
-            <stop offset="60%"  stopColor="#10264E" />
-            <stop offset="100%" stopColor="#040A18" />
-          </radialGradient>
-          <radialGradient id="atmo-fill" cx="50%" cy="50%" r="50%">
-            <stop offset="80%"  stopColor="#3B9EFF" stopOpacity="0" />
-            <stop offset="95%"  stopColor="#3B9EFF" stopOpacity="0.45" />
-            <stop offset="100%" stopColor="#3B9EFF" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        {/* atmosphere halo */}
-        <circle cx="0" cy="0" r="78" fill="url(#atmo-fill)" />
-        {/* earth */}
-        <circle cx="0" cy="0" r="62" fill="url(#earth-fill)" stroke="#3B9EFF" strokeOpacity="0.2" />
-        {/* orbits */}
-        {[0, 1, 2].map((i) => (
-          <ellipse
-            key={i}
-            cx="0" cy="0"
-            rx={78 + i * 4}
-            ry={28 - i * 3}
-            fill="none"
-            stroke={['#22D3EE', '#E879F9', '#FBBF24'][i]}
-            strokeOpacity="0.45"
-            strokeWidth="0.8"
-            transform={`rotate(${-20 + i * 18})`}
-            className="animate-ribbon-breath"
-            style={{ animationDelay: `${i * 800}ms` }}
-          />
-        ))}
-      </svg>
-
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center">
-        {mode === 'connecting' ? (
-          <div className="text-[11px] uppercase tracking-[0.14em] text-text-md">
-            connecting to {StreamConfig.local.server}:{StreamConfig.local.signalingPort}…
-          </div>
-        ) : (
-          <div className="text-[11px] uppercase tracking-[0.14em] text-warn">
-            stream unavailable — local fallback ({msg || 'kit offline'})
-          </div>
-        )}
+      <div className="text-[11px] uppercase tracking-[0.18em] text-text-lo animate-twinkle">
+        loading scene…
       </div>
     </div>
   )
