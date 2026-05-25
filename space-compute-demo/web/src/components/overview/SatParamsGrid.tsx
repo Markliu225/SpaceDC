@@ -21,7 +21,7 @@ export function SatParamsGrid() {
     sat.battery_soc < 0.5 ? 'warn' : 'ok'
 
   return (
-    <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
+    <div className="grid grid-cols-2 gap-x-5 gap-y-1">
       <Metric size="param" label="Orbit"        value={sat.orbit_type} />
       <Metric size="param" label="Lat / Lon"    value={`${sat.lat.toFixed(2)} / ${sat.lon.toFixed(2)}`} unit="°" />
       <Metric size="param" label="Altitude"     value={sat.altitude_km} digits={0} unit="km" />

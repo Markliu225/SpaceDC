@@ -12,11 +12,6 @@ const KIND_COLOR: Record<EventEntry['kind'], string> = {
   err:  colors.err,
 }
 
-/**
- * EventLog — fixed-height card; rows scroll. Newest event at top, fades
- * in with -6px translateY → 0 over 240ms. The header "All Events ⌄"
- * dropdown is a custom button (no native <select>), filters by kind.
- */
 export function EventLog() {
   const all = useTelemetryStore((s) => s.events)
   const [filter, setFilter] = useState<EventEntry['kind'] | 'all'>('all')
@@ -25,8 +20,8 @@ export function EventLog() {
   const events = filter === 'all' ? all : all.filter((e) => e.kind === filter)
 
   return (
-    <Card>
-      <div className="mb-2 flex items-center justify-between">
+    <Card className="h-full flex flex-col min-h-0">
+      <div className="flex items-center justify-between">
         <span className="text-[11px] uppercase tracking-[0.10em] text-text-md">
           Event Log
         </span>
@@ -38,28 +33,21 @@ export function EventLog() {
         />
       </div>
 
-      <div className="h-[280px] -mx-2 overflow-y-auto">
+      <div className="-mx-2 mt-1 flex-1 min-h-0 overflow-y-auto">
         {events.length === 0 ? (
           <div className="px-2 py-3 text-[12px] italic text-text-lo">— no events —</div>
         ) : events.map((e) => (
           <div
             key={e.id}
-            className="animate-event-fade-in grid grid-cols-[64px_16px_1fr_auto] items-center gap-2 px-2 h-10 hover:bg-bg-card-hi"
+            className="animate-event-fade-in grid grid-cols-[60px_14px_1fr_auto] items-center gap-2 px-2 h-7 hover:bg-bg-card-hi"
           >
-            <span className="text-[12px] tabular font-mono text-text-md">{e.ts}</span>
-            <Dot color={KIND_COLOR[e.kind]} size={8} glow={6} />
-            <span className="text-[13px] text-text-hi truncate">{e.label}</span>
-            <span className="text-[12px] tabular text-text-lo whitespace-nowrap">{e.entities}</span>
+            <span className="text-[11px] tabular font-mono text-text-md">{e.ts}</span>
+            <Dot color={KIND_COLOR[e.kind]} size={7} glow={5} />
+            <span className="text-[12px] text-text-hi truncate">{e.label}</span>
+            <span className="text-[11px] tabular text-text-lo whitespace-nowrap">{e.entities}</span>
           </div>
         ))}
       </div>
-
-      <button
-        type="button"
-        className="mt-2 w-full text-left text-[12px] text-accent hover:underline"
-      >
-        View full log ›
-      </button>
     </Card>
   )
 }
@@ -88,10 +76,10 @@ function FilterDropdown({
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => onOpen(!open)}
-        className="flex items-center gap-1.5 rounded border border-border-weak px-2 py-1 text-[12px] text-text-md hover:border-border-med hover:text-text-hi"
+        className="flex items-center gap-1 rounded border border-border-weak px-1.5 py-px text-[11px] text-text-md hover:border-border-med hover:text-text-hi"
       >
         {label}
-        <ChevronDown size={14} strokeWidth={1.5} />
+        <ChevronDown size={12} strokeWidth={1.5} />
       </button>
       {open && (
         <ul
@@ -103,7 +91,7 @@ function FilterDropdown({
               <button
                 type="button"
                 onClick={() => onChange(o.value)}
-                className={`block w-full px-3 py-1.5 text-left text-[12px] hover:bg-bg-card-hi ${o.value === value ? 'text-accent' : 'text-text-md'}`}
+                className={`block w-full px-3 py-1 text-left text-[11px] hover:bg-bg-card-hi ${o.value === value ? 'text-accent' : 'text-text-md'}`}
               >
                 {o.label}
               </button>

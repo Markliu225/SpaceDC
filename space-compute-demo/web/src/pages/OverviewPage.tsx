@@ -1,8 +1,6 @@
 import { useEffect } from 'react'
 import { useDemoStore } from '../store/demoStore'
-import { useTelemetryStore } from '../store/useTelemetryStore'
 import { useMockTelemetryFeed } from '../hooks/useMockTelemetryFeed'
-import { Dot } from '../components/primitives'
 import { EarthViewport } from '../components/overview/EarthViewport'
 import { NetworkOverview } from '../components/overview/NetworkOverview'
 import { SatelliteStatus } from '../components/overview/SatelliteStatus'
@@ -14,101 +12,72 @@ import { SelectedSatellite } from '../components/overview/SelectedSatellite'
 import { UpcomingEvents } from '../components/overview/UpcomingEvents'
 
 /**
- * OverviewPage — mission-control layout. Grid is desktop-only (min 1280,
- * ideal 1440+). Per brief, structure:
+ * OverviewPage — single-viewport mission control. No scroll. 1440×900 target.
  *
- *  ┌────────────────────────────────────────────────────────────────┐
- *  │ NetworkOverview (4 KPI tiles, full-width)                       │
- *  ├──────────────────────────────────┬─────────────────────────────┤
- *  │ EarthViewport (centerpiece)       │ SatelliteStatus              │
- *  │                                   │ LinkAndTraffic               │
- *  │                                   │ SystemHealth                 │
- *  ├──────────────────────────────────┴─────────────────────────────┤
- *  │ SelectedSatellite (full width)                                  │
- *  ├────────────────────────┬───────────────────────────────────────┤
- *  │ CoverageMap            │ EventLog        │  UpcomingEvents      │
- *  └────────────────────────┴─────────────────┴───────────────────────┘
+ * AppShell header is 44px; .shell__main has 12px padding both sides → usable
+ * area is calc(100vh - 68px). The page is a 12-col CSS grid with explicit
+ * row tracks so all 8 panels fit on screen.
  *
- * The legacy DemoStore (WebSocket to backend) is still wired so the
- * stream camera preset gets nudged to "overview", but telemetry numbers
- * here come from the new mock feed per brief.
+ *  ┌───────────────────────────────────────────────────────────────┐
+ *  │ KPI x 4                                                  84px │
+ *  ├──────────────────────────────┬────────────────────────────────┤
+ *  │ Earth Viewport               │ SatelliteStatus                │
+ *  │ (centerpiece)                ├────────────────────────────────┤
+ *  │                          1fr │ LinkAndTraffic           1fr   │
+ *  │                              ├────────────────────────────────┤
+ *  │                              │ SystemHealth                   │
+ *  ├──────────────────────────────┴────────────────────────────────┤
+ *  │ SelectedSatellite (col-7)            │ CoverageMap (col-5)180 │
+ *  ├──────────────────────────────────────┼─────────────┬──────────┤
+ *  │ EventLog (col-7)                     │ Upcoming Events  150px │
+ *  └──────────────────────────────────────┴────────────────────────┘
  */
 export function OverviewPage() {
   const changeCamera = useDemoStore((s) => s.changeCamera)
   const connected    = useDemoStore((s) => s.connected)
-
   useEffect(() => {
     if (connected) changeCamera('overview')
   }, [connected, changeCamera])
-
-  // Drive 1Hz mock feed (AppShell already bridges Play/Pause to running).
   useMockTelemetryFeed()
 
   return (
-    <OverviewLayout>
-      <HeaderStrip />
-
+    <div
+      className="grid w-full bg-bg-app px-3 py-3 font-sans text-text-md gap-3"
+      style={{
+        height: 'calc(100vh - 44px - 24px)', // shell header 44 + .shell__main padding 12x2
+        gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
+        gridTemplateRows: '84px minmax(0, 1fr) 180px 140px',
+      }}
+    >
       {/* Row 1: KPI strip */}
-      <div className="col-span-12">
+      <div className="col-span-12 min-h-0">
         <NetworkOverview />
       </div>
 
-      {/* Row 2: viewport + right rail */}
-      <div className="col-span-8 min-h-[420px]">
+      {/* Row 2: viewport + right rail (sat status / traffic / health) */}
+      <div className="col-span-7 min-h-0">
         <EarthViewport />
       </div>
-      <div className="col-span-4 flex flex-col gap-3">
-        <SatelliteStatus />
-        <LinkAndTraffic />
-        <SystemHealth />
+      <div className="col-span-5 grid min-h-0 gap-3" style={{ gridTemplateRows: '1fr 1fr 1fr' }}>
+        <div className="min-h-0"><SatelliteStatus /></div>
+        <div className="min-h-0"><LinkAndTraffic /></div>
+        <div className="min-h-0"><SystemHealth /></div>
       </div>
 
-      {/* Row 3: selected satellite (full width) */}
-      <div className="col-span-12">
+      {/* Row 3: selected sat + coverage */}
+      <div className="col-span-7 min-h-0">
         <SelectedSatellite />
       </div>
-
-      {/* Row 4: coverage / event log / upcoming */}
-      <div className="col-span-5">
+      <div className="col-span-5 min-h-0">
         <CoverageMap />
       </div>
-      <div className="col-span-4">
+
+      {/* Row 4: event log + upcoming */}
+      <div className="col-span-7 min-h-0">
         <EventLog />
       </div>
-      <div className="col-span-3">
+      <div className="col-span-5 min-h-0">
         <UpcomingEvents />
-      </div>
-    </OverviewLayout>
-  )
-}
-
-function OverviewLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-full w-full bg-bg-app px-4 py-3 font-sans text-text-md">
-      <div className="grid grid-cols-12 gap-3">
-        {children}
-      </div>
-    </div>
-  )
-}
-
-function HeaderStrip() {
-  const running = useTelemetryStore((s) => s.running)
-  return (
-    <div className="col-span-12 flex items-center justify-between rounded-[10px] border border-border-weak bg-card px-4 py-2.5 shadow-card">
-      <div className="flex items-center gap-4">
-        <span className="text-[12px] uppercase tracking-[0.18em] text-accent">
-          Mission Overview
-        </span>
-        <span className="text-[11px] uppercase tracking-[0.14em] text-text-lo">
-          1 MW · LEO/SSO · 24-node constellation
-        </span>
-      </div>
-      <div className="flex items-center gap-2">
-        <Dot color={running ? '#22C55E' : '#6B7691'} size={8} glow={6} pulse={running} />
-        <span className="text-[11px] uppercase tracking-[0.14em] text-text-md">
-          {running ? 'Live' : 'Paused'}
-        </span>
       </div>
     </div>
   )

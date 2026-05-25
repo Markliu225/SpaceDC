@@ -3,14 +3,19 @@
     defaultPrim = "World"
     upAxis = "Z"
     metersPerUnit = 100000
-    doc = "Overview stage: Earth + orbit line + moving cyan satellite icon. No detailed sat geometry."
+    doc = "Overview stage: Blue-Marble Earth + atmosphere shell + 24 multi-hue orbit rings + 24 emissive constellation sats + a bright primary sat icon. Designed for a commercial-demo look in Kit RTX with Bloom."
     subLayers = [
         @./earth_mesh.usda@,
+        @./constellation.usda@,
         @./orbit_line.usda@
     ]
     customLayerData = {
         dictionary cameraSettings = {
             string boundCamera = "/World/Cameras/Overview"
+        }
+        dictionary renderSettings = {
+            int "rtx:post:tonemap:op" = 7
+            float "rtx:post:tonemap:cameraShutter" = 1.0
         }
     }
 )
@@ -18,41 +23,54 @@
 def Xform "World"
 {
     # --------------------------------------------------------------------
-    # Lights — Earth lit; satellite icon is self-emissive (no extra light on it).
+    # Lights — Earth lit with a key sun, soft fill, deep-space dome.
+    # Sky is darker than before so emissive ribbons + sats read against the
+    # background instead of competing with ambient light.
     # --------------------------------------------------------------------
     def Xform "Environment"
     {
-        # Strong sun pointing into the camera hemisphere (+X -Y +Z octant) so the
-        # Earth face toward the Overview camera is well-lit.
         def DistantLight "Sun"
         {
             float inputs:angle = 0.53
-            float inputs:intensity = 3500.0
+            float inputs:intensity = 3000.0
             color3f inputs:color = (1.0, 0.97, 0.92)
-            float3 xformOp:rotateXYZ = (-30, 0, 45)
+            float3 xformOp:rotateXYZ = (-35, 0, 50)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
         def DistantLight "Fill"
         {
-            float inputs:angle = 10.0
-            float inputs:intensity = 400.0
-            color3f inputs:color = (0.5, 0.65, 0.9)
-            float3 xformOp:rotateXYZ = (20, 0, -140)
+            float inputs:angle = 12.0
+            float inputs:intensity = 280.0
+            color3f inputs:color = (0.45, 0.62, 0.95)
+            float3 xformOp:rotateXYZ = (20, 0, -135)
+            uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
+        }
+        # Tiny earth-shine bounce from below so the night-side limb keeps
+        # the cyan rim consistent with the atmosphere shell.
+        def DistantLight "EarthBounce"
+        {
+            float inputs:angle = 30.0
+            float inputs:intensity = 120.0
+            color3f inputs:color = (0.25, 0.45, 0.85)
+            float3 xformOp:rotateXYZ = (70, 0, 150)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
         def DomeLight "Sky"
         {
-            color3f inputs:color = (0.05, 0.07, 0.12)
-            float inputs:intensity = 60.0
+            color3f inputs:color = (0.012, 0.018, 0.030)
+            float inputs:intensity = 22.0
             token inputs:texture:format = "latlong"
         }
     }
 
-    # Earth + Orbit come from subLayers.
+    # Earth / atmosphere / 24 ring constellation come from sublayers.
 
     # --------------------------------------------------------------------
-    # Satellite as a bright cyan dot — position updated every frame by
-    # space.demo.scene from the unified orbit formula.
+    # Primary satellite icon — the "selected" sat. space.demo.scene
+    # updates its translation each frame using the unified orbit formula
+    # (60° inclination, period = 90 s wall-clock). It rides on the
+    # orbit_line.usda trail. Bigger + brighter than the 24 constellation
+    # sats so it reads as the focal point.
     # --------------------------------------------------------------------
     def Xform "SatelliteIcon" (
         prepend apiSchemas = ["MaterialBindingAPI"]
@@ -62,19 +80,46 @@ def Xform "World"
         uniform token[] xformOpOrder = ["xformOp:translate"]
         uniform bool primvars:doNotCastShadows = 1
 
-        def Sphere "Glow"
+        # Core glow ball
+        def Sphere "Core"
         {
-            double radius = 2.2
-            rel material:binding = </World/SatelliteIcon/Glow/Mat>
+            double radius = 1.4
+            rel material:binding = </World/SatelliteIcon/Core/Mat>
 
             def Material "Mat"
             {
-                token outputs:surface.connect = </World/SatelliteIcon/Glow/Mat/Shader.outputs:surface>
+                token outputs:surface.connect = </World/SatelliteIcon/Core/Mat/Shader.outputs:surface>
                 def Shader "Shader"
                 {
                     uniform token info:id = "UsdPreviewSurface"
                     color3f inputs:diffuseColor = (0, 0, 0)
-                    color3f inputs:emissiveColor = (0.2, 2.5, 3.0)
+                    color3f inputs:emissiveColor = (0.5, 3.8, 4.2)
+                    float inputs:metallic = 0
+                    float inputs:roughness = 1
+                    int inputs:useSpecularWorkflow = 0
+                    token outputs:surface
+                }
+            }
+        }
+
+        # Soft selection halo — translucent emissive sphere, ~2.5x core radius.
+        def Sphere "Halo" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            double radius = 3.6
+            uniform bool primvars:doNotCastShadows = 1
+            rel material:binding = </World/SatelliteIcon/Halo/Mat>
+
+            def Material "Mat"
+            {
+                token outputs:surface.connect = </World/SatelliteIcon/Halo/Mat/Shader.outputs:surface>
+                def Shader "Shader"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0, 0, 0)
+                    color3f inputs:emissiveColor = (0.15, 1.2, 1.6)
+                    float inputs:opacity = 0.18
                     float inputs:metallic = 0
                     float inputs:roughness = 1
                     int inputs:useSpecularWorkflow = 0
@@ -85,23 +130,22 @@ def Xform "World"
     }
 
     # --------------------------------------------------------------------
-    # Camera
+    # Cinematic camera — pulled back so all 24 rings frame the earth.
+    # eye=(220, -220, 150), target=(0, 0, 0), up=(0, 0, 1).
+    # focal=28 mm widens the FOV; clip 1..6000 covers the whole sky.
     # --------------------------------------------------------------------
     def Xform "Cameras"
     {
-        # Look-at: eye=(180, -180, 120), target=(0, 0, 0), up=(0, 0, 1).
-        # Row basis: right=(0.7071, 0.7071, 0); up'=(-0.3015, 0.3015, 0.9044);
-        # back (-forward)=(0.6396, -0.6396, 0.4264); translate=(180, -180, 120).
         def Camera "Overview"
         {
-            float focalLength = 35
-            float focusDistance = 283
-            float2 clippingRange = (1, 5000)
+            float focalLength = 28
+            float focusDistance = 343
+            float2 clippingRange = (1, 6000)
             matrix4d xformOp:transform = (
-                ( 0.7071,  0.7071,  0,      0),
-                (-0.3015,  0.3015,  0.9044, 0),
-                ( 0.6396, -0.6396,  0.4264, 0),
-                ( 180,    -180,     120,    1)
+                ( 0.7071,  0.7071,  0,       0),
+                (-0.3072,  0.3072,  0.9011,  0),
+                ( 0.6371, -0.6371,  0.4343,  0),
+                ( 220,    -220,     150,     1)
             )
             uniform token[] xformOpOrder = ["xformOp:transform"]
         }

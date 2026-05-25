@@ -25,7 +25,7 @@ export function Card({
   className = '',
   ...rest
 }: CardProps) {
-  const padding = dense ? 'px-4 py-3.5' : 'px-[18px] py-4'
+  const padding = dense ? 'px-4 py-2.5' : 'px-[18px] py-3'
   const ring = selected
     ? 'border-border-glow shadow-card-glow'
     : 'border-border-weak shadow-card hover:border-border-med hover:shadow-card-hover'
