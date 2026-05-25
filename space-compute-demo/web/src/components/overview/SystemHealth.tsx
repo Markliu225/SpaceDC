@@ -14,7 +14,7 @@ export function SystemHealth() {
     { key: 'comms',      name: 'Comms',      icon: RadioTower, status: h.comms },
   ]
   return (
-    <Card className="h-full flex flex-col min-h-0">
+    <Card className="h-full flex flex-col min-h-0 overflow-hidden">
       <div className="text-[11px] uppercase tracking-[0.10em] text-text-md">
         System Health
       </div>
@@ -31,18 +31,18 @@ function HealthRow({ row, isLast }: { row: Row; isLast: boolean }) {
   const Icon = row.icon
   const tone = STATUS_TONE[row.status]
   return (
-    <div className={`flex items-center gap-2 px-1.5 py-1 transition-colors duration-150 hover:bg-bg-card-hi ${isLast ? '' : 'border-b border-border-weak'}`}>
+    <div className={`flex items-center gap-2 px-1.5 py-0.5 transition-colors duration-150 hover:bg-bg-card-hi ${isLast ? '' : 'border-b border-border-weak'}`}>
       <span
         aria-hidden="true"
         className="grid place-items-center rounded-md"
-        style={{ width: 22, height: 22, background: 'rgba(59,158,255,0.10)' }}
+        style={{ width: 20, height: 20, background: 'rgba(59,158,255,0.10)' }}
       >
-        <Icon size={13} strokeWidth={1.5} className="text-accent" />
+        <Icon size={12} strokeWidth={1.5} className="text-accent" />
       </span>
-      <span className="text-[12px] text-text-hi">{row.name}</span>
+      <span className="text-[11px] text-text-hi">{row.name}</span>
       <span className="flex-1" />
       <span
-        className={`rounded px-1.5 py-px text-[10px] uppercase tracking-[0.10em] ${tone.text}`}
+        className={`rounded px-1.5 py-px text-[9px] uppercase tracking-[0.10em] ${tone.text}`}
         style={{ background: tone.bg }}
       >
         {STATUS_LABEL[row.status]}
@@ -58,7 +58,7 @@ const STATUS_TONE = {
 } as const
 
 const STATUS_LABEL = {
-  nominal: 'Nominal',
-  warn:    'Warning',
-  fault:   'Fault',
+  nominal: 'OK',
+  warn:    'WARN',
+  fault:   'FAULT',
 } as const

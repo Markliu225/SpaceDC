@@ -41,16 +41,16 @@ export function SelectedSatellite() {
         </div>
       </div>
 
-      <div className="mt-2 grid flex-1 min-h-0 grid-cols-[88px_1fr_180px] gap-3 items-center">
+      <div className="mt-1.5 grid flex-1 min-h-0 grid-cols-[72px_minmax(0,1fr)_220px] gap-4 items-center">
         <div className="flex items-center justify-center">
           <div className="animate-float-y">
-            <SatelliteIcon size={80} />
+            <SatelliteIcon size={64} />
           </div>
         </div>
         <div className="min-h-0">
           <SatParamsGrid />
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
           {bars.map((b) => <MetricBar key={b.label} bar={b} />)}
         </div>
       </div>

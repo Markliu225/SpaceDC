@@ -12,6 +12,11 @@ const KIND_COLOR: Record<EventEntry['kind'], string> = {
   err:  colors.err,
 }
 
+/**
+ * EventLog — scrollable list inside a fixed-height card. With 144 height
+ * the visible window is ~4 rows; older events scroll within the panel
+ * (acceptable since the rest of the page never scrolls).
+ */
 export function EventLog() {
   const all = useTelemetryStore((s) => s.events)
   const [filter, setFilter] = useState<EventEntry['kind'] | 'all'>('all')
@@ -20,7 +25,7 @@ export function EventLog() {
   const events = filter === 'all' ? all : all.filter((e) => e.kind === filter)
 
   return (
-    <Card className="h-full flex flex-col min-h-0">
+    <Card className="h-full flex flex-col min-h-0 overflow-hidden">
       <div className="flex items-center justify-between">
         <span className="text-[11px] uppercase tracking-[0.10em] text-text-md">
           Event Log
@@ -39,12 +44,12 @@ export function EventLog() {
         ) : events.map((e) => (
           <div
             key={e.id}
-            className="animate-event-fade-in grid grid-cols-[60px_14px_1fr_auto] items-center gap-2 px-2 h-7 hover:bg-bg-card-hi"
+            className="animate-event-fade-in grid grid-cols-[58px_12px_minmax(0,1fr)_auto] items-center gap-2 px-2 h-6 hover:bg-bg-card-hi"
           >
-            <span className="text-[11px] tabular font-mono text-text-md">{e.ts}</span>
-            <Dot color={KIND_COLOR[e.kind]} size={7} glow={5} />
-            <span className="text-[12px] text-text-hi truncate">{e.label}</span>
-            <span className="text-[11px] tabular text-text-lo whitespace-nowrap">{e.entities}</span>
+            <span className="text-[10px] tabular font-mono text-text-md">{e.ts}</span>
+            <Dot color={KIND_COLOR[e.kind]} size={6} glow={4} />
+            <span className="text-[11px] text-text-hi truncate">{e.label}</span>
+            <span className="text-[10px] tabular text-text-lo whitespace-nowrap">{e.entities}</span>
           </div>
         ))}
       </div>
@@ -76,10 +81,10 @@ function FilterDropdown({
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => onOpen(!open)}
-        className="flex items-center gap-1 rounded border border-border-weak px-1.5 py-px text-[11px] text-text-md hover:border-border-med hover:text-text-hi"
+        className="flex items-center gap-1 rounded border border-border-weak px-1.5 py-px text-[10px] text-text-md hover:border-border-med hover:text-text-hi"
       >
         {label}
-        <ChevronDown size={12} strokeWidth={1.5} />
+        <ChevronDown size={11} strokeWidth={1.5} />
       </button>
       {open && (
         <ul

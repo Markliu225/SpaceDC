@@ -12,25 +12,26 @@ import { SelectedSatellite } from '../components/overview/SelectedSatellite'
 import { UpcomingEvents } from '../components/overview/UpcomingEvents'
 
 /**
- * OverviewPage — single-viewport mission control. No scroll. 1440×900 target.
+ * OverviewPage — single-viewport mission control. Targets 1440×900.
  *
- * AppShell header is 44px; .shell__main has 12px padding both sides → usable
- * area is calc(100vh - 68px). The page is a 12-col CSS grid with explicit
- * row tracks so all 8 panels fit on screen.
+ * AppShell adds 44 (header) + 24 (padding) → usable 832px.
  *
  *  ┌───────────────────────────────────────────────────────────────┐
- *  │ KPI x 4                                                  84px │
+ *  │ NetworkOverview (KPI x 4)                                 74px│
  *  ├──────────────────────────────┬────────────────────────────────┤
- *  │ Earth Viewport               │ SatelliteStatus                │
- *  │ (centerpiece)                ├────────────────────────────────┤
- *  │                          1fr │ LinkAndTraffic           1fr   │
- *  │                              ├────────────────────────────────┤
- *  │                              │ SystemHealth                   │
+ *  │                              │ SatelliteStatus           1fr  │
+ *  │ Earth Viewport          1fr  ├────────────────────────────────┤
+ *  │                              │ LinkAndTraffic            1fr  │
  *  ├──────────────────────────────┴────────────────────────────────┤
- *  │ SelectedSatellite (col-7)            │ CoverageMap (col-5)180 │
- *  ├──────────────────────────────────────┼─────────────┬──────────┤
- *  │ EventLog (col-7)                     │ Upcoming Events  150px │
- *  └──────────────────────────────────────┴────────────────────────┘
+ *  │ SelectedSatellite (full width, 3-col interior)           188px│
+ *  ├──────────┬─────────────┬─────────────┬─────────────────────────┤
+ *  │ SysHealth│ EventLog    │ CoverageMap │ Upcoming           144 │
+ *  │   col-3  │   col-4     │   col-3     │   col-2                │
+ *  └──────────┴─────────────┴─────────────┴─────────────────────────┘
+ *
+ * Tracks: 74 / 1fr / 188 / 144. Fixed = 406 + 30 (gaps) = 436. Row 2 (Earth)
+ * gets 396 → right rail / 2 = ~190 each. Donut + 4 legend rows fit, both
+ * sparklines fit. Row 4 distributes the 4 smaller panels horizontally.
  */
 export function OverviewPage() {
   const changeCamera = useDemoStore((s) => s.changeCamera)
@@ -42,41 +43,42 @@ export function OverviewPage() {
 
   return (
     <div
-      className="grid w-full bg-bg-app px-3 py-3 font-sans text-text-md gap-3"
+      className="grid w-full bg-bg-app font-sans text-text-md gap-2.5 overflow-hidden"
       style={{
-        height: 'calc(100vh - 44px - 24px)', // shell header 44 + .shell__main padding 12x2
+        height: 'calc(100vh - 44px - 24px - 4px)',
         gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
-        gridTemplateRows: '84px minmax(0, 1fr) 180px 140px',
+        gridTemplateRows: '74px minmax(0, 1fr) 188px 144px',
       }}
     >
-      {/* Row 1: KPI strip */}
-      <div className="col-span-12 min-h-0">
+      <div className="col-span-12 min-h-0 overflow-hidden">
         <NetworkOverview />
       </div>
 
-      {/* Row 2: viewport + right rail (sat status / traffic / health) */}
-      <div className="col-span-7 min-h-0">
+      <div className="col-span-7 min-h-0 overflow-hidden">
         <EarthViewport />
       </div>
-      <div className="col-span-5 grid min-h-0 gap-3" style={{ gridTemplateRows: '1fr 1fr 1fr' }}>
-        <div className="min-h-0"><SatelliteStatus /></div>
-        <div className="min-h-0"><LinkAndTraffic /></div>
-        <div className="min-h-0"><SystemHealth /></div>
+      <div
+        className="col-span-5 grid min-h-0 gap-2.5 overflow-hidden"
+        style={{ gridTemplateRows: 'minmax(0, 1fr) minmax(0, 1fr)' }}
+      >
+        <div className="min-h-0 overflow-hidden"><SatelliteStatus /></div>
+        <div className="min-h-0 overflow-hidden"><LinkAndTraffic /></div>
       </div>
 
-      {/* Row 3: selected sat + coverage */}
-      <div className="col-span-7 min-h-0">
+      <div className="col-span-12 min-h-0 overflow-hidden">
         <SelectedSatellite />
       </div>
-      <div className="col-span-5 min-h-0">
-        <CoverageMap />
-      </div>
 
-      {/* Row 4: event log + upcoming */}
-      <div className="col-span-7 min-h-0">
+      <div className="col-span-3 min-h-0 overflow-hidden">
+        <SystemHealth />
+      </div>
+      <div className="col-span-4 min-h-0 overflow-hidden">
         <EventLog />
       </div>
-      <div className="col-span-5 min-h-0">
+      <div className="col-span-3 min-h-0 overflow-hidden">
+        <CoverageMap />
+      </div>
+      <div className="col-span-2 min-h-0 overflow-hidden">
         <UpcomingEvents />
       </div>
     </div>

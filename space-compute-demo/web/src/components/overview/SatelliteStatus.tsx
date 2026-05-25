@@ -6,6 +6,13 @@ import { colors } from '../../design/tokens'
 
 interface Slice { name: string; key: 'online' | 'eclipse' | 'standby' | 'offline'; value: number; color: string }
 
+/**
+ * SatelliteStatus — donut + 4-row legend. Built on Recharts.
+ *
+ * The soft outer glow is faked by a SVG <filter> with a Gaussian blur
+ * applied to each <Cell>. Recharts default mount animation is left ON
+ * (animate on mount, then static).
+ */
 export function SatelliteStatus() {
   const sats = useTelemetryStore((s) => s.sats)
 
@@ -23,55 +30,64 @@ export function SatelliteStatus() {
   const total = sats.length
 
   return (
-    <Card className="h-full flex flex-col min-h-0">
-      <div className="text-[11px] uppercase tracking-[0.10em] text-text-md">
+    <Card>
+      <div className="mb-3 text-[11px] uppercase tracking-[0.10em] text-text-md">
         Satellite Status
       </div>
 
-      <div className="mt-1 grid flex-1 min-h-0 grid-cols-[110px_1fr] items-center gap-3">
-        <div className="relative h-full min-h-0">
+      <div className="grid grid-cols-[160px_1fr] items-center gap-4">
+        {/* Donut */}
+        <div className="relative h-[160px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
+              <defs>
+                <filter id="donutGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3" />
+                </filter>
+              </defs>
               <Pie
                 data={slices}
                 dataKey="value"
-                innerRadius="60%"
-                outerRadius="86%"
+                innerRadius={56}
+                outerRadius={78}
                 paddingAngle={2}
                 stroke="none"
-                animationDuration={800}
+                animationDuration={900}
               >
                 {slices.map((s) => (
                   <Cell
                     key={s.key}
                     fill={s.color}
-                    style={{ filter: `drop-shadow(0 0 6px ${s.color}55)` }}
+                    // Glow filter referenced by id; Recharts forwards style onto path.
+                    style={{ filter: 'drop-shadow(0 0 6px ' + s.color + '55)' }}
                   />
                 ))}
               </Pie>
             </PieChart>
           </ResponsiveContainer>
+          {/* Center label, stacked. */}
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
             <Num
               value={total}
               animate={false}
-              className="text-[22px] leading-none font-semibold text-text-hi"
+              className="text-[28px] leading-none font-semibold text-text-hi"
             />
-            <div className="mt-0.5 text-[9px] uppercase tracking-[0.14em] text-text-lo">
+            <div className="mt-1 text-[10px] uppercase tracking-[0.14em] text-text-lo">
               Total
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-1.5">
+        {/* Legend */}
+        <div className="flex flex-col gap-2.5">
           {slices.map((s) => {
             const pct = total > 0 ? (s.value / total) * 100 : 0
             return (
-              <div key={s.key} className="grid grid-cols-[10px_1fr_auto_auto] items-center gap-2 text-[12px]">
-                <Dot color={s.color} size={7} glow={5} />
+              <div key={s.key} className="grid grid-cols-[12px_1fr_auto_auto] items-center gap-2 text-[13px]">
+                <Dot color={s.color} size={8} glow={6} />
                 <span className="text-text-hi">{s.name}</span>
-                <Num value={s.value} animate={false} className="text-text-hi w-5 text-right" />
-                <Num value={pct} digits={0} animate={false} className="text-[11px] text-text-lo w-7 text-right" />
+                <Num value={s.value} animate={false} className="text-text-hi w-6 text-right" />
+                <Num value={pct} digits={0} animate={false} className="text-[12px] text-text-lo w-8 text-right" />
               </div>
             )
           })}
