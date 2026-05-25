@@ -50,6 +50,12 @@ ORBIT_RADIUS_UNITS = 69.21
 ORBIT_INCLINATION_RAD = math.radians(60.0)
 ORBIT_PERIOD_S = 90.0
 
+# Earth self-rotation: same period as the orbit (visual consistency for the
+# demo). Real Earth is 24 h but at 90s/rev the rotation is clearly visible
+# alongside the moving satellites.
+EARTH_ROTATION_PERIOD_S = 90.0
+EARTH_PATH = "/World/Earth"
+
 USD_ROOT_ENV = "SPACE_DEMO_USD_ROOT"
 SAT_ICON_PATH = "/World/SatelliteIcon"
 
@@ -95,6 +101,31 @@ def set_icon_position(stage, x: float, y: float, z: float) -> None:
     if tr is None:
         tr = xform.AddTranslateOp()
     tr.Set(Gf.Vec3d(x, y, z))
+
+
+def set_earth_rotation(stage, sim_time_s: float) -> None:
+    """Drive /World/Earth's xformOp:rotateZ so the planet self-rotates once
+    per EARTH_ROTATION_PERIOD_S. The 23.5° axial tilt is a static
+    xformOp:rotateX on the same prim (defined in overview.usda) — we ONLY
+    touch the Z component here."""
+    prim = stage.GetPrimAtPath(EARTH_PATH)
+    if not prim or not prim.IsValid():
+        return
+    xform = UsdGeom.Xformable(prim)
+    rotZ = None
+    for op in xform.GetOrderedXformOps():
+        # rotateZ ops can be a few sub-types; match the name precisely so we
+        # never collide with rotateX.
+        if op.GetOpType() == UsdGeom.XformOp.TypeRotateZ:
+            rotZ = op
+            break
+    if rotZ is None:
+        # No rotateZ op present (e.g. earth_mesh.usda is being loaded without
+        # overview.usda's overrides). Don't try to add one — the over should
+        # always provide it.
+        return
+    angle_deg = (sim_time_s * 360.0 / EARTH_ROTATION_PERIOD_S) % 360.0
+    rotZ.Set(angle_deg)
 
 
 STAGE_CAMERAS = {
@@ -223,6 +254,7 @@ if _HAS_KIT:
             )
             x, y, z = _orbit_xyz(sim_now)
             set_icon_position(stage, x, y, z)
+            set_earth_rotation(stage, sim_now)
 else:
     class SpaceDemoSceneExtension:  # type: ignore[no-redef]
         pass
