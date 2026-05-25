@@ -3,7 +3,7 @@
     defaultPrim = "World"
     upAxis = "Z"
     metersPerUnit = 100000
-    doc = "Overview stage. Architecture (per user direction): Earth tilted 23.5° around X (axial tilt), self-rotating around its tilted axis at 90 s/rev driven by space.demo.scene. Sun is a DistantLight in the equatorial plane (+X). Constellation orbits in Earth's equatorial frame so TLE inclinations are relative to Earth's equator, then is tilted together with the Earth."
+    doc = "Overview stage. Earth tilted 23.5° around X (axial tilt), self-rotating around its tilted axis at 90 s/rev driven by space.demo.scene. Sun is a DistantLight in the equatorial plane (+X). Constellation orbits in Earth's equatorial frame and is tilted together with the Earth. Atmosphere shell adds a soft cyan rim halo for the cinematic Omniverse look."
     subLayers = [
         @./earth_mesh.usda@,
         @./constellation.usda@
@@ -14,7 +14,9 @@
         }
         dictionary renderSettings = {
             int "rtx:post:tonemap:op" = 7
-            float "rtx:post:tonemap:cameraShutter" = 0.08
+            float "rtx:post:tonemap:cameraShutter" = 0.05
+            float "rtx:post:bloom:intensity" = 0.18
+            float "rtx:post:bloom:threshold" = 1.5
         }
     }
     startTimeCode = 0
@@ -26,43 +28,50 @@
 def Xform "World"
 {
     # --------------------------------------------------------------------
-    # Lights — single natural sun in the equatorial plane (+X). No bounce
-    # fill, no atmosphere shell, no decorative emissive. Sky DomeLight is
-    # the only ambient contribution and it stays very low so the night
-    # side of Earth reads as space-dark.
+    # Lights — primary sun in equatorial plane + cool back-fill that wraps
+    # the night side so the planet limb reads against deep space. DomeLight
+    # is a faint blue ambient so satellites away from the sun aren't pitch
+    # black against the starfield.
     # --------------------------------------------------------------------
     def Xform "Environment"
     {
-        # Sun direction: light travels in -X (sun sits at +X). With
-        # rotateY=90, DistantLight's default -Z direction is sent to -X.
-        # Z stays 0 -> sun is in the equatorial plane -> terminator is a
-        # clean meridian on the Earth.
+        # Sun: travels in -X (sun sits at +X). rotateY=90 sends DistantLight's
+        # default -Z direction to -X. The terminator is a clean meridian.
         def DistantLight "Sun"
         {
             float inputs:angle = 0.53
-            float inputs:intensity = 120.0
+            float inputs:intensity = 280.0
             color3f inputs:color = (1.0, 0.97, 0.94)
             float3 xformOp:rotateXYZ = (0, 90, 0)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
+        # Back-fill: faint cool wrap-around so the night-side limb still
+        # picks up a hint of glow (planet doesn't disappear into space).
+        def DistantLight "BackFill"
+        {
+            float inputs:angle = 12.0
+            float inputs:intensity = 22.0
+            color3f inputs:color = (0.30, 0.55, 0.95)
+            float3 xformOp:rotateXYZ = (0, -90, 0)
+            uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
+        }
         def DomeLight "Sky"
         {
-            color3f inputs:color = (0.012, 0.018, 0.030)
-            float inputs:intensity = 4.0
+            color3f inputs:color = (0.020, 0.034, 0.060)
+            float inputs:intensity = 14.0
             token inputs:texture:format = "latlong"
         }
     }
 
     # --------------------------------------------------------------------
     # Earth — apply axial tilt + self-rotation as an `over` on the prim
-    # defined by earth_mesh.usda. The xformOpOrder concatenates as
+    # defined by earth_mesh.usda. xformOpOrder concatenates as
     # rotateX * rotateZ (rotateZ applied to local point first, then rotateX
-    # tilts the spinning Earth), so the rotation axis ends up tilted in
-    # world space at 23.5° from +Z.
+    # tilts the spinning Earth), so the rotation axis is tilted in world
+    # space at 23.5° from +Z.
     #
-    # xformOp:rotateZ is animated: 0° at t=0, 360° at t=90 (one revolution
-    # per 90 sim-seconds, matching the orbit period). space.demo.scene also
-    # writes this each frame for live wall-clock motion.
+    # rotateZ is animated 0 → 360 over 90 sim-seconds; space.demo.scene
+    # writes it each frame for wall-clock motion.
     # --------------------------------------------------------------------
     over "Earth"
     {
@@ -75,9 +84,72 @@ def Xform "World"
     }
 
     # --------------------------------------------------------------------
-    # Constellation — same 23.5° tilt as Earth so TLE inclinations stay
-    # referenced to the Earth's (tilted) equator instead of the world
-    # frame. Does NOT self-rotate (orbits are in the inertial frame).
+    # Atmosphere — two concentric emissive shells, low-opacity, sit just
+    # outside Earth (radius 63.71). The inner shell is a denser cyan band,
+    # the outer is a wider but fainter halo. Together they fake a Rayleigh
+    # rim that reads against deep space without needing a custom shader.
+    # Both must not cast shadows; both are non-physical decoration.
+    # --------------------------------------------------------------------
+    def Xform "Atmosphere"
+    {
+        # Atmosphere tilts with Earth so the haze sits on the day-side limb
+        # too — keeps the visual contract that the planet & its halo are
+        # one body.
+        float xformOp:rotateX = 23.5
+        uniform token[] xformOpOrder = ["xformOp:rotateX"]
+
+        def Sphere "Inner" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            double radius = 64.85
+            uniform bool primvars:doNotCastShadows = 1
+            rel material:binding = </World/Atmosphere/Inner/Mat>
+            def Material "Mat"
+            {
+                token outputs:surface.connect = </World/Atmosphere/Inner/Mat/Shader.outputs:surface>
+                def Shader "Shader"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0, 0, 0)
+                    color3f inputs:emissiveColor = (0.10, 0.40, 0.95)
+                    float inputs:metallic = 0
+                    float inputs:roughness = 1
+                    float inputs:opacity = 0.22
+                    int inputs:useSpecularWorkflow = 0
+                    token outputs:surface
+                }
+            }
+        }
+
+        def Sphere "Outer" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            double radius = 66.70
+            uniform bool primvars:doNotCastShadows = 1
+            rel material:binding = </World/Atmosphere/Outer/Mat>
+            def Material "Mat"
+            {
+                token outputs:surface.connect = </World/Atmosphere/Outer/Mat/Shader.outputs:surface>
+                def Shader "Shader"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0, 0, 0)
+                    color3f inputs:emissiveColor = (0.07, 0.30, 0.80)
+                    float inputs:metallic = 0
+                    float inputs:roughness = 1
+                    float inputs:opacity = 0.10
+                    int inputs:useSpecularWorkflow = 0
+                    token outputs:surface
+                }
+            }
+        }
+    }
+
+    # --------------------------------------------------------------------
+    # Constellation — tilt with Earth so TLE inclinations stay referenced
+    # to Earth's tilted equator. Does NOT self-rotate (orbits are inertial).
     # --------------------------------------------------------------------
     over "Constellation"
     {
@@ -86,14 +158,15 @@ def Xform "World"
     }
 
     # --------------------------------------------------------------------
-    # Primary satellite icon — driven by space.demo.scene from the
-    # backend's orbit formula. Stays small and only modestly bright.
+    # Primary "tracked" satellite — driven by space.demo.scene from the
+    # backend's orbit formula. Larger + brighter than the constellation
+    # dots so it reads as the camera's subject.
     # --------------------------------------------------------------------
     def Sphere "SatelliteIcon" (
         prepend apiSchemas = ["MaterialBindingAPI"]
     )
     {
-        double radius = 0.45
+        double radius = 0.85
         double3 xformOp:translate = (69.21, 0, 0)
         uniform token[] xformOpOrder = ["xformOp:translate"]
         uniform bool primvars:doNotCastShadows = 1
@@ -106,7 +179,7 @@ def Xform "World"
             {
                 uniform token info:id = "UsdPreviewSurface"
                 color3f inputs:diffuseColor = (0, 0, 0)
-                color3f inputs:emissiveColor = (0.05, 0.42, 0.55)
+                color3f inputs:emissiveColor = (0.40, 2.40, 3.10)
                 float inputs:metallic = 0
                 float inputs:roughness = 1
                 int inputs:useSpecularWorkflow = 0
@@ -116,7 +189,8 @@ def Xform "World"
     }
 
     # --------------------------------------------------------------------
-    # Cinematic camera — same framing as before.
+    # Cinematic camera — wider FOV and pulled back so atmosphere halo and
+    # constellation both read in frame.
     # --------------------------------------------------------------------
     def Xform "Cameras"
     {
