@@ -1,1 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 html, body, #root { margin: 0; height: 100%; }
+
+/* Numbers don't jitter when they tick. Inherit-friendly because the Tailwind
+   `tabular-nums` class only applies where we explicitly attach it; numeric
+   outputs all go through <Num /> which sets it locally too. */
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* Respect prefers-reduced-motion: kill ALL animations defined in tailwind.config.js
+   keyframes block, leave one-shot transitions alive. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-live-pulse,
+  .animate-spark-draw,
+  .animate-event-fade-in,
+  .animate-coverage-drift,
+  .animate-float-y,
+  .animate-ribbon-breath,
+  .animate-twinkle {
+    animation: none !important;
+  }
+}
