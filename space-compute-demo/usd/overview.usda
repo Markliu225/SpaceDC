@@ -28,30 +28,40 @@ def Xform "World"
     # --------------------------------------------------------------------
     def Xform "Environment"
     {
-        # Sun toned down from 3000 -> 900. Previous value (with cameraShutter
-        # 1.0) was producing a pure-white blowout on the lit hemisphere of
-        # the Earth. 900 + shutter 0.4 gives roughly the same daylight feel
-        # without saturating the diffuse texture.
+        # Geometry note (Z-up, equator in XY plane):
+        # DistantLight default direction is -Z. To get a SUN ON THE EQUATOR
+        # (terminator runs along longitude lines, NOT latitude) the trick is
+        # rotateY=90 -- it sends -Z to -X, putting the light source on the
+        # +X equatorial direction with Z=0. Then rotateZ spins around the
+        # north pole to pick which longitude the sun sits over.
+        #
+        # The previous (-35, 0, 50) put the sun mostly at +Z (north pole),
+        # so the lit area was the north cap and bright clouds/ice there
+        # blew out to pure white. With this geometry the lit area is the
+        # equator-facing side and the terminator is a clean meridian.
         def DistantLight "Sun"
         {
             float inputs:angle = 0.53
-            float inputs:intensity = 900.0
+            float inputs:intensity = 600.0
             color3f inputs:color = (1.0, 0.97, 0.92)
-            float3 xformOp:rotateXYZ = (-35, 0, 50)
+            float3 xformOp:rotateXYZ = (0, 90, 45)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
+        # Fill from the OPPOSITE equatorial direction. Cool blue, very dim
+        # so the night side keeps some shape without competing with the sun.
         def DistantLight "Fill"
         {
             float inputs:angle = 14.0
-            float inputs:intensity = 120.0
-            color3f inputs:color = (0.45, 0.62, 0.95)
-            float3 xformOp:rotateXYZ = (20, 0, -135)
+            float inputs:intensity = 60.0
+            color3f inputs:color = (0.40, 0.60, 0.95)
+            float3 xformOp:rotateXYZ = (0, 90, -135)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
+        # Deep-space ambient. Stays low.
         def DomeLight "Sky"
         {
             color3f inputs:color = (0.020, 0.026, 0.045)
-            float inputs:intensity = 24.0
+            float inputs:intensity = 18.0
             token inputs:texture:format = "latlong"
         }
     }
