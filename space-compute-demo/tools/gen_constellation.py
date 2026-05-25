@@ -34,8 +34,8 @@ SAT_RADIUS_UNITS = 0.35        # 35 km diameter — small dot that still picks u
 # in the foreground don't accumulate past the bloom threshold (0.85) and
 # bleach out to white. Sats are discrete points so they can sit a bit
 # higher without flooding nearby pixels.
-RING_EMIT_GAIN   = 0.22
-SAT_EMIT_GAIN    = 1.8
+RING_EMIT_GAIN   = 0.08
+SAT_EMIT_GAIN    = 0.7
 
 PALETTE_HEX = [
     "E879F9",   # magenta
