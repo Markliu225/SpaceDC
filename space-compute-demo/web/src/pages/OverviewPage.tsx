@@ -52,7 +52,11 @@ export function OverviewPage() {
         gridTemplateRows: '74px minmax(0, 1fr) 188px 144px',
       }}
     >
-      <div className="col-span-12 min-h-0 overflow-hidden">
+      {/* overflow-visible so the Constellation selector's dropdown can
+          extend BELOW this row without getting clipped. The KPI tiles
+          inside NetworkOverview are still fixed at 74px so the row's
+          visible footprint doesn't change. */}
+      <div className="col-span-12 min-h-0 overflow-visible relative z-30">
         <NetworkOverview />
       </div>
 

@@ -51,54 +51,6 @@ def Xform "World"
     }
 
     # --------------------------------------------------------------------
-    # Cloud shell — semi-transparent sphere at Earth radius + ~14 km.
-    # Material is OmniPBR.mdl with the NASA cloud map as both the diffuse
-    # texture AND the opacity texture (grayscale, white = cloud, black =
-    # clear sky). The shell rotates with the Earth (same rotateZ driver
-    # so the clouds don't slide off — for the demo we treat them as
-    # fixed-to-globe; weather drift is out of scope).
-    # --------------------------------------------------------------------
-    def Sphere "CloudShell" (
-        prepend apiSchemas = ["MaterialBindingAPI"]
-    )
-    {
-        double radius = 63.85
-        float xformOp:rotateZ = 0
-        uniform token[] xformOpOrder = ["xformOp:rotateZ"]
-        uniform bool primvars:doNotCastShadows = 1
-        rel material:binding = </World/CloudShell/Mat>
-
-        def Material "Mat"
-        {
-            token outputs:mdl:displacement.connect = </World/CloudShell/Mat/Shader.outputs:out>
-            token outputs:mdl:surface.connect      = </World/CloudShell/Mat/Shader.outputs:out>
-            token outputs:mdl:volume.connect       = </World/CloudShell/Mat/Shader.outputs:out>
-
-            def Shader "Shader"
-            {
-                uniform token info:implementationSource = "sourceAsset"
-                uniform asset info:mdl:sourceAsset = @OmniPBR.mdl@
-                uniform token info:mdl:sourceAsset:subIdentifier = "OmniPBR"
-
-                # Diffuse — NASA cloud map; white pixels = cloud, black = clear.
-                asset inputs:diffuse_texture = @./textures/earth_clouds.jpg@
-                color3f inputs:diffuse_tint = (1.0, 1.0, 1.0)
-                float inputs:reflection_roughness_constant = 0.9
-                float inputs:metallic_constant = 0.0
-
-                # Opacity — same map. Black -> transparent (Earth shows through),
-                # white -> opaque cloud. opacity_mode = 1 selects alpha blend.
-                bool inputs:enable_opacity = 1
-                asset inputs:opacity_texture = @./textures/earth_clouds.jpg@
-                float inputs:opacity_constant = 0.85
-                int inputs:opacity_mode = 1
-
-                token outputs:out
-            }
-        }
-    }
-
-    # --------------------------------------------------------------------
     # Constellation group — populated at runtime by space.demo.scene on
     # every constellation preset change:
     #   - Rings/Ring_K : one BasisCurves per orbital plane (P rings).
@@ -135,7 +87,8 @@ def Xform "World"
                 {
                     uniform token info:id = "UsdPreviewSurface"
                     color3f inputs:diffuseColor = (0, 0, 0)
-                    color3f inputs:emissiveColor = (0.20, 1.80, 2.40)
+                    # Warm white — unambiguous against the 6-hue colored rings.
+                    color3f inputs:emissiveColor = (2.60, 2.40, 1.90)
                     float inputs:metallic = 0
                     float inputs:roughness = 1
                     int inputs:useSpecularWorkflow = 0

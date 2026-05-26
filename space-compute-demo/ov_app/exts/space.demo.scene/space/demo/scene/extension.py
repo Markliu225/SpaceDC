@@ -59,7 +59,6 @@ USD_ROOT_ENV = "SPACE_DEMO_USD_ROOT"
 
 # Prim paths.
 EARTH_PATH       = "/World/Earth"
-CLOUDS_PATH      = "/World/CloudShell"
 CONSTEL_ROOT     = "/World/ConstellationGroup"
 RINGS_ROOT       = f"{CONSTEL_ROOT}/Rings"
 FLEET_POINTS     = f"{CONSTEL_ROOT}/Fleet"
@@ -69,6 +68,18 @@ FLEET_MAT        = f"{CONSTEL_ROOT}/Fleet/Mat"
 SCENE_KM_PER_UNIT = 100.0
 
 EARTH_ROTATION_PERIOD_S = 90.0
+
+# Ring palette — 6 hues, cycled per orbital plane. Matches the Web Three.js
+# fallback's `tokens.colors.ribbons` (magenta / cyan / amber / emerald /
+# violet / rose) so the constellation looks identical in both views.
+RING_HUES: list[tuple[float, float, float]] = [
+    (0.91, 0.47, 0.98),  # E879F9 magenta
+    (0.13, 0.83, 0.93),  # 22D3EE cyan
+    (0.98, 0.75, 0.14),  # FBBF24 amber
+    (0.20, 0.83, 0.60),  # 34D399 emerald
+    (0.65, 0.55, 0.98),  # A78BFA violet
+    (0.98, 0.44, 0.52),  # FB7185 rose
+]
 
 
 def _stage_paths() -> dict[str, str]:
@@ -148,14 +159,18 @@ def rebuild_constellation(
     sats_per_plane = max(1, int(sats_per_plane))
     total_sats = planes * sats_per_plane
 
-    # 3. Author P plane rings.
-    ring_material_path = Sdf.Path(f"{RINGS_ROOT}/RingMat")
-    if not stage.GetPrimAtPath(ring_material_path):
-        _author_ring_material(stage, ring_material_path)
+    # 3. Author 6 ring materials (one per hue) under /Rings, reusable
+    #    across planes. Then author P plane rings, each bound to
+    #    RingMat_(k % 6) so successive planes cycle through the palette.
+    ring_mat_paths = [
+        Sdf.Path(f"{RINGS_ROOT}/RingMat_{i}") for i in range(len(RING_HUES))
+    ]
+    for i, mp in enumerate(ring_mat_paths):
+        if not stage.GetPrimAtPath(mp):
+            _author_ring_material(stage, mp, RING_HUES[i])
     for k in range(planes):
         angle = k * 2.0 * math.pi / planes
         pts_rot = [_rotate_z(p, angle) for p in base_ring_units]
-        # Close the loop visually.
         closed = pts_rot + [pts_rot[0]]
         ring_path = Sdf.Path(f"{RINGS_ROOT}/Ring_{k:03d}")
         curves = UsdGeom.BasisCurves.Define(stage, ring_path)
@@ -164,14 +179,16 @@ def rebuild_constellation(
         curves.GetCurveVertexCountsAttr().Set(Vt.IntArray([len(closed)]))
         curves.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(*p) for p in closed]))
         curves.CreateWidthsAttr(Vt.FloatArray([0.3])).SetMetadata("interpolation", "constant")
-        # Bind shared ring material.
+        hue_idx = k % len(RING_HUES)
+        # displayColor primvar matches the bound material's diffuse so
+        # the legacy Hydra path still draws something even if MDL isn't
+        # available; the bound MDL material wins when it is.
         UsdGeom.PrimvarsAPI(curves).CreatePrimvar(
             "displayColor", Sdf.ValueTypeNames.Color3fArray,
             interpolation="constant",
-        ).Set(Vt.Vec3fArray([Gf.Vec3f(0.55, 0.62, 0.72)]))
-        curves.GetPrim().GetReferences()  # noqa — no-op to satisfy linters
-        _bind_material(stage, curves.GetPrim(), ring_material_path)
-    _log(f"authored {planes} ring(s) under {RINGS_ROOT}")
+        ).Set(Vt.Vec3fArray([Gf.Vec3f(*RING_HUES[hue_idx])]))
+        _bind_material(stage, curves.GetPrim(), ring_mat_paths[hue_idx])
+    _log(f"authored {planes} ring(s) under {RINGS_ROOT} (palette of {len(RING_HUES)} hues)")
 
     # 4. Initial fleet positions (sim_t=0) — the per-frame driver overwrites
     # this; we set something sensible so the points appear immediately even
@@ -183,14 +200,22 @@ def rebuild_constellation(
     return True
 
 
-def _author_ring_material(stage, path: Sdf.Path) -> None:
-    """Subdued gray-blue UsdPreviewSurface used by every plane ring."""
+def _author_ring_material(stage, path: Sdf.Path, hue: tuple[float, float, float]) -> None:
+    """UsdPreviewSurface for one orbit ring at the given hue. Diffuse picks
+    up sun + ambient; a small same-hue emissive keeps the line readable on
+    the night side without making the orbit itself look like a light source."""
     from pxr import UsdShade  # type: ignore
     mat = UsdShade.Material.Define(stage, path)
     sh = UsdShade.Shader.Define(stage, Sdf.Path(f"{path}/Shader"))
     sh.CreateIdAttr("UsdPreviewSurface")
-    sh.CreateInput("diffuseColor",  Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0.55, 0.62, 0.72))
-    sh.CreateInput("emissiveColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0.06, 0.07, 0.10))
+    sh.CreateInput("diffuseColor",  Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(*hue))
+    # Emissive at ~45% of the hue colour — strong enough that the line's
+    # tint is unambiguous against the dim sky on the night side, but well
+    # below 1.0 so the orbit doesn't visually compete with the warm-white
+    # satellite dots.
+    sh.CreateInput("emissiveColor", Sdf.ValueTypeNames.Color3f).Set(
+        Gf.Vec3f(hue[0] * 0.45, hue[1] * 0.45, hue[2] * 0.45)
+    )
     sh.CreateInput("metallic",      Sdf.ValueTypeNames.Float).Set(0.0)
     sh.CreateInput("roughness",     Sdf.ValueTypeNames.Float).Set(1.0)
     sh.CreateInput("useSpecularWorkflow", Sdf.ValueTypeNames.Int).Set(0)
@@ -252,18 +277,19 @@ def _set_fleet_points(stage, positions: list[tuple[float, float, float]]) -> Non
 
 
 def set_earth_rotation(stage, sim_time_s: float) -> None:
-    """Drive xformOp:rotateZ on both /World/Earth and /World/CloudShell so
-    the cloud layer stays locked to the globe (no relative drift)."""
+    prim = stage.GetPrimAtPath(EARTH_PATH)
+    if not prim or not prim.IsValid():
+        return
+    xform = UsdGeom.Xformable(prim)
+    rotZ = None
+    for op in xform.GetOrderedXformOps():
+        if op.GetOpType() == UsdGeom.XformOp.TypeRotateZ:
+            rotZ = op
+            break
+    if rotZ is None:
+        return
     angle_deg = (sim_time_s * 360.0 / EARTH_ROTATION_PERIOD_S) % 360.0
-    for path in (EARTH_PATH, CLOUDS_PATH):
-        prim = stage.GetPrimAtPath(path)
-        if not prim or not prim.IsValid():
-            continue
-        xform = UsdGeom.Xformable(prim)
-        for op in xform.GetOrderedXformOps():
-            if op.GetOpType() == UsdGeom.XformOp.TypeRotateZ:
-                op.Set(angle_deg)
-                break
+    rotZ.Set(angle_deg)
 
 
 # ---------------------------------------------------------------------------
