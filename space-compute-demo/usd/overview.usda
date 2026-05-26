@@ -3,7 +3,7 @@
     defaultPrim = "World"
     upAxis = "Z"
     metersPerUnit = 100000
-    doc = "Overview stage — baseline. Earth (sublayer earth_mesh.usda) self-rotates around its +Z geographic axis once per 90 wall-clock seconds, driven each frame by space.demo.scene. The Sun stays fixed in world space at 23.5° elevation above the equatorial plane, so as the Earth spins the terminator stays tilted at the axial-tilt angle and different longitudes cycle through day/night."
+    doc = "Overview stage — Earth (sublayer earth_mesh.usda) self-rotates around its +Z geographic axis. Sun fixed in world space at 23.5° elevation above the equatorial plane → tilted terminator. /World/ConstellationGroup is fully authored at runtime by space.demo.scene based on the active constellation preset fetched from the backend."
     subLayers = [
         @./earth_mesh.usda@
     ]
@@ -18,21 +18,9 @@ def Xform "World"
 {
     # --------------------------------------------------------------------
     # Lights — single Sun + faint Sky ambient.
-    #
-    # Sun direction: we want the terminator on Earth (Z-up, geographic
-    # north = +Z) to lean 23.5° relative to the north-south meridian, like
-    # the planet at a solstice. That means the Sun's direction vector lies
-    # in a plane tilted 23.5° from Earth's equatorial XY plane.
-    #
-    # Choose Sun position direction D_sun (from origin TOWARD the sun):
-    #   azimuth = -45° in XY (camera-facing octant +X / -Y / +Z),
-    #   elevation = +23.5° above the equatorial plane.
-    # So D_sun = (cos23.5° cos(-45°),  cos23.5° sin(-45°),  sin23.5°)
-    #          = (0.648,  -0.648,  0.398).
-    # The DistantLight emits along -Z by default, then xformOpOrder rotates
-    # that direction. We want it to land at -D_sun = (-0.648, 0.648, -0.398).
-    # Apply rotateX(66.5°) -> (0, 0.917, -0.398), then rotateZ(45°) -> the
-    # vector above. rotateXYZ = (66.5, 0, 45) reproduces that.
+    # Sun rotateXYZ(66.5°, 0, 45°) puts D_sun = (0.648, -0.648, 0.398) →
+    # azimuth -45° in XY, elevation +23.5° above equator → terminator
+    # tilted 23.5° from the N-S meridian.
     # --------------------------------------------------------------------
     def Xform "Environment"
     {
@@ -53,13 +41,8 @@ def Xform "World"
     }
 
     # --------------------------------------------------------------------
-    # Earth — overlay on the prim defined in earth_mesh.usda. The Z rotation
-    # is driven entirely by space.demo.scene each frame (writes the default
-    # value). NO timeSamples here on purpose: if timeSamples existed, USD
-    # would use them in preference to the default when Kit's timeline is
-    # parked at a sampled time code, which would defeat the per-frame
-    # driver. Default-only means the renderer always sees what the driver
-    # last wrote.
+    # Earth — overlay on the prim defined in earth_mesh.usda. xformOp:rotateZ
+    # is driven each frame by space.demo.scene (default value, no timeSamples).
     # --------------------------------------------------------------------
     over "Earth"
     {
@@ -68,80 +51,43 @@ def Xform "World"
     }
 
     # --------------------------------------------------------------------
-    # Orbit + satellite icon. Both are rebuilt by space.demo.scene the
-    # moment it learns the current orbit_type from the backend:
-    #   - OrbitLine: BasisCurves; points + curveVertexCounts get rewritten
-    #     to trace one full TLE-propagated revolution. Uses a constant
-    #     displayColor — no emissive material, the orbit itself does not glow.
-    #   - SatelliteIcon: small sphere with a bright cyan emissive material;
-    #     its xformOp:translate is set every frame to the SGP4 sub-point
-    #     interpolated along the cached orbit curve.
-    # Placeholder authoring below keeps the prims valid before the first
-    # backend roundtrip lands.
+    # Constellation group — populated at runtime by space.demo.scene on
+    # every constellation preset change:
+    #   - Rings/Ring_K : one BasisCurves per orbital plane (P rings).
+    #                    Each plane = base ring rotated about +Z by k·360°/P.
+    #                    Non-emissive, thin gray-blue.
+    #   - Fleet        : single UsdGeom.Points prim with T positions —
+    #                    fast to update at 30 fps even for 1500+ sats.
+    #                    Bright cyan emissive material.
+    # Placeholder children below make the prims valid before the first
+    # backend roundtrip lands; the extension overwrites them on first tick.
     # --------------------------------------------------------------------
-    def Xform "OrbitGroup"
+    def Xform "ConstellationGroup"
     {
-        def BasisCurves "OrbitLine" (
+        def Xform "Rings" {}
+
+        def Points "Fleet" (
             prepend apiSchemas = ["MaterialBindingAPI"]
         )
         {
-            int[] curveVertexCounts = [2]
-            point3f[] points = [(0, 0, 0), (0, 0, 0)]
-            # Width is in scene units (1 unit = 100 km). 0.3 = 30 km thick —
-            # a thin hairline against the Earth limb. Bumped up only enough
-            # to survive sub-pixel aliasing at the cinematic camera distance.
-            float[] widths = [0.3] (
+            point3f[] points = [(0, 0, 0)]
+            float[] widths = [0.7] (
                 interpolation = "constant"
             )
-            float[] primvars:widths = [0.3] (
+            float[] primvars:widths = [0.7] (
                 interpolation = "constant"
             )
-            uniform token type = "linear"
-            uniform token wrap = "nonperiodic"
             uniform bool primvars:doNotCastShadows = 1
-            rel material:binding = </World/OrbitGroup/OrbitLine/Mat>
-
-            # Material — flat gray with a *tiny* self-emission so the orbit
-            # reads against deep space even when the sun is on the far side
-            # of the Earth. The emissive value is well below 1.0 so this is
-            # readable as a subdued line, not a glow.
-            def Material "Mat"
-            {
-                token outputs:surface.connect = </World/OrbitGroup/OrbitLine/Mat/Shader.outputs:surface>
-                def Shader "Shader"
-                {
-                    uniform token info:id = "UsdPreviewSurface"
-                    color3f inputs:diffuseColor = (0.55, 0.62, 0.72)
-                    color3f inputs:emissiveColor = (0.06, 0.07, 0.10)
-                    float inputs:metallic = 0
-                    float inputs:roughness = 1
-                    int inputs:useSpecularWorkflow = 0
-                    token outputs:surface
-                }
-            }
-        }
-
-        def Sphere "SatelliteIcon" (
-            prepend apiSchemas = ["MaterialBindingAPI"]
-        )
-        {
-            # 0.45 unit = 45 km radius — diameter (90 km) is only a touch
-            # wider than the 30 km orbit line, so the sat reads as a small
-            # bead riding on the ring rather than a blob hovering over it.
-            double radius = 0.45
-            double3 xformOp:translate = (69.21, 0, 0)
-            uniform token[] xformOpOrder = ["xformOp:translate"]
-            uniform bool primvars:doNotCastShadows = 1
-            rel material:binding = </World/OrbitGroup/SatelliteIcon/Mat>
+            rel material:binding = </World/ConstellationGroup/Fleet/Mat>
 
             def Material "Mat"
             {
-                token outputs:surface.connect = </World/OrbitGroup/SatelliteIcon/Mat/Shader.outputs:surface>
+                token outputs:surface.connect = </World/ConstellationGroup/Fleet/Mat/Shader.outputs:surface>
                 def Shader "Shader"
                 {
                     uniform token info:id = "UsdPreviewSurface"
                     color3f inputs:diffuseColor = (0, 0, 0)
-                    color3f inputs:emissiveColor = (0.40, 3.20, 3.80)
+                    color3f inputs:emissiveColor = (0.20, 1.80, 2.40)
                     float inputs:metallic = 0
                     float inputs:roughness = 1
                     int inputs:useSpecularWorkflow = 0

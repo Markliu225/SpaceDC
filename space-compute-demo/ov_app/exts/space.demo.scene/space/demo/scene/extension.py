@@ -1,21 +1,22 @@
 """space.demo.scene — orchestrator for the Omniverse overview stage.
 
-Stages (swapped via omni.usd.get_context().open_stage()):
-    usd/overview.usda  — Earth + TLE-driven orbit ring + moving sat icon
-    usd/satellite.usda — DGX close-up (no Earth)
-    usd/interior.usda  — data-hall aisle
+Three motions in the overview stage:
+  1. Earth self-rotation around +Z (wall-clock, backend-independent).
+  2. Constellation rings — one BasisCurves per orbital plane, rebuilt
+     whenever the active preset changes.
+  3. Fleet positions — every sat's ECI point written into a UsdGeom.Points
+     prim each frame, derived from the cached base ring + per-sat Walker
+     phase offsets (no SGP4 in Kit).
 
-In the overview stage this extension is responsible for three motions:
-  1. Earth self-rotation around +Z, driven from wall-clock sim time
-     (independent of backend availability — Earth keeps turning).
-  2. Orbit ring geometry — fetched from the backend's /orbits/<mode>
-     endpoint (TLE + 128 SGP4 sample points per revolution) and
-     rewritten into /World/OrbitGroup/OrbitLine on every orbit_type
-     change. The orbit itself is not emissive.
-  3. Satellite icon position — interpolated along the cached orbit
-     ring using the backend's sim_time and the TLE's revolution period
-     (scaled by /orbits' time_scale so a full revolution takes ~90 s
-     of wall clock for LEO).
+The backend's /constellations/{id} endpoint returns the base orbit ring
+(128 ECI km samples for plane 0 / sat 0) and the Walker params. From
+those everything else is derived in Kit:
+  * Ring K = base ring rotated about +Z by k × 360°/P.
+  * Sat (k, j) at sim_t = ring point at phase
+        (sim_t × time_scale × 360° / period
+         + j × 360° / sats_per_plane
+         + k × phasing × 360° / total) mod 360°
+    interpolated linearly along the (rotated) ring.
 """
 from __future__ import annotations
 
@@ -31,7 +32,7 @@ try:
     import omni.ext  # type: ignore
     import omni.kit.app  # type: ignore
     import omni.usd  # type: ignore
-    from pxr import Gf, UsdGeom, Vt  # type: ignore
+    from pxr import Gf, Sdf, UsdGeom, Vt  # type: ignore
     _HAS_KIT = True
 except ImportError:
     _HAS_KIT = False
@@ -50,22 +51,22 @@ def _log(msg: str) -> None:
 
 
 BACKEND_BASE = os.environ.get("SPACE_DEMO_BACKEND_HTTP", "http://localhost:8001").rstrip("/")
-BACKEND_STATE_URL = f"{BACKEND_BASE}/state"
-BACKEND_ORBIT_URL = f"{BACKEND_BASE}/orbits/{{mode}}"
+BACKEND_STATE_URL          = f"{BACKEND_BASE}/state"
+BACKEND_CONSTELLATION_URL  = f"{BACKEND_BASE}/constellations/{{id}}"
 POLL_HZ = 5.0
 
 USD_ROOT_ENV = "SPACE_DEMO_USD_ROOT"
 
-# Prim paths inside overview.usda.
-EARTH_PATH      = "/World/Earth"
-ORBIT_LINE_PATH = "/World/OrbitGroup/OrbitLine"
-SAT_ICON_PATH   = "/World/OrbitGroup/SatelliteIcon"
+# Prim paths.
+EARTH_PATH       = "/World/Earth"
+CONSTEL_ROOT     = "/World/ConstellationGroup"
+RINGS_ROOT       = f"{CONSTEL_ROOT}/Rings"
+FLEET_POINTS     = f"{CONSTEL_ROOT}/Fleet"
+FLEET_MAT        = f"{CONSTEL_ROOT}/Fleet/Mat"
 
 # Scene scale — overview.usda is metersPerUnit = 100000 so 1 unit = 100 km.
 SCENE_KM_PER_UNIT = 100.0
 
-# Earth self-rotation period in wall-seconds. Independent of TLE — purely a
-# visual choice so the planet's spin is clearly observable in the demo.
 EARTH_ROTATION_PERIOD_S = 90.0
 
 
@@ -79,8 +80,7 @@ def _stage_paths() -> dict[str, str]:
 
 
 # ---------------------------------------------------------------------------
-# HTTP helpers — backend is the source of truth for both state polling and
-# the orbit catalog. urllib (stdlib) because Kit ships no async HTTP client.
+# HTTP helpers.
 # ---------------------------------------------------------------------------
 def fetch_state() -> Optional[dict]:
     try:
@@ -90,64 +90,167 @@ def fetch_state() -> Optional[dict]:
         return None
 
 
-def fetch_orbit_catalog(mode: str) -> Optional[dict]:
-    """One-shot fetch of /orbits/<mode>. ~1.5s timeout — orbit changes are rare,
-    we can tolerate a brief blocking call inside the poll thread."""
+def fetch_constellation(preset_id: str) -> Optional[dict]:
+    """One-shot fetch of /constellations/{id}. The response includes the
+    base orbit ring (128 ECI km samples) + Walker params we need to lay
+    out the whole fleet."""
     try:
-        url = BACKEND_ORBIT_URL.format(mode=mode)
-        with urllib.request.urlopen(url, timeout=1.5) as r:
+        url = BACKEND_CONSTELLATION_URL.format(id=preset_id)
+        with urllib.request.urlopen(url, timeout=2.0) as r:
             return json.loads(r.read().decode("utf-8"))
     except Exception as exc:  # noqa: BLE001
-        _log(f"fetch_orbit_catalog({mode}) failed: {exc}")
+        _log(f"fetch_constellation({preset_id}) failed: {exc}")
         return None
 
 
 # ---------------------------------------------------------------------------
-# USD write helpers.
+# USD authoring.
 # ---------------------------------------------------------------------------
-def _km_to_units(pt_km: tuple[float, float, float]) -> tuple[float, float, float]:
-    return (pt_km[0] / SCENE_KM_PER_UNIT,
-            pt_km[1] / SCENE_KM_PER_UNIT,
-            pt_km[2] / SCENE_KM_PER_UNIT)
+def _km_to_units(p: tuple[float, float, float]) -> tuple[float, float, float]:
+    return (p[0] / SCENE_KM_PER_UNIT, p[1] / SCENE_KM_PER_UNIT, p[2] / SCENE_KM_PER_UNIT)
 
 
-def rebuild_orbit_line(stage, points_units: list[tuple[float, float, float]]) -> bool:
-    """Rewrite /World/OrbitGroup/OrbitLine's points + curveVertexCounts so the
-    BasisCurves traces one full revolution. Returns True on success."""
-    prim = stage.GetPrimAtPath(ORBIT_LINE_PATH)
-    if not prim or not prim.IsValid():
+def _rotate_z(pt: tuple[float, float, float], angle_rad: float) -> tuple[float, float, float]:
+    c = math.cos(angle_rad)
+    s = math.sin(angle_rad)
+    x, y, z = pt
+    return (c * x - s * y, s * x + c * y, z)
+
+
+def rebuild_constellation(
+    stage,
+    base_ring_units: list[tuple[float, float, float]],
+    planes: int,
+    sats_per_plane: int,
+    phasing: int,
+) -> bool:
+    """Author P rings under /Rings + initial Walker positions in /Fleet."""
+    rings_prim = stage.GetPrimAtPath(RINGS_ROOT)
+    if not rings_prim or not rings_prim.IsValid():
+        _log(f"rebuild_constellation: missing {RINGS_ROOT}")
         return False
-    curves = UsdGeom.BasisCurves(prim)
-    if not points_units:
+    fleet_prim = stage.GetPrimAtPath(FLEET_POINTS)
+    if not fleet_prim or not fleet_prim.IsValid():
+        _log(f"rebuild_constellation: missing {FLEET_POINTS}")
         return False
-    # Close the loop visually by repeating the first point at the end. We use
-    # "nonperiodic" wrap mode (set in USD) — closing manually is more
-    # predictable across Hydra renderers than relying on periodic wrap.
-    closed = list(points_units) + [points_units[0]]
-    n = len(closed)
-    pts = Vt.Vec3fArray([Gf.Vec3f(*p) for p in closed])
-    curves.GetPointsAttr().Set(pts)
-    curves.GetCurveVertexCountsAttr().Set(Vt.IntArray([n]))
+
+    # 1. Tear down any existing ring children.
+    for child in list(rings_prim.GetChildren()):
+        stage.RemovePrim(child.GetPath())
+
+    if not base_ring_units:
+        _log("rebuild_constellation: empty base ring")
+        return False
+    n_pts = len(base_ring_units)
+
+    planes = max(1, int(planes))
+    sats_per_plane = max(1, int(sats_per_plane))
+    total_sats = planes * sats_per_plane
+
+    # 3. Author P plane rings.
+    ring_material_path = Sdf.Path(f"{RINGS_ROOT}/RingMat")
+    if not stage.GetPrimAtPath(ring_material_path):
+        _author_ring_material(stage, ring_material_path)
+    for k in range(planes):
+        angle = k * 2.0 * math.pi / planes
+        pts_rot = [_rotate_z(p, angle) for p in base_ring_units]
+        # Close the loop visually.
+        closed = pts_rot + [pts_rot[0]]
+        ring_path = Sdf.Path(f"{RINGS_ROOT}/Ring_{k:03d}")
+        curves = UsdGeom.BasisCurves.Define(stage, ring_path)
+        curves.GetTypeAttr().Set("linear")
+        curves.GetWrapAttr().Set("nonperiodic")
+        curves.GetCurveVertexCountsAttr().Set(Vt.IntArray([len(closed)]))
+        curves.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(*p) for p in closed]))
+        curves.CreateWidthsAttr(Vt.FloatArray([0.3])).SetMetadata("interpolation", "constant")
+        # Bind shared ring material.
+        UsdGeom.PrimvarsAPI(curves).CreatePrimvar(
+            "displayColor", Sdf.ValueTypeNames.Color3fArray,
+            interpolation="constant",
+        ).Set(Vt.Vec3fArray([Gf.Vec3f(0.55, 0.62, 0.72)]))
+        curves.GetPrim().GetReferences()  # noqa — no-op to satisfy linters
+        _bind_material(stage, curves.GetPrim(), ring_material_path)
+    _log(f"authored {planes} ring(s) under {RINGS_ROOT}")
+
+    # 4. Initial fleet positions (sim_t=0) — the per-frame driver overwrites
+    # this; we set something sensible so the points appear immediately even
+    # before the first _on_update tick.
+    positions = compute_fleet_positions(base_ring_units, planes, sats_per_plane, phasing, sim_phase_rad=0.0)
+    _set_fleet_points(stage, positions)
+
+    _log(f"fleet authored: {total_sats} sats ({n_pts}-pt base ring)")
     return True
 
 
-def set_sat_icon_position(stage, x: float, y: float, z: float) -> None:
-    prim = stage.GetPrimAtPath(SAT_ICON_PATH)
+def _author_ring_material(stage, path: Sdf.Path) -> None:
+    """Subdued gray-blue UsdPreviewSurface used by every plane ring."""
+    from pxr import UsdShade  # type: ignore
+    mat = UsdShade.Material.Define(stage, path)
+    sh = UsdShade.Shader.Define(stage, Sdf.Path(f"{path}/Shader"))
+    sh.CreateIdAttr("UsdPreviewSurface")
+    sh.CreateInput("diffuseColor",  Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0.55, 0.62, 0.72))
+    sh.CreateInput("emissiveColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0.06, 0.07, 0.10))
+    sh.CreateInput("metallic",      Sdf.ValueTypeNames.Float).Set(0.0)
+    sh.CreateInput("roughness",     Sdf.ValueTypeNames.Float).Set(1.0)
+    sh.CreateInput("useSpecularWorkflow", Sdf.ValueTypeNames.Int).Set(0)
+    mat.CreateSurfaceOutput().ConnectToSource(sh.ConnectableAPI(), "surface")
+
+
+def _bind_material(stage, prim, mat_path: Sdf.Path) -> None:
+    from pxr import UsdShade  # type: ignore
+    mat_prim = stage.GetPrimAtPath(mat_path)
+    if not mat_prim or not mat_prim.IsValid():
+        return
+    UsdShade.MaterialBindingAPI.Apply(prim).Bind(UsdShade.Material(mat_prim))
+
+
+def compute_fleet_positions(
+    base_ring_units: list[tuple[float, float, float]],
+    planes: int,
+    sats_per_plane: int,
+    phasing: int,
+    sim_phase_rad: float,
+) -> list[tuple[float, float, float]]:
+    """Walker layout. Each sat sits at a phase offset along its plane's
+    (rotated) base ring. `sim_phase_rad` advances every frame so the whole
+    fleet drifts in sync without per-sat propagation."""
+    n = len(base_ring_units)
+    total = planes * sats_per_plane
+    positions: list[tuple[float, float, float]] = []
+    for k in range(planes):
+        plane_angle = k * 2.0 * math.pi / planes
+        for j in range(sats_per_plane):
+            walker_phase = (
+                sim_phase_rad
+                + j * 2.0 * math.pi / sats_per_plane
+                + k * phasing * 2.0 * math.pi / total
+            )
+            # Sample base ring at that phase.
+            t = (walker_phase % (2.0 * math.pi)) / (2.0 * math.pi)
+            f = t * n
+            i0 = int(f) % n
+            i1 = (i0 + 1) % n
+            a = f - math.floor(f)
+            p0 = base_ring_units[i0]
+            p1 = base_ring_units[i1]
+            lerped = (
+                p0[0] + (p1[0] - p0[0]) * a,
+                p0[1] + (p1[1] - p0[1]) * a,
+                p0[2] + (p1[2] - p0[2]) * a,
+            )
+            positions.append(_rotate_z(lerped, plane_angle))
+    return positions
+
+
+def _set_fleet_points(stage, positions: list[tuple[float, float, float]]) -> None:
+    prim = stage.GetPrimAtPath(FLEET_POINTS)
     if not prim or not prim.IsValid():
         return
-    xform = UsdGeom.Xformable(prim)
-    tr = None
-    for op in xform.GetOrderedXformOps():
-        if op.GetOpType() == UsdGeom.XformOp.TypeTranslate:
-            tr = op
-            break
-    if tr is None:
-        tr = xform.AddTranslateOp()
-    tr.Set(Gf.Vec3d(x, y, z))
+    pts = UsdGeom.Points(prim)
+    pts.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(*p) for p in positions]))
 
 
 def set_earth_rotation(stage, sim_time_s: float) -> None:
-    """Drive /World/Earth's xformOp:rotateZ from wall-clock sim_time."""
     prim = stage.GetPrimAtPath(EARTH_PATH)
     if not prim or not prim.IsValid():
         return
@@ -163,28 +266,8 @@ def set_earth_rotation(stage, sim_time_s: float) -> None:
     rotZ.Set(angle_deg)
 
 
-def interp_along_curve(points_units, t_in_period_s: float, period_s: float):
-    """Linear interpolation around an N-sample closed curve where samples are
-    uniformly spaced in time. period_s is the *real* (un-scaled) seconds for
-    one revolution; t_in_period_s is in the same units."""
-    n = len(points_units)
-    if n == 0 or period_s <= 0:
-        return (0.0, 0.0, 0.0)
-    f = (t_in_period_s / period_s) * n
-    i0 = int(f) % n
-    i1 = (i0 + 1) % n
-    a = f - math.floor(f)
-    p0 = points_units[i0]
-    p1 = points_units[i1]
-    return (
-        p0[0] + (p1[0] - p0[0]) * a,
-        p0[1] + (p1[1] - p0[1]) * a,
-        p0[2] + (p1[2] - p0[2]) * a,
-    )
-
-
 # ---------------------------------------------------------------------------
-# Stage swap (preset → stage file).
+# Stage swap.
 # ---------------------------------------------------------------------------
 STAGE_CAMERAS = {
     "overview":  "/World/Cameras/Overview",
@@ -241,21 +324,20 @@ if _HAS_KIT:
             self._anchor_wall_s: float = time.monotonic()
             self._backend_running: bool = True
 
-            # Earth spin — separate wall-clock anchor, no backend dependency.
+            # Earth spin — separate wall-clock anchor.
             self._earth_anchor_wall_s: float = time.monotonic()
             self._earth_rotation_logged: bool = False
 
-            # Orbit catalog cache. _orbit_mode is the mode currently rendered.
-            # _pending_orbit_mode is set when the poll loop notices a change
-            # in state.satellite.orbit_type; the poll loop fetches the new
-            # catalog asynchronously, stores it, and the next render frame
-            # picks it up to rebuild the BasisCurves.
-            self._orbit_mode: Optional[str] = None
-            self._pending_orbit_mode: Optional[str] = "LEO"  # bootstrap fetch on first tick
-            self._orbit_points_units: list[tuple[float, float, float]] = []
-            self._orbit_period_s: float = 90.0       # real seconds (not scaled)
-            self._orbit_time_scale: float = 60.0
-            self._orbit_dirty: bool = False          # set when new points arrived
+            # Constellation cache.
+            self._constellation_id: Optional[str] = None
+            self._pending_constellation: Optional[str] = "single_iss"   # bootstrap
+            self._base_ring_units: list[tuple[float, float, float]] = []
+            self._planes: int = 1
+            self._sats_per_plane: int = 1
+            self._phasing: int = 0
+            self._period_s: float = 5574.0
+            self._time_scale: float = 60.0
+            self._constellation_dirty: bool = False
 
             self._poll_task: Optional[asyncio.Task] = asyncio.ensure_future(self._run_poll_loop())
             app = omni.kit.app.get_app()
@@ -274,11 +356,10 @@ if _HAS_KIT:
         async def _run_poll_loop(self) -> None:
             app = omni.kit.app.get_app()
             dt = 1.0 / POLL_HZ
-            # Wait for the first stage to settle.
             for _ in range(30):
                 await app.next_update_async()
             while self._running:
-                # Backend state poll.
+                # Backend state poll — detects constellation/preset changes.
                 try:
                     state = await asyncio.to_thread(fetch_state)
                     if state is not None:
@@ -286,36 +367,35 @@ if _HAS_KIT:
                 except Exception as exc:  # noqa: BLE001
                     _log(f"poll error: {exc}")
 
-                # Orbit catalog fetch — only when a mode change is pending.
-                if self._pending_orbit_mode is not None:
-                    pending = self._pending_orbit_mode
-                    cat = await asyncio.to_thread(fetch_orbit_catalog, pending)
-                    if cat is not None:
+                # Constellation catalog fetch.
+                if self._pending_constellation is not None:
+                    pending = self._pending_constellation
+                    detail = await asyncio.to_thread(fetch_constellation, pending)
+                    if detail is not None:
                         try:
-                            pts_km = cat.get("points_km", [])
-                            pts_units = [_km_to_units(tuple(p)) for p in pts_km]
-                            if pts_units:
-                                self._orbit_points_units = pts_units
-                                self._orbit_period_s = float(cat.get("period_s", 5574.0))
-                                self._orbit_time_scale = float(cat.get("time_scale", 60.0))
-                                self._orbit_mode = pending
-                                self._orbit_dirty = True
-                                _log(f"orbit catalog cached: {pending} "
-                                     f"({len(pts_units)} pts, period={self._orbit_period_s:.0f}s, "
-                                     f"scale=x{self._orbit_time_scale:.0f})")
+                            pts_km = detail.get("ring_eci_km", [])
+                            if pts_km:
+                                self._base_ring_units = [_km_to_units(tuple(p)) for p in pts_km]
+                                self._planes         = int(detail.get("planes", 1))
+                                self._sats_per_plane = int(detail.get("sats_per_plane", 1))
+                                self._phasing        = int(detail.get("phasing", 0))
+                                self._period_s       = float(detail.get("period_s", 5574.0))
+                                self._time_scale     = float(detail.get("time_scale", 60.0))
+                                self._constellation_id = pending
+                                self._constellation_dirty = True
+                                _log(f"constellation cached: {pending} "
+                                     f"({self._planes}p × {self._sats_per_plane}s, "
+                                     f"period={self._period_s:.0f}s, scale=x{self._time_scale:.0f})")
                         except Exception as exc:  # noqa: BLE001
-                            _log(f"orbit catalog parse error: {exc}")
-                    # Clear pending whether successful or not — next state poll
-                    # that still disagrees will set it again.
-                    if self._pending_orbit_mode == pending:
-                        self._pending_orbit_mode = None
+                            _log(f"constellation parse error: {exc}")
+                    if self._pending_constellation == pending:
+                        self._pending_constellation = None
 
                 await asyncio.sleep(dt)
 
         def _on_poll(self, state: dict) -> None:
             backend_sim = float(state.get("sim_time_s", 0.0))
             backend_running = bool(state.get("running", True))
-
             local_sim = (
                 self._anchor_sim_s + (time.monotonic() - self._anchor_wall_s)
                 if self._anchor_sim_s is not None
@@ -331,7 +411,7 @@ if _HAS_KIT:
                 self._anchor_wall_s = time.monotonic()
             self._backend_running = backend_running
 
-            # Stage preset.
+            # Camera preset / stage swap.
             preset = state.get("camera_preset", "overview")
             if preset not in ("overview", "satellite", "interior"):
                 preset = "overview"
@@ -343,12 +423,12 @@ if _HAS_KIT:
                     if swap_stage(target, preset):
                         self._current_stage = target
 
-            # Orbit mode change detection.
-            sat = state.get("satellite") or {}
-            new_mode = sat.get("orbit_type")
-            if new_mode and new_mode != self._orbit_mode and new_mode != self._pending_orbit_mode:
-                _log(f"orbit mode change requested: {self._orbit_mode} -> {new_mode}")
-                self._pending_orbit_mode = new_mode
+            # Constellation change detection.
+            constel = state.get("constellation") or {}
+            cid = constel.get("constellation_id")
+            if cid and cid != self._constellation_id and cid != self._pending_constellation:
+                _log(f"constellation change requested: {self._constellation_id} -> {cid}")
+                self._pending_constellation = cid
 
         # ---- per-frame update --------------------------------------------
         def _on_update(self, _event) -> None:
@@ -359,39 +439,33 @@ if _HAS_KIT:
             if stage is None:
                 return
 
-            # Earth spin — wall clock, never gated on the backend.
+            # Earth spin — wall-clock, unaffected by backend.
             earth_sim_s = time.monotonic() - self._earth_anchor_wall_s
             set_earth_rotation(stage, earth_sim_s)
             if not self._earth_rotation_logged:
                 _log("earth rotation driver tick — overview stage active")
                 self._earth_rotation_logged = True
 
-            # Rebuild orbit ring if a new catalog landed since last frame.
-            if self._orbit_dirty:
-                if rebuild_orbit_line(stage, self._orbit_points_units):
-                    _log(f"orbit line rebuilt: mode={self._orbit_mode} "
-                         f"({len(self._orbit_points_units)} verts)")
-                self._orbit_dirty = False
+            # Constellation rebuild on first cache or any switch.
+            if self._constellation_dirty and self._base_ring_units:
+                rebuild_constellation(
+                    stage, self._base_ring_units,
+                    self._planes, self._sats_per_plane, self._phasing,
+                )
+                self._constellation_dirty = False
 
-            # Drive the satellite icon along the cached orbit. We need
-            # backend sim_time so the position stays consistent across
-            # restarts; if backend isn't up yet, park the icon at points[0].
-            if not self._orbit_points_units:
+            # Per-frame fleet position update.
+            if not self._base_ring_units or self._anchor_sim_s is None:
                 return
-            if self._anchor_sim_s is None:
-                p0 = self._orbit_points_units[0]
-                set_sat_icon_position(stage, *p0)
-                return
-
             sim_now = self._anchor_sim_s + (
                 (time.monotonic() - self._anchor_wall_s) if self._backend_running else 0.0
             )
-            scaled = sim_now * self._orbit_time_scale
-            t_in_period = scaled % self._orbit_period_s
-            x, y, z = interp_along_curve(
-                self._orbit_points_units, t_in_period, self._orbit_period_s
+            sim_phase_rad = (sim_now * self._time_scale * 2.0 * math.pi / self._period_s) % (2.0 * math.pi)
+            positions = compute_fleet_positions(
+                self._base_ring_units, self._planes, self._sats_per_plane, self._phasing,
+                sim_phase_rad=sim_phase_rad,
             )
-            set_sat_icon_position(stage, x, y, z)
+            _set_fleet_points(stage, positions)
 else:
     class SpaceDemoSceneExtension:  # type: ignore[no-redef]
         pass
