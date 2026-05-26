@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { ConstellationPresetSummary, FleetSnapshot } from '../types/messages'
 
 // Status taxonomy used by the donut + sat markers.
 export type SatStatus = 'online' | 'eclipse' | 'standby' | 'offline'
@@ -72,12 +73,24 @@ interface TelemetryStore {
   uplink_history: number[]
   events: EventEntry[]
   upcoming: UpcomingEvent[]
+
+  // ---- backend-driven fields (filled by useBackendBridge) ----
+  /** Currently active constellation snapshot from /state.constellation. */
+  fleet: FleetSnapshot | null
+  /** Full preset catalog from GET /constellations.presets. */
+  presets: ConstellationPresetSummary[]
+  /** Active preset id; mirrors fleet.constellation_id once we receive a snapshot. */
+  activeConstellationId: string
+
   // ---- actions ----
   setRunning: (v: boolean) => void
   reset: () => void
   select: (id: string) => void
   applyTick: (patch: Partial<TelemetryStore>) => void
   pushEvent: (e: EventEntry) => void
+  applyFleet: (fleet: FleetSnapshot) => void
+  setPresets: (p: ConstellationPresetSummary[]) => void
+  setActiveConstellation: (id: string) => void
 }
 
 // ---- Deterministic seed satellites: 20 online / 2 eclipse / 1 standby / 1 offline.
@@ -163,6 +176,10 @@ export const useTelemetryStore = create<TelemetryStore>((set) => ({
   events: initialEvents(),
   upcoming: initialUpcoming(),
 
+  fleet: null,
+  presets: [],
+  activeConstellationId: 'single_iss',
+
   setRunning: (v) => set({ running: v }),
   reset: () =>
     set({
@@ -176,4 +193,22 @@ export const useTelemetryStore = create<TelemetryStore>((set) => ({
   applyTick: (patch) => set((s) => ({ ...s, ...patch })),
   pushEvent: (e) =>
     set((s) => ({ events: [e, ...s.events].slice(0, 24) })),
+  applyFleet: (fleet) =>
+    set({
+      fleet,
+      activeConstellationId: fleet.constellation_id,
+      // Mirror fleet into NetworkKPIs so existing NetworkOverview reads stay
+      // valid even before its component-level rewrite.
+      network: {
+        total: fleet.total,
+        online: fleet.online,
+        links_total: fleet.links_total,
+        isl_links: fleet.isl_links,
+        gsl_links: fleet.gsl_links,
+        coverage_pct: fleet.coverage_pct,
+        agg_throughput_mbps: fleet.agg_throughput_mbps,
+      },
+    }),
+  setPresets: (presets) => set({ presets }),
+  setActiveConstellation: (id) => set({ activeConstellationId: id }),
 }))

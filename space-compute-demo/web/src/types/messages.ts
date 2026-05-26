@@ -1,6 +1,6 @@
 // Mirrors backend/models.py. Keep in sync with docs/api_spec.md.
 
-export type OrbitType = 'LEO' | 'SSO';
+export type OrbitType = 'LEO' | 'SSO' | 'MEO' | 'GEO';
 export type GpuType = 'H100' | 'H200' | 'B200' | 'MI300X';
 export type Mode = 'on_orbit' | 'ground_only';
 export type TaskPhase =
@@ -50,10 +50,43 @@ export interface CompareMetrics {
   peak_temp_c: number;
 }
 
+export interface FleetSnapshot {
+  constellation_id: string;
+  name: string;
+  total: number;
+  online: number;
+  eclipse: number;
+  standby: number;
+  offline: number;
+  planes: number;
+  sats_per_plane: number;
+  inclination_deg: number;
+  altitude_km: number;
+  coverage_pct: number;
+  links_total: number;
+  isl_links: number;
+  gsl_links: number;
+  agg_throughput_mbps: number;
+}
+
+export interface ConstellationPresetSummary {
+  id: string;
+  name: string;
+  description: string;
+  total_sats: number;
+  planes: number;
+  sats_per_plane: number;
+  phasing: number;
+  inclination_deg: number;
+  altitude_km: number;
+  period_s: number;
+}
+
 export interface StatePacket {
   sim_time_s: number;
   satellite: SatelliteState;
   ground_station: GroundStationState;
+  constellation: FleetSnapshot;
   task: TaskState | null;
   compare: CompareMetrics | null;
 }

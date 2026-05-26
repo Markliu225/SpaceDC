@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useDemoStore } from '../store/demoStore'
 import { useMockTelemetryFeed } from '../hooks/useMockTelemetryFeed'
+import { useBackendBridge } from '../hooks/useBackendBridge'
 import { EarthViewport } from '../components/overview/EarthViewport'
 import { NetworkOverview } from '../components/overview/NetworkOverview'
 import { SatelliteStatus } from '../components/overview/SatelliteStatus'
@@ -40,6 +41,7 @@ export function OverviewPage() {
     if (connected) changeCamera('overview')
   }, [connected, changeCamera])
   useMockTelemetryFeed()
+  useBackendBridge()
 
   return (
     <div
