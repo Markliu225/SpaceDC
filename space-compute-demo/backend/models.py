@@ -5,7 +5,7 @@ from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field
 
-OrbitType = Literal["LEO", "SSO"]
+OrbitType = Literal["LEO", "SSO", "MEO", "GEO"]
 GpuType = Literal["H100", "H200", "B200", "MI300X"]
 Mode = Literal["on_orbit", "ground_only"]
 TaskPhase = Literal[
@@ -16,10 +16,14 @@ TaskPhase = Literal[
 
 class SatelliteState(BaseModel):
     id: str = "sat-001"
-    orbit_type: OrbitType = "SSO"
+    orbit_type: OrbitType = "LEO"
     lat: float = 0.0
     lon: float = 0.0
     altitude_km: float = 550.0
+    # ECI world position in km — kept as a 3-tuple so the Omniverse scene
+    # can drop the satellite icon at exactly the propagated point without
+    # re-doing the math. None when no propagator has run yet.
+    sat_xyz_km: Optional[tuple[float, float, float]] = None
     sunlit: bool = True
     solar_input_w: float = 0.0
     payload_power_w: float = 0.0

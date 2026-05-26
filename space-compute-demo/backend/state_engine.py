@@ -1,7 +1,9 @@
 """StateEngine — single source of business truth.
 
-Phase 1: placeholder numerics (sinusoidal/linear), no real physics.
-Phase 2+: physics/ modules migrated from exts/spacedc.digital_twin will plug in here.
+Orbit kinematics now go through services.orbit_catalog (SGP4 propagation of
+real published TLEs). Power / thermal / battery / downlink remain the toy
+sinusoidal model from Phase 1 — those will be replaced piecewise in later
+phases without disturbing the orbit layer.
 """
 from __future__ import annotations
 
@@ -18,6 +20,7 @@ from models import (
     StatePacket,
     TaskState,
 )
+from services import orbit_catalog
 
 TICK_HZ = 1.0
 
@@ -115,41 +118,36 @@ class StateEngine:
                 except Exception:
                     pass
 
-    # ---- orbit parameters (shared with Kit scene for visualization) ----
-    ORBIT_PERIOD_S = 90.0       # demo period (wall seconds per revolution)
-    ORBIT_INCLINATION_DEG = 60  # circular orbit inclination
-    ORBIT_ALT_KM = 550.0
-
     def _update_placeholder_physics(self, dt: float) -> None:
         t = self._sim_time_s
-        # Circular orbit: angle theta advances linearly; position on a tilted plane.
-        # Parameterization: u = (1, 0, 0), v = (0, cos(a), sin(a)) with inclination a.
-        # world = R*(cos(th), sin(th)*cos(a), sin(th)*sin(a))
-        omega = 2.0 * math.pi / self.ORBIT_PERIOD_S
-        theta = omega * t
-        cos_a = math.cos(math.radians(self.ORBIT_INCLINATION_DEG))
-        sin_a = math.sin(math.radians(self.ORBIT_INCLINATION_DEG))
-        # Unit sphere position; Kit multiplies by (earth_radius + alt).
-        pos_x = math.cos(theta)
-        pos_y = math.sin(theta) * cos_a
-        pos_z = math.sin(theta) * sin_a
-        self._sat.lat = math.degrees(math.asin(pos_z))
-        self._sat.lon = math.degrees(math.atan2(pos_y, pos_x))
-        # Sunlit: simple — lit when pos_x (facing +X where sun is) is positive-ish.
-        self._sat.sunlit = pos_x > -0.3
+
+        # --- Orbit: SGP4 against the currently-selected mode's TLE ---------
+        mode = self._sat.orbit_type or "LEO"
+        x_km, y_km, z_km = orbit_catalog.propagate(mode, t)
+        self._sat.sat_xyz_km = (x_km, y_km, z_km)
+        lat, lon, alt = orbit_catalog.eci_to_lat_lon_alt(x_km, y_km, z_km, t)
+        self._sat.lat = lat
+        self._sat.lon = lon
+        self._sat.altitude_km = alt
+
+        # Sunlit: in scene the sun direction is fixed in inertial frame at
+        # azimuth -45° / elevation +23.5°. The satellite is in sunlight when
+        # its position dotted with the sun direction is positive.
+        sun_dx, sun_dy, sun_dz = 0.648, -0.648, 0.398
+        r_norm = max(1e-6, math.sqrt(x_km * x_km + y_km * y_km + z_km * z_km))
+        cos_a = (x_km * sun_dx + y_km * sun_dy + z_km * sun_dz) / r_norm
+        self._sat.sunlit = cos_a > -0.05  # tiny dawn/dusk margin
         self._sat.solar_input_w = 4200.0 if self._sat.sunlit else 0.0
-        # GPU load sinusoidal
+
+        # --- Power / thermal / battery / downlink (placeholder, unchanged) -
         load = 0.15 + 0.35 * (0.5 + 0.5 * math.sin(t / 20.0))
         self._sat.gpu_utilization = load
         self._sat.payload_power_w = 400.0 + 1800.0 * load
         self._sat.platform_power_w = 600.0
-        # Temperature first-order toward load-driven target
         target = 30.0 + 45.0 * load
         self._sat.temperature_c += (target - self._sat.temperature_c) * 0.1
-        # Battery
         net = self._sat.solar_input_w - self._sat.payload_power_w - self._sat.platform_power_w
         self._sat.battery_soc = max(0.0, min(1.0, self._sat.battery_soc + net * dt / 3.6e7))
-        # Ground visibility: toy 30%% of the time
         self._gs.visible = math.sin(t / 30.0) > 0.4
         self._sat.downlink_mbps = 120.0 if self._gs.visible else 0.0
         self._gs.rx_mbps = self._sat.downlink_mbps

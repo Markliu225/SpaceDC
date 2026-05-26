@@ -68,6 +68,89 @@ def Xform "World"
     }
 
     # --------------------------------------------------------------------
+    # Orbit + satellite icon. Both are rebuilt by space.demo.scene the
+    # moment it learns the current orbit_type from the backend:
+    #   - OrbitLine: BasisCurves; points + curveVertexCounts get rewritten
+    #     to trace one full TLE-propagated revolution. Uses a constant
+    #     displayColor — no emissive material, the orbit itself does not glow.
+    #   - SatelliteIcon: small sphere with a bright cyan emissive material;
+    #     its xformOp:translate is set every frame to the SGP4 sub-point
+    #     interpolated along the cached orbit curve.
+    # Placeholder authoring below keeps the prims valid before the first
+    # backend roundtrip lands.
+    # --------------------------------------------------------------------
+    def Xform "OrbitGroup"
+    {
+        def BasisCurves "OrbitLine" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            int[] curveVertexCounts = [2]
+            point3f[] points = [(0, 0, 0), (0, 0, 0)]
+            # Width is in scene units (1 unit = 100 km). 0.8 = 80 km thick;
+            # cosmetically a touch thicker than physically accurate, so the
+            # line is legible at the cinematic camera distance (~280 units).
+            float[] widths = [0.8] (
+                interpolation = "constant"
+            )
+            float[] primvars:widths = [0.8] (
+                interpolation = "constant"
+            )
+            uniform token type = "linear"
+            uniform token wrap = "nonperiodic"
+            uniform bool primvars:doNotCastShadows = 1
+            rel material:binding = </World/OrbitGroup/OrbitLine/Mat>
+
+            # Material — flat gray with a *tiny* self-emission so the orbit
+            # reads against deep space even when the sun is on the far side
+            # of the Earth. The emissive value is well below 1.0 so this is
+            # readable as a subdued line, not a glow.
+            def Material "Mat"
+            {
+                token outputs:surface.connect = </World/OrbitGroup/OrbitLine/Mat/Shader.outputs:surface>
+                def Shader "Shader"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0.55, 0.62, 0.72)
+                    color3f inputs:emissiveColor = (0.06, 0.07, 0.10)
+                    float inputs:metallic = 0
+                    float inputs:roughness = 1
+                    int inputs:useSpecularWorkflow = 0
+                    token outputs:surface
+                }
+            }
+        }
+
+        def Sphere "SatelliteIcon" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {
+            # 2.5 unit = 250 km radius — visually a small bright dot at the
+            # cinematic framing without dominating the view.
+            double radius = 2.5
+            double3 xformOp:translate = (69.21, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            uniform bool primvars:doNotCastShadows = 1
+            rel material:binding = </World/OrbitGroup/SatelliteIcon/Mat>
+
+            def Material "Mat"
+            {
+                token outputs:surface.connect = </World/OrbitGroup/SatelliteIcon/Mat/Shader.outputs:surface>
+                def Shader "Shader"
+                {
+                    uniform token info:id = "UsdPreviewSurface"
+                    color3f inputs:diffuseColor = (0, 0, 0)
+                    color3f inputs:emissiveColor = (0.40, 3.20, 3.80)
+                    float inputs:metallic = 0
+                    float inputs:roughness = 1
+                    int inputs:useSpecularWorkflow = 0
+                    token outputs:surface
+                }
+            }
+        }
+    }
+
+    # --------------------------------------------------------------------
     # Camera — eye=(180,-180,120), target=(0,0,0), up=(0,0,1).
     # --------------------------------------------------------------------
     def Xform "Cameras"

@@ -10,7 +10,10 @@ from typing import Any
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
+from fastapi import HTTPException
+
 from models import Envelope, StatePacket
+from services import orbit_catalog
 from state_engine import StateEngine
 
 log = logging.getLogger("space_compute_demo")
@@ -90,6 +93,44 @@ async def health():
 async def http_state():
     """Kit-side polling endpoint (Omniverse stdlib doesn't ship websockets)."""
     return engine.snapshot().model_dump()
+
+
+@app.get("/orbits")
+async def http_orbits():
+    """List available orbit modes (LEO / SSO / MEO / GEO + metadata)."""
+    return {"modes": orbit_catalog.list_modes()}
+
+
+@app.post("/orbit_type/{mode}")
+async def http_set_orbit_type(mode: str):
+    """Convenience HTTP control for swapping orbit mode without a WebSocket."""
+    if orbit_catalog.get_entry(mode) is None:
+        raise HTTPException(404, f"unknown orbit mode {mode!r}")
+    engine.set_parameters({"orbit_type": mode})
+    return {"ok": True, "orbit_type": mode}
+
+
+@app.get("/orbits/{mode}")
+async def http_orbit(mode: str, n_points: int = 128):
+    """Return TLE strings + ECI sample points tracing one full revolution.
+
+    Points are in km. The Kit scene divides by 100 to land in the
+    `metersPerUnit = 100000` overview stage's coordinate system.
+    """
+    entry = orbit_catalog.get_entry(mode)
+    if entry is None:
+        raise HTTPException(404, f"unknown orbit mode {mode!r}")
+    pts = orbit_catalog.sample_orbit(mode, max(16, min(n_points, 512)))
+    return {
+        "mode": entry.mode,
+        "name": entry.name,
+        "description": entry.description,
+        "period_s": entry.period_s,
+        "inclination_deg": entry.inclination_deg,
+        "tle": [entry.line1, entry.line2],
+        "time_scale": orbit_catalog.TIME_SCALE,
+        "points_km": pts,
+    }
 
 
 @app.websocket("/ws/state")
