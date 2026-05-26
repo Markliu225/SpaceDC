@@ -187,6 +187,13 @@ def rebuild_constellation(
             "displayColor", Sdf.ValueTypeNames.Color3fArray,
             interpolation="constant",
         ).Set(Vt.Vec3fArray([Gf.Vec3f(*RING_HUES[hue_idx])]))
+        # Rings are decorative — they MUST NOT cast shadows on the Earth.
+        # Without this primvar the thin BasisCurves drop a faint band across
+        # the surface every time the sun grazes them.
+        curves.GetPrim().CreateAttribute(
+            "primvars:doNotCastShadows", Sdf.ValueTypeNames.Bool,
+            custom=False,
+        ).Set(True)
         _bind_material(stage, curves.GetPrim(), ring_mat_paths[hue_idx])
     _log(f"authored {planes} ring(s) under {RINGS_ROOT} (palette of {len(RING_HUES)} hues)")
 
