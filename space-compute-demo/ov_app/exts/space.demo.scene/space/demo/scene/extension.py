@@ -177,6 +177,11 @@ if _HAS_KIT:
             self._anchor_sim_s: Optional[float] = None
             self._anchor_wall_s: float = time.monotonic()
             self._backend_running: bool = True
+            # Earth spin uses a separate wall-clock anchor that does NOT
+            # depend on the backend — the planet must keep turning even if
+            # the FastAPI server is offline.
+            self._earth_anchor_wall_s: float = time.monotonic()
+            self._earth_rotation_logged: bool = False
 
             self._poll_task: Optional[asyncio.Task] = asyncio.ensure_future(self._run_poll_loop())
             app = omni.kit.app.get_app()
@@ -238,18 +243,29 @@ if _HAS_KIT:
         def _on_update(self, _event) -> None:
             if self._current_stage != self._stages.get("overview"):
                 return
-            if self._anchor_sim_s is None:
-                return
             ctx = omni.usd.get_context()
             stage = ctx.get_stage()
             if stage is None:
+                return
+
+            # Earth spin — wall clock, never gated on the backend.
+            earth_sim_s = time.monotonic() - self._earth_anchor_wall_s
+            set_earth_rotation(stage, earth_sim_s)
+            if not self._earth_rotation_logged:
+                # One-shot confirmation log: useful when the user thinks the
+                # planet isn't moving — the absence of this line tells you the
+                # update subscription isn't firing.
+                _log("earth rotation driver tick — overview stage active")
+                self._earth_rotation_logged = True
+
+            # Satellite icon position needs backend sim_time — gate on it.
+            if self._anchor_sim_s is None:
                 return
             sim_now = self._anchor_sim_s + (
                 (time.monotonic() - self._anchor_wall_s) if self._backend_running else 0.0
             )
             x, y, z = _orbit_xyz(sim_now)
             set_icon_position(stage, x, y, z)
-            set_earth_rotation(stage, sim_now)
 else:
     class SpaceDemoSceneExtension:  # type: ignore[no-redef]
         pass

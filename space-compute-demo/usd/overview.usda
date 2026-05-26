@@ -3,7 +3,7 @@
     defaultPrim = "World"
     upAxis = "Z"
     metersPerUnit = 100000
-    doc = "Overview stage — baseline. Earth (sublayer earth_mesh.usda) self-rotates around its +Z geographic axis once per 90 sim-seconds. The Sun stays fixed in world space at 23.5° elevation above the equatorial plane, so as the Earth spins the terminator stays tilted at the axial-tilt angle and different longitudes cycle through day/night."
+    doc = "Overview stage — baseline. Earth (sublayer earth_mesh.usda) self-rotates around its +Z geographic axis once per 90 wall-clock seconds, driven each frame by space.demo.scene. The Sun stays fixed in world space at 23.5° elevation above the equatorial plane, so as the Earth spins the terminator stays tilted at the axial-tilt angle and different longitudes cycle through day/night."
     subLayers = [
         @./earth_mesh.usda@
     ]
@@ -12,10 +12,6 @@
             string boundCamera = "/World/Cameras/Overview"
         }
     }
-    startTimeCode = 0
-    endTimeCode   = 90
-    framesPerSecond = 30
-    timeCodesPerSecond = 30
 )
 
 def Xform "World"
@@ -57,19 +53,17 @@ def Xform "World"
     }
 
     # --------------------------------------------------------------------
-    # Earth — overlay on the prim defined in earth_mesh.usda. Animate
-    # xformOp:rotateZ 0 → 360° over [0, 90] sim seconds so Kit's timeline
-    # alone is enough to see the planet spin. space.demo.scene also writes
-    # this attribute every frame against wall-clock sim time, which takes
-    # precedence and gives smooth rotation even when the timeline is
-    # stopped.
+    # Earth — overlay on the prim defined in earth_mesh.usda. The Z rotation
+    # is driven entirely by space.demo.scene each frame (writes the default
+    # value). NO timeSamples here on purpose: if timeSamples existed, USD
+    # would use them in preference to the default when Kit's timeline is
+    # parked at a sampled time code, which would defeat the per-frame
+    # driver. Default-only means the renderer always sees what the driver
+    # last wrote.
     # --------------------------------------------------------------------
     over "Earth"
     {
-        float xformOp:rotateZ.timeSamples = {
-            0: 0,
-            90: 360,
-        }
+        float xformOp:rotateZ = 0
         uniform token[] xformOpOrder = ["xformOp:rotateZ"]
     }
 
