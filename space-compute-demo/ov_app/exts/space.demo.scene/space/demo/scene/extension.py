@@ -59,6 +59,7 @@ USD_ROOT_ENV = "SPACE_DEMO_USD_ROOT"
 
 # Prim paths.
 EARTH_PATH       = "/World/Earth"
+CLOUDS_PATH      = "/World/CloudShell"
 CONSTEL_ROOT     = "/World/ConstellationGroup"
 RINGS_ROOT       = f"{CONSTEL_ROOT}/Rings"
 FLEET_POINTS     = f"{CONSTEL_ROOT}/Fleet"
@@ -251,19 +252,18 @@ def _set_fleet_points(stage, positions: list[tuple[float, float, float]]) -> Non
 
 
 def set_earth_rotation(stage, sim_time_s: float) -> None:
-    prim = stage.GetPrimAtPath(EARTH_PATH)
-    if not prim or not prim.IsValid():
-        return
-    xform = UsdGeom.Xformable(prim)
-    rotZ = None
-    for op in xform.GetOrderedXformOps():
-        if op.GetOpType() == UsdGeom.XformOp.TypeRotateZ:
-            rotZ = op
-            break
-    if rotZ is None:
-        return
+    """Drive xformOp:rotateZ on both /World/Earth and /World/CloudShell so
+    the cloud layer stays locked to the globe (no relative drift)."""
     angle_deg = (sim_time_s * 360.0 / EARTH_ROTATION_PERIOD_S) % 360.0
-    rotZ.Set(angle_deg)
+    for path in (EARTH_PATH, CLOUDS_PATH):
+        prim = stage.GetPrimAtPath(path)
+        if not prim or not prim.IsValid():
+            continue
+        xform = UsdGeom.Xformable(prim)
+        for op in xform.GetOrderedXformOps():
+            if op.GetOpType() == UsdGeom.XformOp.TypeRotateZ:
+                op.Set(angle_deg)
+                break
 
 
 # ---------------------------------------------------------------------------
