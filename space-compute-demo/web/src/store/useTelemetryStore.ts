@@ -1,5 +1,9 @@
 import { create } from 'zustand'
-import type { ConstellationPresetSummary, FleetSnapshot } from '../types/messages'
+import type {
+  ConstellationDetail,
+  ConstellationPresetSummary,
+  FleetSnapshot,
+} from '../types/messages'
 
 // Status taxonomy used by the donut + sat markers.
 export type SatStatus = 'online' | 'eclipse' | 'standby' | 'offline'
@@ -81,6 +85,14 @@ interface TelemetryStore {
   presets: ConstellationPresetSummary[]
   /** Active preset id; mirrors fleet.constellation_id once we receive a snapshot. */
   activeConstellationId: string
+  /** Full Walker params + base orbit ring for the active preset.
+   *  Fetched once per preset swap via GET /constellations/{id} — drives
+   *  the Web-side fleet propagator (ring + plane rotation + phase offset). */
+  constellationDetail: ConstellationDetail | null
+  /** Index of the currently-selected sat within the propagated fleet
+   *  [0..constellationDetail.total_sats). Replaces the legacy SAT-XX string
+   *  for the new fleet-driven Overview. */
+  selectedSatIdx: number
 
   // ---- actions ----
   setRunning: (v: boolean) => void
@@ -91,6 +103,8 @@ interface TelemetryStore {
   applyFleet: (fleet: FleetSnapshot) => void
   setPresets: (p: ConstellationPresetSummary[]) => void
   setActiveConstellation: (id: string) => void
+  setConstellationDetail: (d: ConstellationDetail | null) => void
+  setSelectedSatIdx: (i: number) => void
 }
 
 // ---- Deterministic seed satellites: 20 online / 2 eclipse / 1 standby / 1 offline.
@@ -179,6 +193,8 @@ export const useTelemetryStore = create<TelemetryStore>((set) => ({
   fleet: null,
   presets: [],
   activeConstellationId: 'single_iss',
+  constellationDetail: null,
+  selectedSatIdx: 0,
 
   setRunning: (v) => set({ running: v }),
   reset: () =>
@@ -211,4 +227,12 @@ export const useTelemetryStore = create<TelemetryStore>((set) => ({
     }),
   setPresets: (presets) => set({ presets }),
   setActiveConstellation: (id) => set({ activeConstellationId: id }),
+  setConstellationDetail: (d) =>
+    // Clamp selectedSatIdx to the new fleet size so a smaller preset doesn't
+    // leave the selection pointing past the last sat.
+    set((s) => ({
+      constellationDetail: d,
+      selectedSatIdx: d ? Math.min(s.selectedSatIdx, d.total_sats - 1) : 0,
+    })),
+  setSelectedSatIdx: (i) => set({ selectedSatIdx: Math.max(0, i) }),
 }))

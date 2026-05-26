@@ -82,6 +82,27 @@ export interface ConstellationPresetSummary {
   period_s: number;
 }
 
+/** Full constellation payload from GET /constellations/{id}.
+ *  Carries the Walker parameters plus the precomputed base orbit ring
+ *  (128 ECI km samples) so the Web client can derive every sat's
+ *  ECI position without round-tripping a position per sat per tick. */
+export interface ConstellationDetail {
+  id: string;
+  name: string;
+  description: string;
+  planes: number;
+  sats_per_plane: number;
+  phasing: number;
+  total_sats: number;
+  inclination_deg: number;
+  altitude_km: number;
+  period_s: number;
+  time_scale: number;
+  /** Sampled positions of the base orbit (plane 0, sat 0) in ECI km.
+   *  Other planes = rotation about +Z; other sats = phase offset along ring. */
+  ring_eci_km: [number, number, number][];
+}
+
 export interface StatePacket {
   sim_time_s: number;
   satellite: SatelliteState;

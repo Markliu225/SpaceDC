@@ -4,13 +4,12 @@ import { useMockTelemetryFeed } from '../hooks/useMockTelemetryFeed'
 import { useBackendBridge } from '../hooks/useBackendBridge'
 import { EarthViewport } from '../components/overview/EarthViewport'
 import { NetworkOverview } from '../components/overview/NetworkOverview'
-import { SatelliteStatus } from '../components/overview/SatelliteStatus'
-import { LinkAndTraffic } from '../components/overview/LinkAndTraffic'
+import { SatelliteList } from '../components/overview/SatelliteList'
+import { RealCoverageMap } from '../components/overview/RealCoverageMap'
+import { SatelliteDetail } from '../components/overview/SatelliteDetail'
 import { SystemHealth } from '../components/overview/SystemHealth'
-import { CoverageMap } from '../components/overview/CoverageMap'
 import { EventLog } from '../components/overview/EventLog'
-import { SelectedSatellite } from '../components/overview/SelectedSatellite'
-import { UpcomingEvents } from '../components/overview/UpcomingEvents'
+import { CostPanel } from '../components/overview/CostPanel'
 
 /**
  * OverviewPage — single-viewport mission control. Targets 1440×900.
@@ -19,20 +18,22 @@ import { UpcomingEvents } from '../components/overview/UpcomingEvents'
  *
  *  ┌───────────────────────────────────────────────────────────────┐
  *  │ NetworkOverview (KPI x 4)                                 74px│
- *  ├──────────────────────────────┬────────────────────────────────┤
- *  │                              │ SatelliteStatus           1fr  │
- *  │ Earth Viewport          1fr  ├────────────────────────────────┤
- *  │                              │ LinkAndTraffic            1fr  │
- *  ├──────────────────────────────┴────────────────────────────────┤
- *  │ SelectedSatellite (full width, 3-col interior)           188px│
- *  ├──────────┬─────────────┬─────────────┬─────────────────────────┤
- *  │ SysHealth│ EventLog    │ CoverageMap │ Upcoming           144 │
- *  │   col-3  │   col-4     │   col-3     │   col-2                │
- *  └──────────┴─────────────┴─────────────┴─────────────────────────┘
+ *  ├──────────────────────────────┬───────────────┬────────────────┤
+ *  │                              │ SatelliteList │ RealCoverageMap│
+ *  │ EarthViewport          1fr   │   col-3       │   col-3        │
+ *  │   col-6                      │               │                │
+ *  ├──────────────────────────────┴───────────────┴────────────────┤
+ *  │ SatelliteDetail (full width)                             188px│
+ *  ├──────────────────┬──────────────────────┬──────────────────────┤
+ *  │ SystemHealth     │ EventLog             │ CostPanel        144 │
+ *  │   col-3          │   col-4              │   col-5              │
+ *  └──────────────────┴──────────────────────┴──────────────────────┘
  *
- * Tracks: 74 / 1fr / 188 / 144. Fixed = 406 + 30 (gaps) = 436. Row 2 (Earth)
- * gets 396 → right rail / 2 = ~190 each. Donut + 4 legend rows fit, both
- * sparklines fit. Row 4 distributes the 4 smaller panels horizontally.
+ * Tracks: 74 / 1fr / 188 / 144. Old layout's LinkAndTraffic,
+ * SatelliteStatus donut, SelectedSatellite (legacy 24-sat), CoverageMap
+ * (decorative swath), and UpcomingEvents panels are dropped — their roles
+ * are covered by SatelliteList (status groups) + RealCoverageMap (real
+ * sub-sat footprints) + SatelliteDetail (any-sat 14-param read).
  */
 export function OverviewPage() {
   const changeCamera = useDemoStore((s) => s.changeCamera)
@@ -60,19 +61,18 @@ export function OverviewPage() {
         <NetworkOverview />
       </div>
 
-      <div className="col-span-7 min-h-0 overflow-hidden">
+      <div className="col-span-6 min-h-0 overflow-hidden">
         <EarthViewport />
       </div>
-      <div
-        className="col-span-5 grid min-h-0 gap-2.5 overflow-hidden"
-        style={{ gridTemplateRows: 'minmax(0, 1fr) minmax(0, 1fr)' }}
-      >
-        <div className="min-h-0 overflow-hidden"><SatelliteStatus /></div>
-        <div className="min-h-0 overflow-hidden"><LinkAndTraffic /></div>
+      <div className="col-span-3 min-h-0 overflow-hidden">
+        <SatelliteList />
+      </div>
+      <div className="col-span-3 min-h-0 overflow-hidden">
+        <RealCoverageMap />
       </div>
 
       <div className="col-span-12 min-h-0 overflow-hidden">
-        <SelectedSatellite />
+        <SatelliteDetail />
       </div>
 
       <div className="col-span-3 min-h-0 overflow-hidden">
@@ -81,11 +81,8 @@ export function OverviewPage() {
       <div className="col-span-4 min-h-0 overflow-hidden">
         <EventLog />
       </div>
-      <div className="col-span-3 min-h-0 overflow-hidden">
-        <CoverageMap />
-      </div>
-      <div className="col-span-2 min-h-0 overflow-hidden">
-        <UpcomingEvents />
+      <div className="col-span-5 min-h-0 overflow-hidden">
+        <CostPanel />
       </div>
     </div>
   )

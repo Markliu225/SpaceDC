@@ -1,7 +1,11 @@
 import { useEffect } from 'react'
 import { useDemoStore } from '../store/demoStore'
 import { useTelemetryStore } from '../store/useTelemetryStore'
-import type { ConstellationPresetSummary, FleetSnapshot } from '../types/messages'
+import type {
+  ConstellationDetail,
+  ConstellationPresetSummary,
+  FleetSnapshot,
+} from '../types/messages'
 
 const BACKEND_HTTP = (import.meta.env.VITE_BACKEND_HTTP as string | undefined)
   ?? 'http://localhost:8001'
@@ -23,9 +27,11 @@ interface ConstellationsListResponse {
  * resulting fleet snapshot will arrive via the next WS state_update tick.
  */
 export function useBackendBridge() {
-  const setPresets = useTelemetryStore((s) => s.setPresets)
-  const applyFleet = useTelemetryStore((s) => s.applyFleet)
-  const setActive  = useTelemetryStore((s) => s.setActiveConstellation)
+  const setPresets      = useTelemetryStore((s) => s.setPresets)
+  const applyFleet      = useTelemetryStore((s) => s.applyFleet)
+  const setActive       = useTelemetryStore((s) => s.setActiveConstellation)
+  const setDetail       = useTelemetryStore((s) => s.setConstellationDetail)
+  const activeId        = useTelemetryStore((s) => s.activeConstellationId)
 
   // One-shot preset fetch.
   useEffect(() => {
@@ -49,6 +55,22 @@ export function useBackendBridge() {
       if (c) applyFleet(c)
     })
   }, [applyFleet])
+
+  // Fetch full detail (Walker params + ring_eci_km) whenever the active
+  // preset id changes. The Web fleet propagator needs the ring + phasing
+  // to derive per-sat ECI without per-tick round-trips.
+  useEffect(() => {
+    if (!activeId) return
+    let cancelled = false
+    fetch(`${BACKEND_HTTP}/constellations/${activeId}`)
+      .then((r) => r.ok ? r.json() as Promise<ConstellationDetail> : null)
+      .then((d) => {
+        if (cancelled || !d) return
+        setDetail(d)
+      })
+      .catch(() => { /* backend offline — detail stays null, fleet propagator no-ops */ })
+    return () => { cancelled = true }
+  }, [activeId, setDetail])
 }
 
 /**
