@@ -1,9 +1,56 @@
-import { useMemo } from 'react'
-import { Card, Metric, Num } from '../primitives'
+import { useMemo, type ReactNode } from 'react'
+import { Card, Num } from '../primitives'
 import { useFleetStatuses, type FleetSat } from '../../hooks/useFleetStatuses'
 import { useTelemetryStore } from '../../store/useTelemetryStore'
+import { SatelliteSelector } from './SatelliteSelector'
 
 type Tone = 'ok' | 'warn' | 'err' | 'hi'
+
+const TONE_CLS: Record<Tone, string> = {
+  hi:   'text-text-hi',
+  ok:   'text-ok',
+  warn: 'text-warn',
+  err:  'text-err',
+}
+
+/** Inline param chip — label and value sit side-by-side with a 6px gap, so
+ *  ORBIT and LEO read as a paired phrase. The chips are then dropped into a
+ *  flex-wrap row that packs them tight (vs the previous 4-col grid, which
+ *  stretched every cell to ~200px and left huge gaps between adjacent
+ *  pairs at this card's full-width footprint). */
+function Param({
+  label, value, unit, digits, tone = 'hi',
+}: {
+  label: string
+  value: number | string
+  unit?: string
+  digits?: number
+  tone?: Tone
+}) {
+  return (
+    <span className="inline-flex items-baseline gap-1.5 whitespace-nowrap">
+      <span className="text-[10px] uppercase tracking-[0.08em] text-text-lo">{label}</span>
+      <Num
+        value={value}
+        digits={digits ?? 0}
+        className={`text-[13px] ${TONE_CLS[tone]}`}
+      />
+      {unit && <span className="text-[10px] text-text-lo">{unit}</span>}
+    </span>
+  )
+}
+
+/** String-value sibling of <Param />. */
+function ParamText({
+  label, value, tone = 'hi',
+}: { label: string; value: ReactNode; tone?: Tone }) {
+  return (
+    <span className="inline-flex items-baseline gap-1.5 whitespace-nowrap">
+      <span className="text-[10px] uppercase tracking-[0.08em] text-text-lo">{label}</span>
+      <span className={`text-[13px] ${TONE_CLS[tone]}`}>{value}</span>
+    </span>
+  )
+}
 
 interface Bar {
   label: string
@@ -109,6 +156,9 @@ export function SatelliteDetail() {
   const socTone: Tone =
     tele.soc < 0.3 ? 'err' : tele.soc < 0.5 ? 'warn' : 'ok'
 
+  // GPU Util / Battery / Temp move out of the param row and become a horizontal
+  // 3-up bar strip below the params. Downlink is dropped entirely — it duplicated
+  // the GS-Visible chip and ate space we'd rather give to the bars.
   const bars: Bar[] = [
     { label: 'GPU Util', value: tele.util * 100, digits: 0, unit: '%',    pct: tele.util },
     { label: 'Battery',  value: tele.soc * 100,  digits: 0, unit: '%',    pct: tele.soc,
@@ -116,44 +166,43 @@ export function SatelliteDetail() {
     { label: 'Temp',     value: tele.temp,       digits: 1, unit: '°C',
       pct: Math.min(1, Math.max(0, (tele.temp - 20) / 60)),
       tone: tele.temp > 70 ? 'err' : tele.temp > 50 ? 'warn' : undefined },
-    { label: 'Downlink', value: tele.downlink,   digits: 0, unit: 'Mbps',
-      pct: Math.min(1, tele.downlink / 200) },
   ]
 
   return (
-    <Card selected className="h-full flex flex-col min-h-0">
-      <div className="flex items-baseline justify-between">
-        <div className="text-[11px] uppercase tracking-[0.10em] text-text-md">
-          Selected Satellite:{' '}
-          <span className="text-accent">{sat.id}</span>
+    <Card
+      dense
+      selected
+      className="h-full flex flex-col min-h-0 overflow-visible relative z-20"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] uppercase tracking-[0.10em] text-text-md">
+            Selected Satellite
+          </span>
+          <SatelliteSelector />
         </div>
         <div className="text-[10px] uppercase tracking-[0.10em] text-text-lo">
           {detail?.name ?? '—'} · plane {sat.planeIdx + 1}/{detail?.planes ?? '—'}
         </div>
       </div>
 
-      <div className="mt-2 grid flex-1 min-h-0 grid-cols-[minmax(0,1fr)_220px] gap-4 items-start">
-        <div className="grid grid-cols-4 gap-x-5 gap-y-1.5">
-          <Metric size="param" label="Orbit"        value={orbitType} />
-          <Metric size="param" label="GPU"          value={tele.gpu} />
-          <Metric size="param" label="Sunlit"       value={sat.sunlit ? 'YES' : 'NO'} tone={sat.sunlit ? 'ok' : 'warn'} />
-          <Metric size="param" label="GS Visible"   value={tele.downlink > 0 ? 'YES' : 'NO'} tone={tele.downlink > 0 ? 'ok' : 'hi'} />
-
-          <Metric size="param" label="Lat / Lon"    value={`${sat.lat.toFixed(1)} / ${sat.lon.toFixed(1)}`} unit="°" />
-          <Metric size="param" label="Altitude"     value={sat.altitudeKm} digits={0} unit="km" />
-          <Metric size="param" label="Solar In"     value={tele.solarIn} digits={0} unit="W" />
-          <Metric size="param" label="Platform Pwr" value={tele.platformPwr} digits={0} unit="W" />
-
-          <Metric size="param" label="Payload Pwr"  value={tele.payloadPwr} digits={0} unit="W" />
-          <Metric size="param" label="GPU Util"     value={tele.util * 100} digits={1} unit="%" />
-          <Metric size="param" label="Temp"         value={tele.temp} digits={1} unit="°C" tone={tempTone} />
-          <Metric size="param" label="Battery SOC"  value={tele.soc * 100} digits={1} unit="%" tone={socTone} />
-
-          <Metric size="param" label="Downlink"     value={tele.downlink} digits={0} unit="Mbps" />
-          <Metric size="param" label="Task"         value={tele.taskState} />
+      <div className="mt-0.5 flex flex-1 min-h-0 flex-col gap-1.5">
+        {/* Param chips — static / slow-changing fields. */}
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
+          <ParamText label="Orbit"        value={orbitType} />
+          <ParamText label="GPU"          value={tele.gpu} />
+          <ParamText label="Sunlit"       value={sat.sunlit ? 'YES' : 'NO'} tone={sat.sunlit ? 'ok' : 'warn'} />
+          <ParamText label="GS Visible"   value={tele.downlink > 0 ? 'YES' : 'NO'} tone={tele.downlink > 0 ? 'ok' : 'hi'} />
+          <ParamText label="Lat / Lon"    value={`${sat.lat.toFixed(1)} / ${sat.lon.toFixed(1)}°`} />
+          <Param     label="Altitude"     value={sat.altitudeKm} digits={0} unit="km" />
+          <Param     label="Solar In"     value={tele.solarIn} digits={0} unit="W" />
+          <Param     label="Platform Pwr" value={tele.platformPwr} digits={0} unit="W" />
+          <Param     label="Payload Pwr"  value={tele.payloadPwr} digits={0} unit="W" />
+          <ParamText label="Task"         value={tele.taskState} />
         </div>
 
-        <div className="flex flex-col gap-1.5">
+        {/* Dynamic bars — 3 columns, each occupying ~1/3 of the panel width. */}
+        <div className="grid grid-cols-3 gap-3">
           {bars.map((b) => <MetricBar key={b.label} bar={b} />)}
         </div>
       </div>
@@ -167,9 +216,9 @@ function MetricBar({ bar }: { bar: Bar }) {
     bar.tone === 'warn' ? 'linear-gradient(90deg, #F59E0B 0%, #FDE68A 100%)' :
                           'linear-gradient(90deg, #3B9EFF 0%, #E0EEFF 100%)'
   const shadow =
-    bar.tone === 'err'  ? '0 0 8px rgba(239,68,68,0.45)' :
-    bar.tone === 'warn' ? '0 0 8px rgba(245,158,11,0.45)' :
-                          '0 0 8px rgba(59,158,255,0.45)'
+    bar.tone === 'err'  ? '0 0 6px rgba(239,68,68,0.45)' :
+    bar.tone === 'warn' ? '0 0 6px rgba(245,158,11,0.45)' :
+                          '0 0 6px rgba(59,158,255,0.45)'
   return (
     <div>
       <div className="flex items-baseline justify-between">
@@ -179,7 +228,7 @@ function MetricBar({ bar }: { bar: Bar }) {
           <span className="ml-1 text-[10px] text-text-lo">{bar.unit}</span>
         </span>
       </div>
-      <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-bg-inset">
+      <div className="mt-0.5 h-1 w-full overflow-hidden rounded-full bg-bg-inset">
         <div
           className="h-full rounded-full transition-[width] duration-500 ease-out"
           style={{ width: `${Math.round(bar.pct * 100)}%`, background: fillBg, boxShadow: shadow }}

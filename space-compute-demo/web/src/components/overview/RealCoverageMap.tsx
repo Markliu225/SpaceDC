@@ -1,9 +1,16 @@
 import { useId, useMemo } from 'react'
 import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps'
-import { Card } from '../primitives'
+import { Card, Dot } from '../primitives'
 import { colors } from '../../design/tokens'
 import { useFleetPositions } from '../../hooks/useFleetPositions'
 import { useTelemetryStore } from '../../store/useTelemetryStore'
+
+const STATUS_LEGEND = [
+  { key: 'online',  label: 'Online',  color: colors.status.online  },
+  { key: 'eclipse', label: 'Eclipse', color: colors.status.eclipse },
+  { key: 'standby', label: 'Standby', color: colors.status.standby },
+  { key: 'offline', label: 'Offline', color: colors.status.offline },
+] as const
 
 const TOPO = 'https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json'
 
@@ -40,7 +47,6 @@ function visibilityRadiusDeg(altKm: number): number {
  */
 export function RealCoverageMap() {
   const fleet      = useFleetPositions()
-  const coveragePct = useTelemetryStore((s) => Math.round(s.fleet?.coverage_pct ?? 0))
   const totalSats   = useTelemetryStore((s) => s.fleet?.total ?? fleet.length)
   const detail      = useTelemetryStore((s) => s.constellationDetail)
   const selectedIdx = useTelemetryStore((s) => s.selectedSatIdx)
@@ -68,7 +74,7 @@ export function RealCoverageMap() {
     <Card className="h-full flex flex-col min-h-0">
       <div className="mb-2 flex items-baseline justify-between">
         <span className="text-[11px] uppercase tracking-[0.10em] text-text-md">
-          Coverage Map
+          Constellation Status
         </span>
         <span className="text-[11px] text-text-lo tabular">
           {detail
@@ -142,22 +148,15 @@ export function RealCoverageMap() {
         </ComposableMap>
       </div>
 
-      <div className="mt-2">
-        <div className="flex items-center justify-between text-[10px] tabular text-text-lo">
-          <span>0%</span>
-          <span className="text-text-md">Coverage</span>
-          <span>100%</span>
-        </div>
-        <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-bg-inset">
-          <div
-            className="h-full rounded-full transition-[width] duration-500 ease-out"
-            style={{
-              width: `${coveragePct}%`,
-              background: 'linear-gradient(90deg, #3B9EFF 0%, #E8EEFB 100%)',
-              boxShadow: '0 0 8px rgba(59,158,255,0.4)',
-            }}
-          />
-        </div>
+      {/* Status legend — replaces the old 0-100% coverage bar. Mirrors
+          the donut/list palette so colors are unambiguous at-a-glance. */}
+      <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
+        {STATUS_LEGEND.map((s) => (
+          <div key={s.key} className="flex items-center gap-1.5 text-[11px]">
+            <Dot color={s.color} size={6} glow={4} />
+            <span className="text-text-md">{s.label}</span>
+          </div>
+        ))}
       </div>
     </Card>
   )
