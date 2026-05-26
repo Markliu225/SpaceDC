@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(python tools/gen_constellation.py)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('ov_app/exts/space.demo.scene/space/demo/scene/extension.py', encoding='utf-8'\\).read\\(\\)\\); print\\('ok'\\)\")",
+      "Bash(node snap_overview.mjs)",
+      "Bash(node -e ' *)",
+      "Bash(powershell -NoProfile -Command \"Get-Content 'C:\\\\Users\\\\markl\\\\.claude\\\\projects\\\\c--Workspace-SpaceDC-space-compute-demo\\\\9a8024fd-582c-4e45-87fe-13855d29c9d0.jsonl' | Select-Object -Last 20\")"
+    ]
+  }
+}
