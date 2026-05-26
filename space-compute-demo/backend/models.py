@@ -54,6 +54,28 @@ class TaskState(BaseModel):
     alerts: int = 0
 
 
+class FleetSnapshot(BaseModel):
+    """Aggregate state of the currently-active constellation. Published in
+    every state_update so Web's Overview / Kit's renderer can react to the
+    preset swap without round-tripping a separate endpoint."""
+    constellation_id: str = "single_iss"
+    name: str = "ISS (single satellite)"
+    total: int = 1
+    online: int = 1
+    eclipse: int = 0
+    standby: int = 0
+    offline: int = 0
+    planes: int = 1
+    sats_per_plane: int = 1
+    inclination_deg: float = 51.6
+    altitude_km: float = 420.0
+    coverage_pct: float = 9.0
+    links_total: int = 0
+    isl_links: int = 0
+    gsl_links: int = 0
+    agg_throughput_mbps: float = 60.0
+
+
 class CompareMetrics(BaseModel):
     mode: Mode = "on_orbit"
     latency_s: float = 0.0
@@ -81,6 +103,7 @@ class StatePacket(BaseModel):
     sim_time_s: float
     satellite: SatelliteState
     ground_station: GroundStationState
+    constellation: FleetSnapshot = Field(default_factory=FleetSnapshot)
     task: Optional[TaskState] = None
     compare: Optional[CompareMetrics] = None
     camera_preset: str = "overview"

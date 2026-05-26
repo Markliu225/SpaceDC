@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import HTTPException
 
 from models import Envelope, StatePacket
-from services import orbit_catalog
+from services import constellations, orbit_catalog
 from state_engine import StateEngine
 
 log = logging.getLogger("space_compute_demo")
@@ -99,6 +99,48 @@ async def http_state():
 async def http_orbits():
     """List available orbit modes (LEO / SSO / MEO / GEO + metadata)."""
     return {"modes": orbit_catalog.list_modes()}
+
+
+@app.get("/constellations")
+async def http_constellations():
+    """List all constellation presets + their headline parameters."""
+    return {
+        "active": engine.constellation_id,
+        "presets": constellations.list_presets(),
+    }
+
+
+@app.get("/constellations/{preset_id}")
+async def http_constellation_detail(preset_id: str):
+    """Return one preset's params + the precomputed base orbit ring (128 ECI
+    km samples). The Kit renderer uses the ring + Walker params to lay out
+    every sat without round-tripping per-sat positions."""
+    preset = constellations.get_preset(preset_id)
+    if preset is None:
+        raise HTTPException(404, f"unknown constellation preset {preset_id!r}")
+    return {
+        "id": preset.id,
+        "name": preset.name,
+        "description": preset.description,
+        "planes": preset.planes,
+        "sats_per_plane": preset.sats_per_plane,
+        "phasing": preset.phasing,
+        "total_sats": preset.total_sats,
+        "inclination_deg": preset.inclination_deg,
+        "altitude_km": preset.altitude_km,
+        "period_s": preset.period_s,
+        "time_scale": constellations.TIME_SCALE,
+        "ring_eci_km": preset.ring_eci_km(),
+    }
+
+
+@app.post("/constellation/{preset_id}")
+async def http_set_constellation(preset_id: str):
+    """Swap the active constellation. The next 1Hz state_update broadcast
+    will carry the new fleet snapshot."""
+    if not engine.set_constellation(preset_id):
+        raise HTTPException(404, f"unknown constellation preset {preset_id!r}")
+    return {"ok": True, "constellation_id": preset_id}
 
 
 @app.post("/orbit_type/{mode}")
