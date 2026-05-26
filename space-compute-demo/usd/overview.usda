@@ -3,10 +3,9 @@
     defaultPrim = "World"
     upAxis = "Z"
     metersPerUnit = 100000
-    doc = "Overview stage — baseline. Earth (sublayer earth_mesh.usda) + simple orbit line + one cyan satellite icon + Sun + dim sky + cinematic camera. Atmosphere shell / axial tilt / self-rotation / constellation all removed — Earth model to be redesigned from this clean baseline."
+    doc = "Overview stage — baseline. Just the Earth (sublayer earth_mesh.usda) under a single Sun whose direction puts the terminator at the 23.5° axial-tilt angle. No orbit line, no satellite icon. Anything we add back will be rebuilt deliberately on top of this."
     subLayers = [
-        @./earth_mesh.usda@,
-        @./orbit_line.usda@
+        @./earth_mesh.usda@
     ]
     customLayerData = {
         dictionary cameraSettings = {
@@ -18,8 +17,22 @@
 def Xform "World"
 {
     # --------------------------------------------------------------------
-    # Lights — Earth lit by a single Sun + faint Sky ambient. Intentionally
-    # minimal so the next iteration can rebuild the lighting from scratch.
+    # Lights — single Sun + faint Sky ambient.
+    #
+    # Sun direction: we want the terminator on Earth (Z-up, geographic
+    # north = +Z) to lean 23.5° relative to the north-south meridian, like
+    # the planet at a solstice. That means the Sun's direction vector lies
+    # in a plane tilted 23.5° from Earth's equatorial XY plane.
+    #
+    # Choose Sun position direction D_sun (from origin TOWARD the sun):
+    #   azimuth = -45° in XY (camera-facing octant +X / -Y / +Z),
+    #   elevation = +23.5° above the equatorial plane.
+    # So D_sun = (cos23.5° cos(-45°),  cos23.5° sin(-45°),  sin23.5°)
+    #          = (0.648,  -0.648,  0.398).
+    # The DistantLight emits along -Z by default, then xformOpOrder rotates
+    # that direction. We want it to land at -D_sun = (-0.648, 0.648, -0.398).
+    # Apply rotateX(66.5°) -> (0, 0.917, -0.398), then rotateZ(45°) -> the
+    # vector above. rotateXYZ = (66.5, 0, 45) reproduces that.
     # --------------------------------------------------------------------
     def Xform "Environment"
     {
@@ -28,7 +41,7 @@ def Xform "World"
             float inputs:angle = 0.53
             float inputs:intensity = 3500.0
             color3f inputs:color = (1.0, 0.97, 0.92)
-            float3 xformOp:rotateXYZ = (-30, 0, 45)
+            float3 xformOp:rotateXYZ = (66.5, 0, 45)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
         def DomeLight "Sky"
@@ -39,44 +52,10 @@ def Xform "World"
         }
     }
 
-    # Earth + orbit_line come from subLayers — no overrides here.
+    # Earth mesh comes from the earth_mesh.usda sublayer — no overrides.
 
     # --------------------------------------------------------------------
-    # Primary satellite icon — driven by space.demo.scene from the
-    # backend's orbit formula. Single self-emissive sphere.
-    # --------------------------------------------------------------------
-    def Xform "SatelliteIcon" (
-        prepend apiSchemas = ["MaterialBindingAPI"]
-    )
-    {
-        double3 xformOp:translate = (69.21, 0, 0)
-        uniform token[] xformOpOrder = ["xformOp:translate"]
-        uniform bool primvars:doNotCastShadows = 1
-
-        def Sphere "Glow"
-        {
-            double radius = 2.2
-            rel material:binding = </World/SatelliteIcon/Glow/Mat>
-
-            def Material "Mat"
-            {
-                token outputs:surface.connect = </World/SatelliteIcon/Glow/Mat/Shader.outputs:surface>
-                def Shader "Shader"
-                {
-                    uniform token info:id = "UsdPreviewSurface"
-                    color3f inputs:diffuseColor = (0, 0, 0)
-                    color3f inputs:emissiveColor = (0.2, 2.5, 3.0)
-                    float inputs:metallic = 0
-                    float inputs:roughness = 1
-                    int inputs:useSpecularWorkflow = 0
-                    token outputs:surface
-                }
-            }
-        }
-    }
-
-    # --------------------------------------------------------------------
-    # Camera — look-at eye=(180,-180,120), target=(0,0,0), up=(0,0,1).
+    # Camera — eye=(180,-180,120), target=(0,0,0), up=(0,0,1).
     # --------------------------------------------------------------------
     def Xform "Cameras"
     {
