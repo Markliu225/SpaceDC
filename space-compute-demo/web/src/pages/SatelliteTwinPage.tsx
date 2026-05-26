@@ -1,27 +1,88 @@
-import { useEffect } from 'react';
-import { SceneEmbed } from '../components/SceneEmbed';
-import { StatusCardGrid } from '../components/StatusCardGrid';
-import { useDemoStore } from '../store/demoStore';
+import { useEffect, useState } from 'react'
+import { useDemoStore } from '../store/demoStore'
+import { useBackendBridge } from '../hooks/useBackendBridge'
+import { useMockTelemetryFeed } from '../hooks/useMockTelemetryFeed'
+import { EarthViewport } from '../components/overview/EarthViewport'
+import { SatelliteSelector } from '../components/overview/SatelliteSelector'
+import { Configurator } from '../components/twin/Configurator'
+import { SubsystemHealthRow } from '../components/twin/SubsystemHealthRow'
+import { TimeSeriesStrip } from '../components/twin/TimeSeriesStrip'
+import { ViewModeTabs, type TwinViewMode } from '../components/twin/ViewModeTabs'
 
+/**
+ * SatelliteTwinPage — single-satellite deep dive. Targets 1440×900.
+ *
+ * AppShell adds 44 (header) + 24 (padding) → usable 832 px.
+ *
+ *  ┌────────────────────────────────────────────────────────────────────┐
+ *  │ Header: sat picker · view-mode tabs · LIVE                  56px   │
+ *  ├──────────────────────────────────────────────┬─────────────────────┤
+ *  │ Omniverse viewport (col-8)            1fr    │ Configurator col-4  │
+ *  │                                              │   3 sections + Δ    │
+ *  ├──────────────────────────────────────────────┴─────────────────────┤
+ *  │ TimeSeriesStrip · 5 sparklines · 120 s        col-12 · 160 px      │
+ *  ├────────────────────────────────────────────────────────────────────┤
+ *  │ SubsystemHealthRow · 4 cards                  col-12 · 120 px      │
+ *  └────────────────────────────────────────────────────────────────────┘
+ *
+ * Tracks: 56 / 1fr / 160 / 120. The viewport keeps a satellite-preset
+ * camera (Kit will respond once Phase 3 lands); the Configurator + bars
+ * stay reactive in Phase 1 via the local useTwinTelemetry synth.
+ */
 export function SatelliteTwinPage() {
-  const changeCamera = useDemoStore((s) => s.changeCamera);
-  const connected = useDemoStore((s) => s.connected);
+  const changeCamera = useDemoStore((s) => s.changeCamera)
+  const connected    = useDemoStore((s) => s.connected)
   useEffect(() => {
-    if (connected) changeCamera('satellite');
-  }, [connected, changeCamera]);
+    if (connected) changeCamera('satellite')
+  }, [connected, changeCamera])
+
+  // Drive the shared global tick + backend mirror so other components
+  // (Subsystem cards, time-series strip) see fresh values.
+  useMockTelemetryFeed()
+  useBackendBridge()
+
+  const [viewMode, setViewMode] = useState<TwinViewMode>('structure')
 
   return (
-    <div className="page page--satellite">
-      <div className="page__toolbar">
-        <span>VIEW MODE</span>
-        <button disabled>Structure</button>
-        <button disabled>Power</button>
-        <button disabled>Thermal</button>
-        <button disabled>Compute</button>
-        <em className="page__note">(view-mode wiring lands in Phase 2)</em>
+    <div
+      className="grid w-full bg-bg-app font-sans text-text-md gap-2.5 overflow-hidden"
+      style={{
+        height: 'calc(100vh - 44px - 24px - 4px)',
+        gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
+        gridTemplateRows: '56px minmax(0, 1fr) 160px 120px',
+      }}
+    >
+      {/* Row 1 — Header strip. */}
+      <div className="col-span-12 flex items-center justify-between rounded border border-border-weak bg-card px-3 min-h-0">
+        <div className="flex items-center gap-3">
+          <span className="text-[11px] uppercase tracking-[0.10em] text-text-md">
+            Satellite Twin
+          </span>
+          <SatelliteSelector />
+        </div>
+        <ViewModeTabs value={viewMode} onChange={setViewMode} />
+        <div className="text-[10px] uppercase tracking-[0.10em] text-text-lo">
+          {connected ? 'Live · Streaming' : 'Offline'}
+        </div>
       </div>
-      <div className="page__scene"><SceneEmbed cameraPreset="satellite" /></div>
-      <div className="page__side"><StatusCardGrid /></div>
+
+      {/* Row 2 — Viewport + Configurator. */}
+      <div className="col-span-8 min-h-0 overflow-hidden">
+        <EarthViewport />
+      </div>
+      <div className="col-span-4 min-h-0 overflow-visible relative z-20">
+        <Configurator />
+      </div>
+
+      {/* Row 3 — Time series strip (full width). */}
+      <div className="col-span-12 min-h-0 overflow-hidden">
+        <TimeSeriesStrip />
+      </div>
+
+      {/* Row 4 — Subsystem health (full width, 4 cards). */}
+      <div className="col-span-12 min-h-0 overflow-hidden">
+        <SubsystemHealthRow />
+      </div>
     </div>
-  );
+  )
 }

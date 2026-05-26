@@ -3,7 +3,19 @@ import type {
   ConstellationDetail,
   ConstellationPresetSummary,
   FleetSnapshot,
+  SatelliteConfig,
 } from '../types/messages'
+
+/** Baseline hardware loadout — referenced by the twin page's "Δ vs baseline"
+ *  delta chips. Kept as a module-level constant so any component can import
+ *  it without round-tripping through the store. */
+export const SAT_CONFIG_BASELINE: SatelliteConfig = {
+  gpu: 'H100',
+  solar_material: 'Si',
+  solar_size: 'M',
+  radiator_material: 'Aluminum',
+  radiator_size: 'Standard',
+}
 
 // Status taxonomy used by the donut + sat markers.
 export type SatStatus = 'online' | 'eclipse' | 'standby' | 'offline'
@@ -93,6 +105,9 @@ interface TelemetryStore {
    *  [0..constellationDetail.total_sats). Replaces the legacy SAT-XX string
    *  for the new fleet-driven Overview. */
   selectedSatIdx: number
+  /** Currently-applied hardware loadout. Twin page mutates via setSatConfig;
+   *  bridge mirrors backend's authoritative value once Phase 2 lands. */
+  satConfig: SatelliteConfig
 
   // ---- actions ----
   setRunning: (v: boolean) => void
@@ -105,6 +120,7 @@ interface TelemetryStore {
   setActiveConstellation: (id: string) => void
   setConstellationDetail: (d: ConstellationDetail | null) => void
   setSelectedSatIdx: (i: number) => void
+  setSatConfig: (patch: Partial<SatelliteConfig>) => void
 }
 
 // ---- Deterministic seed satellites: 20 online / 2 eclipse / 1 standby / 1 offline.
@@ -195,6 +211,7 @@ export const useTelemetryStore = create<TelemetryStore>((set) => ({
   activeConstellationId: 'single_iss',
   constellationDetail: null,
   selectedSatIdx: 0,
+  satConfig: { ...SAT_CONFIG_BASELINE },
 
   setRunning: (v) => set({ running: v }),
   reset: () =>
@@ -235,4 +252,6 @@ export const useTelemetryStore = create<TelemetryStore>((set) => ({
       selectedSatIdx: d ? Math.min(s.selectedSatIdx, d.total_sats - 1) : 0,
     })),
   setSelectedSatIdx: (i) => set({ selectedSatIdx: Math.max(0, i) }),
+  setSatConfig: (patch) =>
+    set((s) => ({ satConfig: { ...s.satConfig, ...patch } })),
 }))

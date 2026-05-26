@@ -103,6 +103,21 @@ export interface ConstellationDetail {
   ring_eci_km: [number, number, number][];
 }
 
+/** Reconfigurable hardware loadout for one satellite. Drives both backend
+ *  physics recompute and Omniverse VariantSet swaps. */
+export type SolarMaterial   = 'Si' | 'GaAs' | 'Perovskite';
+export type SolarSize       = 'S' | 'M' | 'L' | 'XL';
+export type RadiatorMaterial = 'Aluminum' | 'WhitePaint' | 'OSR' | 'Graphite';
+export type RadiatorSize    = 'Compact' | 'Standard' | 'Wide';
+
+export interface SatelliteConfig {
+  gpu: GpuType;
+  solar_material: SolarMaterial;
+  solar_size: SolarSize;
+  radiator_material: RadiatorMaterial;
+  radiator_size: RadiatorSize;
+}
+
 export interface StatePacket {
   sim_time_s: number;
   satellite: SatelliteState;
@@ -110,6 +125,8 @@ export interface StatePacket {
   constellation: FleetSnapshot;
   task: TaskState | null;
   compare: CompareMetrics | null;
+  /** Optional in Phase 1 — backend hasn't started broadcasting it yet. */
+  satellite_config?: SatelliteConfig;
 }
 
 export interface Parameters {
@@ -123,7 +140,8 @@ export interface Parameters {
 
 export type ClientMessageType =
   | 'play' | 'pause' | 'reset' | 'set_time' | 'set_parameters'
-  | 'set_mode' | 'start_task' | 'select_object' | 'change_camera';
+  | 'set_mode' | 'start_task' | 'select_object' | 'change_camera'
+  | 'set_config';
 
 export type ServerMessageType =
   | 'scene_ready' | 'state_update' | 'task_update'

@@ -1,0 +1,179 @@
+import type {
+  GpuType,
+  RadiatorMaterial,
+  RadiatorSize,
+  SolarMaterial,
+  SolarSize,
+  SatelliteConfig,
+} from '../types/messages'
+
+/**
+ * satConfigOptions — authoritative metadata for every reconfigurable
+ * hardware variant on the satellite twin. The data tables mirror
+ * docs/satellite_twin_implementation.md §3 exactly; the values here drive
+ * BOTH the dropdown UI (label + sub-stats) and the Web-side delta math
+ * (so the "ΔSolar / Δmass / Δpayback" tiles update instantly while
+ * waiting for backend's echo).
+ */
+
+export interface GpuOption {
+  id: GpuType
+  label: string
+  /** PFLOPS produced by one card. */
+  pflops_per_card: number
+  /** Card thermal design power, watts. */
+  tdp_w: number
+  /** Card BOM cost in USD thousands. */
+  cost_k: number
+  /** Tint used by both the chip badge and the USD MDL material. */
+  tint: string
+}
+
+export const GPU_OPTIONS: GpuOption[] = [
+  { id: 'H100',   label: 'H100 SXM',        pflops_per_card: 0.98, tdp_w: 700,  cost_k: 30, tint: '#4A5568' },
+  { id: 'H200',   label: 'H200 SXM',        pflops_per_card: 1.50, tdp_w: 700,  cost_k: 40, tint: '#3B82F6' },
+  { id: 'B200',   label: 'Blackwell B200',  pflops_per_card: 2.50, tdp_w: 1000, cost_k: 45, tint: '#0F172A' },
+  { id: 'MI300X', label: 'AMD MI300X',      pflops_per_card: 1.30, tdp_w: 750,  cost_k: 28, tint: '#DC2626' },
+]
+
+export const GPU_CARDS_PER_SAT = 8
+
+export interface SolarMaterialOption {
+  id: SolarMaterial
+  label: string
+  short: string
+  efficiency: number
+  density_kg_m2: number
+  tint: string
+}
+
+export const SOLAR_MATERIAL_OPTIONS: SolarMaterialOption[] = [
+  { id: 'Si',         label: 'Silicon',           short: 'Si',   efficiency: 0.22, density_kg_m2: 2.5, tint: '#1E3A8A' },
+  { id: 'GaAs',       label: 'Gallium Arsenide',  short: 'GaAs', efficiency: 0.32, density_kg_m2: 3.0, tint: '#4C1D95' },
+  { id: 'Perovskite', label: 'Perovskite Tandem', short: 'PvT',  efficiency: 0.38, density_kg_m2: 1.8, tint: '#7C3AED' },
+]
+
+export interface SolarSizeOption {
+  id: SolarSize
+  label: string
+  area_m2_per_panel: number
+  panel_count: number
+}
+
+export const SOLAR_SIZE_OPTIONS: SolarSizeOption[] = [
+  { id: 'S',  label: 'Small',       area_m2_per_panel: 4,  panel_count: 2 },
+  { id: 'M',  label: 'Medium',      area_m2_per_panel: 8,  panel_count: 2 },
+  { id: 'L',  label: 'Large',       area_m2_per_panel: 12, panel_count: 2 },
+  { id: 'XL', label: 'Extra Large', area_m2_per_panel: 16, panel_count: 4 },
+]
+
+export interface RadiatorMaterialOption {
+  id: RadiatorMaterial
+  label: string
+  emissivity: number
+  density_kg_m2: number
+  tint: string
+}
+
+export const RADIATOR_MATERIAL_OPTIONS: RadiatorMaterialOption[] = [
+  { id: 'Aluminum',   label: 'Bare Aluminum',           emissivity: 0.10, density_kg_m2: 4.0, tint: '#C0C0C0' },
+  { id: 'WhitePaint', label: 'White Paint',             emissivity: 0.85, density_kg_m2: 4.4, tint: '#F0F0F0' },
+  { id: 'OSR',        label: 'Optical Solar Reflector', emissivity: 0.92, density_kg_m2: 4.6, tint: '#D4D4D8' },
+  { id: 'Graphite',   label: 'Graphite Composite',      emissivity: 0.96, density_kg_m2: 3.6, tint: '#18181B' },
+]
+
+export interface RadiatorSizeOption {
+  id: RadiatorSize
+  label: string
+  area_m2_per_panel: number
+}
+
+export const RADIATOR_SIZE_OPTIONS: RadiatorSizeOption[] = [
+  { id: 'Compact',  label: 'Compact',  area_m2_per_panel: 1 },
+  { id: 'Standard', label: 'Standard', area_m2_per_panel: 2 },
+  { id: 'Wide',     label: 'Wide',     area_m2_per_panel: 4 },
+]
+
+export const RADIATOR_PANELS_PER_SAT = 2
+
+// ---------------------------------------------------------------------------
+// Lookup helpers — every component uses these instead of array.find inline.
+// ---------------------------------------------------------------------------
+
+export function gpuOption(id: GpuType): GpuOption {
+  return GPU_OPTIONS.find((o) => o.id === id) ?? GPU_OPTIONS[0]
+}
+
+export function solarMaterial(id: SolarMaterial): SolarMaterialOption {
+  return SOLAR_MATERIAL_OPTIONS.find((o) => o.id === id) ?? SOLAR_MATERIAL_OPTIONS[0]
+}
+
+export function solarSize(id: SolarSize): SolarSizeOption {
+  return SOLAR_SIZE_OPTIONS.find((o) => o.id === id) ?? SOLAR_SIZE_OPTIONS[1]
+}
+
+export function radiatorMaterial(id: RadiatorMaterial): RadiatorMaterialOption {
+  return RADIATOR_MATERIAL_OPTIONS.find((o) => o.id === id) ?? RADIATOR_MATERIAL_OPTIONS[0]
+}
+
+export function radiatorSize(id: RadiatorSize): RadiatorSizeOption {
+  return RADIATOR_SIZE_OPTIONS.find((o) => o.id === id) ?? RADIATOR_SIZE_OPTIONS[1]
+}
+
+// ---------------------------------------------------------------------------
+// Derived stats — same formulas as backend's _update_placeholder_physics so
+// the Web-side delta panel matches the eventual state_update echo.
+// ---------------------------------------------------------------------------
+
+const SOLAR_CONSTANT_W_M2 = 1361
+const BUS_MASS_KG         = 300
+const BUS_BASE_CAPEX_USD_M = 3.0
+
+export interface DerivedStats {
+  /** Solar input at sunlit, normal-incidence conditions (worst-case max). */
+  solar_input_max_w: number
+  /** Total launched mass for the satellite, kilograms. */
+  launch_mass_kg: number
+  /** Aggregate compute capability — petaFLOPS at peak. */
+  compute_pflops: number
+  /** All-in CAPEX per satellite, USD millions. */
+  capex_usd_m: number
+  /** Demo proxy for peak thermal — independent of util so we can compare configs. */
+  thermal_index: number
+}
+
+export function deriveStats(cfg: SatelliteConfig): DerivedStats {
+  const gpu  = gpuOption(cfg.gpu)
+  const sMat = solarMaterial(cfg.solar_material)
+  const sSz  = solarSize(cfg.solar_size)
+  const rMat = radiatorMaterial(cfg.radiator_material)
+  const rSz  = radiatorSize(cfg.radiator_size)
+
+  const solar_input_max_w =
+    sMat.efficiency * sSz.area_m2_per_panel * sSz.panel_count * SOLAR_CONSTANT_W_M2
+
+  const compute_pflops = gpu.pflops_per_card * GPU_CARDS_PER_SAT
+
+  const launch_mass_kg =
+    BUS_MASS_KG
+    + sSz.panel_count * sSz.area_m2_per_panel * sMat.density_kg_m2
+    + RADIATOR_PANELS_PER_SAT * rSz.area_m2_per_panel * rMat.density_kg_m2
+
+  const capex_usd_m =
+    BUS_BASE_CAPEX_USD_M
+    + (gpu.cost_k * GPU_CARDS_PER_SAT) / 1000
+    + 0.05 * sSz.panel_count * sSz.area_m2_per_panel
+    + 0.02 * RADIATOR_PANELS_PER_SAT * rSz.area_m2_per_panel
+
+  // Thermal index — lower is better. Proxy: payload power / radiator capacity.
+  const radiator_capacity = rMat.emissivity * RADIATOR_PANELS_PER_SAT * rSz.area_m2_per_panel
+  const thermal_index = (gpu.tdp_w * GPU_CARDS_PER_SAT) / Math.max(0.05, radiator_capacity)
+
+  return {
+    solar_input_max_w,
+    launch_mass_kg,
+    compute_pflops,
+    capex_usd_m,
+    thermal_index,
+  }
+}
