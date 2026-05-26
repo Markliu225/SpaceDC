@@ -3,7 +3,7 @@
     defaultPrim = "World"
     upAxis = "Z"
     metersPerUnit = 100000
-    doc = "Overview stage — baseline. Just the Earth (sublayer earth_mesh.usda) under a single Sun whose direction puts the terminator at the 23.5° axial-tilt angle. No orbit line, no satellite icon. Anything we add back will be rebuilt deliberately on top of this."
+    doc = "Overview stage — baseline. Earth (sublayer earth_mesh.usda) self-rotates around its +Z geographic axis once per 90 sim-seconds. The Sun stays fixed in world space at 23.5° elevation above the equatorial plane, so as the Earth spins the terminator stays tilted at the axial-tilt angle and different longitudes cycle through day/night."
     subLayers = [
         @./earth_mesh.usda@
     ]
@@ -12,6 +12,10 @@
             string boundCamera = "/World/Cameras/Overview"
         }
     }
+    startTimeCode = 0
+    endTimeCode   = 90
+    framesPerSecond = 30
+    timeCodesPerSecond = 30
 )
 
 def Xform "World"
@@ -52,7 +56,22 @@ def Xform "World"
         }
     }
 
-    # Earth mesh comes from the earth_mesh.usda sublayer — no overrides.
+    # --------------------------------------------------------------------
+    # Earth — overlay on the prim defined in earth_mesh.usda. Animate
+    # xformOp:rotateZ 0 → 360° over [0, 90] sim seconds so Kit's timeline
+    # alone is enough to see the planet spin. space.demo.scene also writes
+    # this attribute every frame against wall-clock sim time, which takes
+    # precedence and gives smooth rotation even when the timeline is
+    # stopped.
+    # --------------------------------------------------------------------
+    over "Earth"
+    {
+        float xformOp:rotateZ.timeSamples = {
+            0: 0,
+            90: 360,
+        }
+        uniform token[] xformOpOrder = ["xformOp:rotateZ"]
+    }
 
     # --------------------------------------------------------------------
     # Camera — eye=(180,-180,120), target=(0,0,0), up=(0,0,1).
