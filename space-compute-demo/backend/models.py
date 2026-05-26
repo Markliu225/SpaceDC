@@ -92,6 +92,23 @@ class Parameters(BaseModel):
     sunlit: Optional[bool] = None
 
 
+SolarMaterial = Literal["Si", "GaAs", "Perovskite"]
+SolarSize     = Literal["S", "M", "L", "XL"]
+RadiatorMaterial = Literal["Aluminum", "WhitePaint", "OSR", "Graphite"]
+RadiatorSize  = Literal["Compact", "Standard", "Wide"]
+
+
+class SatelliteConfig(BaseModel):
+    """Reconfigurable hardware loadout for the tracked satellite. Drives
+    both backend physics (solar / payload / thermal recompute) and
+    Omniverse VariantSet selection on the Kit side."""
+    gpu: GpuType = "H100"
+    solar_material: SolarMaterial = "Si"
+    solar_size: SolarSize = "M"
+    radiator_material: RadiatorMaterial = "Aluminum"
+    radiator_size: RadiatorSize = "Standard"
+
+
 class Envelope(BaseModel):
     type: str
     ts: float
@@ -108,3 +125,4 @@ class StatePacket(BaseModel):
     compare: Optional[CompareMetrics] = None
     camera_preset: str = "overview"
     running: bool = True
+    satellite_config: SatelliteConfig = Field(default_factory=SatelliteConfig)

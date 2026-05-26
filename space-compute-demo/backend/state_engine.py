@@ -17,6 +17,7 @@ from models import (
     GroundStationState,
     Mode,
     Parameters,
+    SatelliteConfig,
     SatelliteState,
     StatePacket,
     TaskState,
@@ -25,6 +26,45 @@ from services import orbit_catalog
 from services import constellations as _consts
 
 TICK_HZ = 1.0
+
+# Reconfigurable hardware tables — values mirror docs/satellite_twin_implementation.md §3
+# and web/src/data/satConfigOptions.ts so the backend physics, Web optimistic
+# UI, and USD VariantSet selections all agree on the same numbers.
+
+_GPU_TABLE: dict[str, dict[str, float]] = {
+    "H100":   {"pflops": 0.98, "tdp_w": 700.0,  "cost_k": 30.0},
+    "H200":   {"pflops": 1.50, "tdp_w": 700.0,  "cost_k": 40.0},
+    "B200":   {"pflops": 2.50, "tdp_w": 1000.0, "cost_k": 45.0},
+    "MI300X": {"pflops": 1.30, "tdp_w": 750.0,  "cost_k": 28.0},
+}
+_GPU_CARDS_PER_SAT = 8
+
+_SOLAR_MAT_TABLE = {
+    "Si":         {"efficiency": 0.22, "density_kg_m2": 2.5},
+    "GaAs":       {"efficiency": 0.32, "density_kg_m2": 3.0},
+    "Perovskite": {"efficiency": 0.38, "density_kg_m2": 1.8},
+}
+_SOLAR_SIZE_TABLE = {
+    "S":  {"area_m2_per_panel": 4.0,  "panel_count": 2},
+    "M":  {"area_m2_per_panel": 8.0,  "panel_count": 2},
+    "L":  {"area_m2_per_panel": 12.0, "panel_count": 2},
+    "XL": {"area_m2_per_panel": 16.0, "panel_count": 4},
+}
+
+_RAD_MAT_TABLE = {
+    "Aluminum":   {"emissivity": 0.10, "density_kg_m2": 4.0},
+    "WhitePaint": {"emissivity": 0.85, "density_kg_m2": 4.4},
+    "OSR":        {"emissivity": 0.92, "density_kg_m2": 4.6},
+    "Graphite":   {"emissivity": 0.96, "density_kg_m2": 3.6},
+}
+_RAD_SIZE_TABLE = {
+    "Compact":  {"area_m2_per_panel": 1.0},
+    "Standard": {"area_m2_per_panel": 2.0},
+    "Wide":     {"area_m2_per_panel": 4.0},
+}
+_RAD_PANELS_PER_SAT = 2
+
+_SOLAR_CONSTANT_W_M2 = 1361.0
 
 
 class StateEngine:
@@ -43,6 +83,8 @@ class StateEngine:
         # ISS preset so behaviour matches the pre-constellation baseline.
         self._constellation_id: str = "single_iss"
         self._fleet_snapshot: FleetSnapshot = FleetSnapshot()
+        # Reconfigurable hardware loadout — Twin page mutates via set_config.
+        self._config: SatelliteConfig = SatelliteConfig()
 
     # ---- lifecycle ----
     async def start(self) -> None:
@@ -91,6 +133,21 @@ class StateEngine:
     def set_camera_preset(self, preset: str) -> None:
         self._camera_preset = preset
 
+    def set_config(self, patch: dict[str, Any]) -> SatelliteConfig:
+        """Merge a partial hardware loadout into the active config. Returns
+        the new full config so the handler can echo it back. Unknown keys
+        are ignored; bad values raise the underlying Pydantic ValidationError."""
+        cleaned = {k: v for k, v in patch.items() if v is not None}
+        self._config = self._config.model_copy(update=cleaned)
+        # Pydantic re-validates via model_validate to ensure literals are
+        # actually one of the allowed enum strings (model_copy alone does not).
+        self._config = SatelliteConfig.model_validate(self._config.model_dump())
+        return self._config
+
+    @property
+    def satellite_config(self) -> SatelliteConfig:
+        return self._config
+
     def set_constellation(self, preset_id: str) -> bool:
         """Switch the active constellation. Triggers fleet rebuild on next tick.
         Returns False if the preset id is unknown."""
@@ -122,6 +179,7 @@ class StateEngine:
             task=self._task.model_copy() if self._task else None,
             camera_preset=self._camera_preset,
             running=self._running,
+            satellite_config=self._config.model_copy(),
         )
 
     # ---- inner loop ----
@@ -182,20 +240,47 @@ class StateEngine:
         r_norm = max(1e-6, math.sqrt(x_km * x_km + y_km * y_km + z_km * z_km))
         cos_a = (x_km * sun_dx + y_km * sun_dy + z_km * sun_dz) / r_norm
         self._sat.sunlit = cos_a > -0.05  # tiny dawn/dusk margin
-        self._sat.solar_input_w = 4200.0 if self._sat.sunlit else 0.0
 
-        # --- Power / thermal / battery / downlink (placeholder, unchanged) -
+        # --- Reconfigurable hardware lookups ----------------------------------
+        cfg     = self._config
+        gpu     = _GPU_TABLE.get(cfg.gpu,                _GPU_TABLE["H100"])
+        s_mat   = _SOLAR_MAT_TABLE.get(cfg.solar_material,     _SOLAR_MAT_TABLE["Si"])
+        s_size  = _SOLAR_SIZE_TABLE.get(cfg.solar_size,        _SOLAR_SIZE_TABLE["M"])
+        r_mat   = _RAD_MAT_TABLE.get(cfg.radiator_material,    _RAD_MAT_TABLE["Aluminum"])
+        r_size  = _RAD_SIZE_TABLE.get(cfg.radiator_size,       _RAD_SIZE_TABLE["Standard"])
+
+        # Solar input depends on material × size × incidence × sunlit flag.
+        # cos_a above is the dot of sat-position-unit with sun direction, which
+        # ranges roughly -1..1; we clamp the negative side to 0 for incidence.
+        incidence = max(0.0, cos_a) if self._sat.sunlit else 0.0
+        self._sat.solar_input_w = (
+            s_mat["efficiency"]
+            * s_size["area_m2_per_panel"]
+            * s_size["panel_count"]
+            * _SOLAR_CONSTANT_W_M2
+            * incidence
+        )
+
+        # --- Power / thermal / battery / downlink -----------------------------
         load = 0.15 + 0.35 * (0.5 + 0.5 * math.sin(t / 20.0))
         self._sat.gpu_utilization = load
-        self._sat.payload_power_w = 400.0 + 1800.0 * load
+        # Payload draw now scales with GPU TDP × card count × utilization.
+        self._sat.payload_power_w = gpu["tdp_w"] * _GPU_CARDS_PER_SAT * load
         self._sat.platform_power_w = 600.0
-        target = 30.0 + 45.0 * load
+        # Thermal target uses the linear surrogate from the doc: lower
+        # emissivity × area => higher steady-state temperature.
+        radiator_capacity = max(
+            0.05,
+            r_mat["emissivity"] * _RAD_PANELS_PER_SAT * r_size["area_m2_per_panel"],
+        )
+        target = 28.0 + (50.0 * load) / radiator_capacity
         self._sat.temperature_c += (target - self._sat.temperature_c) * 0.1
         net = self._sat.solar_input_w - self._sat.payload_power_w - self._sat.platform_power_w
         self._sat.battery_soc = max(0.0, min(1.0, self._sat.battery_soc + net * dt / 3.6e7))
         self._gs.visible = math.sin(t / 30.0) > 0.4
         self._sat.downlink_mbps = 120.0 if self._gs.visible else 0.0
         self._gs.rx_mbps = self._sat.downlink_mbps
+        self._sat.gpu_type = cfg.gpu  # echo for the legacy 14-param card
 
 
 async def _maybe_await(x: Any) -> None:

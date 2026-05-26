@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTelemetryStore } from '../store/useTelemetryStore'
-import type { SatelliteConfig } from '../types/messages'
+import { useDemoStore } from '../store/demoStore'
+import type { SatelliteConfig, SatelliteState } from '../types/messages'
 import {
   GPU_CARDS_PER_SAT,
   RADIATOR_PANELS_PER_SAT,
@@ -46,49 +47,50 @@ export interface TwinTelemetrySnapshot {
   scars: TwinScar[]
 }
 
-const ZERO_SNAPSHOT: TwinTelemetrySnapshot = {
-  current: { solar_w: 0, payload_w: 0, battery_soc: 0.8, temp_c: 30, gpu_util: 0, sunlit: true },
-  series: {
-    solar_w:    new Array(HISTORY_LEN).fill(0),
-    payload_w:  new Array(HISTORY_LEN).fill(0),
-    battery_soc: new Array(HISTORY_LEN).fill(0.8),
-    temp_c:     new Array(HISTORY_LEN).fill(30),
-    gpu_util:   new Array(HISTORY_LEN).fill(0),
-  },
-  scars: [],
-}
-
 /**
- * useTwinTelemetry — 1Hz synthesised time series for the currently-selected
- * sat under the currently-applied SatelliteConfig. Phase 1 computes
- * everything client-side; Phase 2 will replace the synthesis with
- * state_update broadcasts from backend (formulas match exactly so the
- * Phase 1 → Phase 2 hand-off is invisible).
+ * useTwinTelemetry — 1Hz time series for the active satellite under the
+ * applied SatelliteConfig.
  *
- * Records a scar marker whenever the SatelliteConfig changes mid-stream,
- * so the strip can paint a dashed vertical line at that point.
+ *  - When the backend's `state_update` is reaching us (lastState present),
+ *    we drive the rolling buffer off the AUTHORITATIVE per-tick values:
+ *    solar_input_w / payload_power_w / battery_soc / temperature_c /
+ *    gpu_utilization come straight from `lastState.satellite`. This is
+ *    the Phase 2 path.
+ *
+ *  - When backend is offline (no lastState yet), we fall back to a local
+ *    synthesis driven by `useTelemetryStore.sim_time_s` and the cfg
+ *    tables — same formulas as backend's _update_placeholder_physics so
+ *    the visual matches when backend comes back online.
+ *
+ *  - Whenever `cfg` changes, we record a scar marker at the current
+ *    buffer tail; the strip paints a dashed vertical line that scrolls
+ *    left and fades out as the buffer ages past it.
  */
 export function useTwinTelemetry(): TwinTelemetrySnapshot {
-  const cfg     = useTelemetryStore((s) => s.satConfig)
-  const running = useTelemetryStore((s) => s.running)
-  const simT    = useTelemetryStore((s) => s.sim_time_s)
+  const cfg       = useTelemetryStore((s) => s.satConfig)
+  const running   = useTelemetryStore((s) => s.running)
+  const simT      = useTelemetryStore((s) => s.sim_time_s)
+  const lastState = useDemoStore((s) => s.lastState)
 
-  const [snap, setSnap] = useState<TwinTelemetrySnapshot>(() => ({
-    ...ZERO_SNAPSHOT,
-    series: cloneSeries(ZERO_SNAPSHOT.series),
-    scars:  [],
-  }))
+  const [snap, setSnap] = useState<TwinTelemetrySnapshot>(() => {
+    const seed = lastState?.satellite
+      ? backendSample(lastState.satellite)
+      : deriveSample(cfg, simT)
+    return {
+      current: seed,
+      series:  prefill(seed),
+      scars:   [],
+    }
+  })
 
-  // Stash the previous cfg JSON to detect change events without re-running
-  // setState every render — only on actual config delta.
+  // Cfg-change scar — stash JSON to compare across renders cheaply.
   const lastCfgRef = useRef<string>(JSON.stringify(cfg))
-
-  // Record a scar whenever cfg changes (the page re-renders, we compare).
   useEffect(() => {
     const next = JSON.stringify(cfg)
     if (next === lastCfgRef.current) return
-    const prevCfg = JSON.parse(lastCfgRef.current)
-    const changed = Object.keys(cfg).filter((k) => (cfg as never)[k] !== prevCfg[k])
+    const prevCfg = JSON.parse(lastCfgRef.current) as SatelliteConfig
+    const changed = (Object.keys(cfg) as (keyof SatelliteConfig)[])
+      .filter((k) => cfg[k] !== prevCfg[k])
     lastCfgRef.current = next
     if (changed.length === 0) return
     setSnap((s) => ({
@@ -98,17 +100,21 @@ export function useTwinTelemetry(): TwinTelemetrySnapshot {
         {
           index: HISTORY_LEN - 1,
           sim_time_s: simT,
-          label: changed.map((k) => `${k}=${(cfg as never)[k]}`).join(' · '),
+          label: changed.map((k) => `${k}=${cfg[k]}`).join(' · '),
         },
       ],
     }))
   }, [cfg, simT])
 
-  // 1Hz tick — append a synthesised sample.
+  // 1Hz buffer advance — prefers backend-authoritative values when present.
   useEffect(() => {
     if (!running) return
     const id = window.setInterval(() => {
-      setSnap((prev) => advance(prev, cfg, simT))
+      setSnap((prev) => {
+        const sat = useDemoStore.getState().lastState?.satellite
+        const sample = sat ? backendSample(sat) : deriveSample(cfg, simT)
+        return advance(prev, sample)
+      })
     }, 1000)
     return () => window.clearInterval(id)
   }, [running, cfg, simT])
@@ -116,24 +122,34 @@ export function useTwinTelemetry(): TwinTelemetrySnapshot {
   return snap
 }
 
-function cloneSeries(s: TwinSeries): TwinSeries {
+/** Pull a sample directly from the backend's authoritative SatelliteState. */
+function backendSample(sat: SatelliteState): TwinTelemetrySnapshot['current'] {
   return {
-    solar_w:     s.solar_w.slice(),
-    payload_w:   s.payload_w.slice(),
-    battery_soc: s.battery_soc.slice(),
-    temp_c:      s.temp_c.slice(),
-    gpu_util:    s.gpu_util.slice(),
+    solar_w:     sat.solar_input_w,
+    payload_w:   sat.payload_power_w,
+    battery_soc: sat.battery_soc,
+    temp_c:      sat.temperature_c,
+    gpu_util:    sat.gpu_utilization,
+    sunlit:      sat.sunlit,
+  }
+}
+
+/** Fill all 120 slots with the seed sample so the first render isn't blank. */
+function prefill(seed: TwinTelemetrySnapshot['current']): TwinSeries {
+  return {
+    solar_w:     new Array(HISTORY_LEN).fill(seed.solar_w),
+    payload_w:   new Array(HISTORY_LEN).fill(seed.payload_w),
+    battery_soc: new Array(HISTORY_LEN).fill(seed.battery_soc),
+    temp_c:      new Array(HISTORY_LEN).fill(seed.temp_c),
+    gpu_util:    new Array(HISTORY_LEN).fill(seed.gpu_util),
   }
 }
 
 /** Append one new sample to each buffer + age scars (shift their index). */
 function advance(
   prev: TwinTelemetrySnapshot,
-  cfg: SatelliteConfig,
-  simT: number,
+  sample: TwinTelemetrySnapshot['current'],
 ): TwinTelemetrySnapshot {
-  const sample = deriveSample(cfg, simT)
-
   const push = (arr: number[], v: number): number[] => {
     const out = arr.slice(1)
     out.push(v)

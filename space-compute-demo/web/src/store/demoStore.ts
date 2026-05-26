@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type {
   ClientMessageType, Envelope, Mode, Parameters,
-  StatePacket, TaskState,
+  SatelliteConfig, StatePacket, TaskState,
 } from '../types/messages';
 
 const WS_URL = import.meta.env.VITE_BACKEND_WS ?? 'ws://localhost:8001/ws/state';
@@ -31,6 +31,7 @@ interface DemoStore {
   startTask: (caseId?: string) => void;
   selectObject: (primPath: string) => void;
   changeCamera: (preset: string) => void;
+  sendSetConfig: (patch: Partial<SatelliteConfig>) => void;
 }
 
 export const useDemoStore = create<DemoStore>((set, get) => ({
@@ -118,5 +119,10 @@ export const useDemoStore = create<DemoStore>((set, get) => ({
   changeCamera: (preset) => {
     set({ cameraPreset: preset });
     get().send('change_camera', { preset });
+  },
+  sendSetConfig: (patch) => {
+    // Optimistic local state lives in useTelemetryStore.satConfig; this
+    // method just fires the wire command. Backend echoes via state_update.
+    get().send('set_config', patch as Record<string, unknown>);
   },
 }));

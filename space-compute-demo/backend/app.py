@@ -143,6 +143,26 @@ async def http_set_constellation(preset_id: str):
     return {"ok": True, "constellation_id": preset_id}
 
 
+@app.get("/satellite_config")
+async def http_get_satellite_config():
+    """Current hardware loadout — Kit polls this each tick to know which
+    USD VariantSet selections to apply, so Web's `/satellite` page stays
+    in lock-step with the rendered 3D model."""
+    return engine.satellite_config.model_dump()
+
+
+@app.post("/satellite_config")
+async def http_post_satellite_config(patch: dict[str, Any]):
+    """Merge a partial config and immediately broadcast a fresh state_update
+    so any connected Web clients see the new derived numbers in <1 s."""
+    try:
+        new_cfg = engine.set_config(patch)
+    except Exception as e:
+        raise HTTPException(422, f"invalid satellite_config patch: {e}") from e
+    await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
+    return {"ok": True, "satellite_config": new_cfg.model_dump()}
+
+
 @app.post("/orbit_type/{mode}")
 async def http_set_orbit_type(mode: str):
     """Convenience HTTP control for swapping orbit mode without a WebSocket."""
@@ -217,6 +237,18 @@ async def _handle(env: Envelope, ws: WebSocket) -> None:
     elif t == "set_parameters":
         engine.set_parameters(p)
         await _ack(ws, env.request_id, True)
+    elif t == "set_config":
+        try:
+            engine.set_config(p)
+        except Exception as e:
+            await ws.send_json(_envelope("error",
+                {"code": "bad_satellite_config", "message": str(e)}, env.request_id))
+            return
+        await _ack(ws, env.request_id, True)
+        # Broadcast the new snapshot so all clients see the recomputed
+        # solar / payload / temp in the next sub-second instead of waiting
+        # for the next 1Hz tick.
+        await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
     elif t == "set_mode":
         engine.set_mode(p.get("mode", "on_orbit"))
         await _ack(ws, env.request_id, True)

@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { useTelemetryStore, SAT_CONFIG_BASELINE } from '../store/useTelemetryStore'
+import { useDemoStore } from '../store/demoStore'
 import { deriveStats, type DerivedStats } from '../data/satConfigOptions'
 import type { SatelliteConfig } from '../types/messages'
 
@@ -24,16 +25,21 @@ export interface UseSatConfigReturn {
  * renders.
  */
 export function useSatConfig(): UseSatConfigReturn {
-  const cfg          = useTelemetryStore((s) => s.satConfig)
-  const setSatConfig = useTelemetryStore((s) => s.setSatConfig)
+  const cfg           = useTelemetryStore((s) => s.satConfig)
+  const setSatConfig  = useTelemetryStore((s) => s.setSatConfig)
+  const sendSetConfig = useDemoStore((s) => s.sendSetConfig)
 
   const stats         = useMemo(() => deriveStats(cfg),                 [cfg])
   const baselineStats = useMemo(() => deriveStats(SAT_CONFIG_BASELINE), [])
 
   const update = useCallback((patch: Partial<SatelliteConfig>) => {
+    // Optimistic local write — the UI deltas + scar markers update at
+    // dropdown-click latency, not WS round-trip latency.
     setSatConfig(patch)
-    // Phase 2 will additionally dispatch `set_config` over WS here.
-  }, [setSatConfig])
+    // Authoritative — backend recomputes physics, broadcasts state_update,
+    // bridge writes the echoed value back over our optimistic one.
+    sendSetConfig(patch)
+  }, [setSatConfig, sendSetConfig])
 
   return { cfg, baseline: SAT_CONFIG_BASELINE, stats, baselineStats, update }
 }

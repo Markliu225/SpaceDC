@@ -5,6 +5,7 @@ import type {
   ConstellationDetail,
   ConstellationPresetSummary,
   FleetSnapshot,
+  SatelliteConfig,
 } from '../types/messages'
 
 const BACKEND_HTTP = (import.meta.env.VITE_BACKEND_HTTP as string | undefined)
@@ -32,6 +33,7 @@ export function useBackendBridge() {
   const setActive       = useTelemetryStore((s) => s.setActiveConstellation)
   const setDetail       = useTelemetryStore((s) => s.setConstellationDetail)
   const activeId        = useTelemetryStore((s) => s.activeConstellationId)
+  const setSatConfig    = useTelemetryStore((s) => s.setSatConfig)
 
   // One-shot preset fetch.
   useEffect(() => {
@@ -47,14 +49,17 @@ export function useBackendBridge() {
     return () => { cancelled = true }
   }, [setPresets, setActive])
 
-  // Bridge demoStore.lastState.constellation -> telemetryStore.fleet.
+  // Bridge demoStore.lastState.constellation -> telemetryStore.fleet,
+  // and lastState.satellite_config -> telemetryStore.satConfig.
   useEffect(() => {
     return useDemoStore.subscribe((s, prev) => {
       if (s.lastState === prev.lastState) return
-      const c = (s.lastState as { constellation?: FleetSnapshot } | null)?.constellation
-      if (c) applyFleet(c)
+      type Echo = { constellation?: FleetSnapshot; satellite_config?: SatelliteConfig }
+      const last = s.lastState as Echo | null
+      if (last?.constellation)     applyFleet(last.constellation)
+      if (last?.satellite_config)  setSatConfig(last.satellite_config)
     })
-  }, [applyFleet])
+  }, [applyFleet, setSatConfig])
 
   // Fetch full detail (Walker params + ring_eci_km) whenever the active
   // preset id changes. The Web fleet propagator needs the ring + phasing
