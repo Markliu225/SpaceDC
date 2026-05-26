@@ -87,13 +87,13 @@ def Xform "World"
         {
             int[] curveVertexCounts = [2]
             point3f[] points = [(0, 0, 0), (0, 0, 0)]
-            # Width is in scene units (1 unit = 100 km). 0.8 = 80 km thick;
-            # cosmetically a touch thicker than physically accurate, so the
-            # line is legible at the cinematic camera distance (~280 units).
-            float[] widths = [0.8] (
+            # Width is in scene units (1 unit = 100 km). 0.3 = 30 km thick —
+            # a thin hairline against the Earth limb. Bumped up only enough
+            # to survive sub-pixel aliasing at the cinematic camera distance.
+            float[] widths = [0.3] (
                 interpolation = "constant"
             )
-            float[] primvars:widths = [0.8] (
+            float[] primvars:widths = [0.3] (
                 interpolation = "constant"
             )
             uniform token type = "linear"
@@ -125,9 +125,10 @@ def Xform "World"
             prepend apiSchemas = ["MaterialBindingAPI"]
         )
         {
-            # 2.5 unit = 250 km radius — visually a small bright dot at the
-            # cinematic framing without dominating the view.
-            double radius = 2.5
+            # 0.45 unit = 45 km radius — diameter (90 km) is only a touch
+            # wider than the 30 km orbit line, so the sat reads as a small
+            # bead riding on the ring rather than a blob hovering over it.
+            double radius = 0.45
             double3 xformOp:translate = (69.21, 0, 0)
             uniform token[] xformOpOrder = ["xformOp:translate"]
             uniform bool primvars:doNotCastShadows = 1
