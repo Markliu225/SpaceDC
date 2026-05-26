@@ -3,9 +3,9 @@
     defaultPrim = "World"
     upAxis = "Z"
     metersPerUnit = 0.01
-    doc = "Satellite close-up — lights + materials. The Satellite assembly (6 procedural bay panels with detail, LUMID solar panels, DGX rack) and the camera are generated into usd/components.usda by tools/apply_assembly.py (reads tools/assembly_config.json, drivable via tools/gui_assemble.py)."
+    doc = "Satellite close-up — lights + materials. The Satellite assembly is now the procedural twin body (usd/twin_satellite.usda) with VariantSets for the swappable GPU / SolarPanel / Radiator hardware. tools/apply_assembly.py is still available for the legacy LUMID monolith (usd/components.usda) but is no longer the primary visible body."
     subLayers = [
-        @./components.usda@
+        @./twin_satellite.usda@
     ]
     customLayerData = {
         dictionary cameraSettings = {

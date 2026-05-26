@@ -53,7 +53,18 @@ def _log(msg: str) -> None:
 BACKEND_BASE = os.environ.get("SPACE_DEMO_BACKEND_HTTP", "http://localhost:8001").rstrip("/")
 BACKEND_STATE_URL          = f"{BACKEND_BASE}/state"
 BACKEND_CONSTELLATION_URL  = f"{BACKEND_BASE}/constellations/{{id}}"
+BACKEND_SAT_CONFIG_URL     = f"{BACKEND_BASE}/satellite_config"
 POLL_HZ = 5.0
+
+# Prim paths for the Twin page's swappable hardware (defined in
+# usd/twin_satellite.usda). Each tuple is (prim_path, list_of_variant_sets).
+SAT_VARIANT_TARGETS = [
+    ("/World/Satellite/DGX_Rack",          ("gpu",)),
+    ("/World/Satellite/SolarPanelWing_N",  ("solar_size", "solar_material")),
+    ("/World/Satellite/SolarPanelWing_S",  ("solar_size", "solar_material")),
+    ("/World/Satellite/Radiator_East",     ("radiator_size", "radiator_material")),
+    ("/World/Satellite/Radiator_West",     ("radiator_size", "radiator_material")),
+]
 
 USD_ROOT_ENV = "SPACE_DEMO_USD_ROOT"
 
@@ -112,6 +123,15 @@ def fetch_constellation(preset_id: str) -> Optional[dict]:
             return json.loads(r.read().decode("utf-8"))
     except Exception as exc:  # noqa: BLE001
         _log(f"fetch_constellation({preset_id}) failed: {exc}")
+        return None
+
+
+def fetch_satellite_config() -> Optional[dict]:
+    """Pulls the current hardware loadout. Returns None if backend offline."""
+    try:
+        with urllib.request.urlopen(BACKEND_SAT_CONFIG_URL, timeout=0.5) as r:
+            return json.loads(r.read().decode("utf-8"))
+    except Exception:
         return None
 
 
@@ -334,6 +354,67 @@ def swap_stage(path: str, preset: str | None = None) -> bool:
         return False
 
 
+def apply_radiator_heat(temp_c: float) -> bool:
+    """Drive the Rad_* materials' emissiveColor by satellite temperature so
+    the radiators visibly glow red when the GPU rack is dumping heat into
+    them. heat_factor goes from 0 (50°C — radiator at idle) to 1 (100°C —
+    radiator at peak). Below 50°C the materials stay matte black.
+
+    This is the Phase 3 "fancy" tier — direct attribute mutation, no Flow
+    SDK needed. Returns True iff at least one material's emissive was
+    actually written."""
+    if not _HAS_KIT:
+        return False
+    stage = omni.usd.get_context().get_stage()
+    if stage is None:
+        return False
+    heat = max(0.0, min(1.0, (temp_c - 50.0) / 50.0))
+    # Red-shifted thermal palette. Even Graphite (which has its own faint
+    # baseline emissive) gets fully overwritten — temp wins over the base
+    # tint when we're heating up.
+    emissive = (heat * 0.85, heat * 0.05 + 0.02 if heat > 0.1 else 0.0, 0.0)
+    any_written = False
+    for mat_id in ("Aluminum", "WhitePaint", "OSR", "Graphite"):
+        shader = stage.GetPrimAtPath(f"/World/Looks/Rad_{mat_id}/Shader")
+        if not shader.IsValid():
+            continue
+        attr = shader.GetAttribute("inputs:emissiveColor")
+        if not attr.IsValid():
+            continue
+        attr.Set(Gf.Vec3f(*emissive))
+        any_written = True
+    return any_written
+
+
+def apply_satellite_config(cfg: dict) -> bool:
+    """Map a SatelliteConfig dict onto the satellite stage's VariantSets.
+    No-op when the active stage isn't the satellite one (the prim paths
+    won't be valid). Returns True iff at least one variant was set."""
+    if not _HAS_KIT:
+        return False
+    stage = omni.usd.get_context().get_stage()
+    if stage is None:
+        return False
+    applied = False
+    for prim_path, vset_names in SAT_VARIANT_TARGETS:
+        prim = stage.GetPrimAtPath(prim_path)
+        if not prim.IsValid():
+            continue
+        for vset_name in vset_names:
+            # Maps the VariantSet name to the SatelliteConfig field of the
+            # same name (the contract is intentional 1:1).
+            value = cfg.get(vset_name)
+            if not value:
+                continue
+            vset = prim.GetVariantSet(vset_name)
+            if not vset.IsValid():
+                continue
+            if vset.GetVariantSelection() != value:
+                vset.SetVariantSelection(value)
+                applied = True
+    return applied
+
+
 async def _deferred_bind(cam_path: str) -> None:
     app = omni.kit.app.get_app()
     for tick in range(30):
@@ -372,6 +453,11 @@ if _HAS_KIT:
             self._time_scale: float = 60.0
             self._constellation_dirty: bool = False
 
+            # Satellite Twin hardware loadout — pulled at the same 5Hz poll
+            # as /state. Re-applied to the satellite stage every time it
+            # changes OR the satellite stage is (re)opened.
+            self._sat_config: Optional[dict] = None
+
             self._poll_task: Optional[asyncio.Task] = asyncio.ensure_future(self._run_poll_loop())
             app = omni.kit.app.get_app()
             self._update_sub = app.get_update_event_stream().create_subscription_to_pop(
@@ -384,6 +470,18 @@ if _HAS_KIT:
             if self._poll_task and not self._poll_task.done():
                 self._poll_task.cancel()
             self._update_sub = None
+
+        async def _deferred_apply_config(self) -> None:
+            """Wait a few ticks for the satellite stage to finish loading,
+            then push the cached SatelliteConfig onto its VariantSets."""
+            app = omni.kit.app.get_app()
+            for _ in range(30):
+                await app.next_update_async()
+            cfg = self._sat_config
+            if cfg is None:
+                return
+            if apply_satellite_config(cfg):
+                _log(f"deferred-applied satellite config after stage swap: {cfg}")
 
         # ---- poll loop ----------------------------------------------------
         async def _run_poll_loop(self) -> None:
@@ -399,6 +497,20 @@ if _HAS_KIT:
                         self._on_poll(state)
                 except Exception as exc:  # noqa: BLE001
                     _log(f"poll error: {exc}")
+
+                # Satellite Twin config — pulled every tick (cheap; backend
+                # serves it from memory in <1ms). On change, immediately
+                # apply to the satellite stage if it's the active one.
+                try:
+                    new_cfg = await asyncio.to_thread(fetch_satellite_config)
+                    if new_cfg is not None and new_cfg != self._sat_config:
+                        prev = self._sat_config
+                        self._sat_config = new_cfg
+                        if self._current_stage == self._stages.get("satellite"):
+                            if apply_satellite_config(new_cfg):
+                                _log(f"applied satellite config: {prev} -> {new_cfg}")
+                except Exception as exc:  # noqa: BLE001
+                    _log(f"satellite_config poll error: {exc}")
 
                 # Constellation catalog fetch.
                 if self._pending_constellation is not None:
@@ -455,6 +567,33 @@ if _HAS_KIT:
                 if target and target != self._current_stage:
                     if swap_stage(target, preset):
                         self._current_stage = target
+                        # When we land on the satellite stage, re-apply the
+                        # cached hardware loadout. The stage swap closed the
+                        # previous stage's variant selections so we have to
+                        # re-issue them on the freshly opened one. Defer a
+                        # few ticks so the new stage finishes loading first.
+                        if preset == "satellite" and self._sat_config is not None:
+                            asyncio.ensure_future(self._deferred_apply_config())
+
+            # Pick up any satellite_config the snapshot brought along —
+            # state_update is broadcast as soon as backend mutates, so this
+            # path lets us react without waiting for the next config poll.
+            packet_cfg = state.get("satellite_config")
+            if packet_cfg and packet_cfg != self._sat_config:
+                prev = self._sat_config
+                self._sat_config = packet_cfg
+                if self._current_stage == self._stages.get("satellite"):
+                    ok = apply_satellite_config(packet_cfg)
+                    _log(f"on_poll cfg snapshot {prev} -> {packet_cfg} applied={ok}")
+                else:
+                    _log(f"on_poll cfg snapshot {prev} -> {packet_cfg} (not satellite stage, deferred)")
+
+            # Heat-driven emissive on the radiator materials. Only matters
+            # when we're looking at the sat; the overview stage doesn't
+            # author Rad_* materials so the call no-ops there.
+            if self._current_stage == self._stages.get("satellite"):
+                temp_c = float(state.get("satellite", {}).get("temperature_c", 0.0))
+                apply_radiator_heat(temp_c)
 
             # Constellation change detection.
             constel = state.get("constellation") or {}
