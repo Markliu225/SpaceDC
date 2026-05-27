@@ -150,43 +150,70 @@ function Mini({ def, data, currentValue, scars }: MiniProps) {
           className="absolute inset-0 h-full w-full"
         >
           <defs>
+            {/* Very subtle fill — just a hint under the line so the curve
+                still feels weighted; primary visual is the stroke itself. */}
             <linearGradient id={gradId} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%"   stopColor={def.color} stopOpacity={0.45} />
+              <stop offset="0%"   stopColor={def.color} stopOpacity={0.18} />
               <stop offset="100%" stopColor={def.color} stopOpacity={0} />
             </linearGradient>
           </defs>
 
-          {/* Faint horizontal gridlines at 25 / 50 / 75 %. */}
+          {/* Horizontal gridlines at 25 / 50 / 75 %. */}
           {[25, 50, 75].map((p) => (
             <line
               key={p} x1={0} x2={100} y1={p} y2={p}
               stroke="#A6B0C4"
               strokeWidth={0.4}
               vectorEffect="non-scaling-stroke"
-              opacity={0.12}
+              opacity={0.18}
+              strokeDasharray="2 3"
             />
           ))}
 
-          {/* Faint vertical time gridlines at 25 / 50 / 75 %. */}
+          {/* Vertical time gridlines at 25 / 50 / 75 %. */}
           {[25, 50, 75].map((p) => (
             <line
               key={`v${p}`} x1={p} x2={p} y1={0} y2={100}
               stroke="#A6B0C4"
               strokeWidth={0.4}
               vectorEffect="non-scaling-stroke"
-              opacity={0.08}
+              opacity={0.10}
+              strokeDasharray="2 3"
             />
           ))}
 
+          {/* Subtle area fill, then the prominent line stroke. */}
           <path d={areaPath} fill={`url(#${gradId})`} />
           <path
             d={path}
             fill="none"
             stroke={def.color}
-            strokeWidth={1.6}
+            strokeWidth={2.2}
+            strokeLinejoin="round"
+            strokeLinecap="round"
             vectorEffect="non-scaling-stroke"
-            style={{ filter: `drop-shadow(0 0 4px ${def.color}99)` }}
+            style={{ filter: `drop-shadow(0 0 5px ${def.color})` }}
           />
+
+          {/* Bright dot at the latest sample so the eye locks onto "now". */}
+          {data.length >= 2 && (() => {
+            const lastIdx = data.length - 1
+            const factor = def.factor ?? 1
+            const lo = yMin
+            const hi = yMax
+            const cx = 100
+            const cy = 100 - ((data[lastIdx] * factor - lo) / (hi - lo)) * 100
+            return (
+              <circle
+                cx={cx} cy={cy} r={2.4}
+                fill={def.color}
+                stroke="#0A0F1E"
+                strokeWidth={1.2}
+                vectorEffect="non-scaling-stroke"
+                style={{ filter: `drop-shadow(0 0 5px ${def.color})` }}
+              />
+            )
+          })()}
 
           {/* Config-change scars — vertical dashed white lines. */}
           {scars.map((s) => {
@@ -199,7 +226,7 @@ function Mini({ def, data, currentValue, scars }: MiniProps) {
                 strokeWidth={1.0}
                 strokeDasharray="3 3"
                 vectorEffect="non-scaling-stroke"
-                opacity={0.65}
+                opacity={0.55}
               />
             )
           })}
