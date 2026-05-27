@@ -58,10 +58,14 @@ POLL_HZ = 5.0
 
 # Prim paths for the Twin page's swappable hardware (defined in
 # usd/twin_satellite.usda). Each tuple is (prim_path, list_of_variant_sets).
+# Bus also owns a solar_material variant that overrides the v022 STL's
+# built-in Mesh/Panel subset material binding, so its solar panels swap
+# colour alongside the deployable wings.
 SAT_VARIANT_TARGETS = [
+    ("/World/Satellite/Bus",               ("solar_material",)),
     ("/World/Satellite/DGX_Rack",          ("gpu",)),
-    ("/World/Satellite/SolarPanelWing_N",  ("solar_size", "solar_material")),
-    ("/World/Satellite/SolarPanelWing_S",  ("solar_size", "solar_material")),
+    ("/World/Satellite/DeployableSolar_N", ("solar_size", "solar_material")),
+    ("/World/Satellite/DeployableSolar_S", ("solar_size", "solar_material")),
     ("/World/Satellite/Radiator_East",     ("radiator_size", "radiator_material")),
     ("/World/Satellite/Radiator_West",     ("radiator_size", "radiator_material")),
 ]
@@ -386,6 +390,34 @@ def apply_radiator_heat(temp_c: float) -> bool:
     return any_written
 
 
+def _dump_satellite_materials() -> str:
+    """Return a one-line summary of the bindings on the key panels — used
+    for debugging variant-override propagation."""
+    if not _HAS_KIT:
+        return ""
+    stage = omni.usd.get_context().get_stage()
+    if stage is None:
+        return ""
+    try:
+        from pxr import UsdShade  # type: ignore
+    except ImportError:
+        return ""
+    bits = []
+    for p in (
+        "/World/Satellite/Bus/Mesh/Panel",
+        "/World/Satellite/DeployableSolar_N/Wing/Plate",
+        "/World/Satellite/Radiator_East/Plate",
+        "/World/Satellite/DGX_Rack/GPU_01",
+    ):
+        prim = stage.GetPrimAtPath(p)
+        if not prim.IsValid():
+            bits.append(f"{p.split('/')[-1]}=missing")
+            continue
+        mat = UsdShade.MaterialBindingAPI(prim).GetDirectBinding().GetMaterialPath()
+        bits.append(f"{p.split('/')[-1]}={mat.name if mat else 'none'}")
+    return " | ".join(bits)
+
+
 def apply_satellite_config(cfg: dict) -> bool:
     """Map a SatelliteConfig dict onto the satellite stage's VariantSets.
     No-op when the active stage isn't the satellite one (the prim paths
@@ -585,6 +617,7 @@ if _HAS_KIT:
                 if self._current_stage == self._stages.get("satellite"):
                     ok = apply_satellite_config(packet_cfg)
                     _log(f"on_poll cfg snapshot {prev} -> {packet_cfg} applied={ok}")
+                    _log(f"  bindings after apply: {_dump_satellite_materials()}")
                 else:
                     _log(f"on_poll cfg snapshot {prev} -> {packet_cfg} (not satellite stage, deferred)")
 

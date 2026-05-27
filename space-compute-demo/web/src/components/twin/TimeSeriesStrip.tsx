@@ -17,21 +17,28 @@ interface SeriesDef {
 }
 
 const SERIES: SeriesDef[] = [
-  { key: 'solar_w',    label: 'Solar In',    unit: 'W',      digits: 0, color: '#F59E0B' },
-  { key: 'payload_w',  label: 'Payload',     unit: 'W',      digits: 0, color: colors.accent },
-  { key: 'battery_soc',label: 'Battery SOC', unit: '%',      digits: 0, color: '#22C55E', yMin: 0, yMax: 1, factor: 100 },
-  { key: 'temp_c',     label: 'Temp',        unit: '°C',     digits: 1, color: '#EF4444' },
-  { key: 'gpu_util',   label: 'GPU Util',    unit: '%',      digits: 0, color: '#A78BFA', yMin: 0, yMax: 1, factor: 100 },
+  { key: 'solar_w',    label: 'Solar Input', unit: 'W',  digits: 0, color: '#F59E0B' },
+  { key: 'payload_w',  label: 'Payload',     unit: 'W',  digits: 0, color: colors.accent },
+  { key: 'battery_soc',label: 'Battery SOC', unit: '%',  digits: 0, color: '#22C55E',
+    yMin: 0, yMax: 1, factor: 100 },
+  { key: 'temp_c',     label: 'Temperature', unit: '°C', digits: 1, color: '#EF4444' },
+  { key: 'gpu_util',   label: 'GPU Util',    unit: '%',  digits: 0, color: '#A78BFA',
+    yMin: 0, yMax: 1, factor: 100 },
 ]
 
+const HISTORY_S = 120
+
 /**
- * TimeSeriesStrip — 5 sparklines side-by-side, 120s rolling window.
- * Each sparkline annotates SatelliteConfig changes with a 1px dashed
- * vertical "scar" at the index where the change happened; the scar
- * persists until it scrolls off the left edge.
+ * TimeSeriesStrip — five stacked time-series charts (one per metric)
+ * over the last 120 s.
  *
- * Values come from useTwinTelemetry() — fully client-side in Phase 1;
- * Phase 2 will replace the underlying derivation with state_update echo.
+ * Each chart shows:
+ *  - title + current value + unit, top
+ *  - filled area + 1.5 px stroke + drop shadow
+ *  - 3 horizontal gridlines (25/50/75 % of range)
+ *  - y-axis tick labels: max (top-right) + min (bottom-right) per panel
+ *  - dashed vertical "scars" wherever the SatelliteConfig changed
+ *  - shared time axis labels at the bottom of the strip (-120s, -60s, now)
  */
 export function TimeSeriesStrip() {
   const { current, series, scars } = useTwinTelemetry()
@@ -40,16 +47,16 @@ export function TimeSeriesStrip() {
     <Card dense className="h-full flex flex-col min-h-0">
       <div className="flex items-baseline justify-between">
         <span className="text-[11px] uppercase tracking-[0.10em] text-text-md">
-          Live Telemetry · 120 s
+          Live Telemetry · {HISTORY_S} s window
         </span>
         <span className="text-[10px] tabular text-text-lo">
           {scars.length > 0
-            ? `${scars.length} config change${scars.length > 1 ? 's' : ''} in window`
-            : 'no recent config changes'}
+            ? `${scars.length} configuration change${scars.length > 1 ? 's' : ''} in window`
+            : 'no recent configuration changes'}
         </span>
       </div>
 
-      <div className="mt-2 grid flex-1 min-h-0 grid-cols-5 gap-3">
+      <div className="mt-1 grid flex-1 min-h-0 grid-cols-5 gap-3">
         {SERIES.map((def) => (
           <Mini
             key={def.key}
@@ -58,6 +65,16 @@ export function TimeSeriesStrip() {
             currentValue={(current[def.key as keyof typeof current] as number) * (def.factor ?? 1)}
             scars={scars}
           />
+        ))}
+      </div>
+
+      <div className="mt-1 grid grid-cols-5 gap-3 text-[9px] tabular text-text-faint">
+        {SERIES.map((def) => (
+          <div key={def.key} className="flex justify-between">
+            <span>-{HISTORY_S}s</span>
+            <span>-{Math.round(HISTORY_S / 2)}s</span>
+            <span>now</span>
+          </div>
         ))}
       </div>
     </Card>
@@ -79,8 +96,8 @@ function Mini({ def, data, currentValue, scars }: MiniProps) {
     const n = data.length
     if (n < 2) return { path: '', areaPath: '', yMin: 0, yMax: 1 }
     const factor = def.factor ?? 1
-    let lo = def.yMin ?? Infinity
-    let hi = def.yMax ?? -Infinity
+    let lo = def.yMin !== undefined ? def.yMin * factor : Infinity
+    let hi = def.yMax !== undefined ? def.yMax * factor : -Infinity
     if (def.yMin === undefined || def.yMax === undefined) {
       for (const v of data) {
         const u = v * factor
@@ -89,25 +106,23 @@ function Mini({ def, data, currentValue, scars }: MiniProps) {
       }
       if (lo === Infinity)  lo = 0
       if (hi === -Infinity) hi = 1
-      if (hi - lo < 0.001) { lo -= 0.5; hi += 0.5 }
-    } else {
-      lo = def.yMin * factor
-      hi = def.yMax * factor
+      // Pad the range slightly so the line never sits on the top/bottom edge.
+      const range = hi - lo
+      if (range < 0.001) { lo -= 0.5; hi += 0.5 }
+      else { lo -= range * 0.08; hi += range * 0.08 }
     }
-    const w = 100  // viewBox width
-    const h = 100  // viewBox height
-    const points: string[] = []
+    const w = 100
+    const h = 100
+    const pts: string[] = []
     for (let i = 0; i < n; i++) {
       const x = (i / (n - 1)) * w
       const y = h - ((data[i] * factor - lo) / (hi - lo)) * h
-      points.push(`${x.toFixed(2)},${y.toFixed(2)}`)
+      pts.push(`${x.toFixed(2)},${y.toFixed(2)}`)
     }
-    const pathStr = `M ${points.join(' L ')}`
+    const pathStr = `M ${pts.join(' L ')}`
     const area = `${pathStr} L ${w.toFixed(2)},${h} L 0,${h} Z`
     return { path: pathStr, areaPath: area, yMin: lo, yMax: hi }
   }, [data, def])
-
-  void yMin; void yMax  // reserved for tooltip / scale display later
 
   return (
     <div className="flex flex-col min-h-0">
@@ -116,11 +131,19 @@ function Mini({ def, data, currentValue, scars }: MiniProps) {
           {def.label}
         </span>
         <span className="flex items-baseline">
-          <Num value={currentValue} digits={def.digits} animate={false} className="text-[13px] font-semibold text-text-hi" />
+          <Num value={currentValue} digits={def.digits} animate={false} className="text-[14px] font-semibold text-text-hi" />
           <span className="ml-0.5 text-[10px] text-text-lo">{def.unit}</span>
         </span>
       </div>
       <div className="relative flex-1 min-h-0">
+        {/* Right-edge y-axis tick labels. */}
+        <div className="pointer-events-none absolute right-0 top-0 z-10 text-[9px] tabular text-text-faint">
+          {fmt(yMax, def.digits, def.unit)}
+        </div>
+        <div className="pointer-events-none absolute right-0 bottom-0 z-10 text-[9px] tabular text-text-faint">
+          {fmt(yMin, def.digits, def.unit)}
+        </div>
+
         <svg
           viewBox="0 0 100 100"
           preserveAspectRatio="none"
@@ -132,27 +155,51 @@ function Mini({ def, data, currentValue, scars }: MiniProps) {
               <stop offset="100%" stopColor={def.color} stopOpacity={0} />
             </linearGradient>
           </defs>
+
+          {/* Faint horizontal gridlines at 25 / 50 / 75 %. */}
+          {[25, 50, 75].map((p) => (
+            <line
+              key={p} x1={0} x2={100} y1={p} y2={p}
+              stroke="#A6B0C4"
+              strokeWidth={0.4}
+              vectorEffect="non-scaling-stroke"
+              opacity={0.12}
+            />
+          ))}
+
+          {/* Faint vertical time gridlines at 25 / 50 / 75 %. */}
+          {[25, 50, 75].map((p) => (
+            <line
+              key={`v${p}`} x1={p} x2={p} y1={0} y2={100}
+              stroke="#A6B0C4"
+              strokeWidth={0.4}
+              vectorEffect="non-scaling-stroke"
+              opacity={0.08}
+            />
+          ))}
+
           <path d={areaPath} fill={`url(#${gradId})`} />
           <path
             d={path}
             fill="none"
             stroke={def.color}
-            strokeWidth={1.2}
+            strokeWidth={1.6}
             vectorEffect="non-scaling-stroke"
-            style={{ filter: `drop-shadow(0 0 3px ${def.color}88)` }}
+            style={{ filter: `drop-shadow(0 0 4px ${def.color}99)` }}
           />
+
+          {/* Config-change scars — vertical dashed white lines. */}
           {scars.map((s) => {
-            // index maps 0..n-1 onto x 0..100; n = data.length.
             const x = (s.index / Math.max(1, data.length - 1)) * 100
             return (
               <line
                 key={`${s.sim_time_s}-${s.index}`}
                 x1={x} x2={x} y1={0} y2={100}
                 stroke="#E8EEFB"
-                strokeWidth={0.8}
-                strokeDasharray="2 2"
+                strokeWidth={1.0}
+                strokeDasharray="3 3"
                 vectorEffect="non-scaling-stroke"
-                opacity={0.55}
+                opacity={0.65}
               />
             )
           })}
@@ -160,4 +207,11 @@ function Mini({ def, data, currentValue, scars }: MiniProps) {
       </div>
     </div>
   )
+}
+
+function fmt(v: number, digits: number, unit: string): string {
+  // Compact formatter: 1.2k for thousands.
+  const abs = Math.abs(v)
+  if (abs >= 10000) return `${(v / 1000).toFixed(1)}k${unit ? ' ' + unit : ''}`
+  return `${v.toFixed(digits)}${unit ? ' ' + unit : ''}`
 }

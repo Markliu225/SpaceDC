@@ -49,7 +49,7 @@ export function SatelliteTwinPage() {
       style={{
         height: 'calc(100vh - 44px - 24px - 4px)',
         gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
-        gridTemplateRows: '56px minmax(0, 1fr) 160px 120px',
+        gridTemplateRows: '56px minmax(0, 1fr) 220px 110px',
       }}
     >
       {/* Row 1 — Header strip. */}
