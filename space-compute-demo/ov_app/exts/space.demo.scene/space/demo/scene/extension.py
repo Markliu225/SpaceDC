@@ -104,10 +104,19 @@ MISSION_AOI    = f"{MISSION_GROUP}/AOI"
 MISSION_PACKET = f"{MISSION_GROUP}/Packet"
 MISSION_ISL    = f"{MISSION_GROUP}/ISLBeam"
 MISSION_GSL    = f"{MISSION_GROUP}/GSLBeam"
+# Cinematic mission camera (authored at runtime on the overview stage).
+MISSION_CAM    = "/World/Cameras/MissionCam"
 # Packet widths (scene units) — big = raw 5 GB capture, small = 2 MB result.
 # Sized for visibility against the ~64-unit Earth radius in the overview cam.
 PACKET_BIG  = 7.0
 PACKET_SMALL = 1.6
+
+# Camera choreography. Close-up shots sit CAM_CLOSE_DIST units off the subject
+# along CAM_OFFSET_DIR; the wide "downlink" shot pulls back to CAM_GLOBAL_EYE.
+CAM_CLOSE_DIST = 22.0
+CAM_OFFSET_DIR = (0.52, -0.52, 0.42)   # subject → camera direction (normalised below)
+CAM_GLOBAL_EYE = (180.0, -180.0, 120.0)
+CAM_LERP = 0.10   # per-frame easing toward the desired pose (dolly feel)
 
 EARTH_ROTATION_PERIOD_S = 90.0
 
@@ -428,13 +437,95 @@ def author_mission_prims(stage) -> bool:
         c.GetPrim().CreateAttribute("primvars:doNotCastShadows", Sdf.ValueTypeNames.Bool, custom=False).Set(True)
         _bind_material(stage, c.GetPrim(), Sdf.Path(f"{MISSION_LOOKS}/{mat}"))
 
+    # Cinematic mission camera (sibling of the static Overview camera).
+    if not stage.GetPrimAtPath(MISSION_CAM).IsValid():
+        cam = UsdGeom.Camera.Define(stage, Sdf.Path(MISSION_CAM))
+        cam.CreateFocalLengthAttr(30.0)
+        cam.CreateClippingRangeAttr(Gf.Vec2f(1.0, 6000.0))
+        cam.AddTransformOp()
+        _set_camera_lookat(stage, MISSION_CAM, CAM_GLOBAL_EYE, (0.0, 0.0, 0.0))
+
     _set_visibility(stage.GetPrimAtPath(MISSION_GROUP), False)
-    _log("authored mission group (AOI / Packet / ISL / GSL)")
+    _log("authored mission group (AOI / Packet / ISL / GSL / MissionCam)")
     return True
 
 
 def _lerp3(a, b, t):
     return (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t)
+
+
+def _norm3(v):
+    n = math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) or 1.0
+    return (v[0] / n, v[1] / n, v[2] / n)
+
+
+def _set_camera_lookat(stage, cam_path: str, eye, target) -> None:
+    """Point the camera at `target` from `eye` (Z-up look-at). Writes the
+    camera-to-world matrix into its xformOp:transform."""
+    cam = stage.GetPrimAtPath(cam_path)
+    if not cam or not cam.IsValid():
+        return
+    fwd = _norm3((target[0] - eye[0], target[1] - eye[1], target[2] - eye[2]))
+    # right = fwd × worldUp(0,0,1); up = right × fwd
+    rx = fwd[1] * 1.0 - fwd[2] * 0.0
+    ry = fwd[2] * 0.0 - fwd[0] * 1.0
+    rz = fwd[0] * 0.0 - fwd[1] * 0.0
+    right = _norm3((rx, ry, rz))
+    up = (
+        right[1] * fwd[2] - right[2] * fwd[1],
+        right[2] * fwd[0] - right[0] * fwd[2],
+        right[0] * fwd[1] - right[1] * fwd[0],
+    )
+    m = Gf.Matrix4d(
+        right[0], right[1], right[2], 0.0,
+        up[0],    up[1],    up[2],    0.0,
+        -fwd[0],  -fwd[1],  -fwd[2],  0.0,
+        eye[0],   eye[1],   eye[2],   1.0,
+    )
+    xform = UsdGeom.Xformable(cam)
+    op = None
+    for o in xform.GetOrderedXformOps():
+        if o.GetOpType() == UsdGeom.XformOp.TypeTransform:
+            op = o
+            break
+    if op is None:
+        op = xform.AddTransformOp()
+    op.Set(m)
+
+
+def mission_camera_pose(mission: dict, fleet_positions: list):
+    """Desired (eye, target) for the current mission phase:
+      acquire/capture → close-up on the sensor sat;
+      route           → follow the data packet sensor→hub;
+      compute         → close-up on the compute hub;
+      downlink/deliver→ pull back to the global Earth view.
+    Returns None when no sensible pose (idle / empty fleet)."""
+    n = len(fleet_positions)
+    s_idx = int(mission.get("sensor_idx", 0))
+    h_idx = int(mission.get("hub_idx", 0))
+    if n == 0:
+        return None
+    sensor = fleet_positions[s_idx] if 0 <= s_idx < n else fleet_positions[0]
+    hub    = fleet_positions[h_idx] if 0 <= h_idx < n else fleet_positions[0]
+    phase  = mission.get("phase", "idle")
+    prog   = float(mission.get("phase_progress", 0.0))
+    udir   = _norm3(CAM_OFFSET_DIR)
+
+    # Route pulls back further so the packet reads as a blob travelling
+    # along the beam with the hub + Earth for context — at the close
+    # distance the long ISL beam just fills the frame as a slab.
+    if phase in ("acquire", "capture"):
+        tgt, dist = sensor, CAM_CLOSE_DIST
+    elif phase == "route":
+        tgt, dist = _lerp3(sensor, hub, prog), CAM_CLOSE_DIST * 1.9
+    elif phase == "compute":
+        tgt, dist = hub, CAM_CLOSE_DIST
+    elif phase in ("downlink", "deliver"):
+        return (CAM_GLOBAL_EYE, (0.0, 0.0, 0.0))
+    else:
+        return None
+    eye = (tgt[0] + udir[0] * dist, tgt[1] + udir[1] * dist, tgt[2] + udir[2] * dist)
+    return (eye, tgt)
 
 
 def update_mission(stage, mission: dict, fleet_positions: list, wall_t: float) -> None:
@@ -682,9 +773,15 @@ if _HAS_KIT:
             # changes OR the satellite stage is (re)opened.
             self._sat_config: Optional[dict] = None
             # 天数天算 mission snapshot (from /state.mission) — drives the
-            # overview-stage choreography (AOI / data packet / ISL-GSL beams).
+            # overview-stage choreography (AOI / data packet / ISL-GSL beams)
+            # and the cinematic MissionCam.
             self._mission: Optional[dict] = None
             self._mission_authored: bool = False
+            # Smoothed camera pose + whether MissionCam currently owns the
+            # viewport (so we bind/unbind only on transitions).
+            self._cam_eye: tuple[float, float, float] = CAM_GLOBAL_EYE
+            self._cam_target: tuple[float, float, float] = (0.0, 0.0, 0.0)
+            self._mission_cam_active: bool = False
 
             self._poll_task: Optional[asyncio.Task] = asyncio.ensure_future(self._run_poll_loop())
             app = omni.kit.app.get_app()
@@ -698,6 +795,26 @@ if _HAS_KIT:
             if self._poll_task and not self._poll_task.done():
                 self._poll_task.cancel()
             self._update_sub = None
+
+        def _drive_mission_camera(self, stage, mission: dict, positions: list) -> None:
+            """Cinematic camera: ease the MissionCam toward the per-phase pose
+            and own the viewport while the mission runs; hand back to the
+            static Overview camera when it ends."""
+            active = bool(mission.get("active")) or mission.get("phase", "idle") != "idle"
+            if active:
+                pose = mission_camera_pose(mission, positions)
+                if pose is not None:
+                    desired_eye, desired_tgt = pose
+                    self._cam_eye = _lerp3(self._cam_eye, desired_eye, CAM_LERP)
+                    self._cam_target = _lerp3(self._cam_target, desired_tgt, CAM_LERP)
+                    _set_camera_lookat(stage, MISSION_CAM, self._cam_eye, self._cam_target)
+                if not self._mission_cam_active:
+                    self._mission_cam_active = True
+                    _bind_active_camera(MISSION_CAM)
+            elif self._mission_cam_active:
+                # Mission ended — return the viewport to the static overview cam.
+                self._mission_cam_active = False
+                _bind_active_camera(STAGE_CAMERAS["overview"])
 
         async def _deferred_apply_config(self) -> None:
             """Wait a few ticks for the satellite stage to finish loading,
@@ -880,6 +997,7 @@ if _HAS_KIT:
                 self._mission_authored = author_mission_prims(stage)
             if self._mission is not None:
                 update_mission(stage, self._mission, positions, time.monotonic())
+                self._drive_mission_camera(stage, self._mission, positions)
 else:
     class SpaceDemoSceneExtension:  # type: ignore[no-redef]
         pass

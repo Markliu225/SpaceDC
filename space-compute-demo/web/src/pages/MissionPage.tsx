@@ -53,7 +53,7 @@ export function MissionPage() {
       <div className="col-span-12 flex items-center justify-between rounded border border-border-weak bg-card px-3 min-h-0">
         <div className="flex items-center gap-3">
           <span className="text-[11px] uppercase tracking-[0.10em] text-text-md">
-            天数天算 Mission
+            In-Orbit Compute Mission
           </span>
           <span className="text-[10px] uppercase tracking-[0.10em] text-text-lo">
             Compute-in-Space · Maritime Detection

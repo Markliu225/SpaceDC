@@ -34,11 +34,11 @@ export function LatencyClock() {
              className="text-[24px] leading-none font-semibold text-text-hi" />
         <span className="ml-1 text-[12px] text-text-lo">s</span>
         <span className="ml-2 rounded bg-ok/15 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.08em] text-ok">
-          天数天算
+          In-Orbit
         </span>
       </div>
       <div className="mt-1 text-[10px] text-text-faint">
-        天数地算 (ground compute) ≈{' '}
+        Ground compute ≈{' '}
         <span className="text-text-lo">{fmtDuration(GROUND_COMPUTE_REF_S)}</span>
         {' '}— downlink raw, wait for pass, process on ground
       </div>
