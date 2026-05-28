@@ -25,6 +25,10 @@ class SatelliteState(BaseModel):
     # re-doing the math. None when no propagator has run yet.
     sat_xyz_km: Optional[tuple[float, float, float]] = None
     sunlit: bool = True
+    # Normalised solar incidence, 0..1 = max(0, cos(angle between sat→sun
+    # and the sub-solar direction)). 0 in eclipse, 1 at solar noon. Drives
+    # the satellite-stage Sun light in Kit so the lighting tracks the orbit.
+    sun_factor: float = 1.0
     solar_input_w: float = 0.0
     payload_power_w: float = 0.0
     platform_power_w: float = 0.0

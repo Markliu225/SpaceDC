@@ -240,6 +240,9 @@ class StateEngine:
         r_norm = max(1e-6, math.sqrt(x_km * x_km + y_km * y_km + z_km * z_km))
         cos_a = (x_km * sun_dx + y_km * sun_dy + z_km * sun_dz) / r_norm
         self._sat.sunlit = cos_a > -0.05  # tiny dawn/dusk margin
+        # Normalised incidence for the Kit Sun driver — 0 in eclipse, 1 at
+        # solar noon. Same cos_a the solar-input model uses.
+        self._sat.sun_factor = max(0.0, cos_a)
 
         # --- Reconfigurable hardware lookups ----------------------------------
         cfg     = self._config

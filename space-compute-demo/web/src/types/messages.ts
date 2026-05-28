@@ -14,6 +14,8 @@ export interface SatelliteState {
   lon: number;
   altitude_km: number;
   sunlit: boolean;
+  /** Normalised solar incidence 0..1 (0 = eclipse, 1 = solar noon). */
+  sun_factor?: number;
   solar_input_w: number;
   payload_power_w: number;
   platform_power_w: number;

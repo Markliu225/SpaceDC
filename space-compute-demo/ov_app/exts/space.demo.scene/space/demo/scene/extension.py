@@ -58,16 +58,28 @@ POLL_HZ = 5.0
 
 # Prim paths for the Twin page's swappable hardware (defined in
 # usd/twin_satellite.usda). Each tuple is (prim_path, list_of_variant_sets).
-# Bus also owns a solar_material variant that overrides the v022 STL's
-# built-in Mesh/Panel subset material binding, so its solar panels swap
-# colour alongside the deployable wings.
+# Currently only the body's built-in Panel subset recolours via the Bus
+# solar_material variant — the procedural wings/radiators were removed
+# pending a richer articulated model. Missing prims are skipped, so this
+# list can grow again when that model lands.
 SAT_VARIANT_TARGETS = [
-    ("/World/Satellite/Bus",               ("solar_material",)),
-    ("/World/Satellite/DGX_Rack",          ("gpu",)),
-    ("/World/Satellite/DeployableSolar_N", ("solar_size", "solar_material")),
-    ("/World/Satellite/DeployableSolar_S", ("solar_size", "solar_material")),
-    ("/World/Satellite/Radiator_East",     ("radiator_size", "radiator_material")),
-    ("/World/Satellite/Radiator_West",     ("radiator_size", "radiator_material")),
+    ("/World/Satellite/Bus", ("solar_material",)),
+]
+
+# Satellite-stage lights authored in usd/satellite.usda. The sun-side
+# lights (Key, Rim) and the earthshine bounce all scale with the backend's
+# satellite.sun_factor so the body genuinely darkens in eclipse instead of
+# staying washed-out by static fills. Each entry: (path, min, max) intensity.
+SUN_LIGHT_PATH = "/World/Environment/Key"
+SUN_BASE_RY_DEG = 40.0       # base rotateXYZ z-component from satellite.usda
+SUN_DRIVEN_LIGHTS = [
+    # Key sun — full dynamic range, near-dark in eclipse.
+    ("/World/Environment/Key",         60.0,  3200.0),
+    # Sharp sun-side rim — tracks the sun.
+    ("/World/Environment/Rim",         80.0,   900.0),
+    # Earthshine bounce — always present (planet fills the dark side) but
+    # dimmer when the sat itself is in shadow; never goes fully black.
+    ("/World/Environment/EarthBounce", 260.0,  700.0),
 ]
 
 USD_ROOT_ENV = "SPACE_DEMO_USD_ROOT"
@@ -358,36 +370,46 @@ def swap_stage(path: str, preset: str | None = None) -> bool:
         return False
 
 
-def apply_radiator_heat(temp_c: float) -> bool:
-    """Drive the Rad_* materials' emissiveColor by satellite temperature so
-    the radiators visibly glow red when the GPU rack is dumping heat into
-    them. heat_factor goes from 0 (50°C — radiator at idle) to 1 (100°C —
-    radiator at peak). Below 50°C the materials stay matte black.
-
-    This is the Phase 3 "fancy" tier — direct attribute mutation, no Flow
-    SDK needed. Returns True iff at least one material's emissive was
-    actually written."""
+def apply_sun(sun_factor: float, sim_now_s: float | None = None) -> bool:
+    """Drive the satellite-stage Sun (DistantLight) from the backend's
+    normalised solar incidence so the lighting tracks the orbit:
+      * intensity ramps SUN_INTENSITY_MIN .. SUN_INTENSITY_MAX with
+        sun_factor (0 in eclipse → near-dark, lit by earthshine only;
+        1 at solar noon → full brightness).
+      * the light's azimuth sweeps slowly with sim time so the highlight
+        visibly travels across the body rather than sitting static.
+    Returns True iff the light attributes were written."""
     if not _HAS_KIT:
         return False
     stage = omni.usd.get_context().get_stage()
     if stage is None:
         return False
-    heat = max(0.0, min(1.0, (temp_c - 50.0) / 50.0))
-    # Red-shifted thermal palette. Even Graphite (which has its own faint
-    # baseline emissive) gets fully overwritten — temp wins over the base
-    # tint when we're heating up.
-    emissive = (heat * 0.85, heat * 0.05 + 0.02 if heat > 0.1 else 0.0, 0.0)
-    any_written = False
-    for mat_id in ("Aluminum", "WhitePaint", "OSR", "Graphite"):
-        shader = stage.GetPrimAtPath(f"/World/Looks/Rad_{mat_id}/Shader")
-        if not shader.IsValid():
+    f = max(0.0, min(1.0, sun_factor))
+    wrote = False
+    for path, lo, hi in SUN_DRIVEN_LIGHTS:
+        light = stage.GetPrimAtPath(path)
+        if not light.IsValid():
             continue
-        attr = shader.GetAttribute("inputs:emissiveColor")
-        if not attr.IsValid():
-            continue
-        attr.Set(Gf.Vec3f(*emissive))
-        any_written = True
-    return any_written
+        attr = light.GetAttribute("inputs:intensity")
+        if attr.IsValid():
+            attr.Set(float(lo + (hi - lo) * f))
+            wrote = True
+
+    sun = stage.GetPrimAtPath(SUN_LIGHT_PATH)
+    if sun.IsValid():
+        # Warm the key colour toward white at noon, cooler near terminator.
+        color_attr = sun.GetAttribute("inputs:color")
+        if color_attr.IsValid():
+            color_attr.Set(Gf.Vec3f(1.0, 0.93 + 0.05 * f, 0.88 + 0.10 * f))
+        # Sweep azimuth so the highlight crawls across the body rather than
+        # sitting static — gentle (~one sweep per 2 min sim).
+        rot_attr = sun.GetAttribute("xformOp:rotateXYZ")
+        if rot_attr.IsValid() and sim_now_s is not None:
+            az = (SUN_BASE_RY_DEG + (sim_now_s * 3.0)) % 360.0
+            cur = rot_attr.Get()
+            if cur is not None:
+                rot_attr.Set(Gf.Vec3f(float(cur[0]), float(cur[1]), float(az)))
+    return wrote
 
 
 def _dump_satellite_materials() -> str:
@@ -405,9 +427,6 @@ def _dump_satellite_materials() -> str:
     bits = []
     for p in (
         "/World/Satellite/Bus/Mesh/Panel",
-        "/World/Satellite/DeployableSolar_N/Wing/Plate",
-        "/World/Satellite/Radiator_East/Plate",
-        "/World/Satellite/DGX_Rack/GPU_01",
     ):
         prim = stage.GetPrimAtPath(p)
         if not prim.IsValid():
@@ -621,12 +640,15 @@ if _HAS_KIT:
                 else:
                     _log(f"on_poll cfg snapshot {prev} -> {packet_cfg} (not satellite stage, deferred)")
 
-            # Heat-driven emissive on the radiator materials. Only matters
-            # when we're looking at the sat; the overview stage doesn't
-            # author Rad_* materials so the call no-ops there.
+            # Orbit-tracking Sun. Only matters on the satellite stage; the
+            # overview stage has no /World/Environment/Key so this no-ops.
             if self._current_stage == self._stages.get("satellite"):
-                temp_c = float(state.get("satellite", {}).get("temperature_c", 0.0))
-                apply_radiator_heat(temp_c)
+                sun_factor = float(state.get("satellite", {}).get("sun_factor", 1.0))
+                sim_now = (
+                    self._anchor_sim_s + (time.monotonic() - self._anchor_wall_s)
+                    if self._anchor_sim_s is not None else 0.0
+                )
+                apply_sun(sun_factor, sim_now)
 
             # Constellation change detection.
             constel = state.get("constellation") or {}
