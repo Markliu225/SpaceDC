@@ -104,6 +104,16 @@ MISSION_AOI    = f"{MISSION_GROUP}/AOI"
 MISSION_PACKET = f"{MISSION_GROUP}/Packet"
 MISSION_ISL    = f"{MISSION_GROUP}/ISLBeam"
 MISSION_GSL    = f"{MISSION_GROUP}/GSLBeam"
+# Hero satellite models for the two sats in the task (sensor + compute hub).
+# The rest of the fleet stays as cheap Points; only these two render as the
+# detailed Satellite_v022 body so the close-up shots show a real spacecraft.
+MISSION_SENSOR_SAT = f"{MISSION_GROUP}/SensorSat"
+MISSION_HUB_SAT    = f"{MISSION_GROUP}/HubSat"
+# Satellite_v022 raw extent is ~168 (mm-space coords) which compose as-is
+# into the 100 km/unit overview stage. Scale to ~5 units (~500 km — same
+# deliberate over-scale as the 0.7-unit fleet points so it reads at orbit
+# distance).
+HERO_SAT_SCALE = 0.03
 # Cinematic mission camera (authored at runtime on the overview stage).
 MISSION_CAM    = "/World/Cameras/MissionCam"
 # Packet widths (scene units) — big = raw 5 GB capture, small = 2 MB result.
@@ -140,6 +150,13 @@ def _stage_paths() -> dict[str, str]:
         "satellite": os.path.join(base, "satellite.usda"),
         "interior":  os.path.join(base, "interior.usda"),
     }
+
+
+def _hero_sat_asset() -> str:
+    """Absolute path to the Satellite_v022 body used for the mission hero
+    sats (forward slashes so USD's asset resolver is happy on Windows)."""
+    base = os.environ.get(USD_ROOT_ENV, "C:/Workspace/SpaceDC/space-compute-demo/usd")
+    return os.path.join(base, "assets", "Satellite_v022.usdc").replace("\\", "/")
 
 
 # ---------------------------------------------------------------------------
@@ -395,6 +412,20 @@ def _set_visibility(prim, visible: bool) -> None:
         )
 
 
+def _place_hero_sat(stage, path: str, pos, visible: bool, spin_deg: float = 0.0) -> None:
+    """Move a hero-sat model to `pos` (scene units) and toggle visibility.
+    The scale op stays baked; we only update translate (+ optional spin)."""
+    prim = stage.GetPrimAtPath(path)
+    if not prim or not prim.IsValid():
+        return
+    xform = UsdGeom.Xformable(prim)
+    for op in xform.GetOrderedXformOps():
+        if op.GetOpType() == UsdGeom.XformOp.TypeTranslate:
+            op.Set(Gf.Vec3d(float(pos[0]), float(pos[1]), float(pos[2])))
+            break
+    _set_visibility(prim, visible)
+
+
 def author_mission_prims(stage) -> bool:
     """Create /World/MissionGroup (AOI · Packet · ISL/GSL beams) once. The
     group starts invisible; the per-frame driver shows it while a mission
@@ -445,8 +476,21 @@ def author_mission_prims(stage) -> bool:
         cam.AddTransformOp()
         _set_camera_lookat(stage, MISSION_CAM, CAM_GLOBAL_EYE, (0.0, 0.0, 0.0))
 
+    # Hero sat models — Sensor + Hub render as the detailed Satellite_v022
+    # body (the rest of the fleet stays as Points). translate updated every
+    # frame; scale baked once. Start invisible.
+    asset = _hero_sat_asset()
+    for path in (MISSION_SENSOR_SAT, MISSION_HUB_SAT):
+        if stage.GetPrimAtPath(path).IsValid():
+            continue
+        xf = UsdGeom.Xform.Define(stage, Sdf.Path(path))
+        xf.GetPrim().GetReferences().AddReference(asset)
+        xf.AddTranslateOp().Set(Gf.Vec3d(0, 0, EARTH_RADIUS_UNITS + 6))
+        xf.AddScaleOp().Set(Gf.Vec3f(HERO_SAT_SCALE, HERO_SAT_SCALE, HERO_SAT_SCALE))
+        _set_visibility(xf.GetPrim(), False)
+
     _set_visibility(stage.GetPrimAtPath(MISSION_GROUP), False)
-    _log("authored mission group (AOI / Packet / ISL / GSL / MissionCam)")
+    _log("authored mission group (AOI / Packet / ISL / GSL / MissionCam / hero sats)")
     return True
 
 
@@ -554,6 +598,13 @@ def update_mission(stage, mission: dict, fleet_positions: list, wall_t: float) -
     hub    = fleet_positions[h_idx] if 0 <= h_idx < n else (0.0, 0.0, EARTH_RADIUS_UNITS + 6)
     aoi    = _latlon_to_units(mission.get("aoi_lat", 0.0), mission.get("aoi_lon", 0.0), EARTH_RADIUS_UNITS + 0.5)
     ground = _latlon_to_units(mission.get("ground_lat", 0.0), mission.get("ground_lon", 0.0), EARTH_RADIUS_UNITS + 0.5)
+
+    # Hero sat models — Sensor + Hub render as detailed Satellite_v022
+    # bodies during the close-up phases; hidden in the wide downlink/deliver
+    # shot (the fleet Points carry the global view).
+    close_phase = phase in ("acquire", "capture", "route", "compute")
+    _place_hero_sat(stage, MISSION_SENSOR_SAT, sensor, close_phase)
+    _place_hero_sat(stage, MISSION_HUB_SAT, hub, close_phase)
 
     # AOI marker — pulse strongest during acquire/capture.
     aoi_prim = UsdGeom.Points(stage.GetPrimAtPath(MISSION_AOI))
