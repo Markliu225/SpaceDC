@@ -33,6 +33,14 @@ SENSOR_POS = (-9.0, 0.0, 0.0)
 HUB_POS    = (9.0, 1.5, 2.0)
 GROUND_POS = (-3.0, -10.0, -32.0)
 
+# The imaged scene — NVIDIA AEC City Tower pack. Z-up, cm units; the tower
+# is ~155 m (~15503 units). Scaled to ~15 m tall and parked below the
+# sensor; the driver sweeps the camera over it during capture, then
+# collapses it into a data cube that flies up to the sensor.
+CITY_REF   = "./aeco_city/Demos/AEC/TowerDemo/CityTowerDemopack/World_CityTowerDemopack.usd"
+CITY_POS   = (0.0, 6.0, -24.0)
+CITY_SCALE = 0.0011
+
 PACKET_CUBES = 8     # pool size for the data-block stream
 GPU_CARDS    = 8     # server-rack cards beside the hub
 
@@ -270,22 +278,31 @@ def Xform "World"
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
     }}
 
-    # Sensor imaging beam — a cone projecting "down" from the sensor sat.
-    # apex near the sat, widening downward. Driver shows + pulses it during
-    # the capture phase. Cone default axis is Z; we flip it to point -Z.
-    def Cone "ScanBeam" (
+    # The imaged scene — AEC City Tower pack. Shown during acquire/capture;
+    # the driver sweeps the camera over it then collapses its scale to ~0.
+    def Xform "TargetScene" (
+        prepend references = @{CITY_REF}@
+    )
+    {{
+        double3 xformOp:translate = ({CITY_POS[0]}, {CITY_POS[1]}, {CITY_POS[2]})
+        double3 xformOp:scale = ({CITY_SCALE}, {CITY_SCALE}, {CITY_SCALE})
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        token visibility = "invisible"
+    }}
+
+    # The "captured data" block — appears as the scene collapses, then flies
+    # up to the sensor. Driven by the extension.
+    def Cube "CaptureCube" (
         prepend apiSchemas = ["MaterialBindingAPI"]
     )
     {{
-        double height = 11.0
-        double radius = 3.4
-        uniform token axis = "Z"
-        double3 xformOp:translate = ({sx}, {sy}, {sz - 6.0})
-        float3 xformOp:rotateXYZ = (180, 0, 0)
-        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        double size = 2.0
+        double3 xformOp:translate = ({CITY_POS[0]}, {CITY_POS[1]}, {CITY_POS[2]})
+        double3 xformOp:scale = (0.5, 0.5, 0.5)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
         token visibility = "invisible"
         uniform bool primvars:doNotCastShadows = 1
-        rel material:binding = </World/Looks/ScanMat>
+        rel material:binding = </World/Looks/PacketMat>
     }}
 
     def Xform "Packets"

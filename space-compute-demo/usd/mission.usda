@@ -145,22 +145,31 @@ def Xform "World"
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
     }
 
-    # Sensor imaging beam — a cone projecting "down" from the sensor sat.
-    # apex near the sat, widening downward. Driver shows + pulses it during
-    # the capture phase. Cone default axis is Z; we flip it to point -Z.
-    def Cone "ScanBeam" (
+    # The imaged scene — AEC City Tower pack. Shown during acquire/capture;
+    # the driver sweeps the camera over it then collapses its scale to ~0.
+    def Xform "TargetScene" (
+        prepend references = @./aeco_city/Demos/AEC/TowerDemo/CityTowerDemopack/World_CityTowerDemopack.usd@
+    )
+    {
+        double3 xformOp:translate = (0.0, 6.0, -24.0)
+        double3 xformOp:scale = (0.0011, 0.0011, 0.0011)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+        token visibility = "invisible"
+    }
+
+    # The "captured data" block — appears as the scene collapses, then flies
+    # up to the sensor. Driven by the extension.
+    def Cube "CaptureCube" (
         prepend apiSchemas = ["MaterialBindingAPI"]
     )
     {
-        double height = 11.0
-        double radius = 3.4
-        uniform token axis = "Z"
-        double3 xformOp:translate = (-9.0, 0.0, -6.0)
-        float3 xformOp:rotateXYZ = (180, 0, 0)
-        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+        double size = 2.0
+        double3 xformOp:translate = (0.0, 6.0, -24.0)
+        double3 xformOp:scale = (0.5, 0.5, 0.5)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
         token visibility = "invisible"
         uniform bool primvars:doNotCastShadows = 1
-        rel material:binding = </World/Looks/ScanMat>
+        rel material:binding = </World/Looks/PacketMat>
     }
 
     def Xform "Packets"

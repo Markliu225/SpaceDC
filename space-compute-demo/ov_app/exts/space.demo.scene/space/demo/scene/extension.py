@@ -657,13 +657,49 @@ def update_mission(stage, mission: dict, fleet_positions: list, wall_t: float) -
 # the driver animates the packet, beams, sat visibility, and follow-cam.
 # ---------------------------------------------------------------------------
 HERO_CAM    = "/World/Cameras/MissionHero"
-HERO_SCAN   = "/World/ScanBeam"
+HERO_CITY   = "/World/TargetScene"   # referenced AEC City Tower pack
+HERO_CUBE   = "/World/CaptureCube"   # the "captured data" block
 # Must match tools/gen_mission_stage.py.
 HERO_SENSOR_POS = (-9.0, 0.0, 0.0)
 HERO_HUB_POS    = (9.0, 1.5, 2.0)
 HERO_GROUND_POS = (-3.0, -10.0, -32.0)
+HERO_CITY_POS   = (0.0, 6.0, -24.0)
+HERO_CITY_SCALE = 0.0011
+HERO_CITY_TGT   = (0.0, 6.0, -13.0)   # camera aim — tower mid-height
+HERO_CUBE_FORM  = (0.0, 4.0, -14.0)   # where the data cube condenses (framed)
 HERO_PACKET_CUBES = 8
 HERO_GPU_CARDS    = 8
+
+# capture sub-phase fractions (phase_progress within the 'capture' phase):
+#   0   .. 0.45  linger + slow camera sweep over the city
+#   0.45.. 0.70  the city shrinks *into* the data cube (scale→0, origin slides
+#                to the cube point) while a big bright cube grows there
+#   0.70.. 1.0   the cube flies from the cube point to the sensor sat
+_CAP_SWEEP_END    = 0.45
+_CAP_COLLAPSE_END = 0.70
+
+# Per-phase durations (s) — MUST mirror web/src/data/missionPlan.ts and the
+# backend MissionEngine. The driver polls /state at only POLL_HZ, so within a
+# phase it advances phase_progress locally by wall-clock against these so the
+# camera + collapse animate at framerate instead of in ~1Hz steps.
+_MISSION_PHASE_DUR = {
+    "acquire": 3.0, "capture": 6.0, "route": 4.0,
+    "compute": 5.0, "downlink": 3.0, "deliver": 2.0,
+}
+
+
+def _set_xform_ts(stage, path: str, pos=None, scale=None) -> None:
+    """Set the translate and/or uniform scale on an xform's existing ops."""
+    prim = stage.GetPrimAtPath(path)
+    if not prim or not prim.IsValid():
+        return
+    xf = UsdGeom.Xformable(prim)
+    for op in xf.GetOrderedXformOps():
+        t = op.GetOpType()
+        if t == UsdGeom.XformOp.TypeTranslate and pos is not None:
+            op.Set(Gf.Vec3d(float(pos[0]), float(pos[1]), float(pos[2])))
+        elif t == UsdGeom.XformOp.TypeScale and scale is not None:
+            op.Set(Gf.Vec3f(float(scale), float(scale), float(scale)))
 
 
 def mission_hero_camera_pose(mission: dict):
@@ -671,9 +707,22 @@ def mission_hero_camera_pose(mission: dict):
     phase = mission.get("phase", "idle")
     prog  = float(mission.get("phase_progress", 0.0))
     sensor, hub, ground = HERO_SENSOR_POS, HERO_HUB_POS, HERO_GROUND_POS
-    if phase in ("acquire", "capture"):
-        tgt = (sensor[0], sensor[1], sensor[2] - 2.0)       # sat + its scan beam
-        eye = (sensor[0] + 4.0, sensor[1] - 9.0, sensor[2] + 3.0)
+    sensor_eye = (sensor[0] + 4.0, sensor[1] - 9.0, sensor[2] + 3.0)
+    if phase == "acquire":
+        # Establishing shot — frame the whole city scene, front-left, above.
+        tgt = HERO_CITY_TGT
+        eye = (-11.0, -22.0, 5.0)
+    elif phase == "capture":
+        if prog < _CAP_SWEEP_END:
+            # Slow lateral sweep across the city facade (缓缓扫过).
+            s = prog / _CAP_SWEEP_END
+            tgt = HERO_CITY_TGT
+            eye = (-12.0 + 24.0 * s, -20.0, 3.5)
+        else:
+            # Hold steady framing the cube point so the city visibly
+            # collapses into the cube, which then flies off to the sensor.
+            tgt = HERO_CUBE_FORM
+            eye = (0.0, -24.0, 4.0)
     elif phase == "route":
         # Follow the packet-cube stream toward the hub, pulled back enough
         # to read the individual blocks travelling, not a wall of light.
@@ -725,9 +774,52 @@ def _hide_cubes(stage) -> None:
         _set_visibility(stage.GetPrimAtPath(f"/World/Packets/Cube_{i:02d}"), False)
 
 
+def _update_capture_scene(stage, mission: dict) -> None:
+    """Image acquisition: show the AEC city scene during acquire/capture, then
+    collapse it into the data cube and fly the cube up to the sensor sat."""
+    phase = mission.get("phase", "idle")
+    active = bool(mission.get("active")) or phase != "idle"
+    prog = float(mission.get("phase_progress", 0.0))
+    city = stage.GetPrimAtPath(HERO_CITY)
+    cube = stage.GetPrimAtPath(HERO_CUBE)
+
+    if not active or phase not in ("acquire", "capture"):
+        _set_visibility(city, False)
+        _set_visibility(cube, False)
+        return
+
+    if phase == "acquire" or prog < _CAP_SWEEP_END:
+        # City fully present; cube not yet formed.
+        _set_xform_ts(stage, HERO_CITY, pos=HERO_CITY_POS, scale=HERO_CITY_SCALE)
+        _set_visibility(city, True)
+        _set_visibility(cube, False)
+    elif prog < _CAP_COLLAPSE_END:
+        # The city shrinks *into* the cube point — scale → 0 while its origin
+        # slides from CITY_POS to the cube point, so it visibly condenses
+        # into the bright cube growing there.
+        k = (prog - _CAP_SWEEP_END) / (_CAP_COLLAPSE_END - _CAP_SWEEP_END)
+        cs = HERO_CITY_SCALE * (1.0 - k)
+        _set_xform_ts(stage, HERO_CITY,
+                      pos=_lerp3(HERO_CITY_POS, HERO_CUBE_FORM, k),
+                      scale=max(cs, 1e-6))
+        _set_visibility(city, k < 0.96)
+        cube_scale = 0.3 + 2.0 * k
+        _set_xform_ts(stage, HERO_CUBE, pos=HERO_CUBE_FORM, scale=cube_scale)
+        _set_visibility(cube, True)
+    else:
+        # City gone; the cube flies off to the sensor sat, shrinking as it
+        # docks.
+        _set_visibility(city, False)
+        k = (prog - _CAP_COLLAPSE_END) / (1.0 - _CAP_COLLAPSE_END)
+        pos = _lerp3(HERO_CUBE_FORM, HERO_SENSOR_POS, k)
+        cube_scale = 2.3 * (1.0 - 0.78 * k)
+        _set_xform_ts(stage, HERO_CUBE, pos=pos, scale=cube_scale)
+        _set_visibility(cube, True)
+
+
 def update_mission_hero(stage, mission: dict, wall_t: float) -> None:
     """Drive the hero-stage props from the mission phase:
-      capture  → sensor scan beam (image acquisition);
+      acquire/capture → AEC city scene sweep, then collapse into a data cube;
       route    → packet cubes stream sensor → hub;
       compute  → GPU rack flickers beside the hub;
       downlink → packet cubes stream hub → ground station;
@@ -739,8 +831,8 @@ def update_mission_hero(stage, mission: dict, wall_t: float) -> None:
     active = bool(mission.get("active")) or phase != "idle"
     sensor, hub, ground = HERO_SENSOR_POS, HERO_HUB_POS, HERO_GROUND_POS
 
-    # 1. Sensor imaging beam — visible while acquiring / capturing.
-    _set_visibility(stage.GetPrimAtPath(HERO_SCAN), active and phase in ("acquire", "capture"))
+    # 1. Image acquisition — AEC city scene sweep → collapse into a data cube.
+    _update_capture_scene(stage, mission)
 
     # 2. Packet cubes.
     if phase == "route":
@@ -943,6 +1035,7 @@ if _HAS_KIT:
             # overview-stage choreography (AOI / data packet / ISL-GSL beams)
             # and the cinematic MissionCam.
             self._mission: Optional[dict] = None
+            self._mission_rx_wall: Optional[float] = None  # monotonic ts of last mission poll
             self._mission_authored: bool = False
             # Smoothed camera pose + whether MissionCam currently owns the
             # viewport (so we bind/unbind only on transitions).
@@ -963,12 +1056,29 @@ if _HAS_KIT:
                 self._poll_task.cancel()
             self._update_sub = None
 
+        def _interp_mission(self) -> dict:
+            """The cached mission snapshot with phase_progress advanced by
+            wall-clock since the last poll, so the hero choreography animates
+            smoothly at framerate rather than stepping at POLL_HZ. The phase
+            itself only ever changes on a real poll (authoritative); we just
+            clamp progress to 1.0 so we never run past the phase end early."""
+            m = self._mission
+            if not m:
+                return {"phase": "idle", "phase_progress": 0.0, "active": False}
+            prog = float(m.get("phase_progress", 0.0))
+            dur = _MISSION_PHASE_DUR.get(m.get("phase", "idle"))
+            if dur and m.get("active") and self._mission_rx_wall is not None:
+                prog = min(1.0, prog + (time.monotonic() - self._mission_rx_wall) / dur)
+            out = dict(m)
+            out["phase_progress"] = prog
+            return out
+
         def _update_mission_stage(self, stage) -> None:
             """Per-frame driver for the HERO mission stage (usd/mission.usda):
             animates the packet + beams + sat visibility and eases the
             follow-cam through the phase shots. Sats are at fixed staged
             positions; no Earth / fleet involved."""
-            mission = self._mission or {"phase": "idle"}
+            mission = self._interp_mission()
             update_mission_hero(stage, mission, time.monotonic())
             # Ease the hero camera toward the per-phase pose.
             eye, tgt = mission_hero_camera_pose(mission)
@@ -1104,8 +1214,10 @@ if _HAS_KIT:
                 )
                 apply_sun(sun_factor, sim_now)
 
-            # Cache the mission snapshot for the overview-stage choreography.
+            # Cache the mission snapshot + the wall time it arrived, so the
+            # per-frame driver can interpolate phase_progress between polls.
             self._mission = state.get("mission")
+            self._mission_rx_wall = time.monotonic()
 
             # Constellation change detection.
             constel = state.get("constellation") or {}

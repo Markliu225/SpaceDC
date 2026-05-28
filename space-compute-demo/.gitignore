@@ -43,5 +43,10 @@ assets_usd/**/*.usdz
 !assets_raw/README.md
 !assets_raw/MANIFEST.md
 
+# Heavy AEC City Tower demo pack (NVIDIA AECO, ~2.8 GB) — referenced by
+# usd/mission.usda as the image-capture target scene, kept external to git.
+usd/AECO_CityTowerDemoPack_NVD@*.zip
+usd/aeco_city/
+
 # Logs
 *.log

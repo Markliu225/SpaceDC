@@ -14,8 +14,8 @@ export interface PhaseDef {
 }
 
 export const PHASE_PLAN: PhaseDef[] = [
-  { phase: 'acquire',  label: 'AOI Acquired', durationS: 2 },
-  { phase: 'capture',  label: 'Capturing',    durationS: 3 },
+  { phase: 'acquire',  label: 'AOI Acquired', durationS: 3 },
+  { phase: 'capture',  label: 'Capturing',    durationS: 6 },
   { phase: 'route',    label: 'ISL Routing',  durationS: 4 },
   { phase: 'compute',  label: 'Inferencing',  durationS: 5 },
   { phase: 'downlink', label: 'Downlinking',  durationS: 3 },

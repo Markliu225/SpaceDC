@@ -34,8 +34,8 @@ TICK_HZ = 1.0
 # wall-clock animation seconds (not sim-scaled) so the story is legible.
 # ---------------------------------------------------------------------------
 _MISSION_PHASES: list[tuple[str, float]] = [
-    ("acquire", 2.0),
-    ("capture", 3.0),
+    ("acquire", 3.0),
+    ("capture", 6.0),   # long enough to sweep the scene + collapse it to a cube
     ("route", 4.0),
     ("compute", 5.0),
     ("downlink", 3.0),
