@@ -1,23 +1,19 @@
 """Generate usd/mission.usda — the 天数天算 mission "hero stage".
 
-A clean cinematic set, deliberately NOT the geo overview: no Earth, no
-orbit rings. Just deep black space + a starfield, dramatic 3-point
-lighting, and the two task satellites (Satellite_v022 body) staged for a
-beauty shot. The space.demo.scene extension drives the data packet, the
-ISL / result beams, satellite visibility, and the follow-cam per mission
-phase.
+A clean cinematic set (no Earth, no orbit rings): deep black space + a
+starfield, dramatic 3-point lighting, the two task satellites, and the
+props the space.demo.scene extension animates per phase —
+
+  * ScanBeam      — a cone projecting from the sensor sat (image capture)
+  * Packets/Cube_NN — a pool of small cubes; the data is shown as discrete
+                      packet blocks flowing along the route (NOT a laser)
+  * ComputeCore/Card_NN — a little server rack beside the hub that flickers
+                      while it runs inference (GPU activity)
+  * GroundStation — a dish the downlink result is delivered to; the camera
+                      follows the packets down to it
 
 Layout (metersPerUnit = 1, units = metres):
-    /World
-        /Environment   Key + Rim + Fill lights (rim-lit sats on black)
-        /Stars         ~700 procedural star points on a 500 m sphere
-        /SensorSat     Satellite_v022 @ (-9, 0, 0)
-        /HubSat        Satellite_v022 @ (9, 1.5, 2)
-        /Packet        glowing data blob (driven)
-        /ISLBeam       sensor → hub (driven)
-        /ResultBeam    hub → camera/off-frame for downlink (driven)
-        /Looks         emissive materials
-        /Cameras/MissionHero   driven by the extension
+    SensorSat (-9,0,0)  HubSat (9,1.5,2)  GroundStation (-3,-10,-32)
 
 Run:
     python tools/gen_mission_stage.py
@@ -32,9 +28,13 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT  = ROOT / "usd" / "mission.usda"
 
 SAT_REF = "./assets/Satellite_v022.usdc"
-SAT_SCALE = 0.024          # v022 raw ~168 → ~4 m
+SAT_SCALE = 0.024
 SENSOR_POS = (-9.0, 0.0, 0.0)
 HUB_POS    = (9.0, 1.5, 2.0)
+GROUND_POS = (-3.0, -10.0, -32.0)
+
+PACKET_CUBES = 8     # pool size for the data-block stream
+GPU_CARDS    = 8     # server-rack cards beside the hub
 
 STAR_COUNT = 700
 STAR_RADIUS = 500.0
@@ -45,7 +45,6 @@ def _stars() -> tuple[list, list]:
     rng = random.Random(STAR_SEED)
     pts, widths = [], []
     for _ in range(STAR_COUNT):
-        # Uniform on sphere.
         z = rng.uniform(-1.0, 1.0)
         t = rng.uniform(0.0, 2.0 * math.pi)
         r = math.sqrt(max(0.0, 1.0 - z * z))
@@ -63,10 +62,65 @@ def _float_list(vs) -> str:
     return ", ".join(f"{v}" for v in vs)
 
 
+def _packet_cubes() -> str:
+    """A pool of small cube prims; the driver positions + shows them to make
+    the data-packet stream. Start invisible at the sensor."""
+    sx, sy, sz = SENSOR_POS
+    out = []
+    for i in range(PACKET_CUBES):
+        out.append(f"""
+        def Cube "Cube_{i:02d}" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {{
+            double size = 2.0
+            double3 xformOp:translate = ({sx}, {sy}, {sz})
+            double3 xformOp:scale = (0.32, 0.32, 0.32)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+            token visibility = "invisible"
+            uniform bool primvars:doNotCastShadows = 1
+            rel material:binding = </World/Looks/PacketMat>
+        }}""")
+    return "".join(out)
+
+
+def _gpu_cards() -> str:
+    """A 2×4 grid of thin cards just in front of the hub — the DGX rack.
+    Driver flickers their visibility during compute. Positioned relative to
+    the hub; start invisible."""
+    hx, hy, hz = HUB_POS
+    out = []
+    cols, rows = 4, 2
+    cw, ch, gap = 0.55, 0.5, 0.25
+    span_x = cols * cw + (cols - 1) * gap
+    span_z = rows * ch + (rows - 1) * gap
+    for r in range(rows):
+        for c in range(cols):
+            i = r * cols + c
+            cx = hx - 3.5 + (c * (cw + gap)) - span_x / 2 + cw / 2
+            cz = hz + (r * (ch + gap)) - span_z / 2 + ch / 2
+            cy = hy - 2.0
+            out.append(f"""
+        def Cube "Card_{i:02d}" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {{
+            double size = 2.0
+            double3 xformOp:translate = ({cx:.2f}, {cy:.2f}, {cz:.2f})
+            double3 xformOp:scale = ({cw/2:.2f}, 0.08, {ch/2:.2f})
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+            token visibility = "invisible"
+            uniform bool primvars:doNotCastShadows = 1
+            rel material:binding = </World/Looks/GpuMat>
+        }}""")
+    return "".join(out)
+
+
 def build() -> str:
     star_pts, star_w = _stars()
     sx, sy, sz = SENSOR_POS
     hx, hy, hz = HUB_POS
+    gx, gy, gz = GROUND_POS
     s = SAT_SCALE
 
     return f"""#usda 1.0
@@ -74,7 +128,7 @@ def build() -> str:
     defaultPrim = "World"
     upAxis = "Z"
     metersPerUnit = 1.0
-    doc = "天数天算 mission hero stage — black space + stars + dramatic lighting + the two task sats. No Earth / no orbit rings; the space.demo.scene extension drives the packet, beams, and follow-cam. Generated by tools/gen_mission_stage.py."
+    doc = "天数天算 mission hero stage — black space + stars + dramatic lighting + the two task sats, a sensor scan beam, a packet-cube stream, a hub GPU rack, and a ground station. No Earth / no orbit rings. Driven by space.demo.scene. Generated by tools/gen_mission_stage.py."
     customLayerData = {{
         dictionary cameraSettings = {{
             string boundCamera = "/World/Cameras/MissionHero"
@@ -86,7 +140,6 @@ def Xform "World"
 {{
     def Xform "Environment"
     {{
-        # Warm key from upper front-right.
         def DistantLight "Key"
         {{
             float inputs:angle = 1.0
@@ -95,7 +148,6 @@ def Xform "World"
             float3 xformOp:rotateXYZ = (-40, 0, 35)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }}
-        # Cool rim from behind to edge-light the sats against black.
         def DistantLight "Rim"
         {{
             float inputs:angle = 0.6
@@ -104,7 +156,6 @@ def Xform "World"
             float3 xformOp:rotateXYZ = (25, 0, -150)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }}
-        # Near-black deep-space ambient so shadows aren't pure void.
         def DomeLight "Space"
         {{
             color3f inputs:color = (0.02, 0.03, 0.06)
@@ -121,7 +172,6 @@ def Xform "World"
             def Shader "Shader"
             {{
                 uniform token info:id = "UsdPreviewSurface"
-                color3f inputs:diffuseColor = (0, 0, 0)
                 color3f inputs:emissiveColor = (1.4, 1.45, 1.6)
                 float inputs:roughness = 1.0
                 token outputs:surface
@@ -133,33 +183,58 @@ def Xform "World"
             def Shader "Shader"
             {{
                 uniform token info:id = "UsdPreviewSurface"
-                color3f inputs:diffuseColor = (0, 0, 0)
-                color3f inputs:emissiveColor = (0.30, 2.20, 2.80)
+                color3f inputs:diffuseColor = (0.05, 0.30, 0.45)
+                color3f inputs:emissiveColor = (0.30, 1.90, 2.60)
+                float inputs:roughness = 0.4
+                token outputs:surface
+            }}
+        }}
+        def Material "GpuMat"
+        {{
+            token outputs:surface.connect = </World/Looks/GpuMat/Shader.outputs:surface>
+            def Shader "Shader"
+            {{
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.0, 0.05, 0.0)
+                color3f inputs:emissiveColor = (0.20, 2.40, 0.70)
+                float inputs:roughness = 0.5
+                token outputs:surface
+            }}
+        }}
+        def Material "ScanMat"
+        {{
+            token outputs:surface.connect = </World/Looks/ScanMat/Shader.outputs:surface>
+            def Shader "Shader"
+            {{
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:emissiveColor = (0.25, 1.40, 2.20)
+                float inputs:opacity = 0.22
                 float inputs:roughness = 1.0
                 token outputs:surface
             }}
         }}
-        def Material "ISLMat"
+        def Material "StationMat"
         {{
-            token outputs:surface.connect = </World/Looks/ISLMat/Shader.outputs:surface>
+            token outputs:surface.connect = </World/Looks/StationMat/Shader.outputs:surface>
             def Shader "Shader"
             {{
                 uniform token info:id = "UsdPreviewSurface"
-                color3f inputs:diffuseColor = (0, 0, 0)
-                color3f inputs:emissiveColor = (0.20, 1.60, 2.60)
-                float inputs:roughness = 1.0
+                color3f inputs:diffuseColor = (0.62, 0.66, 0.72)
+                float inputs:metallic = 0.8
+                float inputs:roughness = 0.35
                 token outputs:surface
             }}
         }}
-        def Material "ResultMat"
+        def Material "DishMat"
         {{
-            token outputs:surface.connect = </World/Looks/ResultMat/Shader.outputs:surface>
+            token outputs:surface.connect = </World/Looks/DishMat/Shader.outputs:surface>
             def Shader "Shader"
             {{
                 uniform token info:id = "UsdPreviewSurface"
-                color3f inputs:diffuseColor = (0, 0, 0)
-                color3f inputs:emissiveColor = (0.40, 2.20, 0.80)
-                float inputs:roughness = 1.0
+                color3f inputs:diffuseColor = (0.85, 0.87, 0.90)
+                color3f inputs:emissiveColor = (0.10, 0.30, 0.20)
+                float inputs:metallic = 0.6
+                float inputs:roughness = 0.3
                 token outputs:surface
             }}
         }}
@@ -195,43 +270,73 @@ def Xform "World"
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
     }}
 
-    def Points "Packet" (
+    # Sensor imaging beam — a cone projecting "down" from the sensor sat.
+    # apex near the sat, widening downward. Driver shows + pulses it during
+    # the capture phase. Cone default axis is Z; we flip it to point -Z.
+    def Cone "ScanBeam" (
         prepend apiSchemas = ["MaterialBindingAPI"]
     )
     {{
-        point3f[] points = [({sx}, {sy}, {sz})]
-        float[] widths = [1.4] (interpolation = "vertex")
-        uniform bool primvars:doNotCastShadows = 1
+        double height = 11.0
+        double radius = 3.4
+        uniform token axis = "Z"
+        double3 xformOp:translate = ({sx}, {sy}, {sz - 6.0})
+        float3 xformOp:rotateXYZ = (180, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
         token visibility = "invisible"
-        rel material:binding = </World/Looks/PacketMat>
+        uniform bool primvars:doNotCastShadows = 1
+        rel material:binding = </World/Looks/ScanMat>
     }}
 
-    def BasisCurves "ISLBeam" (
-        prepend apiSchemas = ["MaterialBindingAPI"]
-    )
-    {{
-        uniform token type = "linear"
-        uniform token wrap = "nonperiodic"
-        int[] curveVertexCounts = [2]
-        point3f[] points = [({sx}, {sy}, {sz}), ({hx}, {hy}, {hz})]
-        float[] widths = [0.35] (interpolation = "constant")
-        uniform bool primvars:doNotCastShadows = 1
-        token visibility = "invisible"
-        rel material:binding = </World/Looks/ISLMat>
+    def Xform "Packets"
+    {{{_packet_cubes()}
     }}
 
-    def BasisCurves "ResultBeam" (
-        prepend apiSchemas = ["MaterialBindingAPI"]
-    )
+    def Xform "ComputeCore"
+    {{{_gpu_cards()}
+    }}
+
+    # Ground station — mast + dish, the downlink delivery target.
+    def Xform "GroundStation"
     {{
-        uniform token type = "linear"
-        uniform token wrap = "nonperiodic"
-        int[] curveVertexCounts = [2]
-        point3f[] points = [({hx}, {hy}, {hz}), (0, -40, -20)]
-        float[] widths = [0.3] (interpolation = "constant")
-        uniform bool primvars:doNotCastShadows = 1
-        token visibility = "invisible"
-        rel material:binding = </World/Looks/ResultMat>
+        double3 xformOp:translate = ({gx}, {gy}, {gz})
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+
+        def Cylinder "Base" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {{
+            double height = 0.6
+            double radius = 1.6
+            uniform token axis = "Z"
+            double3 xformOp:translate = (0, 0, 0.3)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            rel material:binding = </World/Looks/StationMat>
+        }}
+        def Cylinder "Mast" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {{
+            double height = 2.4
+            double radius = 0.28
+            uniform token axis = "Z"
+            double3 xformOp:translate = (0, 0, 1.8)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+            rel material:binding = </World/Looks/StationMat>
+        }}
+        # Dish — a shallow cone tilted up toward the satellites.
+        def Cone "Dish" (
+            prepend apiSchemas = ["MaterialBindingAPI"]
+        )
+        {{
+            double height = 0.7
+            double radius = 2.0
+            uniform token axis = "Z"
+            double3 xformOp:translate = (0, 0, 3.2)
+            float3 xformOp:rotateXYZ = (35, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ"]
+            rel material:binding = </World/Looks/DishMat>
+        }}
     }}
 
     def Xform "Cameras"
@@ -257,7 +362,8 @@ def Xform "World"
 def main() -> None:
     out = build()
     OUT.write_text(out, encoding="utf-8")
-    print(f"[gen] wrote {OUT} ({len(out):,} bytes, {STAR_COUNT} stars)")
+    print(f"[gen] wrote {OUT} ({len(out):,} bytes, {STAR_COUNT} stars, "
+          f"{PACKET_CUBES} packet cubes, {GPU_CARDS} GPU cards)")
 
 
 if __name__ == "__main__":

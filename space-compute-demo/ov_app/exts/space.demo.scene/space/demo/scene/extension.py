@@ -656,87 +656,113 @@ def update_mission(stage, mission: dict, fleet_positions: list, wall_t: float) -
 # no rings. Sats are at FIXED staged positions (matching the generator);
 # the driver animates the packet, beams, sat visibility, and follow-cam.
 # ---------------------------------------------------------------------------
-HERO_SENSOR_SAT = "/World/SensorSat"
-HERO_HUB_SAT    = "/World/HubSat"
-HERO_PACKET     = "/World/Packet"
-HERO_ISL        = "/World/ISLBeam"
-HERO_RESULT     = "/World/ResultBeam"
-HERO_CAM        = "/World/Cameras/MissionHero"
+HERO_CAM    = "/World/Cameras/MissionHero"
+HERO_SCAN   = "/World/ScanBeam"
 # Must match tools/gen_mission_stage.py.
 HERO_SENSOR_POS = (-9.0, 0.0, 0.0)
 HERO_HUB_POS    = (9.0, 1.5, 2.0)
-HERO_RESULT_TGT = (0.0, -42.0, -22.0)   # off-frame, toward/below camera
-HERO_PACKET_BIG  = 2.2
-HERO_PACKET_SMALL = 0.6
+HERO_GROUND_POS = (-3.0, -10.0, -32.0)
+HERO_PACKET_CUBES = 8
+HERO_GPU_CARDS    = 8
 
 
 def mission_hero_camera_pose(mission: dict):
     """Follow-cam poses on the hero stage (metres). Returns (eye, target)."""
     phase = mission.get("phase", "idle")
     prog  = float(mission.get("phase_progress", 0.0))
+    sensor, hub, ground = HERO_SENSOR_POS, HERO_HUB_POS, HERO_GROUND_POS
     if phase in ("acquire", "capture"):
-        tgt = HERO_SENSOR_POS
-        eye = (tgt[0] + 4.0, tgt[1] - 8.0, tgt[2] + 3.5)
+        tgt = (sensor[0], sensor[1], sensor[2] - 2.0)       # sat + its scan beam
+        eye = (sensor[0] + 4.0, sensor[1] - 9.0, sensor[2] + 3.0)
     elif phase == "route":
-        # Follow the packet but stand back so it reads as a blob travelling
-        # the beam toward the hub — not a wall of cyan filling the frame.
-        tgt = _lerp3(HERO_SENSOR_POS, HERO_HUB_POS, prog)   # the packet
+        # Follow the packet-cube stream toward the hub, pulled back enough
+        # to read the individual blocks travelling, not a wall of light.
+        tgt = _lerp3(sensor, hub, prog)
         eye = (tgt[0] + 6.0, tgt[1] - 20.0, tgt[2] + 8.5)
     elif phase == "compute":
         tgt = HERO_HUB_POS
-        eye = (tgt[0] + 5.5, tgt[1] - 8.0, tgt[2] + 4.5)    # beauty 3/4
-    elif phase in ("downlink", "deliver"):
-        tgt = (0.0, -2.0, 1.0)
-        eye = (3.0, -32.0, 13.0)                            # wide pull-back
+        eye = (tgt[0] - 1.0, tgt[1] - 8.5, tgt[2] + 3.5)    # beauty 3/4, GPU rack in view
+    elif phase == "downlink":
+        # Follow the result cubes DOWN to the ground station.
+        tgt = _lerp3(hub, (ground[0], ground[1], ground[2] + 2.5), prog)
+        eye = (tgt[0] + 9.0, tgt[1] - 13.0, tgt[2] + 8.0)
+    elif phase == "deliver":
+        tgt = (ground[0], ground[1], ground[2] + 2.5)       # framed on the dish
+        eye = (ground[0] + 8.0, ground[1] - 11.0, ground[2] + 7.0)
     else:
         tgt = (0.0, 0.0, 1.0)
         eye = (0.0, -28.0, 12.0)
     return (eye, tgt)
 
 
+def _flow_cubes(stage, start, end, n_show: int, wall_t: float, size: float,
+                speed: float = 0.22) -> None:
+    """Stream the packet-cube pool from `start` to `end`: the first `n_show`
+    cubes flow along the path at staggered phase, the rest are hidden."""
+    n_show = max(1, min(HERO_PACKET_CUBES, n_show))
+    pulse = 1.0 + 0.12 * math.sin(wall_t * 8.0)
+    for i in range(HERO_PACKET_CUBES):
+        prim = stage.GetPrimAtPath(f"/World/Packets/Cube_{i:02d}")
+        if not prim or not prim.IsValid():
+            continue
+        if i >= n_show:
+            _set_visibility(prim, False)
+            continue
+        frac = (wall_t * speed + i / n_show) % 1.0
+        pos = _lerp3(start, end, frac)
+        xf = UsdGeom.Xformable(prim)
+        for op in xf.GetOrderedXformOps():
+            if op.GetOpType() == UsdGeom.XformOp.TypeTranslate:
+                op.Set(Gf.Vec3d(*pos))
+            elif op.GetOpType() == UsdGeom.XformOp.TypeScale:
+                sc = size * pulse
+                op.Set(Gf.Vec3f(sc, sc, sc))
+        _set_visibility(prim, True)
+
+
+def _hide_cubes(stage) -> None:
+    for i in range(HERO_PACKET_CUBES):
+        _set_visibility(stage.GetPrimAtPath(f"/World/Packets/Cube_{i:02d}"), False)
+
+
 def update_mission_hero(stage, mission: dict, wall_t: float) -> None:
-    """Drive the hero-stage packet + beams + sat visibility from the phase.
-    (Camera is eased separately by the extension so it can persist state.)"""
+    """Drive the hero-stage props from the mission phase:
+      capture  → sensor scan beam (image acquisition);
+      route    → packet cubes stream sensor → hub;
+      compute  → GPU rack flickers beside the hub;
+      downlink → packet cubes stream hub → ground station;
+      deliver  → all data props cleared (camera frames the station).
+    (Camera is eased separately so it can keep smoothing state.)"""
     if not _HAS_KIT or stage is None:
         return
     phase = mission.get("phase", "idle")
-    prog  = float(mission.get("phase_progress", 0.0))
     active = bool(mission.get("active")) or phase != "idle"
+    sensor, hub, ground = HERO_SENSOR_POS, HERO_HUB_POS, HERO_GROUND_POS
 
-    sensor, hub = HERO_SENSOR_POS, HERO_HUB_POS
+    # 1. Sensor imaging beam — visible while acquiring / capturing.
+    _set_visibility(stage.GetPrimAtPath(HERO_SCAN), active and phase in ("acquire", "capture"))
 
-    # Packet position + size.
-    packet_pos, packet_size, packet_vis = sensor, HERO_PACKET_BIG, False
-    if phase == "capture":
-        packet_pos, packet_vis = sensor, True
-    elif phase == "route":
-        packet_pos, packet_vis = _lerp3(sensor, hub, prog), True
-    elif phase == "compute":
-        packet_pos, packet_vis = hub, True
-        packet_size = HERO_PACKET_BIG + (HERO_PACKET_SMALL - HERO_PACKET_BIG) * prog
+    # 2. Packet cubes.
+    if phase == "route":
+        _flow_cubes(stage, sensor, hub, HERO_PACKET_CUBES, wall_t, 0.34, speed=0.28)
     elif phase == "downlink":
-        # Result rides the beam from hub toward the off-frame target.
-        packet_pos, packet_size, packet_vis = _lerp3(hub, HERO_RESULT_TGT, prog), HERO_PACKET_SMALL, True
-    elif phase == "deliver":
-        packet_vis = False
+        _flow_cubes(stage, hub, (ground[0], ground[1], ground[2] + 3.0),
+                    max(3, HERO_PACKET_CUBES // 2), wall_t, 0.22, speed=0.34)
+    else:
+        _hide_cubes(stage)
 
-    pkt = UsdGeom.Points(stage.GetPrimAtPath(HERO_PACKET))
-    if pkt:
-        # gentle pulse
-        pulse = 1.0 + 0.15 * math.sin(wall_t * 6.0)
-        pkt.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(*packet_pos)]))
-        pkt.GetWidthsAttr().Set(Vt.FloatArray([max(0.15, packet_size * pulse)]))
-        _set_visibility(pkt.GetPrim(), active and packet_vis)
-
-    isl = UsdGeom.BasisCurves(stage.GetPrimAtPath(HERO_ISL))
-    if isl:
-        isl.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(*sensor), Gf.Vec3f(*hub)]))
-        _set_visibility(isl.GetPrim(), active and phase in ("route", "compute"))
-
-    res = UsdGeom.BasisCurves(stage.GetPrimAtPath(HERO_RESULT))
-    if res:
-        res.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(*hub), Gf.Vec3f(*HERO_RESULT_TGT)]))
-        _set_visibility(res.GetPrim(), active and phase in ("downlink", "deliver"))
+    # 3. GPU rack — flicker the cards during compute (server activity).
+    compute_on = active and phase == "compute"
+    for i in range(HERO_GPU_CARDS):
+        card = stage.GetPrimAtPath(f"/World/ComputeCore/Card_{i:02d}")
+        if not card or not card.IsValid():
+            continue
+        if compute_on:
+            # Mostly on, each card blinking at its own rate → rack activity.
+            lit = math.sin(wall_t * 11.0 + i * 1.7) > -0.45
+            _set_visibility(card, lit)
+        else:
+            _set_visibility(card, False)
 
 
 # ---------------------------------------------------------------------------
