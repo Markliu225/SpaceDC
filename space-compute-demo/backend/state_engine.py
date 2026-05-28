@@ -15,6 +15,7 @@ from typing import Any, Callable, Optional
 from models import (
     FleetSnapshot,
     GroundStationState,
+    MissionState,
     Mode,
     Parameters,
     SatelliteConfig,
@@ -26,6 +27,38 @@ from services import orbit_catalog
 from services import constellations as _consts
 
 TICK_HZ = 1.0
+
+# ---------------------------------------------------------------------------
+# 天数天算 mission choreography — phase plan mirrors web/src/data/missionPlan.ts
+# so the Phase-1 mock and this backend produce identical beats. Durations are
+# wall-clock animation seconds (not sim-scaled) so the story is legible.
+# ---------------------------------------------------------------------------
+_MISSION_PHASES: list[tuple[str, float]] = [
+    ("acquire", 2.0),
+    ("capture", 3.0),
+    ("route", 4.0),
+    ("compute", 5.0),
+    ("downlink", 3.0),
+    ("deliver", 2.0),
+]
+_MISSION_TOTAL_S = sum(d for _, d in _MISSION_PHASES)
+_MISSION_RAW_MB = 5120.0
+_MISSION_RESULT_MB = 2.0
+_MISSION_TARGETS = 7
+_AOI_LAT, _AOI_LON = 38.0, -145.0
+_GROUND_STATIONS = [
+    ("GS-SVALBARD", 78.2, 15.4),
+    ("GS-REYKJAVIK", 64.1, -21.9),
+    ("GS-GUAM", 13.4, 144.8),
+]
+
+
+def _ang_dist(lat_a: float, lon_a: float, lat_b: float, lon_b: float) -> float:
+    """Great-circle angular distance (radians) between two lat/lon (deg)."""
+    a1, a2 = math.radians(lat_a), math.radians(lat_b)
+    dlon = math.radians(lon_b - lon_a)
+    cosd = math.sin(a1) * math.sin(a2) + math.cos(a1) * math.cos(a2) * math.cos(dlon)
+    return math.acos(max(-1.0, min(1.0, cosd)))
 
 # Reconfigurable hardware tables — values mirror docs/satellite_twin_implementation.md §3
 # and web/src/data/satConfigOptions.ts so the backend physics, Web optimistic
@@ -85,6 +118,11 @@ class StateEngine:
         self._fleet_snapshot: FleetSnapshot = FleetSnapshot()
         # Reconfigurable hardware loadout — Twin page mutates via set_config.
         self._config: SatelliteConfig = SatelliteConfig()
+        # 天数天算 mission — phase machine on a wall-clock timeline.
+        self._mission: MissionState = MissionState()
+        self._mission_start_wall: Optional[float] = None
+        # Cached fleet lat/lon (computed each tick) for mission cast picking.
+        self._fleet_latlon: list[tuple[float, float]] = []
 
     # ---- lifecycle ----
     async def start(self) -> None:
@@ -148,6 +186,117 @@ class StateEngine:
     def satellite_config(self) -> SatelliteConfig:
         return self._config
 
+    # ---- 天数天算 mission ----
+    def start_mission(self) -> MissionState:
+        """Kick the compute-in-space choreography: assign cast (sensor =
+        fleet sat nearest AOI, hub = idx 0, ground = nearest GS to hub) and
+        start the wall-clock phase machine."""
+        sensor_idx, hub_idx, gs = self._assign_cast()
+        self._mission = MissionState(
+            active=True,
+            phase="acquire",
+            phase_progress=0.0,
+            elapsed_s=0.0,
+            data_volume_mb=0.0,
+            targets_found=0,
+            sensor_idx=sensor_idx,
+            hub_idx=hub_idx,
+            aoi_lat=_AOI_LAT,
+            aoi_lon=_AOI_LON,
+            ground_lat=gs[1],
+            ground_lon=gs[2],
+            ground_id=gs[0],
+        )
+        self._mission_start_wall = time.monotonic()
+        return self._mission
+
+    def stop_mission(self) -> None:
+        self._mission = MissionState()
+        self._mission_start_wall = None
+
+    @property
+    def mission(self) -> MissionState:
+        return self._mission
+
+    def _assign_cast(self) -> tuple[int, int, tuple[str, float, float]]:
+        """Pick (sensor_idx, hub_idx, ground_station) from the live fleet."""
+        sensor_idx = 0
+        if self._fleet_latlon:
+            best = float("inf")
+            for i, (lat, lon) in enumerate(self._fleet_latlon):
+                d = _ang_dist(lat, lon, _AOI_LAT, _AOI_LON)
+                if d < best:
+                    best, sensor_idx = d, i
+        hub_idx = 0
+        # Ground station nearest the hub's sub-point (fallback: first GS).
+        gs = _GROUND_STATIONS[0]
+        if self._fleet_latlon and hub_idx < len(self._fleet_latlon):
+            hlat, hlon = self._fleet_latlon[hub_idx]
+            best = float("inf")
+            for cand in _GROUND_STATIONS:
+                d = _ang_dist(hlat, hlon, cand[1], cand[2])
+                if d < best:
+                    best, gs = d, cand
+        return sensor_idx, hub_idx, gs
+
+    def _update_mission(self) -> None:
+        """Advance the mission phase machine on the wall clock."""
+        if not self._mission.active or self._mission_start_wall is None:
+            return
+        t = time.monotonic() - self._mission_start_wall
+
+        # Find active phase + progress.
+        acc = 0.0
+        phase, phase_start, dur = _MISSION_PHASES[0][0], 0.0, _MISSION_PHASES[0][1]
+        for name, d in _MISSION_PHASES:
+            if t < acc + d:
+                phase, phase_start, dur = name, acc, d
+                break
+            acc += d
+        else:
+            # Walked past the end — mission complete, pin to delivered.
+            self._mission = self._mission.model_copy(update={
+                "active": False,
+                "phase": "deliver",
+                "phase_progress": 1.0,
+                "elapsed_s": _MISSION_TOTAL_S - _MISSION_PHASES[0][1],
+                "data_volume_mb": _MISSION_RESULT_MB,
+                "targets_found": _MISSION_TARGETS,
+            })
+            return
+
+        progress = max(0.0, min(1.0, (t - phase_start) / dur))
+
+        # Data volume: full raw through capture/route; eases 5120→2 during
+        # compute; result-sized afterwards.
+        if phase in ("capture", "route"):
+            data_mb = _MISSION_RAW_MB
+        elif phase == "compute":
+            data_mb = _MISSION_RAW_MB * (_MISSION_RESULT_MB / _MISSION_RAW_MB) ** progress
+        elif phase in ("downlink", "deliver"):
+            data_mb = _MISSION_RESULT_MB
+        else:
+            data_mb = 0.0
+
+        if phase == "compute":
+            targets = round(_MISSION_TARGETS * progress)
+        elif phase in ("downlink", "deliver"):
+            targets = _MISSION_TARGETS
+        else:
+            targets = 0
+
+        capture_start = _MISSION_PHASES[0][1]  # acquire duration
+        elapsed = max(0.0, min(t, _MISSION_TOTAL_S) - capture_start)
+
+        self._mission = self._mission.model_copy(update={
+            "active": True,
+            "phase": phase,
+            "phase_progress": progress,
+            "elapsed_s": elapsed,
+            "data_volume_mb": data_mb,
+            "targets_found": targets,
+        })
+
     def set_constellation(self, preset_id: str) -> bool:
         """Switch the active constellation. Triggers fleet rebuild on next tick.
         Returns False if the preset id is unknown."""
@@ -171,6 +320,9 @@ class StateEngine:
 
     # ---- snapshot ----
     def snapshot(self) -> StatePacket:
+        # Evaluate the mission on read so /state polls (5 Hz from Kit) and WS
+        # broadcasts always see fresh wall-clock progress, not 1 Hz-quantized.
+        self._update_mission()
         return StatePacket(
             sim_time_s=self._sim_time_s,
             satellite=self._sat.model_copy(),
@@ -180,6 +332,7 @@ class StateEngine:
             camera_preset=self._camera_preset,
             running=self._running,
             satellite_config=self._config.model_copy(),
+            mission=self._mission.model_copy(),
         )
 
     # ---- inner loop ----
@@ -224,6 +377,12 @@ class StateEngine:
             gsl_links=kpis["gsl_links"],
             agg_throughput_mbps=kpis["agg_throughput_mbps"],
         )
+
+        # Cache per-sat lat/lon for mission cast picking (sensor = nearest AOI).
+        self._fleet_latlon = [
+            orbit_catalog.eci_to_lat_lon_alt(px, py, pz, t)[:2]
+            for (px, py, pz) in fleet_pos_km
+        ]
 
         # Tracked satellite: plane 0, sat 0.
         x_km, y_km, z_km = fleet_pos_km[0] if fleet_pos_km else (0.0, 0.0, 0.0)

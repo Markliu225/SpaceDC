@@ -87,6 +87,30 @@ class CompareMetrics(BaseModel):
     peak_temp_c: float = 0.0
 
 
+MissionPhase = Literal[
+    "idle", "acquire", "capture", "route", "compute", "downlink", "deliver",
+]
+
+
+class MissionState(BaseModel):
+    """Live state of the 天数天算 (compute-in-space) choreography. The phase
+    machine advances on a wall-clock timeline in MissionEngine; Kit reads
+    the phase + progress + cast indices to drive the 3D data-packet flight."""
+    active: bool = False
+    phase: MissionPhase = "idle"
+    phase_progress: float = 0.0      # 0..1 within current phase
+    elapsed_s: float = 0.0           # since capture start; freezes at deliver
+    data_volume_mb: float = 0.0      # 5120 at capture, ~2 after inference
+    targets_found: int = 0
+    sensor_idx: int = -1             # fleet index of the sensing sat
+    hub_idx: int = -1                # fleet index of the compute hub
+    aoi_lat: float = 38.0
+    aoi_lon: float = -145.0
+    ground_lat: float = 78.2
+    ground_lon: float = 15.4
+    ground_id: str = ""
+
+
 class Parameters(BaseModel):
     orbit_type: Optional[OrbitType] = None
     gpu_type: Optional[GpuType] = None
@@ -130,3 +154,4 @@ class StatePacket(BaseModel):
     camera_preset: str = "overview"
     running: bool = True
     satellite_config: SatelliteConfig = Field(default_factory=SatelliteConfig)
+    mission: MissionState = Field(default_factory=MissionState)

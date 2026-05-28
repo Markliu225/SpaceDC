@@ -163,6 +163,21 @@ async def http_post_satellite_config(patch: dict[str, Any]):
     return {"ok": True, "satellite_config": new_cfg.model_dump()}
 
 
+@app.post("/mission/start")
+async def http_start_mission():
+    """Kick the 天数天算 mission + broadcast so Web/Kit react immediately."""
+    m = engine.start_mission()
+    await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
+    return {"ok": True, "mission": m.model_dump()}
+
+
+@app.post("/mission/stop")
+async def http_stop_mission():
+    engine.stop_mission()
+    await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
+    return {"ok": True}
+
+
 @app.post("/orbit_type/{mode}")
 async def http_set_orbit_type(mode: str):
     """Convenience HTTP control for swapping orbit mode without a WebSocket."""
@@ -248,6 +263,14 @@ async def _handle(env: Envelope, ws: WebSocket) -> None:
         # Broadcast the new snapshot so all clients see the recomputed
         # solar / payload / temp in the next sub-second instead of waiting
         # for the next 1Hz tick.
+        await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
+    elif t == "start_mission":
+        engine.start_mission()
+        await _ack(ws, env.request_id, True)
+        await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
+    elif t == "stop_mission":
+        engine.stop_mission()
+        await _ack(ws, env.request_id, True)
         await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
     elif t == "set_mode":
         engine.set_mode(p.get("mode", "on_orbit"))

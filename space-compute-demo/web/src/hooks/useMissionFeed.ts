@@ -47,17 +47,21 @@ export function useMissionFeed() {
     }
   }, [])
 
-  // Backend mirror — a real mission snapshot supersedes the mock.
+  // Backend mirror. Our local mock runs at 100 ms and follows the SAME
+  // phase plan as the backend, so while it's running it's the smoother
+  // display driver (backend broadcasts at 1 Hz → would step jerkily).
+  // We only adopt backend.mission directly when NO local mock is running —
+  // i.e. a mission was triggered from another client or the page mounted
+  // mid-mission — so the Web still reflects it.
   useEffect(() => {
     return useDemoStore.subscribe((s, prev) => {
       if (s.lastState === prev.lastState) return
       const m = (s.lastState as { mission?: MissionState } | null)?.mission
-      if (m && m.active) {
-        clearMock()
+      if (m && m.active && mockTimer.current === null) {
         setMissionBackend(m)
       }
     })
-  }, [setMissionBackend, clearMock])
+  }, [setMissionBackend])
 
   useEffect(() => clearMock, [clearMock])
 
