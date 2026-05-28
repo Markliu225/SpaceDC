@@ -120,6 +120,36 @@ export interface SatelliteConfig {
   radiator_size: RadiatorSize;
 }
 
+/** 天数天算 mission phase. idle = not running; the rest advance in order. */
+export type MissionPhase =
+  | 'idle' | 'acquire' | 'capture' | 'route' | 'compute' | 'downlink' | 'deliver';
+
+export const MISSION_PHASES: MissionPhase[] = [
+  'acquire', 'capture', 'route', 'compute', 'downlink', 'deliver',
+];
+
+/** Live state of the single compute-in-space mission. Mirrors backend
+ *  MissionState (Phase 2); driven by a local mock until backend lands. */
+export interface MissionState {
+  active: boolean;
+  phase: MissionPhase;
+  /** 0..1 progress within the current phase. */
+  phase_progress: number;
+  /** Seconds since capture start; freezes at deliver. */
+  elapsed_s: number;
+  /** Current data-packet size (MB): 5120 at capture, ~2 after inference. */
+  data_volume_mb: number;
+  targets_found: number;
+  /** Fleet indices of the assigned cast. -1 when unassigned. */
+  sensor_idx: number;
+  hub_idx: number;
+  aoi_lat: number;
+  aoi_lon: number;
+  ground_lat: number;
+  ground_lon: number;
+  ground_id: string;
+}
+
 export interface StatePacket {
   sim_time_s: number;
   satellite: SatelliteState;
@@ -129,6 +159,8 @@ export interface StatePacket {
   compare: CompareMetrics | null;
   /** Optional in Phase 1 — backend hasn't started broadcasting it yet. */
   satellite_config?: SatelliteConfig;
+  /** Optional until backend MissionEngine lands. */
+  mission?: MissionState;
 }
 
 export interface Parameters {
@@ -143,7 +175,7 @@ export interface Parameters {
 export type ClientMessageType =
   | 'play' | 'pause' | 'reset' | 'set_time' | 'set_parameters'
   | 'set_mode' | 'start_task' | 'select_object' | 'change_camera'
-  | 'set_config';
+  | 'set_config' | 'start_mission' | 'stop_mission';
 
 export type ServerMessageType =
   | 'scene_ready' | 'state_update' | 'task_update'

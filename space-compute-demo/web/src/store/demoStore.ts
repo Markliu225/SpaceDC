@@ -32,6 +32,8 @@ interface DemoStore {
   selectObject: (primPath: string) => void;
   changeCamera: (preset: string) => void;
   sendSetConfig: (patch: Partial<SatelliteConfig>) => void;
+  startMission: () => void;
+  stopMission: () => void;
 }
 
 export const useDemoStore = create<DemoStore>((set, get) => ({
@@ -125,4 +127,6 @@ export const useDemoStore = create<DemoStore>((set, get) => ({
     // method just fires the wire command. Backend echoes via state_update.
     get().send('set_config', patch as Record<string, unknown>);
   },
+  startMission: () => get().send('start_mission'),
+  stopMission: () => get().send('stop_mission'),
 }));

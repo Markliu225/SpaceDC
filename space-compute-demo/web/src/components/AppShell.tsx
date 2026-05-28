@@ -32,6 +32,7 @@ export function AppShell() {
         <nav className="shell__nav">
           <NavLink to="/" end>Overview</NavLink>
           <NavLink to="/satellite">Satellite Twin</NavLink>
+          <NavLink to="/mission">Mission</NavLink>
           <NavLink to="/task">Task</NavLink>
           <NavLink to="/control">Control</NavLink>
         </nav>
