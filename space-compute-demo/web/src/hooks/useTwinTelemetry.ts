@@ -48,42 +48,54 @@ export interface TwinTelemetrySnapshot {
 }
 
 /**
- * useTwinTelemetry — 1Hz time series for the active satellite under the
- * applied SatelliteConfig.
+ * useTwinTelemetry — rolling time-series for the currently-selected sat.
  *
- *  - When the backend's `state_update` is reaching us (lastState present),
- *    we drive the rolling buffer off the AUTHORITATIVE per-tick values:
- *    solar_input_w / payload_power_w / battery_soc / temperature_c /
- *    gpu_utilization come straight from `lastState.satellite`. This is
- *    the Phase 2 path.
+ *  The buffer ADVANCES driven by two independent triggers, whichever fires
+ *  first per tick:
  *
- *  - When backend is offline (no lastState yet), we fall back to a local
- *    synthesis driven by `useTelemetryStore.sim_time_s` and the cfg
- *    tables — same formulas as backend's _update_placeholder_physics so
- *    the visual matches when backend comes back online.
+ *    1. **WS state_update arrival** — when the backend pushes a new
+ *       SatelliteState (this is the 1 Hz nominal cadence), we subscribe
+ *       to `demoStore.lastState` and append the new authoritative values.
+ *       This carries the FULL backend physics: orbit-phase-driven solar /
+ *       sunlit, sinusoidal GPU utilisation, payload power scaled by the
+ *       active SatelliteConfig's GPU TDP, thermal target dependent on the
+ *       radiator material × area, integrated battery SOC.
  *
- *  - Whenever `cfg` changes, we record a scar marker at the current
- *    buffer tail; the strip paints a dashed vertical line that scrolls
- *    left and fades out as the buffer ages past it.
+ *    2. **1 Hz local timer** — backup when backend is offline (no
+ *       lastState yet). Pushes a deriveSample() driven by the local mock
+ *       sim_time_s — same formulas as backend so the visual matches once
+ *       backend reconnects.
+ *
+ *  Scar markers (vertical dashed lines on chart) get stamped at the tail
+ *  position whenever `satConfig` changes.
+ *
+ *  Critical bug fixed (2026-05-28): the previous version keyed the 1 Hz
+ *  effect on `[running, cfg, simT]`. `simT` increments every second, so
+ *  the effect cleanup ran (clearInterval) and re-created the interval
+ *  every second — meaning the 1 s callback was ALWAYS cleared before it
+ *  fired. The buffer therefore stayed locked at the seed prefill and
+ *  charts read as flat lines. Now we key on `[running]` only and read
+ *  `cfg` / `lastState` via `getState()` inside the callback.
  */
 export function useTwinTelemetry(): TwinTelemetrySnapshot {
-  const cfg       = useTelemetryStore((s) => s.satConfig)
-  const running   = useTelemetryStore((s) => s.running)
-  const simT      = useTelemetryStore((s) => s.sim_time_s)
-  const lastState = useDemoStore((s) => s.lastState)
+  const cfg     = useTelemetryStore((s) => s.satConfig)
+  const running = useTelemetryStore((s) => s.running)
+  const simT    = useTelemetryStore((s) => s.sim_time_s)
 
   const [snap, setSnap] = useState<TwinTelemetrySnapshot>(() => {
-    const seed = lastState?.satellite
-      ? backendSample(lastState.satellite)
-      : deriveSample(cfg, simT)
-    return {
-      current: seed,
-      series:  prefill(seed),
-      scars:   [],
-    }
+    const sat = useDemoStore.getState().lastState?.satellite
+    const seedCfg  = useTelemetryStore.getState().satConfig
+    const seedSimT = useTelemetryStore.getState().sim_time_s
+    // Prefill the buffer with a backward-time synthetic history so the
+    // chart shows the orbit-driven solar + sinusoidal payload pattern
+    // from the first render rather than 120 s of an identical seed value.
+    // Newest sample at the tail; oldest at the head.
+    const seedNow = sat ? backendSample(sat) : deriveSample(seedCfg, seedSimT)
+    const series = backfillSeries(seedCfg, seedSimT, seedNow)
+    return { current: seedNow, series, scars: [] }
   })
 
-  // Cfg-change scar — stash JSON to compare across renders cheaply.
+  // --- Cfg-change scar tracking ---------------------------------------
   const lastCfgRef = useRef<string>(JSON.stringify(cfg))
   useEffect(() => {
     const next = JSON.stringify(cfg)
@@ -106,18 +118,36 @@ export function useTwinTelemetry(): TwinTelemetrySnapshot {
     }))
   }, [cfg, simT])
 
-  // 1Hz buffer advance — prefers backend-authoritative values when present.
+  // --- WS-driven append: react to lastState changes ------------------
+  // demoStore writes a new `lastState` object on EVERY state_update; each
+  // arrival appends a backend-authoritative sample AND timestamps the WS
+  // path as live so the synth fallback knows to stay quiet.
+  const lastWsAtRef = useRef<number>(0)
+  useEffect(() => {
+    return useDemoStore.subscribe((s, prev) => {
+      if (s.lastState === prev.lastState) return
+      const sat = s.lastState?.satellite
+      if (!sat) return
+      lastWsAtRef.current = Date.now()
+      setSnap((cur) => advance(cur, backendSample(sat)))
+    })
+  }, [])
+
+  // --- Fallback synth tick: only fires when backend isn't pushing ----
+  // Stable 1 Hz interval — independent of cfg/simT churn (those are read
+  // freshly inside the callback so the interval handle never recreates).
+  // Skips emitting if a WS state_update arrived within the last 1.8 s,
+  // which avoids double-pushes when backend is healthy.
   useEffect(() => {
     if (!running) return
     const id = window.setInterval(() => {
-      setSnap((prev) => {
-        const sat = useDemoStore.getState().lastState?.satellite
-        const sample = sat ? backendSample(sat) : deriveSample(cfg, simT)
-        return advance(prev, sample)
-      })
+      if (Date.now() - lastWsAtRef.current < 1800) return
+      const localCfg  = useTelemetryStore.getState().satConfig
+      const localSimT = useTelemetryStore.getState().sim_time_s
+      setSnap((cur) => advance(cur, deriveSample(localCfg, localSimT)))
     }, 1000)
     return () => window.clearInterval(id)
-  }, [running, cfg, simT])
+  }, [running])
 
   return snap
 }
@@ -134,15 +164,43 @@ function backendSample(sat: SatelliteState): TwinTelemetrySnapshot['current'] {
   }
 }
 
-/** Fill all 120 slots with the seed sample so the first render isn't blank. */
-function prefill(seed: TwinTelemetrySnapshot['current']): TwinSeries {
-  return {
-    solar_w:     new Array(HISTORY_LEN).fill(seed.solar_w),
-    payload_w:   new Array(HISTORY_LEN).fill(seed.payload_w),
-    battery_soc: new Array(HISTORY_LEN).fill(seed.battery_soc),
-    temp_c:      new Array(HISTORY_LEN).fill(seed.temp_c),
-    gpu_util:    new Array(HISTORY_LEN).fill(seed.gpu_util),
+/** Synthesise a backward-time history (oldest first, newest at tail) so the
+ *  chart shows orbit-driven solar + sinusoidal load motion right away
+ *  instead of a flat line that takes 120 s of real time to populate.
+ *  When backend is live, real samples will replace each slot one tick at
+ *  a time from the right edge, so within ~10 s the chart is showing only
+ *  real values. */
+function backfillSeries(
+  cfg: SatelliteConfig,
+  simT: number,
+  liveSeed: TwinTelemetrySnapshot['current'],
+): TwinSeries {
+  const sample = (t: number) => deriveSample(cfg, t)
+  // Newest = liveSeed (from backend if available) — anchored at index N-1.
+  // Older entries = deriveSample at older sim times.
+  const solar_w     = new Array<number>(HISTORY_LEN)
+  const payload_w   = new Array<number>(HISTORY_LEN)
+  const battery_soc = new Array<number>(HISTORY_LEN)
+  const temp_c      = new Array<number>(HISTORY_LEN)
+  const gpu_util    = new Array<number>(HISTORY_LEN)
+  for (let i = 0; i < HISTORY_LEN; i++) {
+    const ageS = HISTORY_LEN - 1 - i
+    if (ageS === 0) {
+      solar_w[i]     = liveSeed.solar_w
+      payload_w[i]   = liveSeed.payload_w
+      battery_soc[i] = liveSeed.battery_soc
+      temp_c[i]      = liveSeed.temp_c
+      gpu_util[i]    = liveSeed.gpu_util
+    } else {
+      const s = sample(Math.max(0, simT - ageS))
+      solar_w[i]     = s.solar_w
+      payload_w[i]   = s.payload_w
+      battery_soc[i] = s.battery_soc
+      temp_c[i]      = s.temp_c
+      gpu_util[i]    = s.gpu_util
+    }
   }
+  return { solar_w, payload_w, battery_soc, temp_c, gpu_util }
 }
 
 /** Append one new sample to each buffer + age scars (shift their index). */
