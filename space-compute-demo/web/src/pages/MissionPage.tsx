@@ -13,23 +13,25 @@ import { MissionEventLog } from '../components/mission/MissionEventLog'
  * MissionPage — 天数天算 (compute-in-space) choreography. Targets 1440×900.
  *
  *  ┌────────────────────────────────────────────────────────────────────┐
- *  │ Header: 天数天算 MISSION · Start/Stop                          56px │
+ *  │ Header: In-Orbit Compute Mission · Start/Stop                  56px │
  *  ├──────────────────────────────────────────────┬─────────────────────┤
- *  │ EarthViewport (geo) — Earth + fleet + AOI +   │ MissionStatus col-4 │
- *  │   data packet + ISL/GSL beams          col-8  │  phase rail + reads │
+ *  │ Hero viewport — black space + 2 sat models +  │ MissionStatus col-4 │
+ *  │   data packet + ISL/result beams       col-8  │  phase rail + reads │
  *  ├──────────────────────────────────────────────┴─────────────────────┤
  *  │ MissionEventLog                                          col-12·150 │
  *  └────────────────────────────────────────────────────────────────────┘
  *
- * The viewport binds the overview (geo) camera since the mission spans the
- * whole constellation. The choreography prims are authored on the overview
- * stage in Phase 3 (space.demo.scene), gated behind /World/MissionGroup.
+ * The viewport binds the dedicated mission hero stage (usd/mission.usda) —
+ * a clean cinematic set (no Earth / no orbit rings). space.demo.scene
+ * runs the follow-cam + packet/beam choreography there per mission phase.
  */
 export function MissionPage() {
   const changeCamera = useDemoStore((s) => s.changeCamera)
   const connected    = useDemoStore((s) => s.connected)
   useEffect(() => {
-    if (connected) changeCamera('overview')
+    // The mission runs on its own cinematic hero stage (usd/mission.usda),
+    // not the geo overview — clean black space, no Earth / orbit rings.
+    if (connected) changeCamera('mission')
   }, [connected, changeCamera])
 
   useMockTelemetryFeed()

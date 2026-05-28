@@ -149,6 +149,7 @@ def _stage_paths() -> dict[str, str]:
         "overview":  os.path.join(base, "overview.usda"),
         "satellite": os.path.join(base, "satellite.usda"),
         "interior":  os.path.join(base, "interior.usda"),
+        "mission":   os.path.join(base, "mission.usda"),
     }
 
 
@@ -651,12 +652,101 @@ def update_mission(stage, mission: dict, fleet_positions: list, wall_t: float) -
 
 
 # ---------------------------------------------------------------------------
+# Mission HERO stage (usd/mission.usda) — clean black-space set, no Earth /
+# no rings. Sats are at FIXED staged positions (matching the generator);
+# the driver animates the packet, beams, sat visibility, and follow-cam.
+# ---------------------------------------------------------------------------
+HERO_SENSOR_SAT = "/World/SensorSat"
+HERO_HUB_SAT    = "/World/HubSat"
+HERO_PACKET     = "/World/Packet"
+HERO_ISL        = "/World/ISLBeam"
+HERO_RESULT     = "/World/ResultBeam"
+HERO_CAM        = "/World/Cameras/MissionHero"
+# Must match tools/gen_mission_stage.py.
+HERO_SENSOR_POS = (-9.0, 0.0, 0.0)
+HERO_HUB_POS    = (9.0, 1.5, 2.0)
+HERO_RESULT_TGT = (0.0, -42.0, -22.0)   # off-frame, toward/below camera
+HERO_PACKET_BIG  = 2.2
+HERO_PACKET_SMALL = 0.6
+
+
+def mission_hero_camera_pose(mission: dict):
+    """Follow-cam poses on the hero stage (metres). Returns (eye, target)."""
+    phase = mission.get("phase", "idle")
+    prog  = float(mission.get("phase_progress", 0.0))
+    if phase in ("acquire", "capture"):
+        tgt = HERO_SENSOR_POS
+        eye = (tgt[0] + 4.0, tgt[1] - 8.0, tgt[2] + 3.5)
+    elif phase == "route":
+        # Follow the packet but stand back so it reads as a blob travelling
+        # the beam toward the hub — not a wall of cyan filling the frame.
+        tgt = _lerp3(HERO_SENSOR_POS, HERO_HUB_POS, prog)   # the packet
+        eye = (tgt[0] + 6.0, tgt[1] - 20.0, tgt[2] + 8.5)
+    elif phase == "compute":
+        tgt = HERO_HUB_POS
+        eye = (tgt[0] + 5.5, tgt[1] - 8.0, tgt[2] + 4.5)    # beauty 3/4
+    elif phase in ("downlink", "deliver"):
+        tgt = (0.0, -2.0, 1.0)
+        eye = (3.0, -32.0, 13.0)                            # wide pull-back
+    else:
+        tgt = (0.0, 0.0, 1.0)
+        eye = (0.0, -28.0, 12.0)
+    return (eye, tgt)
+
+
+def update_mission_hero(stage, mission: dict, wall_t: float) -> None:
+    """Drive the hero-stage packet + beams + sat visibility from the phase.
+    (Camera is eased separately by the extension so it can persist state.)"""
+    if not _HAS_KIT or stage is None:
+        return
+    phase = mission.get("phase", "idle")
+    prog  = float(mission.get("phase_progress", 0.0))
+    active = bool(mission.get("active")) or phase != "idle"
+
+    sensor, hub = HERO_SENSOR_POS, HERO_HUB_POS
+
+    # Packet position + size.
+    packet_pos, packet_size, packet_vis = sensor, HERO_PACKET_BIG, False
+    if phase == "capture":
+        packet_pos, packet_vis = sensor, True
+    elif phase == "route":
+        packet_pos, packet_vis = _lerp3(sensor, hub, prog), True
+    elif phase == "compute":
+        packet_pos, packet_vis = hub, True
+        packet_size = HERO_PACKET_BIG + (HERO_PACKET_SMALL - HERO_PACKET_BIG) * prog
+    elif phase == "downlink":
+        # Result rides the beam from hub toward the off-frame target.
+        packet_pos, packet_size, packet_vis = _lerp3(hub, HERO_RESULT_TGT, prog), HERO_PACKET_SMALL, True
+    elif phase == "deliver":
+        packet_vis = False
+
+    pkt = UsdGeom.Points(stage.GetPrimAtPath(HERO_PACKET))
+    if pkt:
+        # gentle pulse
+        pulse = 1.0 + 0.15 * math.sin(wall_t * 6.0)
+        pkt.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(*packet_pos)]))
+        pkt.GetWidthsAttr().Set(Vt.FloatArray([max(0.15, packet_size * pulse)]))
+        _set_visibility(pkt.GetPrim(), active and packet_vis)
+
+    isl = UsdGeom.BasisCurves(stage.GetPrimAtPath(HERO_ISL))
+    if isl:
+        isl.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(*sensor), Gf.Vec3f(*hub)]))
+        _set_visibility(isl.GetPrim(), active and phase in ("route", "compute"))
+
+    res = UsdGeom.BasisCurves(stage.GetPrimAtPath(HERO_RESULT))
+    if res:
+        res.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(*hub), Gf.Vec3f(*HERO_RESULT_TGT)]))
+        _set_visibility(res.GetPrim(), active and phase in ("downlink", "deliver"))
+
+
+# ---------------------------------------------------------------------------
 # Stage swap.
 # ---------------------------------------------------------------------------
 STAGE_CAMERAS = {
     "overview":  "/World/Cameras/Overview",
     "satellite": "/World/Cameras/Closeup",
     "interior":  "/World/Cameras/Aisle",
+    "mission":   "/World/Cameras/MissionHero",
 }
 
 
@@ -847,25 +937,18 @@ if _HAS_KIT:
                 self._poll_task.cancel()
             self._update_sub = None
 
-        def _drive_mission_camera(self, stage, mission: dict, positions: list) -> None:
-            """Cinematic camera: ease the MissionCam toward the per-phase pose
-            and own the viewport while the mission runs; hand back to the
-            static Overview camera when it ends."""
-            active = bool(mission.get("active")) or mission.get("phase", "idle") != "idle"
-            if active:
-                pose = mission_camera_pose(mission, positions)
-                if pose is not None:
-                    desired_eye, desired_tgt = pose
-                    self._cam_eye = _lerp3(self._cam_eye, desired_eye, CAM_LERP)
-                    self._cam_target = _lerp3(self._cam_target, desired_tgt, CAM_LERP)
-                    _set_camera_lookat(stage, MISSION_CAM, self._cam_eye, self._cam_target)
-                if not self._mission_cam_active:
-                    self._mission_cam_active = True
-                    _bind_active_camera(MISSION_CAM)
-            elif self._mission_cam_active:
-                # Mission ended — return the viewport to the static overview cam.
-                self._mission_cam_active = False
-                _bind_active_camera(STAGE_CAMERAS["overview"])
+        def _update_mission_stage(self, stage) -> None:
+            """Per-frame driver for the HERO mission stage (usd/mission.usda):
+            animates the packet + beams + sat visibility and eases the
+            follow-cam through the phase shots. Sats are at fixed staged
+            positions; no Earth / fleet involved."""
+            mission = self._mission or {"phase": "idle"}
+            update_mission_hero(stage, mission, time.monotonic())
+            # Ease the hero camera toward the per-phase pose.
+            eye, tgt = mission_hero_camera_pose(mission)
+            self._cam_eye = _lerp3(self._cam_eye, eye, CAM_LERP)
+            self._cam_target = _lerp3(self._cam_target, tgt, CAM_LERP)
+            _set_camera_lookat(stage, HERO_CAM, self._cam_eye, self._cam_target)
 
         async def _deferred_apply_config(self) -> None:
             """Wait a few ticks for the satellite stage to finish loading,
@@ -954,7 +1037,7 @@ if _HAS_KIT:
 
             # Camera preset / stage swap.
             preset = state.get("camera_preset", "overview")
-            if preset not in ("overview", "satellite", "interior"):
+            if preset not in ("overview", "satellite", "interior", "mission"):
                 preset = "overview"
             if preset != self._last_preset:
                 _log(f"preset -> {preset}")
@@ -1007,11 +1090,18 @@ if _HAS_KIT:
 
         # ---- per-frame update --------------------------------------------
         def _on_update(self, _event) -> None:
-            if self._current_stage != self._stages.get("overview"):
-                return
             ctx = omni.usd.get_context()
             stage = ctx.get_stage()
             if stage is None:
+                return
+
+            # HERO mission stage — its own choreography (packet / beams /
+            # follow-cam). No Earth, no fleet.
+            if self._current_stage == self._stages.get("mission"):
+                self._update_mission_stage(stage)
+                return
+
+            if self._current_stage != self._stages.get("overview"):
                 return
 
             # Earth spin — wall-clock, unaffected by backend.
@@ -1041,14 +1131,8 @@ if _HAS_KIT:
                 sim_phase_rad=sim_phase_rad,
             )
             _set_fleet_points(stage, positions)
-
-            # 天数天算 mission choreography — author the group once, then
-            # drive the AOI / packet / beams from the cached mission snapshot.
-            if not self._mission_authored:
-                self._mission_authored = author_mission_prims(stage)
-            if self._mission is not None:
-                update_mission(stage, self._mission, positions, time.monotonic())
-                self._drive_mission_camera(stage, self._mission, positions)
+            # Mission choreography now lives on the dedicated hero stage
+            # (usd/mission.usda) — the overview stage stays Earth + fleet.
 else:
     class SpaceDemoSceneExtension:  # type: ignore[no-redef]
         pass
