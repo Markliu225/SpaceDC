@@ -93,6 +93,21 @@ FLEET_MAT        = f"{CONSTEL_ROOT}/Fleet/Mat"
 
 # Scene scale — overview.usda is metersPerUnit = 100000 so 1 unit = 100 km.
 SCENE_KM_PER_UNIT = 100.0
+# Earth radius in scene units (6371 km / 100). Used to place the AOI +
+# ground station markers on the surface for the 天数天算 mission.
+EARTH_RADIUS_UNITS = 63.71
+
+# 天数天算 mission choreography prims (authored at runtime under World).
+MISSION_GROUP  = "/World/MissionGroup"
+MISSION_LOOKS  = f"{MISSION_GROUP}/Looks"
+MISSION_AOI    = f"{MISSION_GROUP}/AOI"
+MISSION_PACKET = f"{MISSION_GROUP}/Packet"
+MISSION_ISL    = f"{MISSION_GROUP}/ISLBeam"
+MISSION_GSL    = f"{MISSION_GROUP}/GSLBeam"
+# Packet widths (scene units) — big = raw 5 GB capture, small = 2 MB result.
+# Sized for visibility against the ~64-unit Earth radius in the overview cam.
+PACKET_BIG  = 7.0
+PACKET_SMALL = 1.6
 
 EARTH_ROTATION_PERIOD_S = 90.0
 
@@ -336,6 +351,164 @@ def set_earth_rotation(stage, sim_time_s: float) -> None:
 
 
 # ---------------------------------------------------------------------------
+# 天数天算 mission choreography.
+# ---------------------------------------------------------------------------
+def _latlon_to_units(lat_deg: float, lon_deg: float, radius: float) -> tuple[float, float, float]:
+    """Lat/lon (deg) → ECI-frame point on a sphere of the given radius
+    (scene units). Not Earth-rotation-coupled — the markers are abstract
+    glow points, and the data-flow beams read fine without texture lock."""
+    lat = math.radians(lat_deg)
+    lon = math.radians(lon_deg)
+    return (
+        radius * math.cos(lat) * math.cos(lon),
+        radius * math.cos(lat) * math.sin(lon),
+        radius * math.sin(lat),
+    )
+
+
+def _author_emissive_material(stage, path: "Sdf.Path", color: tuple[float, float, float]) -> None:
+    from pxr import UsdShade  # type: ignore
+    mat = UsdShade.Material.Define(stage, path)
+    sh = UsdShade.Shader.Define(stage, Sdf.Path(f"{path}/Shader"))
+    sh.CreateIdAttr("UsdPreviewSurface")
+    sh.CreateInput("diffuseColor",  Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0, 0, 0))
+    sh.CreateInput("emissiveColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(*color))
+    sh.CreateInput("metallic",      Sdf.ValueTypeNames.Float).Set(0.0)
+    sh.CreateInput("roughness",     Sdf.ValueTypeNames.Float).Set(1.0)
+    sh.CreateInput("useSpecularWorkflow", Sdf.ValueTypeNames.Int).Set(0)
+    mat.CreateSurfaceOutput().ConnectToSource(sh.ConnectableAPI(), "surface")
+
+
+def _set_visibility(prim, visible: bool) -> None:
+    if prim and prim.IsValid():
+        UsdGeom.Imageable(prim).GetVisibilityAttr().Set(
+            "inherited" if visible else "invisible"
+        )
+
+
+def author_mission_prims(stage) -> bool:
+    """Create /World/MissionGroup (AOI · Packet · ISL/GSL beams) once. The
+    group starts invisible; the per-frame driver shows it while a mission
+    runs. Idempotent — skips if already authored."""
+    if not _HAS_KIT or stage is None:
+        return False
+    if stage.GetPrimAtPath(MISSION_GROUP).IsValid():
+        return True
+
+    UsdGeom.Xform.Define(stage, Sdf.Path(MISSION_GROUP))
+
+    # Materials: amber AOI, warm-white packet, cyan ISL, green GSL.
+    _author_emissive_material(stage, Sdf.Path(f"{MISSION_LOOKS}/AOIMat"),    (1.60, 0.95, 0.20))
+    _author_emissive_material(stage, Sdf.Path(f"{MISSION_LOOKS}/PacketMat"), (0.30, 1.80, 2.20))
+    _author_emissive_material(stage, Sdf.Path(f"{MISSION_LOOKS}/ISLMat"),    (0.20, 1.40, 2.40))
+    _author_emissive_material(stage, Sdf.Path(f"{MISSION_LOOKS}/GSLMat"),    (0.30, 1.80, 0.60))
+
+    # AOI — a single fat point on the Earth surface.
+    aoi = UsdGeom.Points.Define(stage, Sdf.Path(MISSION_AOI))
+    aoi.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(0, 0, EARTH_RADIUS_UNITS)]))
+    aoi.CreateWidthsAttr(Vt.FloatArray([6.0])).SetMetadata("interpolation", "vertex")
+    aoi.GetPrim().CreateAttribute("primvars:doNotCastShadows", Sdf.ValueTypeNames.Bool, custom=False).Set(True)
+    _bind_material(stage, aoi.GetPrim(), Sdf.Path(f"{MISSION_LOOKS}/AOIMat"))
+
+    # Packet — the travelling data blob.
+    pkt = UsdGeom.Points.Define(stage, Sdf.Path(MISSION_PACKET))
+    pkt.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(0, 0, 0)]))
+    pkt.CreateWidthsAttr(Vt.FloatArray([PACKET_BIG])).SetMetadata("interpolation", "vertex")
+    pkt.GetPrim().CreateAttribute("primvars:doNotCastShadows", Sdf.ValueTypeNames.Bool, custom=False).Set(True)
+    _bind_material(stage, pkt.GetPrim(), Sdf.Path(f"{MISSION_LOOKS}/PacketMat"))
+
+    # ISL + GSL beams — 2-CV linear curves, repositioned each frame.
+    for beam_path, mat in ((MISSION_ISL, "ISLMat"), (MISSION_GSL, "GSLMat")):
+        c = UsdGeom.BasisCurves.Define(stage, Sdf.Path(beam_path))
+        c.GetTypeAttr().Set("linear")
+        c.GetWrapAttr().Set("nonperiodic")
+        c.GetCurveVertexCountsAttr().Set(Vt.IntArray([2]))
+        c.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(0, 0, 0), Gf.Vec3f(0, 0, 1)]))
+        c.CreateWidthsAttr(Vt.FloatArray([1.4])).SetMetadata("interpolation", "constant")
+        c.GetPrim().CreateAttribute("primvars:doNotCastShadows", Sdf.ValueTypeNames.Bool, custom=False).Set(True)
+        _bind_material(stage, c.GetPrim(), Sdf.Path(f"{MISSION_LOOKS}/{mat}"))
+
+    _set_visibility(stage.GetPrimAtPath(MISSION_GROUP), False)
+    _log("authored mission group (AOI / Packet / ISL / GSL)")
+    return True
+
+
+def _lerp3(a, b, t):
+    return (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t)
+
+
+def update_mission(stage, mission: dict, fleet_positions: list, wall_t: float) -> None:
+    """Per-frame choreography. `fleet_positions` are scene-unit sat points
+    (from compute_fleet_positions). Places the AOI + packet + beams per the
+    mission phase/progress."""
+    if not _HAS_KIT or stage is None:
+        return
+    group = stage.GetPrimAtPath(MISSION_GROUP)
+    if not group.IsValid():
+        return
+
+    active = bool(mission.get("active")) or mission.get("phase", "idle") != "idle"
+    _set_visibility(group, active)
+    if not active:
+        return
+
+    phase = mission.get("phase", "idle")
+    prog  = float(mission.get("phase_progress", 0.0))
+
+    # Cast positions. Sensor/hub from the live fleet; AOI/ground from lat/lon.
+    n = len(fleet_positions)
+    s_idx = int(mission.get("sensor_idx", 0))
+    h_idx = int(mission.get("hub_idx", 0))
+    sensor = fleet_positions[s_idx] if 0 <= s_idx < n else (0.0, 0.0, EARTH_RADIUS_UNITS + 6)
+    hub    = fleet_positions[h_idx] if 0 <= h_idx < n else (0.0, 0.0, EARTH_RADIUS_UNITS + 6)
+    aoi    = _latlon_to_units(mission.get("aoi_lat", 0.0), mission.get("aoi_lon", 0.0), EARTH_RADIUS_UNITS + 0.5)
+    ground = _latlon_to_units(mission.get("ground_lat", 0.0), mission.get("ground_lon", 0.0), EARTH_RADIUS_UNITS + 0.5)
+
+    # AOI marker — pulse strongest during acquire/capture.
+    aoi_prim = UsdGeom.Points(stage.GetPrimAtPath(MISSION_AOI))
+    if aoi_prim:
+        aoi_prim.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(*aoi)]))
+        pulse = 1.0 + 0.4 * math.sin(wall_t * 4.0)
+        base = 7.0 if phase in ("acquire", "capture") else 3.5
+        aoi_prim.GetWidthsAttr().Set(Vt.FloatArray([base * pulse]))
+
+    # Packet position + size by phase.
+    packet_pos = sensor
+    packet_size = PACKET_BIG
+    packet_vis = True
+    if phase == "acquire":
+        packet_vis = False
+    elif phase == "capture":
+        packet_pos, packet_size = sensor, PACKET_BIG
+    elif phase == "route":
+        packet_pos, packet_size = _lerp3(sensor, hub, prog), PACKET_BIG
+    elif phase == "compute":
+        packet_pos = hub
+        packet_size = PACKET_BIG + (PACKET_SMALL - PACKET_BIG) * prog
+    elif phase == "downlink":
+        packet_pos, packet_size = _lerp3(hub, ground, prog), PACKET_SMALL
+    elif phase == "deliver":
+        packet_pos, packet_size = ground, PACKET_SMALL
+
+    pkt = UsdGeom.Points(stage.GetPrimAtPath(MISSION_PACKET))
+    if pkt:
+        pkt.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(*packet_pos)]))
+        pkt.GetWidthsAttr().Set(Vt.FloatArray([max(0.2, packet_size)]))
+        _set_visibility(pkt.GetPrim(), packet_vis)
+
+    # Beams: ISL (sensor→hub) during route+compute; GSL (hub→ground) during
+    # downlink+deliver.
+    isl = UsdGeom.BasisCurves(stage.GetPrimAtPath(MISSION_ISL))
+    if isl:
+        isl.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(*sensor), Gf.Vec3f(*hub)]))
+        _set_visibility(isl.GetPrim(), phase in ("route", "compute"))
+    gsl = UsdGeom.BasisCurves(stage.GetPrimAtPath(MISSION_GSL))
+    if gsl:
+        gsl.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(*hub), Gf.Vec3f(*ground)]))
+        _set_visibility(gsl.GetPrim(), phase in ("downlink", "deliver"))
+
+
+# ---------------------------------------------------------------------------
 # Stage swap.
 # ---------------------------------------------------------------------------
 STAGE_CAMERAS = {
@@ -508,6 +681,10 @@ if _HAS_KIT:
             # as /state. Re-applied to the satellite stage every time it
             # changes OR the satellite stage is (re)opened.
             self._sat_config: Optional[dict] = None
+            # 天数天算 mission snapshot (from /state.mission) — drives the
+            # overview-stage choreography (AOI / data packet / ISL-GSL beams).
+            self._mission: Optional[dict] = None
+            self._mission_authored: bool = False
 
             self._poll_task: Optional[asyncio.Task] = asyncio.ensure_future(self._run_poll_loop())
             app = omni.kit.app.get_app()
@@ -650,6 +827,9 @@ if _HAS_KIT:
                 )
                 apply_sun(sun_factor, sim_now)
 
+            # Cache the mission snapshot for the overview-stage choreography.
+            self._mission = state.get("mission")
+
             # Constellation change detection.
             constel = state.get("constellation") or {}
             cid = constel.get("constellation_id")
@@ -693,6 +873,13 @@ if _HAS_KIT:
                 sim_phase_rad=sim_phase_rad,
             )
             _set_fleet_points(stage, positions)
+
+            # 天数天算 mission choreography — author the group once, then
+            # drive the AOI / packet / beams from the cached mission snapshot.
+            if not self._mission_authored:
+                self._mission_authored = author_mission_prims(stage)
+            if self._mission is not None:
+                update_mission(stage, self._mission, positions, time.monotonic())
 else:
     class SpaceDemoSceneExtension:  # type: ignore[no-redef]
         pass
