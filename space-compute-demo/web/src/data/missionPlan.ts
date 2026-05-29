@@ -15,11 +15,11 @@ export interface PhaseDef {
 
 export const PHASE_PLAN: PhaseDef[] = [
   { phase: 'acquire',  label: 'AOI Acquired', durationS: 3 },
-  { phase: 'capture',  label: 'Capturing',    durationS: 6 },
-  { phase: 'route',    label: 'ISL Routing',  durationS: 4 },
-  { phase: 'compute',  label: 'Inferencing',  durationS: 5 },
-  { phase: 'downlink', label: 'Downlinking',  durationS: 3 },
-  { phase: 'deliver',  label: 'Delivered',    durationS: 2 },
+  { phase: 'capture',  label: 'Capturing',    durationS: 30 },
+  { phase: 'route',    label: 'ISL Routing',  durationS: 5 },
+  { phase: 'compute',  label: 'Inferencing',  durationS: 6 },
+  { phase: 'downlink', label: 'Downlinking',  durationS: 4 },
+  { phase: 'deliver',  label: 'Delivered',    durationS: 3 },
 ]
 
 export const TOTAL_MISSION_S = PHASE_PLAN.reduce((a, p) => a + p.durationS, 0)

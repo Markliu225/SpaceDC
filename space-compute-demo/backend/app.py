@@ -178,6 +178,15 @@ async def http_stop_mission():
     return {"ok": True}
 
 
+@app.post("/mission/scene_ready")
+async def http_mission_scene_ready():
+    """Kit calls this once the target scene geometry is resident, releasing
+    the load gate so the cinematic timeline begins."""
+    engine.mission_scene_ready()
+    await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
+    return {"ok": True, "mission": engine.mission.model_dump()}
+
+
 @app.post("/orbit_type/{mode}")
 async def http_set_orbit_type(mode: str):
     """Convenience HTTP control for swapping orbit mode without a WebSocket."""

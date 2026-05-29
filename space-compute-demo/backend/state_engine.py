@@ -34,14 +34,19 @@ TICK_HZ = 1.0
 # wall-clock animation seconds (not sim-scaled) so the story is legible.
 # ---------------------------------------------------------------------------
 _MISSION_PHASES: list[tuple[str, float]] = [
-    ("acquire", 3.0),
-    ("capture", 6.0),   # long enough to sweep the scene + collapse it to a cube
-    ("route", 4.0),
-    ("compute", 5.0),
-    ("downlink", 3.0),
-    ("deliver", 2.0),
+    ("acquire", 3.0),    # brief establishing beat on the freshly-loaded city
+    ("capture", 30.0),   # slow camera sweep (~24s) then collapse to a cube (~6s)
+    ("route", 5.0),
+    ("compute", 6.0),
+    ("downlink", 4.0),
+    ("deliver", 3.0),
 ]
 _MISSION_TOTAL_S = sum(d for _, d in _MISSION_PHASES)
+# Load gate — after Start the timeline HOLDS on 'acquire' (scene loading,
+# black is fine) until Kit signals the target scene geometry is resident via
+# mission_scene_ready(). This fallback caps the wait if that signal never
+# arrives (e.g. Kit not running) so the demo can never hang on a black frame.
+_MISSION_LOAD_TIMEOUT_S = 45.0
 _MISSION_RAW_MB = 5120.0
 _MISSION_RESULT_MB = 2.0
 _MISSION_TARGETS = 7
@@ -118,9 +123,13 @@ class StateEngine:
         self._fleet_snapshot: FleetSnapshot = FleetSnapshot()
         # Reconfigurable hardware loadout — Twin page mutates via set_config.
         self._config: SatelliteConfig = SatelliteConfig()
-        # 天数天算 mission — phase machine on a wall-clock timeline.
+        # 天数天算 mission — phase machine on a wall-clock timeline. The clock
+        # (_mission_start_wall) only starts once the scene is loaded; until
+        # then the mission holds on 'acquire'. _mission_request_wall marks when
+        # Start was pressed so the load gate can time out.
         self._mission: MissionState = MissionState()
         self._mission_start_wall: Optional[float] = None
+        self._mission_request_wall: Optional[float] = None
         # Cached fleet lat/lon (computed each tick) for mission cast picking.
         self._fleet_latlon: list[tuple[float, float]] = []
 
@@ -207,12 +216,23 @@ class StateEngine:
             ground_lon=gs[2],
             ground_id=gs[0],
         )
-        self._mission_start_wall = time.monotonic()
+        # Don't start the clock yet — hold on 'acquire' until the scene loads.
+        self._mission_start_wall = None
+        self._mission_request_wall = time.monotonic()
         return self._mission
+
+    def mission_scene_ready(self) -> None:
+        """Begin the cinematic timeline. Called once Kit confirms the target
+        scene geometry is resident (POST /mission/scene_ready). Idempotent and
+        ignored unless a mission is pending its load gate."""
+        if not self._mission.active or self._mission_start_wall is not None:
+            return
+        self._mission_start_wall = time.monotonic()
 
     def stop_mission(self) -> None:
         self._mission = MissionState()
         self._mission_start_wall = None
+        self._mission_request_wall = None
 
     @property
     def mission(self) -> MissionState:
@@ -241,8 +261,23 @@ class StateEngine:
 
     def _update_mission(self) -> None:
         """Advance the mission phase machine on the wall clock."""
-        if not self._mission.active or self._mission_start_wall is None:
+        if not self._mission.active:
             return
+        # Load gate — hold on 'acquire' (scene loading) until the clock starts
+        # (Kit signalled scene_ready) or the fallback timeout elapses.
+        if self._mission_start_wall is None:
+            waited = (
+                time.monotonic() - self._mission_request_wall
+                if self._mission_request_wall is not None else 0.0
+            )
+            if waited >= _MISSION_LOAD_TIMEOUT_S:
+                self._mission_start_wall = time.monotonic()
+            else:
+                self._mission = self._mission.model_copy(update={
+                    "active": True, "phase": "acquire", "phase_progress": 0.0,
+                    "elapsed_s": 0.0, "data_volume_mb": 0.0, "targets_found": 0,
+                })
+                return
         t = time.monotonic() - self._mission_start_wall
 
         # Find active phase + progress.

@@ -171,6 +171,29 @@ def fetch_state() -> Optional[dict]:
         return None
 
 
+def post_backend(path: str) -> bool:
+    """Fire-and-forget POST to the backend (e.g. /mission/scene_ready)."""
+    try:
+        req = urllib.request.Request(f"{BACKEND_BASE}{path}", data=b"", method="POST")
+        with urllib.request.urlopen(req, timeout=0.5):
+            return True
+    except Exception:
+        return False
+
+
+def _stage_loading_done() -> tuple[bool, str]:
+    """Best-effort 'is the open stage fully resident' check for the load gate.
+    get_stage_loading_status() returns (message, files_loaded, files_loading);
+    done when nothing is still loading. Returns (done, debug_string)."""
+    try:
+        st = omni.usd.get_context().get_stage_loading_status()
+        if isinstance(st, (tuple, list)) and len(st) >= 3:
+            return (int(st[2]) == 0, str(st))
+        return (True, str(st))
+    except Exception as exc:  # noqa: BLE001
+        return (True, f"err:{exc}")
+
+
 def fetch_constellation(preset_id: str) -> Optional[dict]:
     """One-shot fetch of /constellations/{id}. The response includes the
     base orbit ring (128 ECI km samples) + Walker params we need to lay
@@ -670,21 +693,22 @@ HERO_CUBE_FORM  = (0.0, 4.0, -14.0)   # where the data cube condenses (framed)
 HERO_PACKET_CUBES = 8
 HERO_GPU_CARDS    = 8
 
-# capture sub-phase fractions (phase_progress within the 'capture' phase):
-#   0   .. 0.45  linger + slow camera sweep over the city
-#   0.45.. 0.70  the city shrinks *into* the data cube (scale→0, origin slides
+# capture sub-phase fractions (phase_progress within the 'capture' phase,
+# which now runs ~30 s so the sweep is a slow flythrough, not a rush):
+#   0   .. 0.80  slow camera sweep over the city (~24 s)
+#   0.80.. 0.95  the city shrinks *into* the data cube (scale→0, origin slides
 #                to the cube point) while a big bright cube grows there
-#   0.70.. 1.0   the cube flies from the cube point to the sensor sat
-_CAP_SWEEP_END    = 0.45
-_CAP_COLLAPSE_END = 0.70
+#   0.95.. 1.0   the cube flies from the cube point to the sensor sat
+_CAP_SWEEP_END    = 0.80
+_CAP_COLLAPSE_END = 0.95
 
 # Per-phase durations (s) — MUST mirror web/src/data/missionPlan.ts and the
 # backend MissionEngine. The driver polls /state at only POLL_HZ, so within a
 # phase it advances phase_progress locally by wall-clock against these so the
 # camera + collapse animate at framerate instead of in ~1Hz steps.
 _MISSION_PHASE_DUR = {
-    "acquire": 3.0, "capture": 6.0, "route": 4.0,
-    "compute": 5.0, "downlink": 3.0, "deliver": 2.0,
+    "acquire": 3.0, "capture": 30.0, "route": 5.0,
+    "compute": 6.0, "downlink": 4.0, "deliver": 3.0,
 }
 
 
@@ -709,20 +733,22 @@ def mission_hero_camera_pose(mission: dict):
     sensor, hub, ground = HERO_SENSOR_POS, HERO_HUB_POS, HERO_GROUND_POS
     sensor_eye = (sensor[0] + 4.0, sensor[1] - 9.0, sensor[2] + 3.0)
     if phase == "acquire":
-        # Establishing shot — frame the whole city scene, front-left, above.
-        tgt = HERO_CITY_TGT
-        eye = (-11.0, -22.0, 5.0)
+        # Establishing shot — a high 3/4 over the city skyline.
+        tgt = (0.0, 4.0, -14.0)
+        eye = (2.0, -23.0, 6.0)
     elif phase == "capture":
         if prog < _CAP_SWEEP_END:
-            # Slow lateral sweep across the city facade (缓缓扫过).
+            # Slow flyover across the city skyline (缓缓扫过) — ~24 s: pan
+            # laterally while drifting forward + descending a touch.
             s = prog / _CAP_SWEEP_END
-            tgt = HERO_CITY_TGT
-            eye = (-12.0 + 24.0 * s, -20.0, 3.5)
+            tgt = (0.0, 4.0, -14.0)
+            eye = (-11.0 + 22.0 * s, -22.0 + 5.0 * s, 6.5 - 2.0 * s)
         else:
-            # Hold steady framing the cube point so the city visibly
-            # collapses into the cube, which then flies off to the sensor.
-            tgt = HERO_CUBE_FORM
-            eye = (0.0, -24.0, 4.0)
+            # Fixed wide shot framing BOTH the cube-form point and the sensor
+            # sat, so the cube condenses then flies left into the sat without
+            # the eased camera ever chasing it out of frame.
+            tgt = (-4.0, 2.0, -8.0)
+            eye = (-4.0, -30.0, 9.0)
     elif phase == "route":
         # Follow the packet-cube stream toward the hub, pulled back enough
         # to read the individual blocks travelling, not a wall of light.
@@ -783,36 +809,39 @@ def _update_capture_scene(stage, mission: dict) -> None:
     city = stage.GetPrimAtPath(HERO_CITY)
     cube = stage.GetPrimAtPath(HERO_CUBE)
 
+    # NOTE: the heavy referenced city does NOT respond to per-frame scale /
+    # translate writes through the usdrt/Fabric delegate (only visibility
+    # toggles reliably). So the "city → cube" is staged with the city held at
+    # its authored pose and toggled, while the lightweight CaptureCube (a plain
+    # prim that DOES transform) carries the grow / condense / fly animation.
     if not active or phase not in ("acquire", "capture"):
-        _set_visibility(city, False)
         _set_visibility(cube, False)
+        _set_visibility(city, False)
         return
 
     if phase == "acquire" or prog < _CAP_SWEEP_END:
         # City fully present; cube not yet formed.
-        _set_xform_ts(stage, HERO_CITY, pos=HERO_CITY_POS, scale=HERO_CITY_SCALE)
         _set_visibility(city, True)
         _set_visibility(cube, False)
     elif prog < _CAP_COLLAPSE_END:
-        # The city shrinks *into* the cube point — scale → 0 while its origin
-        # slides from CITY_POS to the cube point, so it visibly condenses
-        # into the bright cube growing there.
+        # The data cube materialises over the city and grows to engulf it,
+        # then condenses to a compact block. The city is cut under cover of
+        # the big cube so it reads as "captured into" the cube.
         k = (prog - _CAP_SWEEP_END) / (_CAP_COLLAPSE_END - _CAP_SWEEP_END)
-        cs = HERO_CITY_SCALE * (1.0 - k)
-        _set_xform_ts(stage, HERO_CITY,
-                      pos=_lerp3(HERO_CITY_POS, HERO_CUBE_FORM, k),
-                      scale=max(cs, 1e-6))
-        _set_visibility(city, k < 0.96)
-        cube_scale = 0.3 + 2.0 * k
+        if k < 0.6:
+            cube_scale = 0.4 + (3.4 - 0.4) * (k / 0.6)       # grow to engulf
+            _set_visibility(city, True)
+        else:
+            cube_scale = 3.4 - (3.4 - 1.2) * ((k - 0.6) / 0.4)  # condense
+            _set_visibility(city, False)
         _set_xform_ts(stage, HERO_CUBE, pos=HERO_CUBE_FORM, scale=cube_scale)
         _set_visibility(cube, True)
     else:
-        # City gone; the cube flies off to the sensor sat, shrinking as it
-        # docks.
+        # The compact cube flies to the sensor sat and docks (方块给任务卫星).
         _set_visibility(city, False)
         k = (prog - _CAP_COLLAPSE_END) / (1.0 - _CAP_COLLAPSE_END)
         pos = _lerp3(HERO_CUBE_FORM, HERO_SENSOR_POS, k)
-        cube_scale = 2.3 * (1.0 - 0.78 * k)
+        cube_scale = 1.2 * (1.0 - 0.70 * k)                  # 1.2 -> 0.36
         _set_xform_ts(stage, HERO_CUBE, pos=pos, scale=cube_scale)
         _set_visibility(cube, True)
 
@@ -1037,6 +1066,10 @@ if _HAS_KIT:
             self._mission: Optional[dict] = None
             self._mission_rx_wall: Optional[float] = None  # monotonic ts of last mission poll
             self._mission_authored: bool = False
+            # Load gate — POST /mission/scene_ready once per mission, after the
+            # target scene geometry is resident, so the backend starts the
+            # cinematic clock (it holds on 'acquire' until then).
+            self._scene_ready_posted: bool = False
             # Smoothed camera pose + whether MissionCam currently owns the
             # viewport (so we bind/unbind only on transitions).
             self._cam_eye: tuple[float, float, float] = CAM_GLOBAL_EYE
@@ -1079,6 +1112,22 @@ if _HAS_KIT:
             follow-cam through the phase shots. Sats are at fixed staged
             positions; no Earth / fleet involved."""
             mission = self._interp_mission()
+            phase = mission.get("phase", "idle")
+            active = bool(mission.get("active")) or phase != "idle"
+
+            # Load gate — once the city geometry is resident, tell the backend
+            # so it releases 'acquire' and starts the cinematic clock. Posted
+            # once per mission; reset when the mission goes idle.
+            if not active:
+                self._scene_ready_posted = False
+            elif phase == "acquire" and not self._scene_ready_posted:
+                done, info = _stage_loading_done()
+                city = stage.GetPrimAtPath(HERO_CITY)
+                if done and city and city.IsValid() and city.GetChildren():
+                    if post_backend("/mission/scene_ready"):
+                        self._scene_ready_posted = True
+                        _log(f"mission scene_ready posted (loading={info})")
+
             update_mission_hero(stage, mission, time.monotonic())
             # Ease the hero camera toward the per-phase pose.
             eye, tgt = mission_hero_camera_pose(mission)

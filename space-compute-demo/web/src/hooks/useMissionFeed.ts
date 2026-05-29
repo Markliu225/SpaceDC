@@ -1,115 +1,60 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useDemoStore } from '../store/demoStore'
 import { useMissionStore } from '../store/useMissionStore'
-import { useFleetPositions } from './useFleetPositions'
-import {
-  DEFAULT_AOI,
-  GROUND_STATIONS,
-  TOTAL_MISSION_S,
-  angularDist,
-  missionStateAt,
-  type MissionCastInput,
-} from '../data/missionPlan'
 import type { MissionState } from '../types/messages'
 
-const MOCK_TICK_MS = 100
+const POLL_MS = 100
+const HTTP_BASE =
+  (import.meta.env.VITE_BACKEND_HTTP as string | undefined) ?? 'http://localhost:8001'
 
 /**
- * useMissionFeed — owns the /mission page's mission state lifecycle.
+ * useMissionFeed — owns the /mission page's mission lifecycle.
  *
- *  - Mirrors backend `state_update.mission` into the store when present
- *    (Phase 2 path) and tears down any running local mock so backend wins.
- *  - Provides `start()` / `stop()`. `start()` fires the `start_mission` WS
- *    command (backend, when it exists) AND kicks a local mock driver so
- *    the choreography animates even before the backend MissionEngine
- *    lands (Phase 1).
+ * The backend MissionEngine is the single source of truth: it runs the
+ * wall-clock phase machine AND the scene-load gate (it holds on 'acquire'
+ * until Kit reports the target scene geometry is resident). We poll /state at
+ * 10 Hz and mirror `mission` straight into the store, so the side panel and
+ * the Omniverse 3D scene are driven by the *same* clock and can never desync —
+ * and the loading hold is honoured by the UI as well.
  *
- *  Cast assignment for the mock: Sensor = fleet sat nearest the AOI; Hub =
- *  fleet index 0; Ground = nearest ground station to the hub's sub-point.
- *  (Backend will own this once Phase 2 is live.)
+ * (Earlier there was a local mock driver here with its own clock; it raced the
+ * backend and is the reason the panel and 3D could drift. Retired.)
  */
 export function useMissionFeed() {
-  const setMissionMock    = useMissionStore((s) => s.setMissionMock)
   const setMissionBackend = useMissionStore((s) => s.setMissionBackend)
   const resetMission      = useMissionStore((s) => s.resetMission)
   const startMissionCmd   = useDemoStore((s) => s.startMission)
   const stopMissionCmd    = useDemoStore((s) => s.stopMission)
-  const fleet             = useFleetPositions()
 
-  const mockTimer = useRef<number | null>(null)
-  const fleetRef  = useRef(fleet)
-  fleetRef.current = fleet
-
-  const clearMock = useCallback(() => {
-    if (mockTimer.current !== null) {
-      window.clearInterval(mockTimer.current)
-      mockTimer.current = null
-    }
-  }, [])
-
-  // Backend mirror. Our local mock runs at 100 ms and follows the SAME
-  // phase plan as the backend, so while it's running it's the smoother
-  // display driver (backend broadcasts at 1 Hz → would step jerkily).
-  // We only adopt backend.mission directly when NO local mock is running —
-  // i.e. a mission was triggered from another client or the page mounted
-  // mid-mission — so the Web still reflects it.
   useEffect(() => {
-    return useDemoStore.subscribe((s, prev) => {
-      if (s.lastState === prev.lastState) return
-      const m = (s.lastState as { mission?: MissionState } | null)?.mission
-      if (m && m.active && mockTimer.current === null) {
-        setMissionBackend(m)
+    let alive = true
+    let inFlight = false
+    const tick = async () => {
+      if (inFlight) return
+      inFlight = true
+      try {
+        const r = await fetch(`${HTTP_BASE}/state`)
+        const s = (await r.json()) as { mission?: MissionState }
+        if (alive && s.mission) setMissionBackend(s.mission)
+      } catch {
+        /* backend momentarily unreachable — keep the last state */
+      } finally {
+        inFlight = false
       }
-    })
+    }
+    const id = window.setInterval(tick, POLL_MS)
+    tick()
+    return () => { alive = false; window.clearInterval(id) }
   }, [setMissionBackend])
 
-  useEffect(() => clearMock, [clearMock])
-
-  const pickCast = useCallback((): MissionCastInput => {
-    const sats = fleetRef.current
-    let sensorIdx = 0
-    if (sats.length > 0) {
-      let best = Infinity
-      for (const s of sats) {
-        const d = angularDist(s.lat, s.lon, DEFAULT_AOI.lat, DEFAULT_AOI.lon)
-        if (d < best) { best = d; sensorIdx = s.idx }
-      }
-    }
-    const hubIdx = 0
-    // Nearest ground station to the hub sub-point (fallback: first GS).
-    const hub = sats.find((s) => s.idx === hubIdx) ?? sats[0]
-    let ground = GROUND_STATIONS[0]
-    if (hub) {
-      let best = Infinity
-      for (const gs of GROUND_STATIONS) {
-        const d = angularDist(hub.lat, hub.lon, gs.lat, gs.lon)
-        if (d < best) { best = d; ground = gs }
-      }
-    }
-    return { sensor_idx: sensorIdx, hub_idx: hubIdx, ground }
-  }, [])
-
   const start = useCallback(() => {
-    // Fire the backend command (no-op until Phase 2 — backend replies
-    // unknown_type, harmless). Then run the local mock as the driver;
-    // the backend-mirror effect will take over + clear the mock if a real
-    // mission snapshot arrives.
     startMissionCmd()
-    clearMock()
-    const cast = pickCast()
-    const t0 = performance.now()
-    mockTimer.current = window.setInterval(() => {
-      const t = (performance.now() - t0) / 1000
-      setMissionMock(missionStateAt(Math.min(t, TOTAL_MISSION_S), cast))
-      if (t >= TOTAL_MISSION_S) clearMock()  // leave the delivered state up
-    }, MOCK_TICK_MS)
-  }, [startMissionCmd, clearMock, pickCast, setMissionMock])
+  }, [startMissionCmd])
 
   const stop = useCallback(() => {
     stopMissionCmd()
-    clearMock()
     resetMission()
-  }, [stopMissionCmd, clearMock, resetMission])
+  }, [stopMissionCmd, resetMission])
 
   return { start, stop }
 }
