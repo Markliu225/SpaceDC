@@ -5,27 +5,25 @@ import {
   CatmullRomCurve3, DoubleSide, Group, Mesh, MeshBasicMaterial,
   ShaderMaterial, TubeGeometry, Vector3,
 } from 'three'
-import { atmoVert, atmoFrag } from '../overview/earth/shaders'
 import { useFleetPositions } from '../../hooks/useFleetPositions'
 import { useTelemetryStore } from '../../store/useTelemetryStore'
 import type { ConstellationDetail } from '../../types/messages'
 
 /**
- * MiniOrbitHud — sci-fi holographic constellation HUD at the bottom-left of
- * the Satellite Twin viewport. Shows:
- *   - the whole active constellation (every plane's orbit ring, faint cyan)
- *   - the SELECTED satellite's plane highlighted (thicker bright tube)
- *   - the selected sat as a pulsing reticle at its live ECI position
- *   - a sun marker placed at SUN_DIR_ECI — the SAME constant the backend uses
- *     for sun_factor, so the SUNLIT/ECLIPSE badge flips in step with the
- *     satellite stage's lighting transitions
- *   - a wireframe lat/lon Earth rotating at the true GMST rate (sidereal day
- *     scaled by the constellation's time_scale) so the Earth rotation, the
- *     sat's orbital motion, and the sunlit/eclipse state all share one clock
+ * MiniOrbitHud — sci-fi holographic HUD at the bottom-left of the Satellite
+ * Twin viewport. Shows the active constellation (every plane's orbit ring),
+ * highlights the selected sat's plane, places the sat as a pulsing reticle,
+ * a sun marker at SUN_DIR_ECI, and a solid day/night Earth sphere whose
+ * terminator is computed from the SAME sun direction the backend uses for
+ * `sun_factor` — so the lit hemisphere on the HUD matches the side of the
+ * Omniverse satellite that's currently bright. The wireframe globe rotates
+ * at the true GMST rate so Earth time, sat orbital motion, and the
+ * SUNLIT/ECLIPSE badge all share one clock.
  */
 
 const EARTH_RADIUS_KM = 6378.137
 const SIDEREAL_DAY_S = 86164.0905
+// Must match services/constellations.py and hooks/useFleetPositions.ts.
 const SUN_DIR_ECI: [number, number, number] = [0.648, -0.648, 0.398]
 const HUD_CYAN     = '#3B9EFF'
 const HUD_CYAN_HOT = '#22D3EE'
@@ -36,7 +34,60 @@ function eciToDisplay([x, y, z]: [number, number, number]): [number, number, num
   return [x, z, -y]
 }
 
-/** Clean lat/lon wireframe — N parallels + M meridians. */
+// ---------------------------------------------------------------------------
+// Day/night Earth — solid sphere with a sun-direction shader. The lit
+// hemisphere glows cyan; the dark side is near-black. Terminator is a soft
+// smoothstep so the boundary reads but isn't a hard line.
+// ---------------------------------------------------------------------------
+const dayNightVert = /* glsl */`
+  varying vec3 vNormalW;
+  varying vec3 vPositionW;
+  void main() {
+    vNormalW = normalize(mat3(modelMatrix) * normal);
+    vec4 wp = modelMatrix * vec4(position, 1.0);
+    vPositionW = wp.xyz;
+    gl_Position = projectionMatrix * viewMatrix * wp;
+  }
+`
+const dayNightFrag = /* glsl */`
+  precision highp float;
+  uniform vec3 uSunDir;
+  varying vec3 vNormalW;
+  varying vec3 vPositionW;
+  void main() {
+    vec3 N = normalize(vNormalW);
+    float ndl = dot(N, normalize(uSunDir));
+    float day = smoothstep(-0.15, 0.45, ndl);
+    vec3 nightCol = vec3(0.015, 0.025, 0.05);
+    vec3 dayCol   = vec3(0.08, 0.28, 0.55);
+    vec3 col = mix(nightCol, dayCol, day);
+    // Subtle Fresnel limb so the sphere has a planetary halo, not a flat disc.
+    float limb = pow(1.0 - clamp(dot(N, normalize(cameraPosition - vPositionW)), 0.0, 1.0), 3.0);
+    col += vec3(0.10, 0.30, 0.55) * limb * 0.45;
+    gl_FragColor = vec4(col, 1.0);
+  }
+`
+
+function DayNightEarth({ sunDir }: { sunDir: Vector3 }) {
+  const material = useMemo(() => new ShaderMaterial({
+    vertexShader: dayNightVert,
+    fragmentShader: dayNightFrag,
+    uniforms: { uSunDir: { value: sunDir.clone() } },
+  }), [sunDir])
+  useFrame(() => { material.uniforms.uSunDir.value.copy(sunDir) })
+  return (
+    <mesh>
+      <sphereGeometry args={[0.985, 48, 48]} />
+      <primitive object={material} attach="material" />
+    </mesh>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Wireframe overlay — sparse lat/lon grid on top of the day/night sphere.
+// Rotates with GMST so the surface and the fixed-ECI sun direction give a
+// visibly drifting terminator.
+// ---------------------------------------------------------------------------
 function makeLatLonGrid(radius: number, parallels: number, meridians: number): BufferGeometry {
   const pts: number[] = []
   const SEGS = 64
@@ -67,60 +118,25 @@ function makeLatLonGrid(radius: number, parallels: number, meridians: number): B
   return g
 }
 
-function makeEquatorRing(radius: number): BufferGeometry {
-  const pts: number[] = []
-  const SEGS = 96
-  for (let j = 0; j < SEGS; j++) {
-    const a0 = (j / SEGS) * 2 * Math.PI
-    const a1 = ((j + 1) / SEGS) * 2 * Math.PI
-    pts.push(radius * Math.cos(a0), 0, radius * Math.sin(a0))
-    pts.push(radius * Math.cos(a1), 0, radius * Math.sin(a1))
-  }
-  const g = new BufferGeometry()
-  g.setAttribute('position', new BufferAttribute(new Float32Array(pts), 3))
-  return g
-}
-
-function GmstEarth({ gmst }: { gmst: number }) {
+function GmstWireframe({ gmst }: { gmst: number }) {
   const ref = useRef<Group>(null!)
-  const grid = useMemo(() => makeLatLonGrid(1.0, 7, 8), [])
-  const equator = useMemo(() => makeEquatorRing(1.0), [])
+  const grid = useMemo(() => makeLatLonGrid(1.0, 6, 8), [])
   useFrame(() => { if (ref.current) ref.current.rotation.y = gmst })
   return (
     <group ref={ref}>
       <lineSegments>
         <primitive object={grid} attach="geometry" />
-        <lineBasicMaterial color="#1E5A99" transparent opacity={0.55} />
-      </lineSegments>
-      <lineSegments>
-        <primitive object={equator} attach="geometry" />
-        <lineBasicMaterial color={HUD_CYAN} transparent opacity={0.7} />
+        <lineBasicMaterial color="#4DB0FF" transparent opacity={0.45} />
       </lineSegments>
     </group>
   )
 }
 
-function MiniAtmosphere() {
-  const material = useMemo(() => new ShaderMaterial({
-    vertexShader: atmoVert,
-    fragmentShader: atmoFrag,
-    uniforms: {
-      uColor:     { value: new Vector3(0.23, 0.62, 1.0) },
-      uIntensity: { value: 0.8 },
-    },
-    transparent: true,
-    depthWrite: false,
-    blending: AdditiveBlending,
-    side: BackSide,
-  }), [])
-  return (
-    <mesh>
-      <sphereGeometry args={[1.05, 32, 32]} />
-      <primitive object={material} attach="material" />
-    </mesh>
-  )
-}
-
+// ---------------------------------------------------------------------------
+// Constellation — every plane's orbit ring + selected plane highlighted.
+// Geometry math MUST match useFleetPositions so the highlighted ring and the
+// sat reticle visibly coincide.
+// ---------------------------------------------------------------------------
 function ConstellationRings({
   detail, selectedPlane,
 }: { detail: ConstellationDetail; selectedPlane: number }) {
@@ -137,7 +153,7 @@ function ConstellationRings({
       })
       const curve = new CatmullRomCurve3(pts, true, 'catmullrom', 0.5)
       const isSel = k === selectedPlane
-      const geom = new TubeGeometry(curve, 96, isSel ? 0.020 : 0.0085, isSel ? 6 : 4, true)
+      const geom = new TubeGeometry(curve, 120, isSel ? 0.020 : 0.010, isSel ? 6 : 4, true)
       return { k, geom, isSel }
     })
   }, [detail, selectedPlane])
@@ -149,7 +165,7 @@ function ConstellationRings({
           <meshBasicMaterial
             color={isSel ? HUD_CYAN_HOT : HUD_CYAN}
             transparent
-            opacity={isSel ? 0.95 : 0.62}
+            opacity={isSel ? 1.0 : 0.7}
             depthWrite={false}
             blending={AdditiveBlending}
           />
@@ -163,7 +179,7 @@ function SatReticle({ pos }: { pos: [number, number, number] }) {
   const haloRef = useRef<Mesh>(null!)
   useFrame(({ clock }) => {
     if (!haloRef.current) return
-    const t = (clock.getElapsedTime() % 1.8) / 1.8   // 0..1 over 1.8 s
+    const t = (clock.getElapsedTime() % 1.8) / 1.8
     const s = 1 + t * 3.5
     haloRef.current.scale.set(s, s, s)
     ;(haloRef.current.material as MeshBasicMaterial).opacity = (1 - t) * 0.75
@@ -215,7 +231,7 @@ function SunMarker({ dir }: { dir: Vector3 }) {
 }
 
 function Brackets() {
-  const base = 'absolute w-3 h-3 border-[#3B9EFF]'
+  const base = 'absolute w-2.5 h-2.5 border-[#3B9EFF]'
   return (
     <>
       <div className={`${base} left-0 top-0 border-l border-t`} />
@@ -238,9 +254,6 @@ export function MiniOrbitHud() {
     () => new Vector3(...eciToDisplay(SUN_DIR_ECI)).normalize(),
     [],
   )
-
-  // GMST — same formula as services/constellations.py + useFleetPositions.
-  // Earth rotation, sat orbital position, sunlit/eclipse all share this clock.
   const gmst = useMemo(
     () => (simTime * timeScale / SIDEREAL_DAY_S) * 2 * Math.PI,
     [simTime, timeScale],
@@ -256,51 +269,47 @@ export function MiniOrbitHud() {
 
   return (
     <div className="absolute left-3 bottom-3 z-10 pointer-events-none">
-      <div className="pointer-events-auto relative h-[240px] w-[220px] bg-[#040912]/85 backdrop-blur-sm">
-        {/* Faint cyan grid — holographic feel. */}
+      <div className="pointer-events-auto relative h-[200px] w-[180px] bg-[#040912]/85 backdrop-blur-sm">
         <div
           className="absolute inset-0 opacity-50"
           style={{
             backgroundImage:
               'linear-gradient(rgba(59,158,255,0.06) 1px, transparent 1px),'
               + 'linear-gradient(90deg, rgba(59,158,255,0.06) 1px, transparent 1px)',
-            backgroundSize: '14px 14px',
+            backgroundSize: '12px 12px',
           }}
         />
         <Brackets />
 
-        {/* Header strip. */}
         <div className="absolute left-1.5 right-1.5 top-1.5 flex items-center justify-between">
-          <span className="text-[8.5px] uppercase tracking-[0.20em] text-[#3B9EFF] font-mono">
+          <span className="text-[8px] uppercase tracking-[0.18em] text-[#3B9EFF] font-mono">
             ▸ {constellationId}
           </span>
           <span
-            className="text-[8.5px] uppercase tracking-[0.18em] font-mono"
+            className="text-[8px] uppercase tracking-[0.16em] font-mono"
             style={{ color: sat?.sunlit ? HUD_CYAN_HOT : HUD_WARN }}
           >
             {sat ? (sat.sunlit ? '◉ SUNLIT' : '○ ECLIPSE') : '— STDBY'}
           </span>
         </div>
 
-        {/* Sub-header — selected sat + fleet shape. */}
-        <div className="absolute left-1.5 right-1.5 top-[20px] flex items-center justify-between">
-          <span className="text-[8px] tracking-[0.18em] text-[#3B9EFF]/80 font-mono">
+        <div className="absolute left-1.5 right-1.5 top-[18px] flex items-center justify-between">
+          <span className="text-[7.5px] tracking-[0.16em] text-[#3B9EFF]/80 font-mono">
             SAT-{String(selected).padStart(3, '0')}
           </span>
-          <span className="text-[8px] tracking-[0.18em] text-[#3B9EFF]/80 font-mono">
+          <span className="text-[7.5px] tracking-[0.16em] text-[#3B9EFF]/80 font-mono">
             {detail ? `${detail.planes}P × ${detail.sats_per_plane}S` : ''}
           </span>
         </div>
 
-        {/* 3D holographic scene. */}
-        <div className="absolute inset-x-1 top-[36px] bottom-[52px]">
+        <div className="absolute inset-x-1 top-[32px] bottom-[44px]">
           <Canvas
-            camera={{ position: [3.2, 1.9, 3.6], fov: 32 }}
+            camera={{ position: [2.7, 1.6, 3.2], fov: 32 }}
             gl={{ antialias: true, alpha: true }}
           >
-            <ambientLight intensity={0.4} />
-            <GmstEarth gmst={gmst} />
-            <MiniAtmosphere />
+            <ambientLight intensity={0.3} />
+            <DayNightEarth sunDir={sunDir} />
+            <GmstWireframe gmst={gmst} />
             {detail && detail.ring_eci_km.length > 0 && sat && (
               <ConstellationRings detail={detail} selectedPlane={sat.planeIdx} />
             )}
@@ -309,8 +318,7 @@ export function MiniOrbitHud() {
           </Canvas>
         </div>
 
-        {/* Footer telemetry — labelled mono readouts. */}
-        <div className="absolute left-1.5 right-1.5 bottom-1.5 flex flex-col gap-[2px] text-[8.5px] font-mono leading-[1.3]">
+        <div className="absolute left-1.5 right-1.5 bottom-1.5 flex flex-col gap-[1px] text-[8px] font-mono leading-[1.25]">
           <div className="flex justify-between text-[#3B9EFF]/85">
             <span>LAT</span>
             <span className="text-[#E0F0FF]">
