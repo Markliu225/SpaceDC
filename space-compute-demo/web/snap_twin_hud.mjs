@@ -20,7 +20,7 @@ console.log('[snap] twin-hud captured')
 // Tight crop of the HUD itself for readability.
 // Generous clip around the bottom-left of the viewport cell.
 await page.screenshot({ path: OUT + 'twin-hud-zoom.png',
-  clip: { x: 20, y: 300, width: 230, height: 260 } })
+  clip: { x: 16, y: 264, width: 268, height: 290 } })
 console.log('[snap] twin-hud-zoom captured')
 
 // Verify Overview still renders correctly (nothing broken).
