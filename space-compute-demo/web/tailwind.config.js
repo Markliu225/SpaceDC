@@ -6,8 +6,10 @@ export default {
   content: [
     './index.html',
     './src/pages/OverviewPage.tsx',
+    './src/pages/SatelliteTwinPage.tsx',
     './src/components/overview/**/*.{ts,tsx}',
     './src/components/primitives/**/*.{ts,tsx}',
+    './src/components/twin/**/*.{ts,tsx}',
     './src/hooks/**/*.{ts,tsx}',
     './src/store/useTelemetryStore.ts',
   ],
