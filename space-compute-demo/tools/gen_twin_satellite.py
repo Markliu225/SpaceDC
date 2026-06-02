@@ -31,7 +31,13 @@ from textwrap import indent
 ROOT = Path(__file__).resolve().parent.parent
 OUT  = ROOT / "usd" / "twin_satellite.usda"
 
-BUS_REF = "./assets/Satellite_v022.usdc"
+BUS_REF = "./assets/satellite_v023.usdz"
+# satellite_v023.usdz is authored at metersPerUnit=1.0 (meters); the host
+# Twin stage is metersPerUnit=0.01 (cm), and USD references don't auto-rescale
+# across the unit boundary. Multiply by 100 to land in cm, then by an extra
+# 1.7 so the longest dimension (~1 m in the asset) frames at ~170 cm — close
+# to the previous Satellite_v022 body so the Closeup camera still works.
+BUS_SCALE = 170.0
 
 # Panel materials — recolour the body's built-in solar Panel subset. Tuned
 # so the swap reads under the satellite-stage warm Sun; emissive keeps the
@@ -77,9 +83,13 @@ def looks_scope() -> str:
 
 
 def bus_prim() -> str:
-    """Satellite body. solar_material variant rebinds the v022 Mesh/Panel
-    subset to one of /World/Looks/Solar_*. Base def carries no Panel
-    binding override so the variant's `over` owns the opinion."""
+    """Satellite body. The `solar_material` variantSet stays authored so the
+    backend's set_config({solar_material: ...}) path keeps working end-to-end
+    (no UI/state surprises); each variant's `over "Mesh"/over "Panel"` was
+    designed for the Satellite_v022 subset hierarchy and is a no-op on this
+    asset (which has no `Panel` mesh subset). Visual recolour of solar panels
+    on this body will need re-targeting once a panel subset is identified —
+    flagged but left wired so the rest of the pipeline doesn't regress."""
     mat_variants = "\n".join(
         f"""        "{mat_id}" {{
             over "Mesh"
@@ -101,6 +111,8 @@ def bus_prim() -> str:
         prepend variantSets = ["solar_material"]
     )
     {{
+        double3 xformOp:scale = ({BUS_SCALE}, {BUS_SCALE}, {BUS_SCALE})
+        uniform token[] xformOpOrder = ["xformOp:scale"]
         variantSet "solar_material" = {{
 {mat_variants}
         }}

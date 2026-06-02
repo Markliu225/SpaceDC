@@ -58,13 +58,15 @@ def Xform "World"
     {
 
     def Xform "Bus" (
-        prepend references = @./assets/Satellite_v022.usdc@
+        prepend references = @./assets/satellite_v023.usdz@
         variants = {
             string solar_material = "Si"
         }
         prepend variantSets = ["solar_material"]
     )
     {
+        double3 xformOp:scale = (170.0, 170.0, 170.0)
+        uniform token[] xformOpOrder = ["xformOp:scale"]
         variantSet "solar_material" = {
         "Si" {
             over "Mesh"
