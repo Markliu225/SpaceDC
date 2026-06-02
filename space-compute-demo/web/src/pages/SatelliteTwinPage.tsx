@@ -5,6 +5,7 @@ import { useMockTelemetryFeed } from '../hooks/useMockTelemetryFeed'
 import { EarthViewport } from '../components/overview/EarthViewport'
 import { SatelliteSelector } from '../components/overview/SatelliteSelector'
 import { Configurator } from '../components/twin/Configurator'
+import { MiniOrbitHud } from '../components/twin/MiniOrbitHud'
 import { SubsystemHealthRow } from '../components/twin/SubsystemHealthRow'
 import { TimeSeriesStrip } from '../components/twin/TimeSeriesStrip'
 import { ViewModeTabs, type TwinViewMode } from '../components/twin/ViewModeTabs'
@@ -66,9 +67,11 @@ export function SatelliteTwinPage() {
         </div>
       </div>
 
-      {/* Row 2 — Viewport + Configurator. */}
-      <div className="col-span-8 min-h-0 overflow-hidden">
+      {/* Row 2 — Viewport + Configurator. The viewport cell is `relative` so
+          the MiniOrbitHud overlay can anchor to its top-right corner. */}
+      <div className="col-span-8 min-h-0 overflow-hidden relative">
         <EarthViewport />
+        <MiniOrbitHud />
       </div>
       <div className="col-span-4 min-h-0 overflow-visible relative z-20">
         <Configurator />
