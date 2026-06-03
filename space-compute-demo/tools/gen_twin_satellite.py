@@ -86,14 +86,16 @@ SOLAR_MESH      = "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
 PANEL_SCALE     = 0.5
 # Panels lie FLAT on the bus's ±Y sides, normal parallel to the body's large
 # (X-Y) face normal (= stage Z) — i.e. the cell face points up at the same
-# direction the radar mast does. solar.usdz's source axes already match this
-# (long X, deploy Y, thin Z = normal) so NO rotation is authored on the
-# wings. After scale 0.5 the wing half-Y is 0.167 m; the shell's Y face is
-# at ±0.50 m in source meters, so an offset of ±0.72 lands the wing inner
-# edge ~5 cm past the shell face. Wing extends 0.489 m along the body's X
-# axis and is ~17 mm thick in Z (a clean horizontal tab).
-PANEL_LEFT_Y    = 0.72
-PANEL_RIGHT_Y   = -0.72
+# direction the radar mast does. A rotateZ=90 spins each wing 90° about its
+# normal so the source's LONG axis points OUTWARD (along bus Y) rather than
+# along the bus length — the conventional deployed-wing look. After scale
+# 0.5 and rotateZ=90 the wing half-Y is 0.245 m; the shell's Y face is at
+# ±0.50 m, so an offset of ±0.80 lands the wing inner edge ~5 cm past the
+# shell. Wing footprint after rotation: 0.333 m along bus X × 0.489 m
+# along bus Y × 0.034 m thick.
+PANEL_LEFT_Y    = 0.80
+PANEL_RIGHT_Y   = -0.80
+PANEL_ROTATE_Z  = 90.0
 # Shell centroid in source Z is ~-0.22 m (the shell sits in the lower half
 # of the asset, with the radar mast above). Drop the wings to the shell's
 # mid-height so they read as deployed tabs emerging from the bay's +Y/-Y
@@ -185,20 +187,20 @@ def parentnode_overrides() -> str:
 
 
 def solar_wing_prim(name: str, y_offset: float) -> str:
-    """A solar wing — references solar.usdz with no rotation. The asset's
-    source axes already match the desired stage orientation: source X is
-    the long edge (stays along bus X), source Y is the deploy direction
-    (stays along bus Y, the side the wing extends out of), and source Z
-    is the thin axis whose normal (+Z) points the same way the radar
-    mast does. The wing therefore lies FLAT on the bus's ±Y face with its
-    cell side facing up."""
+    """A solar wing — references solar.usdz, lies FLAT on the bus's ±Y side
+    with its normal at +Z (same direction the radar mast points), and is
+    rotated 90° about that normal so the asset's long source-X axis points
+    OUTWARD along bus Y. xformOpOrder = ["translate","scale","rotateZ"]:
+    USD composes M = M_op0 * M_op1 * …, so the LAST op (rotateZ) is applied
+    first to the local point, then scale, then translate."""
     return f"""def Xform "{name}" (
     prepend references = @{SOLAR_REF}@
 )
 {{
     double3 xformOp:translate = (0.0, {y_offset}, {PANEL_Z})
     double3 xformOp:scale = ({PANEL_SCALE}, {PANEL_SCALE}, {PANEL_SCALE})
-    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    float xformOp:rotateZ = {PANEL_ROTATE_Z}
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale", "xformOp:rotateZ"]
 }}"""
 
 
