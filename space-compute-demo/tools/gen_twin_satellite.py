@@ -189,22 +189,11 @@ def solar_wing_prim(name: str, y_offset: float) -> str:
 
 
 def solar_variants() -> str:
-    """variantSet body — each variant rebinds the two new solar wings'
-    meshes to the same Solar_* material so the Configurator dropdown drives
-    both panels together."""
-    variant_bodies = []
-    for mat_id in SOLAR_MATERIALS.keys():
-        left = _nested_over_for_path(
-            f"PanelLeft/{SOLAR_NODE}/{SOLAR_MESH}",
-            f"rel material:binding = </World/Looks/Solar_{mat_id}>",
-        )
-        right = _nested_over_for_path(
-            f"PanelRight/{SOLAR_NODE}/{SOLAR_MESH}",
-            f"rel material:binding = </World/Looks/Solar_{mat_id}>",
-        )
-        body = f"{left}\n{right}"
-        variant_bodies.append(f'"{mat_id}" {{\n{indent(body, "    ")}\n}}')
-    return "\n".join(variant_bodies)
+    """variantSet body — kept wired so the backend's set_config({solar_material:
+    ...}) round-trip and the Twin Configurator dropdown continue to work, but
+    each variant is now a visual no-op: the panels keep solar.usdz's own
+    texture-driven look regardless of the selection."""
+    return "\n".join(f'"{m}" {{ }}' for m in SOLAR_MATERIALS.keys())
 
 
 def bus_prim() -> str:

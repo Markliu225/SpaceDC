@@ -118,72 +118,9 @@ def Xform "World"
         }
 
         variantSet "solar_material" = {
-            "Si" {
-                over "PanelLeft"
-                {
-                    over "tripo_node_f428be0e_6763_4c3c_adc0_48f9e995f063"
-                    {
-                        over "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
-                        {
-                            rel material:binding = </World/Looks/Solar_Si>
-                        }
-                    }
-                }
-                over "PanelRight"
-                {
-                    over "tripo_node_f428be0e_6763_4c3c_adc0_48f9e995f063"
-                    {
-                        over "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
-                        {
-                            rel material:binding = </World/Looks/Solar_Si>
-                        }
-                    }
-                }
-            }
-            "GaAs" {
-                over "PanelLeft"
-                {
-                    over "tripo_node_f428be0e_6763_4c3c_adc0_48f9e995f063"
-                    {
-                        over "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
-                        {
-                            rel material:binding = </World/Looks/Solar_GaAs>
-                        }
-                    }
-                }
-                over "PanelRight"
-                {
-                    over "tripo_node_f428be0e_6763_4c3c_adc0_48f9e995f063"
-                    {
-                        over "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
-                        {
-                            rel material:binding = </World/Looks/Solar_GaAs>
-                        }
-                    }
-                }
-            }
-            "Perovskite" {
-                over "PanelLeft"
-                {
-                    over "tripo_node_f428be0e_6763_4c3c_adc0_48f9e995f063"
-                    {
-                        over "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
-                        {
-                            rel material:binding = </World/Looks/Solar_Perovskite>
-                        }
-                    }
-                }
-                over "PanelRight"
-                {
-                    over "tripo_node_f428be0e_6763_4c3c_adc0_48f9e995f063"
-                    {
-                        over "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
-                        {
-                            rel material:binding = </World/Looks/Solar_Perovskite>
-                        }
-                    }
-                }
-            }
+            "Si" { }
+            "GaAs" { }
+            "Perovskite" { }
         }
     }
     }
