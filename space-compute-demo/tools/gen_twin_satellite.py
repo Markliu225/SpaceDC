@@ -83,7 +83,7 @@ SOLAR_MESH      = "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
 # 0.167 m; body centroid is at y=0.129 m with body half-Y ≈ 0.30 m. Offset
 # 0.47 / -0.21 puts each panel's inner edge ~5 cm from the body's side
 # face (in source meters) so they read as wings on the payload bay.
-PANEL_SCALE     = 0.5
+PANEL_SCALE     = 0.95
 # Panels lie FLAT on the bus's ±X sides (the "east/west" faces), normal
 # parallel to the body's large (X-Y) face normal (= stage Z) so the cell
 # face points up at the same direction as the radar mast. solar.usdz's
@@ -92,8 +92,8 @@ PANEL_SCALE     = 0.5
 # stage -X. The wing therefore spans the bay's Y dimension and extends
 # outward along X. Shell's X face is at ±0.47 m in source meters; offset
 # 0.72 lands the wing inner edge ~8 cm past the shell face.
-PANEL_LEFT_X    = 0.72
-PANEL_RIGHT_X   = -0.72
+PANEL_LEFT_X    = 0.79
+PANEL_RIGHT_X   = -0.79
 # Shell centroid in source Z is ~-0.22 m (the shell sits in the lower half
 # of the asset, with the radar mast above). Drop the wings to the shell's
 # mid-height so they read as deployed tabs emerging from the bay's ±X
