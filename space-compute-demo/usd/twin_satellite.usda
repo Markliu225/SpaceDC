@@ -97,22 +97,18 @@ def Xform "World"
             prepend references = @./assets/solar.usdz@
         )
         {
-            double3 xformOp:translate = (0.0, 0.72, 0.0)
+            double3 xformOp:translate = (0.0, 0.72, -0.22)
             double3 xformOp:scale = (0.5, 0.5, 0.5)
-            float xformOp:rotateZ = 180.0
-            float xformOp:rotateY = -90.0
-            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale", "xformOp:rotateZ", "xformOp:rotateY"]
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
         }
 
         def Xform "PanelRight" (
             prepend references = @./assets/solar.usdz@
         )
         {
-            double3 xformOp:translate = (0.0, -0.72, 0.0)
+            double3 xformOp:translate = (0.0, -0.72, -0.22)
             double3 xformOp:scale = (0.5, 0.5, 0.5)
-            float xformOp:rotateZ = 180.0
-            float xformOp:rotateY = -90.0
-            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale", "xformOp:rotateZ", "xformOp:rotateY"]
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
         }
 
         variantSet "solar_material" = {

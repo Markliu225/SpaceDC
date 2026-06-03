@@ -84,18 +84,21 @@ SOLAR_MESH      = "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
 # 0.47 / -0.21 puts each panel's inner edge ~5 cm from the body's side
 # face (in source meters) so they read as wings on the payload bay.
 PANEL_SCALE     = 0.5
-# satellite_body.usdz shell Y in source meters: ~-0.49 to +0.50. Panel half-Y
-# after scale = 0.167. Offset 0.72 → panel inner edge at 0.553 m (~5 cm
-# clearance past the +Y shell face), symmetric on -Y.
+# Panels lie FLAT on the bus's ±Y sides, normal parallel to the body's large
+# (X-Y) face normal (= stage Z) — i.e. the cell face points up at the same
+# direction the radar mast does. solar.usdz's source axes already match this
+# (long X, deploy Y, thin Z = normal) so NO rotation is authored on the
+# wings. After scale 0.5 the wing half-Y is 0.167 m; the shell's Y face is
+# at ±0.50 m in source meters, so an offset of ±0.72 lands the wing inner
+# edge ~5 cm past the shell face. Wing extends 0.489 m along the body's X
+# axis and is ~17 mm thick in Z (a clean horizontal tab).
 PANEL_LEFT_Y    = 0.72
 PANEL_RIGHT_Y   = -0.72
-PANEL_ROTATE_Y  = -90.0
-# After rotateY=-90 the panel's source +Z face (the cell side) lands at stage
-# -X — i.e. facing AWAY from the Closeup camera and the open GPU bay. A
-# +180° rotation about stage Z spins the panel around its vertical axis so
-# the cell face swings to +X (the GPU-bay/camera side) without changing the
-# panel's bbox in the bus frame (symmetric in X and Y about the local origin).
-PANEL_ROTATE_Z  = 180.0
+# Shell centroid in source Z is ~-0.22 m (the shell sits in the lower half
+# of the asset, with the radar mast above). Drop the wings to the shell's
+# mid-height so they read as deployed tabs emerging from the bay's +Y/-Y
+# sides, not floating above the bay.
+PANEL_Z         = -0.22
 
 # Panel materials — recolour the body's solar panels. Tuned so the swap
 # reads under the satellite-stage warm Sun; emissive keeps the identity
@@ -182,23 +185,20 @@ def parentnode_overrides() -> str:
 
 
 def solar_wing_prim(name: str, y_offset: float) -> str:
-    """A solar wing — references solar.usdz and orients it so the long
-    source-X axis stands up (Z) and the medium source-Y axis is the deploy
-    direction (Y). Placed at `y_offset` and uniformly scaled to PANEL_SCALE
-    in the bus's source-meter frame.
-
-    xformOpOrder = ["translate","scale","rotateZ","rotateY"] — USD composes
-    M = M_op0 * M_op1 * …, so the LAST op (rotateY) is applied first to the
-    local point, then rotateZ (front/back flip), then scale, then translate."""
+    """A solar wing — references solar.usdz with no rotation. The asset's
+    source axes already match the desired stage orientation: source X is
+    the long edge (stays along bus X), source Y is the deploy direction
+    (stays along bus Y, the side the wing extends out of), and source Z
+    is the thin axis whose normal (+Z) points the same way the radar
+    mast does. The wing therefore lies FLAT on the bus's ±Y face with its
+    cell side facing up."""
     return f"""def Xform "{name}" (
     prepend references = @{SOLAR_REF}@
 )
 {{
-    double3 xformOp:translate = (0.0, {y_offset}, 0.0)
+    double3 xformOp:translate = (0.0, {y_offset}, {PANEL_Z})
     double3 xformOp:scale = ({PANEL_SCALE}, {PANEL_SCALE}, {PANEL_SCALE})
-    float xformOp:rotateZ = {PANEL_ROTATE_Z}
-    float xformOp:rotateY = {PANEL_ROTATE_Y}
-    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale", "xformOp:rotateZ", "xformOp:rotateY"]
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
 }}"""
 
 
