@@ -187,6 +187,17 @@ async def http_mission_scene_ready():
     return {"ok": True, "mission": engine.mission.model_dump()}
 
 
+@app.post("/selection")
+async def http_selection(payload: dict[str, Any]):
+    """Kit calls this when the user changes the USD viewport selection (clicks
+    a prim in the WebRTC stream). The backend just re-broadcasts as the same
+    `selection_changed` envelope already produced by the WS select_object
+    path, so all web clients update their selectedPrim in lockstep."""
+    prim = str(payload.get("prim_path", ""))
+    await manager.broadcast(_envelope("selection_changed", {"prim_path": prim, "details": {}}))
+    return {"ok": True, "prim_path": prim}
+
+
 @app.post("/orbit_type/{mode}")
 async def http_set_orbit_type(mode: str):
     """Convenience HTTP control for swapping orbit mode without a WebSocket."""

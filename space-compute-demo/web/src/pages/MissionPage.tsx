@@ -8,6 +8,7 @@ import { useMissionStore } from '../store/useMissionStore'
 import { EarthViewport } from '../components/overview/EarthViewport'
 import { MissionStatus } from '../components/mission/MissionStatus'
 import { MissionEventLog } from '../components/mission/MissionEventLog'
+import { GpuInfoPopup } from '../components/mission/GpuInfoPopup'
 
 /**
  * MissionPage — 天数天算 (compute-in-space) choreography. Targets 1440×900.
@@ -85,9 +86,11 @@ export function MissionPage() {
         </div>
       </div>
 
-      {/* Row 2 — viewport + mission status. */}
-      <div className="col-span-8 min-h-0 overflow-hidden">
+      {/* Row 2 — viewport + mission status. The viewport cell is `relative`
+          so the GpuInfoPopup can anchor to its top-right corner. */}
+      <div className="col-span-8 min-h-0 overflow-hidden relative">
         <EarthViewport />
+        <GpuInfoPopup />
       </div>
       <div className="col-span-4 min-h-0 overflow-hidden">
         <MissionStatus />

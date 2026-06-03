@@ -70,9 +70,11 @@ def Xform "World"
             def Shader "Shader"
             {
                 uniform token info:id = "UsdPreviewSurface"
-                color3f inputs:diffuseColor = (0.0, 0.05, 0.0)
-                color3f inputs:emissiveColor = (0.20, 2.40, 0.70)
-                float inputs:roughness = 0.5
+                color3f inputs:diffuseColor = (0.78, 0.80, 0.82)
+                color3f inputs:emissiveColor = (0.0, 0.0, 0.0)
+                float inputs:metallic = 0.9
+                float inputs:roughness = 0.25
+                int inputs:useSpecularWorkflow = 0
                 token outputs:surface
             }
         }
