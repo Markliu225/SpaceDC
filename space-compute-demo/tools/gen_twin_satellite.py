@@ -80,6 +80,12 @@ PANEL_SCALE     = 0.5
 PANEL_LEFT_Y    = 0.45
 PANEL_RIGHT_Y   = -0.45
 PANEL_ROTATE_Y  = -90.0
+# After rotateY=-90 the panel's source +Z face (the cell side) lands at stage
+# -X — i.e. facing AWAY from the Closeup camera and the open GPU bay. A
+# +180° rotation about stage Z spins the panel around its vertical axis so
+# the cell face swings to +X (the GPU-bay/camera side) without changing the
+# panel's bbox in the bus frame (symmetric in X and Y about the local origin).
+PANEL_ROTATE_Z  = 180.0
 
 # Panel materials — recolour the body's solar panels. Tuned so the swap
 # reads under the satellite-stage warm Sun; emissive keeps the identity
@@ -173,18 +179,20 @@ def solar_wing_prim(name: str, y_offset: float) -> str:
     """A solar wing — references solar.usdz and orients it so the long
     source-X axis stands up (Z) and the medium source-Y axis is the deploy
     direction (Y). Placed at `y_offset` and uniformly scaled to PANEL_SCALE
-    in the bus's source-meter frame. xformOpOrder = ["translate","scale",
-    "rotateY"]: USD composes M = M_op0 * M_op1 * …, so the LAST op in the
-    list (rotateY) is applied first to the local point, then scale, then
-    translate."""
+    in the bus's source-meter frame.
+
+    xformOpOrder = ["translate","scale","rotateZ","rotateY"] — USD composes
+    M = M_op0 * M_op1 * …, so the LAST op (rotateY) is applied first to the
+    local point, then rotateZ (front/back flip), then scale, then translate."""
     return f"""def Xform "{name}" (
     prepend references = @{SOLAR_REF}@
 )
 {{
     double3 xformOp:translate = (0.0, {y_offset}, 0.0)
     double3 xformOp:scale = ({PANEL_SCALE}, {PANEL_SCALE}, {PANEL_SCALE})
+    float xformOp:rotateZ = {PANEL_ROTATE_Z}
     float xformOp:rotateY = {PANEL_ROTATE_Y}
-    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale", "xformOp:rotateY"]
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale", "xformOp:rotateZ", "xformOp:rotateY"]
 }}"""
 
 
