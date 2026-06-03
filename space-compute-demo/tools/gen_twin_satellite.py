@@ -48,18 +48,27 @@ from textwrap import indent
 ROOT = Path(__file__).resolve().parent.parent
 OUT  = ROOT / "usd" / "twin_satellite.usda"
 
-# Tripo compute-sat model: metersPerUnit=1.0, Z-up, default prim /root.
-BUS_REF = "./assets/satellite_compute.usdz"
-# Host stage is metersPerUnit=0.01 (cm) — USD references don't auto-rescale
-# across the unit boundary. Source longest dim is ~0.742 m; 0.742 × 230 ≈
-# 170 cm physical, matching the previous Satellite_v022 framing so the
-# Closeup camera (focusDistance=430 cm) still works.
-BUS_SCALE = 230.0
+# Tripo payload-bay model: metersPerUnit=1.0, Z-up, default prim /root.
+# Contains three component groups — payload bay shell, radar dish, and
+# seven GPU plates — clickable from the WebRTC viewport (see
+# TwinModulePopup on the Twin page).
+BUS_REF = "./assets/satellite_body.usdz"
+# Host stage is metersPerUnit=0.01 (cm). Source longest dim is ~1.0 m; ×170
+# lands at ~170 cm — matches the prior Satellite_v022 framing so the
+# Closeup camera (focusDistance=430 cm) keeps working.
+BUS_SCALE = 170.0
 
-# Prim paths inside the asset (surveyed via pxr — pinned here so a swap to a
-# different Tripo bake fails loud instead of silently misbinding).
-ASSET_BUS_MESH    = "ParentNode/tripo_part_74_0/Mesh_10"   # ~70% of mesh volume
-ASSET_PANEL_XFORM = "ParentNode/tripo_part_new_1"          # the bus's built-in deployed panel — hidden
+# Prim paths inside the asset (surveyed via pxr — pinned so a Tripo
+# re-bake fails loud instead of silently misbinding).
+ASSET_BUS_MESH = "ParentNode/tripo_part_9/Mesh_0"          # payload bay shell mesh
+# Selection regexes for TwinModulePopup are exported separately on the web
+# side (see web/src/components/twin/TwinModulePopup.tsx); the IDs below are
+# the source of truth so the two sides can't drift.
+ASSET_SHELL_PART  = "tripo_part_9"
+ASSET_RADAR_PART  = "tripo_part_4"
+ASSET_GPU_PARTS   = ("tripo_part_1", "tripo_part_11", "tripo_part_12",
+                     "tripo_part_13", "tripo_part_14", "tripo_part_15",
+                     "tripo_part_16")
 
 # New solar wing asset (replaces the bus's built-in deployed panel on both
 # sides of the payload bay). Standalone Tripo bake — Z-up, meters,
@@ -75,10 +84,11 @@ SOLAR_MESH      = "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
 # 0.47 / -0.21 puts each panel's inner edge ~5 cm from the body's side
 # face (in source meters) so they read as wings on the payload bay.
 PANEL_SCALE     = 0.5
-# Bus shell Y in source meters: -0.242 to +0.239. Panel half-Y after scale =
-# 0.167. Offset 0.45 → panel inner edge at 0.283 m (5 cm clearance), symmetric.
-PANEL_LEFT_Y    = 0.45
-PANEL_RIGHT_Y   = -0.45
+# satellite_body.usdz shell Y in source meters: ~-0.49 to +0.50. Panel half-Y
+# after scale = 0.167. Offset 0.72 → panel inner edge at 0.553 m (~5 cm
+# clearance past the +Y shell face), symmetric on -Y.
+PANEL_LEFT_Y    = 0.72
+PANEL_RIGHT_Y   = -0.72
 PANEL_ROTATE_Y  = -90.0
 # After rotateY=-90 the panel's source +Z face (the cell side) lands at stage
 # -X — i.e. facing AWAY from the Closeup camera and the open GPU bay. A
@@ -154,23 +164,19 @@ def _nested_over_for_path(path: str, payload: str) -> str:
 
 
 def parentnode_overrides() -> str:
-    """A single `over "ParentNode"` block that combines BOTH the bus-shell
-    gold rebind (on tripo_part_74_0/Mesh_10) and the hide of the built-in
-    deployed panel (tripo_part_new_1). USD forbids two top-level `over`s
-    of the same prim name at the same sibling level, so they have to share
-    one ParentNode scope."""
+    """Single `over "ParentNode"` block that rebinds the payload bay shell
+    mesh to BusGold so it reads as warm MLI gold rather than the asset's
+    texture-driven look. (Earlier passes also had to hide an asset-internal
+    panel here; satellite_body.usdz ships without one so that override is
+    gone.)"""
     return f'''over "ParentNode"
 {{
-    over "tripo_part_74_0"
+    over "{ASSET_SHELL_PART}"
     {{
-        over "Mesh_10"
+        over "Mesh_0"
         {{
             rel material:binding = </World/Looks/BusGold>
         }}
-    }}
-    over "tripo_part_new_1"
-    {{
-        token visibility = "invisible"
     }}
 }}'''
 

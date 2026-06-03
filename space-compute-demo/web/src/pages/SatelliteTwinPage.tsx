@@ -6,6 +6,7 @@ import { EarthViewport } from '../components/overview/EarthViewport'
 import { SatelliteSelector } from '../components/overview/SatelliteSelector'
 import { Configurator } from '../components/twin/Configurator'
 import { MiniOrbitHud } from '../components/twin/MiniOrbitHud'
+import { TwinModulePopup } from '../components/twin/TwinModulePopup'
 import { SubsystemHealthRow } from '../components/twin/SubsystemHealthRow'
 import { TimeSeriesStrip } from '../components/twin/TimeSeriesStrip'
 import { ViewModeTabs, type TwinViewMode } from '../components/twin/ViewModeTabs'
@@ -68,10 +69,12 @@ export function SatelliteTwinPage() {
       </div>
 
       {/* Row 2 — Viewport + Configurator. The viewport cell is `relative` so
-          the MiniOrbitHud overlay can anchor to its top-right corner. */}
+          the HUD overlays (MiniOrbitHud bottom-left, TwinModulePopup top-right
+          when a module is clicked) can anchor inside it. */}
       <div className="col-span-8 min-h-0 overflow-hidden relative">
         <EarthViewport />
         <MiniOrbitHud />
+        <TwinModulePopup />
       </div>
       <div className="col-span-4 min-h-0 overflow-visible relative z-20">
         <Configurator />
