@@ -92,13 +92,13 @@ PANEL_SCALE     = 0.95
 # stage -X. The wing therefore spans the bay's Y dimension and extends
 # outward along X. Shell's X face is at ±0.47 m in source meters; offset
 # 0.72 lands the wing inner edge ~8 cm past the shell face.
-PANEL_LEFT_X    = 0.79
-PANEL_RIGHT_X   = -0.79
+PANEL_LEFT_X    = 0.77
+PANEL_RIGHT_X   = -0.77
 # Shell centroid in source Z is ~-0.22 m (the shell sits in the lower half
 # of the asset, with the radar mast above). Drop the wings to the shell's
 # mid-height so they read as deployed tabs emerging from the bay's ±X
 # sides, not floating above the bay.
-PANEL_Z         = -0.22
+PANEL_Z         = -0.17
 # Rotate the wing 90° about its local Z (the thin / normal axis) so it
 # turns from the previous N/S layout to E/W — long source-X edge points
 # along stage Y instead of stage X.

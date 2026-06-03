@@ -97,7 +97,7 @@ def Xform "World"
             prepend references = @./assets/solar.usdz@
         )
         {
-            double3 xformOp:translate = (0.79, 0.0, -0.22)
+            double3 xformOp:translate = (0.77, 0.0, -0.17)
             double3 xformOp:scale = (0.95, 0.95, 0.95)
             float xformOp:rotateZ = 90.0
             uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale", "xformOp:rotateZ"]
@@ -107,7 +107,7 @@ def Xform "World"
             prepend references = @./assets/solar.usdz@
         )
         {
-            double3 xformOp:translate = (-0.79, 0.0, -0.22)
+            double3 xformOp:translate = (-0.77, 0.0, -0.17)
             double3 xformOp:scale = (0.95, 0.95, 0.95)
             float xformOp:rotateZ = 90.0
             uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale", "xformOp:rotateZ"]
