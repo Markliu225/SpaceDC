@@ -84,23 +84,25 @@ SOLAR_MESH      = "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
 # 0.47 / -0.21 puts each panel's inner edge ~5 cm from the body's side
 # face (in source meters) so they read as wings on the payload bay.
 PANEL_SCALE     = 0.5
-# Panels lie FLAT on the bus's ±Y sides, normal parallel to the body's large
-# (X-Y) face normal (= stage Z) — i.e. the cell face points up at the same
-# direction the radar mast does. A rotateZ=90 spins each wing 90° about its
-# normal so the source's LONG axis points OUTWARD (along bus Y) rather than
-# along the bus length — the conventional deployed-wing look. After scale
-# 0.5 and rotateZ=90 the wing half-Y is 0.245 m; the shell's Y face is at
-# ±0.50 m, so an offset of ±0.80 lands the wing inner edge ~5 cm past the
-# shell. Wing footprint after rotation: 0.333 m along bus X × 0.489 m
-# along bus Y × 0.034 m thick.
-PANEL_LEFT_Y    = 0.80
-PANEL_RIGHT_Y   = -0.80
-PANEL_ROTATE_Z  = 90.0
+# Panels lie FLAT on the bus's ±X sides (the "east/west" faces), normal
+# parallel to the body's large (X-Y) face normal (= stage Z) so the cell
+# face points up at the same direction as the radar mast. solar.usdz's
+# source axes have the long edge along source X; we add rotateZ=90 so the
+# long edge swings to stage Y and the deploy direction (source Y) lands on
+# stage -X. The wing therefore spans the bay's Y dimension and extends
+# outward along X. Shell's X face is at ±0.47 m in source meters; offset
+# 0.72 lands the wing inner edge ~8 cm past the shell face.
+PANEL_LEFT_X    = 0.72
+PANEL_RIGHT_X   = -0.72
 # Shell centroid in source Z is ~-0.22 m (the shell sits in the lower half
 # of the asset, with the radar mast above). Drop the wings to the shell's
-# mid-height so they read as deployed tabs emerging from the bay's +Y/-Y
+# mid-height so they read as deployed tabs emerging from the bay's ±X
 # sides, not floating above the bay.
 PANEL_Z         = -0.22
+# Rotate the wing 90° about its local Z (the thin / normal axis) so it
+# turns from the previous N/S layout to E/W — long source-X edge points
+# along stage Y instead of stage X.
+PANEL_ROTATE_Z  = 90.0
 
 # Panel materials — recolour the body's solar panels. Tuned so the swap
 # reads under the satellite-stage warm Sun; emissive keeps the identity
@@ -186,18 +188,20 @@ def parentnode_overrides() -> str:
 }}'''
 
 
-def solar_wing_prim(name: str, y_offset: float) -> str:
-    """A solar wing — references solar.usdz, lies FLAT on the bus's ±Y side
-    with its normal at +Z (same direction the radar mast points), and is
-    rotated 90° about that normal so the asset's long source-X axis points
-    OUTWARD along bus Y. xformOpOrder = ["translate","scale","rotateZ"]:
-    USD composes M = M_op0 * M_op1 * …, so the LAST op (rotateZ) is applied
-    first to the local point, then scale, then translate."""
+def solar_wing_prim(name: str, x_offset: float) -> str:
+    """A solar wing — references solar.usdz with a rotateZ=90 spin so the
+    long edge runs across the bay's Y axis and the deploy direction is X.
+    Lies FLAT on the bus's ±X face with the cell side facing +Z (the same
+    direction the radar mast points).
+
+    xformOpOrder = ["translate","scale","rotateZ"] — USD composes M = M_op0
+    * M_op1 * … so the LAST op (rotateZ) is applied first to the local
+    point, then scale, then translate."""
     return f"""def Xform "{name}" (
     prepend references = @{SOLAR_REF}@
 )
 {{
-    double3 xformOp:translate = (0.0, {y_offset}, {PANEL_Z})
+    double3 xformOp:translate = ({x_offset}, 0.0, {PANEL_Z})
     double3 xformOp:scale = ({PANEL_SCALE}, {PANEL_SCALE}, {PANEL_SCALE})
     float xformOp:rotateZ = {PANEL_ROTATE_Z}
     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale", "xformOp:rotateZ"]
@@ -218,8 +222,8 @@ def bus_prim() -> str:
     and adds two solar.usdz wings on the +Y / -Y sides of the payload bay
     so the Configurator's solar_material variant drives both panels."""
     parent_overs = indent(parentnode_overrides(),       "        ")
-    left_wing    = indent(solar_wing_prim("PanelLeft",  PANEL_LEFT_Y),  "        ")
-    right_wing   = indent(solar_wing_prim("PanelRight", PANEL_RIGHT_Y), "        ")
+    left_wing    = indent(solar_wing_prim("PanelLeft",  PANEL_LEFT_X),  "        ")
+    right_wing   = indent(solar_wing_prim("PanelRight", PANEL_RIGHT_X), "        ")
     variants     = indent(solar_variants(),             "            ")
     return f"""
     def Xform "Bus" (
