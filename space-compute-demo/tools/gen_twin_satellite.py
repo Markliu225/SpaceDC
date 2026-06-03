@@ -59,13 +59,27 @@ BUS_SCALE = 230.0
 # Prim paths inside the asset (surveyed via pxr — pinned here so a swap to a
 # different Tripo bake fails loud instead of silently misbinding).
 ASSET_BUS_MESH    = "ParentNode/tripo_part_74_0/Mesh_10"   # ~70% of mesh volume
-ASSET_PANEL_XFORM = "ParentNode/tripo_part_new_1"          # the deployed panel
-ASSET_PANEL_MESH  = "Mesh_8"                                # mesh under the panel xform
+ASSET_PANEL_XFORM = "ParentNode/tripo_part_new_1"          # the bus's built-in deployed panel — hidden
 
-# Mirror geometry: panel centroid (source meters) sits +0.254 m along +Y of
-# the bus centroid (0, 0.129, 0.086). Mirroring about the bus centroid
-# y = 0.129 means scale(1,-1,1) followed by translate(0, 2*0.129, 0).
-MIRROR_TRANSLATE_Y = 0.258
+# New solar wing asset (replaces the bus's built-in deployed panel on both
+# sides of the payload bay). Standalone Tripo bake — Z-up, meters,
+# bbox 0.978 × 0.666 × 0.068 m, single mesh under tripo_node_<uuid>.
+SOLAR_REF       = "./assets/solar.usdz"
+SOLAR_NODE      = "tripo_node_f428be0e_6763_4c3c_adc0_48f9e995f063"
+SOLAR_MESH      = "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
+# After rotateY=-90: source X (0.978m long) → +Z (up), source Y (0.666m) →
+# Y (deploy axis), source Z (0.068m thick) → -X. Scaled to 0.5 so the panel
+# height (~112 cm post-scale, post-Bus-scale) fits comfortably in the
+# Closeup camera frame next to the 170 cm body. Panel half-Y after scale =
+# 0.167 m; body centroid is at y=0.129 m with body half-Y ≈ 0.30 m. Offset
+# 0.47 / -0.21 puts each panel's inner edge ~5 cm from the body's side
+# face (in source meters) so they read as wings on the payload bay.
+PANEL_SCALE     = 0.5
+# Bus shell Y in source meters: -0.242 to +0.239. Panel half-Y after scale =
+# 0.167. Offset 0.45 → panel inner edge at 0.283 m (5 cm clearance), symmetric.
+PANEL_LEFT_Y    = 0.45
+PANEL_RIGHT_Y   = -0.45
+PANEL_ROTATE_Y  = -90.0
 
 # Panel materials — recolour the body's solar panels. Tuned so the swap
 # reads under the satellite-stage warm Sun; emissive keeps the identity
@@ -133,68 +147,75 @@ def _nested_over_for_path(path: str, payload: str) -> str:
     return inner
 
 
-def bus_shell_gold_override() -> str:
-    """Nested `over` that rebinds the asset's bus shell mesh to BusGold."""
-    return _nested_over_for_path(
-        ASSET_BUS_MESH,
-        "rel material:binding = </World/Looks/BusGold>",
-    )
+def parentnode_overrides() -> str:
+    """A single `over "ParentNode"` block that combines BOTH the bus-shell
+    gold rebind (on tripo_part_74_0/Mesh_10) and the hide of the built-in
+    deployed panel (tripo_part_new_1). USD forbids two top-level `over`s
+    of the same prim name at the same sibling level, so they have to share
+    one ParentNode scope."""
+    return f'''over "ParentNode"
+{{
+    over "tripo_part_74_0"
+    {{
+        over "Mesh_10"
+        {{
+            rel material:binding = </World/Looks/BusGold>
+        }}
+    }}
+    over "tripo_part_new_1"
+    {{
+        token visibility = "invisible"
+    }}
+}}'''
 
 
-def mirrored_panel_prim() -> str:
-    """Child Xform that sub-prim references just the panel sub-tree and
-    mirrors it across the bus centerline."""
-    return f"""def Xform "MirroredPanel" (
-    prepend references = @{BUS_REF}@</root/{ASSET_PANEL_XFORM}>
+def solar_wing_prim(name: str, y_offset: float) -> str:
+    """A solar wing — references solar.usdz and orients it so the long
+    source-X axis stands up (Z) and the medium source-Y axis is the deploy
+    direction (Y). Placed at `y_offset` and uniformly scaled to PANEL_SCALE
+    in the bus's source-meter frame. xformOpOrder = ["translate","scale",
+    "rotateY"]: USD composes M = M_op0 * M_op1 * …, so the LAST op in the
+    list (rotateY) is applied first to the local point, then scale, then
+    translate."""
+    return f"""def Xform "{name}" (
+    prepend references = @{SOLAR_REF}@
 )
 {{
-    # USD composes xformOpOrder as M = M_op0 * M_op1 * ... — i.e. the op
-    # LAST in the list is applied first to the local point, then the next
-    # one up, etc. We want scale(-1) FIRST then translate(+0.258), so the
-    # list is ["translate", "scale"]: scale (last) acts on the source y,
-    # then translate (first) shifts the mirrored result up by 2 * 0.129 m
-    # to land symmetric about the bus centroid.
-    double3 xformOp:translate = (0.0, {MIRROR_TRANSLATE_Y}, 0.0)
-    double3 xformOp:scale = (1.0, -1.0, 1.0)
-    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
-
-    # Negative-scale flips winding; mark double-sided so lighting is correct
-    # on both faces.
-    over "{ASSET_PANEL_MESH}"
-    {{
-        uniform bool doubleSided = 1
-    }}
+    double3 xformOp:translate = (0.0, {y_offset}, 0.0)
+    double3 xformOp:scale = ({PANEL_SCALE}, {PANEL_SCALE}, {PANEL_SCALE})
+    float xformOp:rotateY = {PANEL_ROTATE_Y}
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale", "xformOp:rotateY"]
 }}"""
 
 
 def solar_variants() -> str:
-    """variantSet body — each variant rebinds the original panel AND the
-    mirrored panel to the same Solar_* material so the Configurator dropdown
-    drives both panels together. (It also gives the mirrored panel a
-    defined material, since its sub-prim reference doesn't bring the
-    asset's /root/_materials scope.)"""
+    """variantSet body — each variant rebinds the two new solar wings'
+    meshes to the same Solar_* material so the Configurator dropdown drives
+    both panels together."""
     variant_bodies = []
     for mat_id in SOLAR_MATERIALS.keys():
-        orig = _nested_over_for_path(
-            f"{ASSET_PANEL_XFORM}/{ASSET_PANEL_MESH}",
+        left = _nested_over_for_path(
+            f"PanelLeft/{SOLAR_NODE}/{SOLAR_MESH}",
             f"rel material:binding = </World/Looks/Solar_{mat_id}>",
         )
-        mirror = _nested_over_for_path(
-            f"MirroredPanel/{ASSET_PANEL_MESH}",
+        right = _nested_over_for_path(
+            f"PanelRight/{SOLAR_NODE}/{SOLAR_MESH}",
             f"rel material:binding = </World/Looks/Solar_{mat_id}>",
         )
-        body = f"{orig}\n{mirror}"
+        body = f"{left}\n{right}"
         variant_bodies.append(f'"{mat_id}" {{\n{indent(body, "    ")}\n}}')
     return "\n".join(variant_bodies)
 
 
 def bus_prim() -> str:
-    """The bus: references the new compute-sat asset, scales m→cm with extra
-    framing, rebinds the shell to gold, mirrors the missing solar panel, and
-    keeps the solar_material variantSet wired to BOTH panels."""
-    over_gold = indent(bus_shell_gold_override(), "        ")
-    mirror = indent(mirrored_panel_prim(), "        ")
-    variants = indent(solar_variants(), "            ")
+    """The bus: references the compute-sat asset, scales m→cm with extra
+    framing, rebinds the shell to gold, HIDES the built-in deployed panel
+    and adds two solar.usdz wings on the +Y / -Y sides of the payload bay
+    so the Configurator's solar_material variant drives both panels."""
+    parent_overs = indent(parentnode_overrides(),       "        ")
+    left_wing    = indent(solar_wing_prim("PanelLeft",  PANEL_LEFT_Y),  "        ")
+    right_wing   = indent(solar_wing_prim("PanelRight", PANEL_RIGHT_Y), "        ")
+    variants     = indent(solar_variants(),             "            ")
     return f"""
     def Xform "Bus" (
         prepend references = @{BUS_REF}@
@@ -207,9 +228,11 @@ def bus_prim() -> str:
         double3 xformOp:scale = ({BUS_SCALE}, {BUS_SCALE}, {BUS_SCALE})
         uniform token[] xformOpOrder = ["xformOp:scale"]
 
-{over_gold}
+{parent_overs}
 
-{mirror}
+{left_wing}
+
+{right_wing}
 
         variantSet "solar_material" = {{
 {variants}

@@ -91,85 +91,96 @@ def Xform "World"
                     rel material:binding = </World/Looks/BusGold>
                 }
             }
+            over "tripo_part_new_1"
+            {
+                token visibility = "invisible"
+            }
         }
 
-        def Xform "MirroredPanel" (
-            prepend references = @./assets/satellite_compute.usdz@</root/ParentNode/tripo_part_new_1>
+        def Xform "PanelLeft" (
+            prepend references = @./assets/solar.usdz@
         )
         {
-            # USD composes xformOpOrder as M = M_op0 * M_op1 * ... — i.e. the op
-            # LAST in the list is applied first to the local point, then the next
-            # one up, etc. We want scale(-1) FIRST then translate(+0.258), so the
-            # list is ["translate", "scale"]: scale (last) acts on the source y,
-            # then translate (first) shifts the mirrored result up by 2 * 0.129 m
-            # to land symmetric about the bus centroid.
-            double3 xformOp:translate = (0.0, 0.258, 0.0)
-            double3 xformOp:scale = (1.0, -1.0, 1.0)
-            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+            double3 xformOp:translate = (0.0, 0.45, 0.0)
+            double3 xformOp:scale = (0.5, 0.5, 0.5)
+            float xformOp:rotateY = -90.0
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale", "xformOp:rotateY"]
+        }
 
-            # Negative-scale flips winding; mark double-sided so lighting is correct
-            # on both faces.
-            over "Mesh_8"
-            {
-                uniform bool doubleSided = 1
-            }
+        def Xform "PanelRight" (
+            prepend references = @./assets/solar.usdz@
+        )
+        {
+            double3 xformOp:translate = (0.0, -0.45, 0.0)
+            double3 xformOp:scale = (0.5, 0.5, 0.5)
+            float xformOp:rotateY = -90.0
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale", "xformOp:rotateY"]
         }
 
         variantSet "solar_material" = {
             "Si" {
-                over "ParentNode"
+                over "PanelLeft"
                 {
-                    over "tripo_part_new_1"
+                    over "tripo_node_f428be0e_6763_4c3c_adc0_48f9e995f063"
                     {
-                        over "Mesh_8"
+                        over "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
                         {
                             rel material:binding = </World/Looks/Solar_Si>
                         }
                     }
                 }
-                over "MirroredPanel"
+                over "PanelRight"
                 {
-                    over "Mesh_8"
+                    over "tripo_node_f428be0e_6763_4c3c_adc0_48f9e995f063"
                     {
-                        rel material:binding = </World/Looks/Solar_Si>
+                        over "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
+                        {
+                            rel material:binding = </World/Looks/Solar_Si>
+                        }
                     }
                 }
             }
             "GaAs" {
-                over "ParentNode"
+                over "PanelLeft"
                 {
-                    over "tripo_part_new_1"
+                    over "tripo_node_f428be0e_6763_4c3c_adc0_48f9e995f063"
                     {
-                        over "Mesh_8"
+                        over "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
                         {
                             rel material:binding = </World/Looks/Solar_GaAs>
                         }
                     }
                 }
-                over "MirroredPanel"
+                over "PanelRight"
                 {
-                    over "Mesh_8"
+                    over "tripo_node_f428be0e_6763_4c3c_adc0_48f9e995f063"
                     {
-                        rel material:binding = </World/Looks/Solar_GaAs>
+                        over "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
+                        {
+                            rel material:binding = </World/Looks/Solar_GaAs>
+                        }
                     }
                 }
             }
             "Perovskite" {
-                over "ParentNode"
+                over "PanelLeft"
                 {
-                    over "tripo_part_new_1"
+                    over "tripo_node_f428be0e_6763_4c3c_adc0_48f9e995f063"
                     {
-                        over "Mesh_8"
+                        over "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
                         {
                             rel material:binding = </World/Looks/Solar_Perovskite>
                         }
                     }
                 }
-                over "MirroredPanel"
+                over "PanelRight"
                 {
-                    over "Mesh_8"
+                    over "tripo_node_f428be0e_6763_4c3c_adc0_48f9e995f063"
                     {
-                        rel material:binding = </World/Looks/Solar_Perovskite>
+                        over "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
+                        {
+                            rel material:binding = </World/Looks/Solar_Perovskite>
+                        }
                     }
                 }
             }
