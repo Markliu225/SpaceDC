@@ -23,6 +23,25 @@ export interface SatelliteState {
   gpu_utilization: number;
   temperature_c: number;
   battery_soc: number;
+  battery_capacity_wh?: number;
+  /** Instantaneous net power into the battery (positive = charging,
+   *  negative = discharging). */
+  battery_charge_w?: number;
+  /** Heat radiated out via the panel back (W). */
+  radiator_power_w?: number;
+  /** Workload (0..1) — the upstream job pattern driving gpu_utilization. */
+  workload?: number;
+  /** Standing alarm codes (e.g. 'low_battery', 'overtemp', 'undertemp',
+   *  'eclipse_deficit', 'radiator_undersized', 'solar_undersized'). */
+  alarms?: string[];
+  /** Design-check numbers — supply vs demand for solar avg power and
+   *  thermal peak emission. Margin = supply − demand; negative = the
+   *  current loadout cannot meet the workload. */
+  solar_demand_avg_w?: number;
+  solar_supply_avg_w?: number;
+  thermal_peak_demand_w?: number;
+  thermal_max_emit_w?: number;
+  radiator_area_m2?: number;
   downlink_mbps: number;
   task_state: TaskPhase;
 }

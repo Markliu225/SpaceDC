@@ -64,7 +64,7 @@ export const SOLAR_SIZE_OPTIONS: SolarSizeOption[] = [
   { id: 'S',  label: 'Small',       area_m2_per_panel: 4,  panel_count: 2 },
   { id: 'M',  label: 'Medium',      area_m2_per_panel: 8,  panel_count: 2 },
   { id: 'L',  label: 'Large',       area_m2_per_panel: 12, panel_count: 2 },
-  { id: 'XL', label: 'Extra Large', area_m2_per_panel: 16, panel_count: 4 },
+  { id: 'XL', label: 'Extra Large', area_m2_per_panel: 16, panel_count: 2 },
 ]
 
 export interface RadiatorMaterialOption {

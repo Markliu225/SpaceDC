@@ -105,6 +105,45 @@ _RAD_PANELS_PER_SAT = 2
 _SOLAR_CONSTANT_W_M2 = 1361.0
 
 
+# Deterministic compute-job schedule. (start_s, duration_s, util_target).
+# This is the GPU's queue — a fixed sequence of inference / training /
+# downlink-preprocessing jobs that repeats every JOB_CYCLE_S. No sinusoid,
+# no mod-based step folding: each tuple is one concrete job arriving at
+# its scheduled sim time and holding the GPUs at a target utilization for
+# its duration. The schedule is hand-picked to cover idle gaps, sustained
+# medium load, and short peak bursts the way a real maritime-detection
+# pipeline would (target-of-interest spikes vs steady inference batches).
+_JOB_SCHEDULE: list[tuple[float, float, float]] = [
+    (  0.0,  18.0, 0.10),   # cold boot — housekeeping idle
+    ( 18.0,  42.0, 0.65),   # batch inference on imagery
+    ( 60.0,  18.0, 0.92),   # target acquired — burst classification
+    ( 78.0,  36.0, 0.75),   # continued tracking
+    (114.0,  24.0, 0.20),   # downlinking results, GPU mostly idle
+    (138.0,  60.0, 0.55),   # medium training batch
+    (198.0,  48.0, 0.85),   # heavy compute run
+    (246.0,  30.0, 0.30),   # cooldown gap
+    (276.0,  72.0, 0.70),   # sustained mid-high
+    (348.0,  18.0, 0.95),   # peak burst — emergency re-classify
+    (366.0,  34.0, 0.40),   # decaying back to idle
+]
+_JOB_CYCLE_S = 400.0
+
+
+def _gpu_workload_util(t: float) -> float:
+    """Walk the fixed _JOB_SCHEDULE — NOT a sinusoid, NOT a mod-folded step
+    wave. At sim time t we wrap into the schedule's cycle and pick the
+    single active job's target utilization, falling back to a 0.05 idle
+    floor if t lands in a gap. The schedule is hand-authored so config
+    changes (GPU model, panel size, etc.) interact with a *consistent*
+    workload trace and the user sees their design choice as the only
+    moving variable."""
+    ct = t % _JOB_CYCLE_S
+    for start, dur, u in _JOB_SCHEDULE:
+        if start <= ct < start + dur:
+            return u
+    return 0.05
+
+
 class StateEngine:
     def __init__(self, on_state: Callable[[StatePacket], Any]):
         self._on_state = on_state
@@ -444,39 +483,118 @@ class StateEngine:
         s_mat   = _SOLAR_MAT_TABLE.get(cfg.solar_material,     _SOLAR_MAT_TABLE["Si"])
         s_size  = _SOLAR_SIZE_TABLE.get(cfg.solar_size,        _SOLAR_SIZE_TABLE["M"])
         r_mat   = _RAD_MAT_TABLE.get(cfg.radiator_material,    _RAD_MAT_TABLE["Aluminum"])
-        r_size  = _RAD_SIZE_TABLE.get(cfg.radiator_size,       _RAD_SIZE_TABLE["Standard"])
 
-        # Solar input depends on material × size × incidence × sunlit flag.
-        # cos_a above is the dot of sat-position-unit with sun direction, which
-        # ranges roughly -1..1; we clamp the negative side to 0 for incidence.
+        # Per user spec: the back of each solar panel is also the radiator —
+        # area shared. Ignore the radiator_size selector for area; keep
+        # radiator MATERIAL as the only knob (its emissivity).
+        panel_area_m2 = s_size["area_m2_per_panel"] * s_size["panel_count"]
+        radiator_area_m2 = panel_area_m2
+
+        # --- Solar input (front of panel) -------------------------------------
         incidence = max(0.0, cos_a) if self._sat.sunlit else 0.0
         self._sat.solar_input_w = (
-            s_mat["efficiency"]
-            * s_size["area_m2_per_panel"]
-            * s_size["panel_count"]
-            * _SOLAR_CONSTANT_W_M2
-            * incidence
+            s_mat["efficiency"] * panel_area_m2 * _SOLAR_CONSTANT_W_M2 * incidence
         )
 
-        # --- Power / thermal / battery / downlink -----------------------------
-        load = 0.15 + 0.35 * (0.5 + 0.5 * math.sin(t / 20.0))
-        self._sat.gpu_utilization = load
-        # Payload draw now scales with GPU TDP × card count × utilization.
-        self._sat.payload_power_w = gpu["tdp_w"] * _GPU_CARDS_PER_SAT * load
-        self._sat.platform_power_w = 600.0
-        # Thermal target uses the linear surrogate from the doc: lower
-        # emissivity × area => higher steady-state temperature.
-        radiator_capacity = max(
-            0.05,
-            r_mat["emissivity"] * _RAD_PANELS_PER_SAT * r_size["area_m2_per_panel"],
-        )
-        target = 28.0 + (50.0 * load) / radiator_capacity
-        self._sat.temperature_c += (target - self._sat.temperature_c) * 0.1
-        net = self._sat.solar_input_w - self._sat.payload_power_w - self._sat.platform_power_w
-        self._sat.battery_soc = max(0.0, min(1.0, self._sat.battery_soc + net * dt / 3.6e7))
+        # --- Workload-driven GPU utilization ----------------------------------
+        # Superposition of square jobs with mismatched periods so the curve
+        # has burstiness (high/mid/low steps) rather than a clean sinusoid.
+        # Eclipse triggers low-power mode (clamped down further below).
+        workload = _gpu_workload_util(t)
+        if not self._sat.sunlit and self._sat.battery_soc < 0.4:
+            workload = min(workload, 0.20)  # power save: drop to baseline
+        self._sat.workload = workload
+        # Real-design GPU power: idle floor at ~15% TDP, scales linearly with
+        # util up to TDP. Datacenter GPUs (H100/H200/B200/MI300X) bench
+        # within ~10% of this curve.
+        IDLE_FRAC = 0.15
+        gpu_w_per_card = gpu["tdp_w"] * (IDLE_FRAC + (1.0 - IDLE_FRAC) * workload)
+        payload_w = gpu_w_per_card * _GPU_CARDS_PER_SAT
+        platform_w = 600.0
+        self._sat.gpu_utilization = workload
+        self._sat.payload_power_w = payload_w
+        self._sat.platform_power_w = platform_w
+
+        # --- Battery (real Wh integration, accelerated 60x for visibility) ----
+        # Net power into the battery. Surplus charges it; deficit discharges.
+        load_total_w = payload_w + platform_w
+        net_w = self._sat.solar_input_w - load_total_w
+        self._sat.battery_charge_w = net_w
+        PHYS_TIME_SCALE = 60.0   # 1 wall sec runs 60 sim sec of battery dynamics
+        capacity_J = self._sat.battery_capacity_wh * 3600.0
+        d_soc = (net_w * dt * PHYS_TIME_SCALE) / capacity_J
+        self._sat.battery_soc = max(0.0, min(1.0, self._sat.battery_soc + d_soc))
+
+        # --- Thermal (Stefan-Boltzmann, accelerated 60x) ----------------------
+        # Heat in = electrical power dissipated as heat (≈ payload + platform
+        # minus a small fraction that leaves as RF — call it 5%).
+        SIGMA = 5.67e-8             # W/m²K⁴ Stefan-Boltzmann
+        T_BG_K = 250.0              # effective deep-space + Earth IR background
+        epsilon = r_mat["emissivity"]
+        T_K = self._sat.temperature_c + 273.15
+        Q_in = (payload_w + platform_w) * 0.95
+        Q_out = epsilon * SIGMA * radiator_area_m2 * (T_K**4 - T_BG_K**4)
+        self._sat.radiator_power_w = max(0.0, Q_out)
+        # Thermal mass — typical 200 kg sat with aluminum/structures: c_p ~ 800
+        # J/kg·K, mass ~ 200 kg → 160 kJ/K. Picked here for legible dynamics.
+        THERMAL_MASS_J_PER_K = 160_000.0
+        dT_dt = (Q_in - Q_out) / THERMAL_MASS_J_PER_K
+        T_K_new = T_K + dT_dt * dt * PHYS_TIME_SCALE
+        # Soft clamp to plausible space-sat range.
+        self._sat.temperature_c = max(-80.0, min(95.0, T_K_new - 273.15))
+
+        # --- Downlink ---------------------------------------------------------
         self._gs.visible = math.sin(t / 30.0) > 0.4
         self._sat.downlink_mbps = 120.0 if self._gs.visible else 0.0
         self._gs.rx_mbps = self._sat.downlink_mbps
+
+        # --- Design check (solar supply vs avg demand; thermal headroom) ------
+        # Average workload across the _JOB_SCHEDULE — duration-weighted mean
+        # of each block's target util. This is the same number the visible
+        # workload trace will tend to (over a cycle), so the user sees the
+        # demand the SCHEDULE actually produces, not a hand-typed 0.40.
+        sched_total_dt = sum(d for _, d, _ in _JOB_SCHEDULE)
+        avg_workload = (sum(d * u for _, d, u in _JOB_SCHEDULE) / sched_total_dt
+                        if sched_total_dt > 0 else 0.30)
+        avg_card_w = gpu["tdp_w"] * (IDLE_FRAC + (1.0 - IDLE_FRAC) * avg_workload)
+        avg_payload_w = avg_card_w * _GPU_CARDS_PER_SAT
+        solar_demand_avg_w = avg_payload_w + platform_w
+        peak_solar_w = s_mat["efficiency"] * panel_area_m2 * _SOLAR_CONSTANT_W_M2
+        # Sat is sunlit ~50 % of an orbit; the BATTERY needs to round-trip
+        # the night, so average solar supply is 0.5 × peak.
+        solar_supply_avg_w = peak_solar_w * 0.5
+
+        # Thermal peak demand: worst case is sustained 100 % workload.
+        peak_card_w = gpu["tdp_w"] * (IDLE_FRAC + (1.0 - IDLE_FRAC) * 1.0)
+        thermal_peak_demand_w = (peak_card_w * _GPU_CARDS_PER_SAT + platform_w) * 0.95
+        # Thermal supply: emit at the +60 °C safe-operating ceiling.
+        T_max_K = 60.0 + 273.15
+        thermal_max_emit_w = epsilon * SIGMA * radiator_area_m2 * (T_max_K**4 - T_BG_K**4)
+
+        self._sat.solar_demand_avg_w    = solar_demand_avg_w
+        self._sat.solar_supply_avg_w    = solar_supply_avg_w
+        self._sat.thermal_peak_demand_w = thermal_peak_demand_w
+        self._sat.thermal_max_emit_w    = thermal_max_emit_w
+        self._sat.radiator_area_m2      = radiator_area_m2
+
+        # --- Standing alarms --------------------------------------------------
+        alarms: list[str] = []
+        if self._sat.battery_soc < 0.20:
+            alarms.append("low_battery")
+        if self._sat.temperature_c > 70.0:
+            alarms.append("overtemp")
+        if self._sat.temperature_c < -40.0:
+            alarms.append("undertemp")
+        if (not self._sat.sunlit
+                and self._sat.battery_soc < 0.35
+                and net_w < 0):
+            alarms.append("eclipse_deficit")
+        # Design alarms — use the same numbers the popup will display.
+        if thermal_max_emit_w < thermal_peak_demand_w * 0.9:
+            alarms.append("radiator_undersized")
+        if solar_supply_avg_w < solar_demand_avg_w:
+            alarms.append("solar_undersized")
+        self._sat.alarms = alarms
         self._sat.gpu_type = cfg.gpu  # echo for the legacy 14-param card
 
 

@@ -63,7 +63,7 @@ POLL_HZ = 5.0
 # pending a richer articulated model. Missing prims are skipped, so this
 # list can grow again when that model lands.
 SAT_VARIANT_TARGETS = [
-    ("/World/Satellite/Bus", ("solar_material",)),
+    ("/World/Satellite/Bus", ("solar_material", "solar_size")),
 ]
 
 # Satellite-stage lights authored in usd/satellite.usda. The sun-side

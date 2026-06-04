@@ -75,8 +75,9 @@ def Xform "World"
         prepend references = @./assets/satellite_body.usdz@
         variants = {
             string solar_material = "Si"
+            string solar_size = "M"
         }
-        prepend variantSets = ["solar_material"]
+        prepend variantSets = ["solar_material", "solar_size"]
     )
     {
         double3 xformOp:scale = (170.0, 170.0, 170.0)
@@ -97,8 +98,6 @@ def Xform "World"
             prepend references = @./assets/solar.usdz@
         )
         {
-            double3 xformOp:translate = (0.77, 0.0, -0.17)
-            double3 xformOp:scale = (0.95, 0.95, 0.95)
             float xformOp:rotateZ = 90.0
             uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale", "xformOp:rotateZ"]
         }
@@ -107,8 +106,6 @@ def Xform "World"
             prepend references = @./assets/solar.usdz@
         )
         {
-            double3 xformOp:translate = (-0.77, 0.0, -0.17)
-            double3 xformOp:scale = (0.95, 0.95, 0.95)
             float xformOp:rotateZ = 90.0
             uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale", "xformOp:rotateZ"]
         }
@@ -117,6 +114,56 @@ def Xform "World"
             "Si" { }
             "GaAs" { }
             "Perovskite" { }
+        }
+        variantSet "solar_size" = {
+            "S" {
+                over "PanelLeft"
+                {
+                    double3 xformOp:translate = (0.5313, 0.0, -0.17)
+                    double3 xformOp:scale = (0.2320, 1.0120, 0.7350)
+                }
+                over "PanelRight"
+                {
+                    double3 xformOp:translate = (-0.5313, 0.0, -0.17)
+                    double3 xformOp:scale = (0.2320, 1.0120, 0.7350)
+                }
+            }
+            "M" {
+                over "PanelLeft"
+                {
+                    double3 xformOp:translate = (0.6085, 0.0, -0.17)
+                    double3 xformOp:scale = (0.4640, 1.0120, 0.7350)
+                }
+                over "PanelRight"
+                {
+                    double3 xformOp:translate = (-0.6085, 0.0, -0.17)
+                    double3 xformOp:scale = (0.4640, 1.0120, 0.7350)
+                }
+            }
+            "L" {
+                over "PanelLeft"
+                {
+                    double3 xformOp:translate = (0.6858, 0.0, -0.17)
+                    double3 xformOp:scale = (0.6960, 1.0120, 0.7350)
+                }
+                over "PanelRight"
+                {
+                    double3 xformOp:translate = (-0.6858, 0.0, -0.17)
+                    double3 xformOp:scale = (0.6960, 1.0120, 0.7350)
+                }
+            }
+            "XL" {
+                over "PanelLeft"
+                {
+                    double3 xformOp:translate = (0.7630, 0.0, -0.17)
+                    double3 xformOp:scale = (0.9280, 1.0120, 0.7350)
+                }
+                over "PanelRight"
+                {
+                    double3 xformOp:translate = (-0.7630, 0.0, -0.17)
+                    double3 xformOp:scale = (0.9280, 1.0120, 0.7350)
+                }
+            }
         }
     }
     }

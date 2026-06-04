@@ -17,6 +17,10 @@ export function GpuPanel({ cardIdx }: { cardIdx: number }) {
   const perSatTdpKw  = (gpu.tdp_w * GPU_CARDS_PER_SAT) / 1000
 
   const util = sat?.gpu_utilization
+  const workload = sat?.workload
+  const payloadW = sat?.payload_power_w
+  const liveTotalKw = payloadW != null ? payloadW / 1000 : undefined
+  const liveCardW   = payloadW != null ? payloadW / GPU_CARDS_PER_SAT : undefined
   const die  = sat?.temperature_c
   const jobPhase = (() => {
     const phase = sat?.task_state ?? 'idle'
@@ -36,10 +40,25 @@ export function GpuPanel({ cardIdx }: { cardIdx: number }) {
       </Section>
       <Section title="Live">
         <Row
+          label="Workload"
+          value={workload != null ? Math.round(Math.max(0, Math.min(1, workload)) * 100).toString() : '— —'}
+          unit="%"
+          tone={workload != null && workload > 0.8 ? 'hot' : undefined}
+        />
+        <Row
           label="Util"
           value={util != null ? Math.round(Math.max(0, Math.min(1, util)) * 100).toString() : '— —'}
           unit="%"
-          tone={util != null && util > 0.8 ? 'hot' : undefined}
+        />
+        <Row
+          label="Per card"
+          value={liveCardW != null ? Math.round(liveCardW).toString() : '— —'}
+          unit="W"
+        />
+        <Row
+          label="Total"
+          value={liveTotalKw != null ? liveTotalKw.toFixed(2) : '— —'}
+          unit="kW"
         />
         <Row label="Die"   value={die != null ? die.toFixed(1) : '— —'} unit="°C" />
         <Row label="Job"   value={jobPhase} />

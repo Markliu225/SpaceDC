@@ -83,17 +83,39 @@ SOLAR_MESH      = "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
 # 0.167 m; body centroid is at y=0.129 m with body half-Y ≈ 0.30 m. Offset
 # 0.47 / -0.21 puts each panel's inner edge ~5 cm from the body's side
 # face (in source meters) so they read as wings on the payload bay.
-PANEL_SCALE     = 0.95
+# Per-size NON-UNIFORM scales for the solar_size variantSet.
+#
+# Physical setup (user-stipulated): the payload bay is treated as 1 m long,
+# and each wing is a rectangle that runs the bay's full length along stage Y
+# (the bay's long axis) and deploys outward along stage X. The four sizes are
+# 4 / 8 / 12 / 16 m² each — areas scale 1 : 2 : 3 : 4 — so the deploy length
+# (panel area ÷ 1 m bay width) also has to scale 1 : 2 : 3 : 4. That can't
+# come from a single scalar scale: a uniform scale would grow Y as well, and
+# the panel would stop matching the bay edge.
+#
+# So each variant authors a NON-UNIFORM (sx, sy, sz) triple:
+#   sy fixed → stage-Y span = 0.978 m source × sy = bay's ~1 m source length
+#   sx linear in area → stage-X (deploy) span = 0.666 m × sx, areas scale 1:4
+#   sz fixed thin    → ~5 cm physical thickness, just enough to read in 3D
+#
+# Inner-edge X is held constant across every variant (the wing's near edge
+# stays welded to the bay's ±X face); translate is derived from sx in
+# solar_size_variants() below.
+PANEL_SIZE_SCALE: dict[str, tuple[float, float, float]] = {
+    "S":  (0.232, 1.012, 0.735),
+    "M":  (0.464, 1.012, 0.735),
+    "L":  (0.696, 1.012, 0.735),
+    "XL": (0.928, 1.012, 0.735),
+}
 # Panels lie FLAT on the bus's ±X sides (the "east/west" faces), normal
 # parallel to the body's large (X-Y) face normal (= stage Z) so the cell
 # face points up at the same direction as the radar mast. solar.usdz's
 # source axes have the long edge along source X; we add rotateZ=90 so the
 # long edge swings to stage Y and the deploy direction (source Y) lands on
 # stage -X. The wing therefore spans the bay's Y dimension and extends
-# outward along X. Shell's X face is at ±0.47 m in source meters; offset
-# 0.72 lands the wing inner edge ~8 cm past the shell face.
-PANEL_LEFT_X    = 0.77
-PANEL_RIGHT_X   = -0.77
+# outward along X. (Per-variant translate is derived from SOLAR_INNER_EDGE_X
+# and the variant's sx in solar_size_variants(); no scalar offset here.)
+
 # Shell centroid in source Z is ~-0.22 m (the shell sits in the lower half
 # of the asset, with the radar mast above). Drop the wings to the shell's
 # mid-height so they read as deployed tabs emerging from the bay's ±X
@@ -188,21 +210,27 @@ def parentnode_overrides() -> str:
 }}'''
 
 
-def solar_wing_prim(name: str, x_offset: float) -> str:
+def solar_wing_prim(name: str) -> str:
     """A solar wing — references solar.usdz with a rotateZ=90 spin so the
     long edge runs across the bay's Y axis and the deploy direction is X.
     Lies FLAT on the bus's ±X face with the cell side facing +Z (the same
     direction the radar mast points).
 
-    xformOpOrder = ["translate","scale","rotateZ"] — USD composes M = M_op0
-    * M_op1 * … so the LAST op (rotateZ) is applied first to the local
-    point, then scale, then translate."""
+    NOTE: translate + scale are intentionally NOT authored on the def body.
+    USD opinion strength is Local > Variant, so a def-level translate
+    would shadow the solar_size variant's override and the wing would
+    refuse to resize when the user picks S/L/XL. Instead each solar_size
+    variant authors the full (translate, scale) pair on PanelLeft and
+    PanelRight; the default variant 'M' makes sure a fresh stage still
+    has well-defined transforms.
+
+    xformOpOrder is fixed here — USD composes M = M_op0 * M_op1 * … so the
+    LAST op (rotateZ) is applied first to the local point, then scale,
+    then translate."""
     return f"""def Xform "{name}" (
     prepend references = @{SOLAR_REF}@
 )
 {{
-    double3 xformOp:translate = ({x_offset}, 0.0, {PANEL_Z})
-    double3 xformOp:scale = ({PANEL_SCALE}, {PANEL_SCALE}, {PANEL_SCALE})
     float xformOp:rotateZ = {PANEL_ROTATE_Z}
     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale", "xformOp:rotateZ"]
 }}"""
@@ -216,22 +244,61 @@ def solar_variants() -> str:
     return "\n".join(f'"{m}" {{ }}' for m in SOLAR_MATERIALS.keys())
 
 
+# Constant inner-edge X in the bus's source-meter frame: the bus shell's +X
+# face sits at ~0.47 m source; pinning the wing's inner edge at 0.454 m
+# leaves a 1.6 cm seam so the wing visibly meets the bay without z-fighting.
+# Every solar_size variant's translate is derived from this anchor so the
+# inner edge stays welded regardless of which size the user picks.
+SOLAR_INNER_EDGE_X = 0.454
+
+
+def solar_size_variants() -> str:
+    """variantSet body for solar_size — each variant overrides the wing's
+    translate + non-uniform scale. As sx grows (deploy direction), the
+    translate slides outward by exactly the change in stage-X half-extent
+    (0.333 m × Δsx), keeping the inner edge welded to the bay's ±X face.
+    xformOpOrder is unchanged (declared on the base def)."""
+    bodies: list[str] = []
+    for size_id, (sx, sy, sz) in PANEL_SIZE_SCALE.items():
+        half_x_after_scale = 0.333 * sx
+        tx = SOLAR_INNER_EDGE_X + half_x_after_scale
+        left = (
+            f'over "PanelLeft"\n'
+            f'{{\n'
+            f'    double3 xformOp:translate = ({tx:.4f}, 0.0, {PANEL_Z})\n'
+            f'    double3 xformOp:scale = ({sx:.4f}, {sy:.4f}, {sz:.4f})\n'
+            f'}}'
+        )
+        right = (
+            f'over "PanelRight"\n'
+            f'{{\n'
+            f'    double3 xformOp:translate = ({-tx:.4f}, 0.0, {PANEL_Z})\n'
+            f'    double3 xformOp:scale = ({sx:.4f}, {sy:.4f}, {sz:.4f})\n'
+            f'}}'
+        )
+        body = f"{left}\n{right}"
+        bodies.append(f'"{size_id}" {{\n{indent(body, "    ")}\n}}')
+    return "\n".join(bodies)
+
+
 def bus_prim() -> str:
     """The bus: references the compute-sat asset, scales m→cm with extra
     framing, rebinds the shell to gold, HIDES the built-in deployed panel
     and adds two solar.usdz wings on the +Y / -Y sides of the payload bay
     so the Configurator's solar_material variant drives both panels."""
-    parent_overs = indent(parentnode_overrides(),       "        ")
-    left_wing    = indent(solar_wing_prim("PanelLeft",  PANEL_LEFT_X),  "        ")
-    right_wing   = indent(solar_wing_prim("PanelRight", PANEL_RIGHT_X), "        ")
-    variants     = indent(solar_variants(),             "            ")
+    parent_overs    = indent(parentnode_overrides(),     "        ")
+    left_wing       = indent(solar_wing_prim("PanelLeft"),  "        ")
+    right_wing      = indent(solar_wing_prim("PanelRight"), "        ")
+    mat_variants    = indent(solar_variants(),           "            ")
+    size_variants   = indent(solar_size_variants(),      "            ")
     return f"""
     def Xform "Bus" (
         prepend references = @{BUS_REF}@
         variants = {{
             string solar_material = "Si"
+            string solar_size = "M"
         }}
-        prepend variantSets = ["solar_material"]
+        prepend variantSets = ["solar_material", "solar_size"]
     )
     {{
         double3 xformOp:scale = ({BUS_SCALE}, {BUS_SCALE}, {BUS_SCALE})
@@ -244,7 +311,10 @@ def bus_prim() -> str:
 {right_wing}
 
         variantSet "solar_material" = {{
-{variants}
+{mat_variants}
+        }}
+        variantSet "solar_size" = {{
+{size_variants}
         }}
     }}"""
 

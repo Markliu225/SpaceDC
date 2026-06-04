@@ -1,4 +1,4 @@
-import { CircleDollarSign, Cpu, Maximize2, Snowflake, Sun, Thermometer, Weight } from 'lucide-react'
+import { Cpu, Snowflake, Sun } from 'lucide-react'
 import { Card } from '../primitives'
 import {
   GPU_OPTIONS,
@@ -8,8 +8,8 @@ import {
   SOLAR_SIZE_OPTIONS,
 } from '../../data/satConfigOptions'
 import { useSatConfig } from '../../hooks/useSatConfig'
-import { ConfigDelta } from './ConfigDelta'
 import { ConfigDropdown } from './ConfigDropdown'
+import { DesignSummary } from './DesignSummary'
 
 /**
  * Configurator — the right-rail "design lab" where the viewer reconfigures
@@ -23,7 +23,7 @@ import { ConfigDropdown } from './ConfigDropdown'
  * SAT_CONFIG_BASELINE). Recomputes synchronously via deriveStats().
  */
 export function Configurator() {
-  const { cfg, baselineStats, stats, update } = useSatConfig()
+  const { cfg, update } = useSatConfig()
 
   return (
     <Card dense className="h-full flex flex-col min-h-0 overflow-y-auto">
@@ -98,58 +98,7 @@ export function Configurator() {
         />
       </Section>
 
-      <div className="mt-3 border-t border-border-weak pt-2">
-        <div className="mb-1.5 text-[10px] uppercase tracking-[0.10em] text-text-lo">
-          Δ vs baseline
-        </div>
-        <div className="flex flex-col gap-1">
-          <ConfigDelta
-            label="Solar Input (peak)"
-            baseline={baselineStats.solar_input_max_w}
-            current={stats.solar_input_max_w}
-            digits={0}
-            unit="W"
-            bias="higher_is_better"
-            icon={Sun}
-          />
-          <ConfigDelta
-            label="Compute"
-            baseline={baselineStats.compute_pflops}
-            current={stats.compute_pflops}
-            digits={1}
-            unit="PFLOPS"
-            bias="higher_is_better"
-            icon={Maximize2}
-          />
-          <ConfigDelta
-            label="Launch Mass"
-            baseline={baselineStats.launch_mass_kg}
-            current={stats.launch_mass_kg}
-            digits={0}
-            unit="kg"
-            bias="lower_is_better"
-            icon={Weight}
-          />
-          <ConfigDelta
-            label="CAPEX / sat"
-            baseline={baselineStats.capex_usd_m}
-            current={stats.capex_usd_m}
-            digits={2}
-            unit="$M"
-            bias="lower_is_better"
-            icon={CircleDollarSign}
-          />
-          <ConfigDelta
-            label="Thermal Load Ratio"
-            baseline={baselineStats.thermal_index}
-            current={stats.thermal_index}
-            digits={2}
-            unit="W/ε·m²"
-            bias="lower_is_better"
-            icon={Thermometer}
-          />
-        </div>
-      </div>
+      <DesignSummary />
     </Card>
   )
 }

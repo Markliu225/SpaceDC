@@ -35,7 +35,28 @@ class SatelliteState(BaseModel):
     gpu_type: GpuType = "H100"
     gpu_utilization: float = 0.0
     temperature_c: float = 25.0
+    # Battery: SOC (0..1), total capacity (Wh), and instantaneous net power
+    # into the battery (positive = charging, negative = discharging).
     battery_soc: float = 0.9
+    battery_capacity_wh: float = 1500.0
+    battery_charge_w: float = 0.0
+    # Heat balance: total radiator emission (W). Stefan-Boltzmann driven —
+    # see services / state_engine.
+    radiator_power_w: float = 0.0
+    # Workload (0..1) drives gpu_utilization; exposed so the UI can show
+    # the upstream job pattern, not just the resulting load.
+    workload: float = 0.0
+    # Standing alarms — short string codes the web maps to localized labels.
+    # Empty list while nominal.
+    alarms: list[str] = []
+    # Design-check numbers — let the user see the physics math behind the
+    # alarms, not just the alarm flag. All in real units (W, m²); the popup
+    # also derives margin = supply − demand so green/red is unambiguous.
+    solar_demand_avg_w: float = 0.0
+    solar_supply_avg_w: float = 0.0
+    thermal_peak_demand_w: float = 0.0
+    thermal_max_emit_w: float = 0.0
+    radiator_area_m2: float = 0.0
     downlink_mbps: float = 0.0
     task_state: TaskPhase = "idle"
 

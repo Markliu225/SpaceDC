@@ -4,6 +4,7 @@ import { PopupChrome } from './panels/PopupPrimitives'
 import { ShellPanel } from './panels/ShellPanel'
 import { RadarPanel } from './panels/RadarPanel'
 import { GpuPanel } from './panels/GpuPanel'
+import { SolarPanel } from './panels/SolarPanel'
 
 /**
  * TwinModulePopup — dispatcher for the Satellite Twin viewport's click-to-
@@ -29,10 +30,14 @@ import { GpuPanel } from './panels/GpuPanel'
 // under /World/Satellite/Bus/<...>/, but every selection_changed path ends
 // with .../tripo_part_<N>(/Mesh_<M>)?. Order matters — shell + radar are
 // disjoint singletons, GPU is the row.
-const MATCHERS: { kind: 'shell' | 'radar' | 'gpu'; re: RegExp }[] = [
+const MATCHERS: { kind: 'shell' | 'radar' | 'gpu' | 'solar'; re: RegExp }[] = [
   { kind: 'shell', re: /.*\/tripo_part_9(\/Mesh_\d+)?$/ },
   { kind: 'radar', re: /.*\/tripo_part_4(\/Mesh_\d+)?$/ },
   { kind: 'gpu',   re: /.*\/tripo_part_(1|11|12|13|14|15|16)(\/Mesh_\d+)?$/ },
+  // Solar wings — clicking any descendant of PanelLeft/PanelRight (the
+  // wrapper Xform, the referenced tripo_node, or its mesh) opens the wing
+  // popup. Side captured in group 1.
+  { kind: 'solar', re: /.*\/(PanelLeft|PanelRight)(?:\/.*)?$/ },
 ]
 
 // The 7 GPU prims in the asset, listed by ascending source-X (the visible
@@ -49,7 +54,7 @@ const GPU_PART_ORDER = [
 ] as const
 
 interface Match {
-  kind: 'shell' | 'radar' | 'gpu'
+  kind: 'shell' | 'radar' | 'gpu' | 'solar'
   partId: string
 }
 
@@ -58,8 +63,11 @@ function matchSelection(path: string | null): Match | null {
   for (const { kind, re } of MATCHERS) {
     const m = re.exec(path)
     if (!m) continue
-    // For GPU the regex's group 1 captures the numeric part suffix.
-    const partId = kind === 'gpu' ? `tripo_part_${m[1]}` : (kind === 'shell' ? 'tripo_part_9' : 'tripo_part_4')
+    let partId: string
+    if (kind === 'gpu')        partId = `tripo_part_${m[1]}`
+    else if (kind === 'shell') partId = 'tripo_part_9'
+    else if (kind === 'radar') partId = 'tripo_part_4'
+    else                       partId = m[1]   // 'PanelLeft' | 'PanelRight'
     return { kind, partId }
   }
   return null
@@ -69,6 +77,7 @@ const HEADER = {
   shell: { title: 'Payload Bay',      subtitle: 'Shell · MLI / Radiator', swatch: '#B69755' },
   radar: { title: 'Maritime Payload', subtitle: 'X-band SAR · Comms',     swatch: '#3B9EFF' },
   gpu:   { title: 'GPU Compute',      subtitle: '',                       swatch: '#E8EEFB' },
+  solar: { title: 'Solar Wing',       subtitle: 'PV array · radiator',    swatch: '#22D3EE' },
 } as const
 
 export function TwinModulePopup() {
@@ -93,9 +102,10 @@ export function TwinModulePopup() {
     : 0
 
   const head = HEADER[match.kind]
-  const subtitle = match.kind === 'gpu'
-    ? `Card ${String(gpuIdx).padStart(2, '0')} · live`
-    : head.subtitle
+  const subtitle =
+    match.kind === 'gpu'   ? `Card ${String(gpuIdx).padStart(2, '0')} · live` :
+    match.kind === 'solar' ? `${match.partId === 'PanelLeft' ? 'East' : 'West'} wing · live`
+                           : head.subtitle
 
   return (
     <div className="pointer-events-none absolute right-3 top-3 z-40">
@@ -108,6 +118,7 @@ export function TwinModulePopup() {
         {match.kind === 'shell' && <ShellPanel />}
         {match.kind === 'radar' && <RadarPanel />}
         {match.kind === 'gpu'   && <GpuPanel cardIdx={gpuIdx} />}
+        {match.kind === 'solar' && <SolarPanel side={match.partId as 'PanelLeft' | 'PanelRight'} />}
       </PopupChrome>
     </div>
   )
