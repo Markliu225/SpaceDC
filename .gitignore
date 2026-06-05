@@ -1,0 +1,17 @@
+# Repo-top gitignore. Most rules live in space-compute-demo/.gitignore;
+# this file just blocks oversized assets at the parent that previously
+# got committed by accident and pushed the pack over GitHub's per-file
+# 100 MB hard limit.
+
+# Blender install (400 MB+ zip + extracted runtime). Tools should live
+# outside the repo or be downloaded by a setup script, not vendored.
+tools/blender/
+tools/blender-*.zip
+
+# NVIDIA AECO DigitalTwin asset pack — multi-GB textures (~50–140 MB each
+# for normal/ORM maps). Keep external; reference via SPACE_DEMO_USD_ROOT
+# or a parallel asset store, not in-repo.
+space-compute-demo/assets_usd/DigitalTwin/
+
+# Native debug symbols and large standalone runtime binaries.
+*.pdb
