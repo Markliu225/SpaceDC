@@ -40,8 +40,18 @@ assets_raw/**/*.sldasm
 assets_raw/**/*.fbx
 assets_raw/**/*.glb
 assets_usd/**/*.usdz
+# Oversized USD payloads kept external (e.g. SpaceDcBackbone.usdz ~77MB) — the
+# stages reference them by path; drop them next to the .usda locally.
+usd/assets/*.usdz
+assets_raw/**/*.usdz
 !assets_raw/README.md
 !assets_raw/MANIFEST.md
+
+# Local tool outputs (regenerable by tools/render_usd.py + the inspect/analyze
+# scripts) — never committed.
+tools/_renders/
+tools/*_report.json
+tools/slots_report.json
 
 # Heavy AEC City Tower demo pack (NVIDIA AECO, ~2.8 GB) — referenced by
 # usd/mission.usda as the image-capture target scene, kept external to git.
