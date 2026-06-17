@@ -88,35 +88,42 @@ SERVER_MATERIALS = {
 # --- Solar array ------------------------------------------------------------
 # The backbone's mid-section deliberately carries no server racks: each ±Y face
 # of the central module (tripo_part_6/7) instead presents a deployment bracket
-# with a rotary hinge. A support boom reaches out from each bracket and carries
-# an oversized solar wing — far larger than the backbone itself — one per side.
-# All in backbone metres (×BACKBONE_SCALE into the cm host stage).
-SOLAR_Z      = -0.024     # central-module hub height
+# with a rotary hinge. A thin support boom reaches out from each bracket and
+# carries oversized solar wings built from the real solar.usdz panel — far
+# larger than the backbone itself — one wing per side.
+#
+# All lengths in backbone metres (the solar group is a child of the ×180
+# /World/Satellite Xform, so 1 unit here = BACKBONE_SCALE cm = 1.8 m on stage).
+SOLAR_REF    = "./assets/solar.usdz"
+# solar.usdz native (m): long 0.978 (X), wide 0.666 (Y), thick 0.068 (Z); the
+# cell face is along ±Z. rotateY=90 stands the panel up: long→Z (wing height),
+# wide→Y (deploy), and the cell normal Z→+X (the sun / camera side).
+SOLAR_NATIVE = (0.978, 0.666, 0.068)
+PANEL_RY     = 90.0
+# Per-panel scale (height, deploy, thickness) — non-uniform so the panel reads
+# oversized and thin. Height 0.978×1.45≈1.42 (≈2.6 m on stage, taller than the
+# 1.8 m body); deploy 0.666×1.05≈0.70; thickness 0.068×0.45≈0.031.
+PANEL_SCALE  = (1.45, 1.05, 0.45)
+N_PANELS     = 2          # "几块" — two panels chained into one wing per side
+PANEL_GAP    = 0.05       # gap between chained panels
+
+SOLAR_Z      = -0.024     # central-module hub height (boom + panel mid-Z)
 SOLAR_X      = 0.030      # boom + panel plane, just off the +X spine face
-BOOM_Y0      = 0.08       # boom root (seats inside the bracket)
-BOOM_Y1      = 0.47       # boom tip / panel inner edge (clear of rack tips @0.227)
-BOOM_THICK   = 0.030      # square support-rod cross-section
-PANEL_Y1     = 1.45       # wing outer tip (|Y|) — span ≫ 0.45 m backbone width
-PANEL_H      = 1.32       # wing height along Z — taller than the 1.0 m body
-PANEL_SEGS   = 3          # "几块" — three articulated cell segments per wing
-PANEL_GAP    = 0.025      # inter-segment gap
-FRAME_X      = 0.016      # aluminium substrate thickness (along X)
-CELL_X       = 0.010      # photovoltaic layer, proud on the +X (sun) face
+BOOM_Y0      = 0.07       # boom root (seats inside the bracket)
+BOOM_Y1      = 0.42       # boom tip / first-panel inner edge (clear of racks @0.227)
+BOOM_THICK   = 0.012      # thin square support-rod cross-section (was 0.030)
 
 SOLAR_MATERIALS = {
-    # Deep-blue photovoltaic cells; faint emissive so they read in eclipse.
-    "SolarCell":  {"diffuse": (0.035, 0.085, 0.340), "metallic": 0.35,
-                   "roughness": 0.22, "emissive": (0.010, 0.040, 0.160)},
-    # Brushed-aluminium panel frame + support boom.
+    # Brushed-aluminium support boom (the panels keep solar.usdz's own look).
     "SolarFrame": {"diffuse": (0.600, 0.630, 0.700), "metallic": 0.85,
                    "roughness": 0.35, "emissive": (0.0, 0.0, 0.0)},
 }
 
-# Closeup camera — pulled far back along +X so the whole solar sail (a thin
-# Y-Z plane) reads face-on, with a slight -Y / +Z 3/4 tilt. Wide enough to hold
-# the full ~5 m wingspan + ~2.4 m panel height after scale.
-CAM_EYE   = (900.0, -130.0, 220.0)
-CAM_FOCAL = 32.0
+# Closeup camera — pulled far back along +X so the whole solar sail reads
+# face-on, with a slight -Y / +Z 3/4 tilt. Wide enough to hold the full
+# wingspan (~6 m) plus the body.
+CAM_EYE   = (1150.0, -160.0, 280.0)
+CAM_FOCAL = 30.0
 
 
 # ---------------------------------------------------------------------------
@@ -210,24 +217,36 @@ def servers_group() -> str:
     return f'def Xform "Servers"\n{{\n{indent(body, "    ")}\n}}'
 
 
+def solar_panel(name: str, cx: float, cy: float, cz: float) -> str:
+    """One solar.usdz panel referenced + stood upright (rotateY=90) and scaled.
+    Op order applies scale, then rotateY, then translate (USD reads the list
+    last-first), so the scale is in the asset's native axes."""
+    sx, sy, sz = PANEL_SCALE
+    return (
+        f'def Xform "{name}" (\n'
+        f'    prepend references = @{SOLAR_REF}@\n'
+        f')\n'
+        f'{{\n'
+        f'    double3 xformOp:translate = ({cx:.4f}, {cy:.4f}, {cz:.4f})\n'
+        f'    float xformOp:rotateY = {PANEL_RY}\n'
+        f'    double3 xformOp:scale = ({sx:.4f}, {sy:.4f}, {sz:.4f})\n'
+        f'    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]\n'
+        f'}}'
+    )
+
+
 def solar_wing(side: float) -> str:
-    """One deployed solar wing: a support boom from the central bracket out to
-    PANEL_Y1 along `side`·Y, carrying PANEL_SEGS framed cell segments. The cell
-    layer faces +X (sun side) on both wings so they stay coplanar."""
+    """One deployed solar wing: a thin support boom from the central bracket
+    out along `side`·Y, carrying N_PANELS chained solar.usdz panels. The panels
+    stand upright with the cell face toward +X (sun side) on both wings."""
     s = side
     by0, by1 = BOOM_Y0 * s, BOOM_Y1 * s
+    deploy = SOLAR_NATIVE[1] * PANEL_SCALE[1]          # per-panel span along Y
     parts = [box_mesh("Boom", SOLAR_X, (by0 + by1) / 2.0, SOLAR_Z,
                       BOOM_THICK, abs(by1 - by0), BOOM_THICK, "SolarFrame")]
-    span = PANEL_Y1 - BOOM_Y1
-    seg_len = (span - PANEL_GAP * (PANEL_SEGS - 1)) / PANEL_SEGS
-    for i in range(PANEL_SEGS):
-        y_in = BOOM_Y1 + i * (seg_len + PANEL_GAP)
-        cy = (y_in + seg_len / 2.0) * s
-        parts.append(box_mesh(f"Frame_{i}", SOLAR_X + FRAME_X / 2.0, cy, SOLAR_Z,
-                              FRAME_X, seg_len, PANEL_H, "SolarFrame"))
-        parts.append(box_mesh(f"Cell_{i}", SOLAR_X + FRAME_X + CELL_X / 2.0, cy,
-                              SOLAR_Z, CELL_X, seg_len * 0.94, PANEL_H * 0.96,
-                              "SolarCell"))
+    for i in range(N_PANELS):
+        cy = (BOOM_Y1 + deploy / 2.0 + i * (deploy + PANEL_GAP)) * s
+        parts.append(solar_panel(f"Panel_{i}", SOLAR_X, cy, SOLAR_Z))
     name = "WingPosY" if side > 0 else "WingNegY"
     body = "\n".join(parts)
     return f'def Xform "{name}"\n{{\n{indent(body, "    ")}\n}}'
