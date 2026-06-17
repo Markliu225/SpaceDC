@@ -47,11 +47,14 @@ def Xform "World"
             float3 xformOp:rotateXYZ = (15, 0, -120)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
-        # Deep space — near-black ambient.
+        # Deep space ambient — lifted a notch so the whole scene reads a bit
+        # brighter (overall fill, not the directional sun which is driven by
+        # space.demo.scene from sun_factor). Not in SUN_DRIVEN_LIGHTS, so this
+        # static value holds at runtime.
         def DomeLight "Space"
         {
-            color3f inputs:color = (0.012, 0.016, 0.028)
-            float inputs:intensity = 25.0
+            color3f inputs:color = (0.016, 0.021, 0.036)
+            float inputs:intensity = 45.0
             token inputs:texture:format = "latlong"
         }
 
