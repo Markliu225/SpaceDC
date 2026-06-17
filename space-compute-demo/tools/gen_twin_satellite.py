@@ -95,13 +95,10 @@ SERVER_MATERIALS = {
 # All lengths in backbone metres (the solar group is a child of the ×180
 # /World/Satellite Xform, so 1 unit here = BACKBONE_SCALE cm = 1.8 m on stage).
 SOLAR_REF    = "./assets/solar_panel_3d_model.usdz"
-# Mesh prim inside the panel asset (surveyed via pxr) — pinned so a re-bake
-# fails loud. Each panel rebinds this mesh to a glossy metallic look (below).
-SOLAR_NODE   = "tripo_node_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
-SOLAR_MESH   = "tripo_mesh_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
 # Panel native (m): long 0.981 (X), wide 0.777 (Y), thick 0.054 (Z); the cell
 # face is along ±Z. rotateY=90 stands the panel up: long→Z (wing height),
-# wide→Y (deploy), and the cell normal Z→+X (the sun / camera side).
+# wide→Y (deploy), and the cell normal Z→+X (the sun / camera side). The panels
+# keep solar_panel_3d_model.usdz's own default materials — no override.
 SOLAR_NATIVE = (0.981, 0.777, 0.054)
 PANEL_RY     = 90.0
 # Per-panel scale (height, deploy, thickness) — non-uniform so the panel reads
@@ -118,15 +115,9 @@ BOOM_Y1      = 0.42       # boom tip / first-panel inner edge (clear of racks @0
 BOOM_THICK   = 0.012      # thin square support-rod cross-section (was 0.030)
 
 SOLAR_MATERIALS = {
-    # Brushed-aluminium support boom.
+    # Brushed-aluminium support boom (panels keep the asset's own materials).
     "SolarFrame": {"diffuse": (0.600, 0.630, 0.700), "metallic": 0.85,
                    "roughness": 0.35, "emissive": (0.0, 0.0, 0.0)},
-    # Glossy metallic solar cell — deep blue with a high metallic + low
-    # roughness so the panels catch a bright specular sheen (金属光泽). Rebinds
-    # solar.usdz's own texture-driven mesh. Faint emissive keeps a little
-    # colour in eclipse.
-    "SolarCellMetallic": {"diffuse": (0.040, 0.105, 0.420), "metallic": 0.90,
-                          "roughness": 0.14, "emissive": (0.010, 0.030, 0.110)},
 }
 
 # Closeup camera — pulled far back along +X so the whole solar sail reads
@@ -228,11 +219,10 @@ def servers_group() -> str:
 
 
 def solar_panel(name: str, cx: float, cy: float, cz: float) -> str:
-    """One solar.usdz panel referenced + stood upright (rotateY=90) and scaled.
-    Op order applies scale, then rotateY, then translate (USD reads the list
-    last-first), so the scale is in the asset's native axes. A local `over`
-    rebinds the asset's mesh to the glossy SolarCellMetallic look — the local
-    opinion beats the referenced binding."""
+    """One solar_panel_3d_model.usdz panel referenced + stood upright
+    (rotateY=90) and scaled. Op order applies scale, then rotateY, then
+    translate (USD reads the list last-first), so the scale is in the asset's
+    native axes. The panel keeps the asset's own default materials."""
     sx, sy, sz = PANEL_SCALE
     return (
         f'def Xform "{name}" (\n'
@@ -243,14 +233,6 @@ def solar_panel(name: str, cx: float, cy: float, cz: float) -> str:
         f'    float xformOp:rotateY = {PANEL_RY}\n'
         f'    double3 xformOp:scale = ({sx:.4f}, {sy:.4f}, {sz:.4f})\n'
         f'    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]\n'
-        f'\n'
-        f'    over "{SOLAR_NODE}"\n'
-        f'    {{\n'
-        f'        over "{SOLAR_MESH}"\n'
-        f'        {{\n'
-        f'            rel material:binding = </World/Looks/SolarCellMetallic>\n'
-        f'        }}\n'
-        f'    }}\n'
         f'}}'
     )
 

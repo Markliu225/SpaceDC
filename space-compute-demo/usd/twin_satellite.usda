@@ -66,20 +66,6 @@ def Xform "World"
                 token outputs:surface
             }
         }
-        def Material "SolarCellMetallic"
-        {
-            token outputs:surface.connect = </World/Looks/SolarCellMetallic/Shader.outputs:surface>
-            def Shader "Shader"
-            {
-                uniform token info:id = "UsdPreviewSurface"
-                color3f inputs:diffuseColor = (0.040, 0.105, 0.420)
-                color3f inputs:emissiveColor = (0.010, 0.030, 0.110)
-                float inputs:metallic = 0.900
-                float inputs:roughness = 0.140
-                int inputs:useSpecularWorkflow = 0
-                token outputs:surface
-            }
-        }
     }
 
     def Xform "Satellite"
@@ -589,14 +575,6 @@ def Xform "World"
                     float xformOp:rotateY = 90.0
                     double3 xformOp:scale = (1.4500, 1.0500, 0.4500)
                     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-
-                    over "tripo_node_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
-                    {
-                        over "tripo_mesh_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
-                        {
-                            rel material:binding = </World/Looks/SolarCellMetallic>
-                        }
-                    }
                 }
                 def Xform "Panel_1" (
                     prepend references = @./assets/solar_panel_3d_model.usdz@
@@ -606,14 +584,6 @@ def Xform "World"
                     float xformOp:rotateY = 90.0
                     double3 xformOp:scale = (1.4500, 1.0500, 0.4500)
                     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-
-                    over "tripo_node_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
-                    {
-                        over "tripo_mesh_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
-                        {
-                            rel material:binding = </World/Looks/SolarCellMetallic>
-                        }
-                    }
                 }
             }
             def Xform "WingNegY"
@@ -638,14 +608,6 @@ def Xform "World"
                     float xformOp:rotateY = 90.0
                     double3 xformOp:scale = (1.4500, 1.0500, 0.4500)
                     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-
-                    over "tripo_node_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
-                    {
-                        over "tripo_mesh_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
-                        {
-                            rel material:binding = </World/Looks/SolarCellMetallic>
-                        }
-                    }
                 }
                 def Xform "Panel_1" (
                     prepend references = @./assets/solar_panel_3d_model.usdz@
@@ -655,14 +617,6 @@ def Xform "World"
                     float xformOp:rotateY = 90.0
                     double3 xformOp:scale = (1.4500, 1.0500, 0.4500)
                     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-
-                    over "tripo_node_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
-                    {
-                        over "tripo_mesh_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
-                        {
-                            rel material:binding = </World/Looks/SolarCellMetallic>
-                        }
-                    }
                 }
             }
         }
