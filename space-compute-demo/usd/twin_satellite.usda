@@ -567,22 +567,76 @@ def Xform "World"
                     uniform token subdivisionScheme = "none"
                     rel material:binding = </World/Looks/SolarFrame>
                 }
-                def Xform "Panel_0" (
+                def Xform "Cluster0_00" (
                     prepend references = @./assets/solar_panel_3d_model.usdz@
                 )
                 {
-                    double3 xformOp:translate = (0.0300, 0.8279, -0.0240)
+                    double3 xformOp:translate = (0.0300, 0.6240, 0.3316)
                     float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (1.4500, 1.0500, 0.4500)
+                    double3 xformOp:scale = (0.6670, 0.4830, 0.4500)
                     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
                 }
-                def Xform "Panel_1" (
+                def Xform "Cluster0_01" (
                     prepend references = @./assets/solar_panel_3d_model.usdz@
                 )
                 {
-                    double3 xformOp:translate = (0.0300, 1.6938, -0.0240)
+                    double3 xformOp:translate = (0.0300, 1.0319, 0.3316)
                     float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (1.4500, 1.0500, 0.4500)
+                    double3 xformOp:scale = (0.6670, 0.4830, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster0_10" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 0.6240, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.6670, 0.4830, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster0_11" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 1.0319, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.6670, 0.4830, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster1_00" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 1.4898, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.6670, 0.4830, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster1_01" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 1.8977, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.6670, 0.4830, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster1_10" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 1.4898, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.6670, 0.4830, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster1_11" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 1.8977, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.6670, 0.4830, 0.4500)
                     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
                 }
             }
@@ -600,22 +654,76 @@ def Xform "World"
                     uniform token subdivisionScheme = "none"
                     rel material:binding = </World/Looks/SolarFrame>
                 }
-                def Xform "Panel_0" (
+                def Xform "Cluster0_00" (
                     prepend references = @./assets/solar_panel_3d_model.usdz@
                 )
                 {
-                    double3 xformOp:translate = (0.0300, -0.8279, -0.0240)
+                    double3 xformOp:translate = (0.0300, -1.0319, 0.3316)
                     float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (1.4500, 1.0500, 0.4500)
+                    double3 xformOp:scale = (0.6670, 0.4830, 0.4500)
                     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
                 }
-                def Xform "Panel_1" (
+                def Xform "Cluster0_01" (
                     prepend references = @./assets/solar_panel_3d_model.usdz@
                 )
                 {
-                    double3 xformOp:translate = (0.0300, -1.6938, -0.0240)
+                    double3 xformOp:translate = (0.0300, -0.6240, 0.3316)
                     float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (1.4500, 1.0500, 0.4500)
+                    double3 xformOp:scale = (0.6670, 0.4830, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster0_10" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -1.0319, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.6670, 0.4830, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster0_11" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -0.6240, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.6670, 0.4830, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster1_00" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -1.8977, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.6670, 0.4830, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster1_01" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -1.4898, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.6670, 0.4830, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster1_10" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -1.8977, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.6670, 0.4830, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster1_11" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -1.4898, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.6670, 0.4830, 0.4500)
                     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
                 }
             }

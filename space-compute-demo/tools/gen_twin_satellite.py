@@ -105,8 +105,12 @@ PANEL_RY     = 90.0
 # oversized and thin. Height 0.978×1.45≈1.42 (≈2.6 m on stage, taller than the
 # 1.8 m body); deploy 0.666×1.05≈0.70; thickness 0.068×0.45≈0.031.
 PANEL_SCALE  = (1.45, 1.05, 0.45)
-N_PANELS     = 2          # "几块" — two panels chained into one wing per side
-PANEL_GAP    = 0.05       # gap between chained panels
+N_PANELS     = 2          # two panel clusters chained into one wing per side
+PANEL_GAP    = 0.05       # gap between chained clusters
+# Each (formerly single) panel is now a 2×2 grid of four smaller panels filling
+# the same footprint. SUB_FRAC is each sub-panel's per-axis scale vs the full
+# panel; 2 × 0.46 ≈ 0.92 leaves a ~8% seam between the four tiles.
+SUB_FRAC     = 0.46
 
 SOLAR_Z      = -0.024     # central-module hub height (boom + panel mid-Z)
 SOLAR_X      = 0.030      # boom + panel plane, just off the +X spine face
@@ -218,12 +222,13 @@ def servers_group() -> str:
     return f'def Xform "Servers"\n{{\n{indent(body, "    ")}\n}}'
 
 
-def solar_panel(name: str, cx: float, cy: float, cz: float) -> str:
+def solar_panel(name: str, cx: float, cy: float, cz: float,
+                scale: tuple[float, float, float]) -> str:
     """One solar_panel_3d_model.usdz panel referenced + stood upright
     (rotateY=90) and scaled. Op order applies scale, then rotateY, then
     translate (USD reads the list last-first), so the scale is in the asset's
     native axes. The panel keeps the asset's own default materials."""
-    sx, sy, sz = PANEL_SCALE
+    sx, sy, sz = scale
     return (
         f'def Xform "{name}" (\n'
         f'    prepend references = @{SOLAR_REF}@\n'
@@ -237,18 +242,34 @@ def solar_panel(name: str, cx: float, cy: float, cz: float) -> str:
     )
 
 
+def solar_cluster(prefix: str, cx: float, cy: float, cz: float) -> list[str]:
+    """A 2×2 grid of four small panels filling one full-panel footprint. The
+    big panel spanned H (along Z) × D (along Y); the four tiles sit at the
+    quadrant centres (±H/4, ±D/4) scaled to SUB_FRAC of the full panel."""
+    H = SOLAR_NATIVE[0] * PANEL_SCALE[0]      # full-panel height along Z
+    D = SOLAR_NATIVE[1] * PANEL_SCALE[1]      # full-panel deploy along Y
+    sub = (PANEL_SCALE[0] * SUB_FRAC, PANEL_SCALE[1] * SUB_FRAC, PANEL_SCALE[2])
+    tiles = []
+    for r, zs in enumerate((1.0, -1.0)):          # two rows (Z)
+        for c, ys in enumerate((-1.0, 1.0)):      # two columns (Y)
+            tiles.append(solar_panel(f"{prefix}_{r}{c}",
+                                     cx, cy + ys * D / 4.0, cz + zs * H / 4.0, sub))
+    return tiles
+
+
 def solar_wing(side: float) -> str:
     """One deployed solar wing: a thin support boom from the central bracket
-    out along `side`·Y, carrying N_PANELS chained solar.usdz panels. The panels
-    stand upright with the cell face toward +X (sun side) on both wings."""
+    out along `side`·Y, carrying N_PANELS chained panel clusters. Each cluster
+    is a 2×2 grid of four small panels, standing upright with the cell face
+    toward +X (sun side) on both wings."""
     s = side
     by0, by1 = BOOM_Y0 * s, BOOM_Y1 * s
-    deploy = SOLAR_NATIVE[1] * PANEL_SCALE[1]          # per-panel span along Y
+    deploy = SOLAR_NATIVE[1] * PANEL_SCALE[1]          # per-cluster span along Y
     parts = [box_mesh("Boom", SOLAR_X, (by0 + by1) / 2.0, SOLAR_Z,
                       BOOM_THICK, abs(by1 - by0), BOOM_THICK, "SolarFrame")]
     for i in range(N_PANELS):
         cy = (BOOM_Y1 + deploy / 2.0 + i * (deploy + PANEL_GAP)) * s
-        parts.append(solar_panel(f"Panel_{i}", SOLAR_X, cy, SOLAR_Z))
+        parts.extend(solar_cluster(f"Cluster{i}", SOLAR_X, cy, SOLAR_Z))
     name = "WingPosY" if side > 0 else "WingNegY"
     body = "\n".join(parts)
     return f'def Xform "{name}"\n{{\n{indent(body, "    ")}\n}}'
