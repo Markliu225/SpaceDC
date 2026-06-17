@@ -94,15 +94,15 @@ SERVER_MATERIALS = {
 #
 # All lengths in backbone metres (the solar group is a child of the ×180
 # /World/Satellite Xform, so 1 unit here = BACKBONE_SCALE cm = 1.8 m on stage).
-SOLAR_REF    = "./assets/solar.usdz"
-# Mesh prim inside solar.usdz (surveyed via pxr) — pinned so a re-bake fails
-# loud. Each panel rebinds this mesh to a glossy metallic look (see below).
-SOLAR_NODE   = "tripo_node_f428be0e_6763_4c3c_adc0_48f9e995f063"
-SOLAR_MESH   = "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
-# solar.usdz native (m): long 0.978 (X), wide 0.666 (Y), thick 0.068 (Z); the
-# cell face is along ±Z. rotateY=90 stands the panel up: long→Z (wing height),
+SOLAR_REF    = "./assets/solar_panel_3d_model.usdz"
+# Mesh prim inside the panel asset (surveyed via pxr) — pinned so a re-bake
+# fails loud. Each panel rebinds this mesh to a glossy metallic look (below).
+SOLAR_NODE   = "tripo_node_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+SOLAR_MESH   = "tripo_mesh_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+# Panel native (m): long 0.981 (X), wide 0.777 (Y), thick 0.054 (Z); the cell
+# face is along ±Z. rotateY=90 stands the panel up: long→Z (wing height),
 # wide→Y (deploy), and the cell normal Z→+X (the sun / camera side).
-SOLAR_NATIVE = (0.978, 0.666, 0.068)
+SOLAR_NATIVE = (0.981, 0.777, 0.054)
 PANEL_RY     = 90.0
 # Per-panel scale (height, deploy, thickness) — non-uniform so the panel reads
 # oversized and thin. Height 0.978×1.45≈1.42 (≈2.6 m on stage, taller than the

@@ -582,34 +582,34 @@ def Xform "World"
                     rel material:binding = </World/Looks/SolarFrame>
                 }
                 def Xform "Panel_0" (
-                    prepend references = @./assets/solar.usdz@
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
                 )
                 {
-                    double3 xformOp:translate = (0.0300, 0.7696, -0.0240)
+                    double3 xformOp:translate = (0.0300, 0.8279, -0.0240)
                     float xformOp:rotateY = 90.0
                     double3 xformOp:scale = (1.4500, 1.0500, 0.4500)
                     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
 
-                    over "tripo_node_f428be0e_6763_4c3c_adc0_48f9e995f063"
+                    over "tripo_node_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
                     {
-                        over "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
+                        over "tripo_mesh_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
                         {
                             rel material:binding = </World/Looks/SolarCellMetallic>
                         }
                     }
                 }
                 def Xform "Panel_1" (
-                    prepend references = @./assets/solar.usdz@
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
                 )
                 {
-                    double3 xformOp:translate = (0.0300, 1.5190, -0.0240)
+                    double3 xformOp:translate = (0.0300, 1.6938, -0.0240)
                     float xformOp:rotateY = 90.0
                     double3 xformOp:scale = (1.4500, 1.0500, 0.4500)
                     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
 
-                    over "tripo_node_f428be0e_6763_4c3c_adc0_48f9e995f063"
+                    over "tripo_node_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
                     {
-                        over "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
+                        over "tripo_mesh_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
                         {
                             rel material:binding = </World/Looks/SolarCellMetallic>
                         }
@@ -631,34 +631,34 @@ def Xform "World"
                     rel material:binding = </World/Looks/SolarFrame>
                 }
                 def Xform "Panel_0" (
-                    prepend references = @./assets/solar.usdz@
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
                 )
                 {
-                    double3 xformOp:translate = (0.0300, -0.7696, -0.0240)
+                    double3 xformOp:translate = (0.0300, -0.8279, -0.0240)
                     float xformOp:rotateY = 90.0
                     double3 xformOp:scale = (1.4500, 1.0500, 0.4500)
                     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
 
-                    over "tripo_node_f428be0e_6763_4c3c_adc0_48f9e995f063"
+                    over "tripo_node_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
                     {
-                        over "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
+                        over "tripo_mesh_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
                         {
                             rel material:binding = </World/Looks/SolarCellMetallic>
                         }
                     }
                 }
                 def Xform "Panel_1" (
-                    prepend references = @./assets/solar.usdz@
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
                 )
                 {
-                    double3 xformOp:translate = (0.0300, -1.5190, -0.0240)
+                    double3 xformOp:translate = (0.0300, -1.6938, -0.0240)
                     float xformOp:rotateY = 90.0
                     double3 xformOp:scale = (1.4500, 1.0500, 0.4500)
                     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
 
-                    over "tripo_node_f428be0e_6763_4c3c_adc0_48f9e995f063"
+                    over "tripo_node_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
                     {
-                        over "tripo_mesh_f428be0e_6763_4c3c_adc0_48f9e995f063"
+                        over "tripo_mesh_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
                         {
                             rel material:binding = </World/Looks/SolarCellMetallic>
                         }
