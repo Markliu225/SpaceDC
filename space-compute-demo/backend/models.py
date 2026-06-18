@@ -56,6 +56,10 @@ class SatelliteState(BaseModel):
     solar_supply_avg_w: float = 0.0
     thermal_peak_demand_w: float = 0.0
     thermal_max_emit_w: float = 0.0
+    # Deployable-geometry-driven areas (Feature 4) — solar = clusters × 2 sides,
+    # radiator = dedicated ±Z panels (2 panels × 2 faces). Drive the power /
+    # thermal balance so add/remove + resize change the live numbers.
+    solar_area_m2: float = 0.0
     radiator_area_m2: float = 0.0
     downlink_mbps: float = 0.0
     task_state: TaskPhase = "idle"

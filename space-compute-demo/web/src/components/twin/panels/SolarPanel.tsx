@@ -1,28 +1,25 @@
 import { Section, Row } from './PopupPrimitives'
 import { useDemoStore } from '../../../store/demoStore'
 import { useTelemetryStore } from '../../../store/useTelemetryStore'
-import {
-  solarMaterial, solarSize,
-} from '../../../data/satConfigOptions'
+import { solarMaterial } from '../../../data/satConfigOptions'
 
-/** Sub-panel for one of the deployed solar wings — same model + material
- * per the user's spec (panels are symmetric). Shows the static config
- * (material, size, area, efficiency, peak rating) alongside the live
- * solar-input power so the user can see how the chosen panel size is
- * generating right now. */
+/** Sub-panel for one of the deployed solar wings. Area + count come from the
+ * LIVE deployable geometry (Feature 3/4): total area = clusters/side × 2 sides,
+ * so adding panels changes these numbers and the generated power in real time.
+ * η is the chosen cell material; the live solar input is the backend's
+ * η·area·flux·incidence. */
 export function SolarPanel({ wing }: { wing: 'Pos' | 'Neg' }) {
-  const sat = useDemoStore((s) => s.lastState?.satellite)
-  const cfg = useTelemetryStore((s) => s.satConfig)
+  const sat  = useDemoStore((s) => s.lastState?.satellite)
+  const geom = useDemoStore((s) => s.lastState?.twin_geometry)
+  const cfg  = useTelemetryStore((s) => s.satConfig)
   const mat  = solarMaterial(cfg.solar_material)
-  const size = solarSize(cfg.solar_size)
-  const areaPerPanel = size.area_m2_per_panel
-  const totalArea    = areaPerPanel * size.panel_count
-  const peakW        = mat.efficiency * areaPerPanel * 1361   // per-panel peak
-  const fleetPeakW   = peakW * size.panel_count
-  // Live live in_w from backend (sum across panels); show this panel's share.
+
+  const totalArea  = sat?.solar_area_m2                 // live, geometry-driven
+  const clusters   = geom?.solar_clusters_per_side
+  const peakW      = totalArea != null ? mat.efficiency * totalArea * 1361 : null
   const liveTotalW = sat?.solar_input_w
-  const liveShareW = liveTotalW != null ? liveTotalW / Math.max(1, size.panel_count) : null
-  const sunlit = sat?.sunlit
+  const liveShareW = liveTotalW != null ? liveTotalW / 2 : null   // per wing
+  const sunlit     = sat?.sunlit
 
   const sideLabel = wing === 'Pos' ? '+Y wing' : '−Y wing'
 
@@ -30,12 +27,12 @@ export function SolarPanel({ wing }: { wing: 'Pos' | 'Neg' }) {
     <>
       <Section title={sideLabel}>
         <Row label="Material" value={mat.label} />
-        <Row label="Size"     value={`${size.label} · ${areaPerPanel} m²`} />
         <Row label="η"        value={(mat.efficiency * 100).toFixed(0)} unit="%" />
+        <Row label="Clusters" value={clusters != null ? `${clusters} × 2 sides` : '— —'} />
       </Section>
-      <Section title={`Array · ${size.panel_count}×`}>
-        <Row label="Total area" value={totalArea.toFixed(1)} unit="m²" />
-        <Row label="Peak rating" value={Math.round(fleetPeakW).toString()} unit="W" />
+      <Section title="Array (both wings)">
+        <Row label="Total area"  value={totalArea != null ? totalArea.toFixed(1) : '— —'} unit="m²" />
+        <Row label="Peak rating" value={peakW != null ? Math.round(peakW).toString() : '— —'} unit="W" />
       </Section>
       <Section title="Live">
         <Row
@@ -50,7 +47,7 @@ export function SolarPanel({ wing }: { wing: 'Pos' | 'Neg' }) {
           tone={liveTotalW != null && liveTotalW > 0 ? 'accent' : undefined}
         />
         <Row
-          label="This panel"
+          label="This wing"
           value={liveShareW != null ? Math.round(liveShareW).toString() : '— —'}
           unit="W"
         />

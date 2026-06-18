@@ -41,6 +41,7 @@ export interface SatelliteState {
   solar_supply_avg_w?: number;
   thermal_peak_demand_w?: number;
   thermal_max_emit_w?: number;
+  solar_area_m2?: number;
   radiator_area_m2?: number;
   downlink_mbps: number;
   task_state: TaskPhase;

@@ -5,34 +5,33 @@ import { radiatorMaterial } from '../../../data/satConfigOptions'
 
 /**
  * Sub-panel for one of the two dedicated radiator panels (±Z booms off the
- * spine). The current twin model authors each radiator as a single 2:5 panel
- * (~1.12 × 2.79 m) standing perpendicular to the solar wings; both faces
- * radiate. Static rows show the panel geometry + material; the Live section
- * pulls the backend's emitted power (split across the two radiators) and the
- * bay temperature it is rejecting.
+ * spine). Area comes from the LIVE deployable geometry (Feature 3/4): total =
+ * 2 panels × 2 faces, so resizing the radiator changes the area and the heat
+ * it rejects (Stefan-Boltzmann ε·σ·A·(T⁴−T_bg⁴)) in real time. ε is the chosen
+ * coating material.
  */
-// Authored radiator face (tools/gen_twin_satellite.py: 111.6 × 279 cm on stage).
-const RAD_FACE_M2 = 1.116 * 2.79          // ≈ 3.11 m² one side
-const RAD_BOTH_M2 = RAD_FACE_M2 * 2       // both faces radiate to deep space
-
 export function RadiatorPanel({ which }: { which: 'Top' | 'Bot' }) {
   const sat  = useDemoStore((s) => s.lastState?.satellite)
+  const geom = useDemoStore((s) => s.lastState?.twin_geometry)
   const cfg  = useTelemetryStore((s) => s.satConfig)
   const rMat = radiatorMaterial(cfg.radiator_material)
 
-  const tempC  = sat?.temperature_c
-  const radW   = sat?.radiator_power_w            // total emit across both panels
-  const shareW = radW != null ? radW / 2 : null   // this panel's half
+  const totalArea = sat?.radiator_area_m2              // both panels, both faces
+  const panelArea = totalArea != null ? totalArea / 2 : null   // this panel (2 faces)
+  const radW      = sat?.radiator_power_w
+  const shareW    = radW != null ? radW / 2 : null
+  const tempC     = sat?.temperature_c
+  const ratio     = geom?.radiator_ratio
 
   const label = which === 'Top' ? '+Z radiator' : '−Z radiator'
 
   return (
     <>
       <Section title={label}>
-        <Row label="Material"  value={rMat.label} />
-        <Row label="Face area" value={RAD_FACE_M2.toFixed(2)} unit="m²" />
-        <Row label="Both sides" value={RAD_BOTH_M2.toFixed(2)} unit="m²" />
-        <Row label="ε"         value={rMat.emissivity.toFixed(2)} />
+        <Row label="Material"   value={rMat.label} />
+        <Row label="This panel" value={panelArea != null ? panelArea.toFixed(1) : '— —'} unit="m²" />
+        <Row label="Ratio"      value={ratio != null ? `1:${ratio.toFixed(1)}` : '— —'} />
+        <Row label="ε"          value={rMat.emissivity.toFixed(2)} />
       </Section>
       <Section title="Live">
         <Row

@@ -105,6 +105,26 @@ _RAD_PANELS_PER_SAT = 2
 
 _SOLAR_CONSTANT_W_M2 = 1361.0
 
+# --- Deployable-geometry areas (Feature 4) --------------------------------
+# Mirror tools/gen_twin_satellite.py: a solar "cluster" is a 2×2 grid filling
+# one big-panel footprint = SOLAR_NATIVE × PANEL_SCALE × BACKBONE_SCALE per
+# side; each radiator panel face = radiator_long × (radiator_long / ratio),
+# both faces radiate, two panels (±Z). All in stage metres.
+_BACKBONE_SCALE = 1.8
+_SOLAR_CLUSTER_M2 = (0.981 * 1.45 * _BACKBONE_SCALE) * (0.777 * 1.05 * _BACKBONE_SCALE)
+
+
+def _solar_area_m2(geom) -> float:
+    """Total active solar area: clusters/side × 2 sides × one-cluster area."""
+    return geom.solar_clusters_per_side * 2 * _SOLAR_CLUSTER_M2
+
+
+def _radiator_area_m2(geom) -> float:
+    """Total radiating area: 2 panels × 2 faces × face area."""
+    long_m = geom.radiator_long * _BACKBONE_SCALE
+    short_m = (geom.radiator_long / max(0.1, geom.radiator_ratio)) * _BACKBONE_SCALE
+    return 4.0 * long_m * short_m
+
 
 # Deterministic compute-job schedule. (start_s, duration_s, util_target).
 # This is the GPU's queue — a fixed sequence of inference / training /
@@ -503,11 +523,12 @@ class StateEngine:
         s_size  = _SOLAR_SIZE_TABLE.get(cfg.solar_size,        _SOLAR_SIZE_TABLE["M"])
         r_mat   = _RAD_MAT_TABLE.get(cfg.radiator_material,    _RAD_MAT_TABLE["Aluminum"])
 
-        # Per user spec: the back of each solar panel is also the radiator —
-        # area shared. Ignore the radiator_size selector for area; keep
-        # radiator MATERIAL as the only knob (its emissivity).
-        panel_area_m2 = s_size["area_m2_per_panel"] * s_size["panel_count"]
-        radiator_area_m2 = panel_area_m2
+        # Areas now come from the deployable geometry (Feature 4): solar scales
+        # with clusters/side, radiators are the dedicated ±Z panels (independent
+        # of solar). solar_material still sets η, radiator_material sets ε.
+        geom = self._twin_geometry
+        panel_area_m2 = _solar_area_m2(geom)
+        radiator_area_m2 = _radiator_area_m2(geom)
 
         # --- Solar input (front of panel) -------------------------------------
         incidence = max(0.0, cos_a) if self._sat.sunlit else 0.0
@@ -594,6 +615,7 @@ class StateEngine:
         self._sat.solar_supply_avg_w    = solar_supply_avg_w
         self._sat.thermal_peak_demand_w = thermal_peak_demand_w
         self._sat.thermal_max_emit_w    = thermal_max_emit_w
+        self._sat.solar_area_m2         = panel_area_m2
         self._sat.radiator_area_m2      = radiator_area_m2
 
         # --- Standing alarms --------------------------------------------------
