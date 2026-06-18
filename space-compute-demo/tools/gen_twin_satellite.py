@@ -106,11 +106,11 @@ PANEL_RY     = 90.0
 # 1.8 m body); deploy 0.666×1.05≈0.70; thickness 0.068×0.45≈0.031.
 PANEL_SCALE  = (1.45, 1.05, 0.45)
 N_PANELS     = 2          # two panel clusters chained into one wing per side
-PANEL_GAP    = 0.05       # gap between chained clusters
-# Each (formerly single) panel is now a 2×2 grid of four smaller panels filling
-# the same footprint. SUB_FRAC is each sub-panel's per-axis scale vs the full
-# panel; 2 × 0.46 ≈ 0.92 leaves a ~8% seam between the four tiles.
-SUB_FRAC     = 0.46
+PANEL_GAP    = 0.0        # clusters abut — no gap between panels
+# Each (formerly single) panel is a 2×2 grid of four smaller panels filling the
+# same footprint. SUB_FRAC is each tile's per-axis scale vs the full panel;
+# 0.5 makes the four tiles meet exactly edge-to-edge (no seam/gap).
+SUB_FRAC     = 0.5
 
 SOLAR_Z      = -0.024     # central-module hub height (boom + panel mid-Z)
 SOLAR_X      = 0.030      # boom + panel plane, just off the +X spine face
