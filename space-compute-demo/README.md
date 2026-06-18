@@ -40,7 +40,7 @@ Geometry is parameterised at runtime via `usd/twin_params.json` (written by the 
 1. **Enlarged viewport** — the Twin page gives the Omniverse window most of the screen; side/bottom panels are compact.
 2. **Component-level interaction** — clicking a server, solar wing, radiator, or backbone part opens its info card (matched from the selected prim path).
 3. **Deployables editing** — the *Deployables* controls add/remove solar clusters (sides only) and resize / reshape the radiators; each change regenerates the USD model and reloads it in Kit.
-4. **Real-time physics** — solar illumination · panel area × efficiency · GPU workload · device power · radiator area × emissivity all feed a live power / thermal balance shown in the status cards and component panels. Editing the geometry changes the numbers immediately.
+4. **Real-time physics** — solar illumination · panel area × efficiency · GPU workload · device power · radiator area × emissivity all feed a live power / thermal balance shown in the status cards and component panels. Editing the geometry changes the numbers immediately. See **[docs/physics.md](docs/physics.md)** for the full model.
 
 ## Getting started
 
