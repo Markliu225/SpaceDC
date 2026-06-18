@@ -118,17 +118,32 @@ BOOM_Y0      = 0.07       # boom root (seats inside the bracket)
 BOOM_Y1      = 0.42       # boom tip / first-panel inner edge (clear of racks @0.227)
 BOOM_THICK   = 0.012      # thin square support-rod cross-section (was 0.030)
 
+# --- Radiator panels --------------------------------------------------------
+# A boom off each ±Z end of the spine carries one oversized radiator. Its
+# large-face normal is perpendicular to the solar panels' (solar faces +X; the
+# radiator faces ±Y) — rotateX=90 turns the asset's native +Z normal to -Y and
+# stands the big face in the X-Z plane. The module is a single panel scaled up
+# on its face only (thickness ×1, no tiling).
+RAD_REF        = "./assets/radiation_panel_3d_model.usdz"
+RAD_NATIVE     = (0.9824, 0.6377, 0.0528)   # long X, wide Y, thick Z (normal Z)
+RAD_RX         = 90.0     # normal Z→-Y (⊥ solar +X); native X→world X, Y→world Z
+RAD_FACE_SCALE = 1.35     # enlarge the large face (native X & Y); thickness ×1
+RAD_X          = 0.026    # centred on the spine axis
+SPINE_END_Z    = 0.50     # spine ±Z ends (backbone bbox is Z ∈ [-0.5, 0.5])
+RAD_BOOM_LEN   = 0.16     # boom reach along Z beyond the spine end
+RAD_BOOM_THICK = 0.014    # thin square support rod
+
 SOLAR_MATERIALS = {
     # Brushed-aluminium support boom (panels keep the asset's own materials).
     "SolarFrame": {"diffuse": (0.600, 0.630, 0.700), "metallic": 0.85,
                    "roughness": 0.35, "emissive": (0.0, 0.0, 0.0)},
 }
 
-# Closeup camera — pulled far back along +X so the whole solar sail reads
-# face-on, with a slight -Y / +Z 3/4 tilt. Wide enough to hold the full
-# wingspan (~6 m) plus the body.
-CAM_EYE   = (1150.0, -160.0, 280.0)
-CAM_FOCAL = 30.0
+# Closeup camera — a true 3/4 (from +X / -Y / above) so the solar wings (face
+# +X) AND the perpendicular radiators (face ±Y, top/bottom) are both readable.
+# Pulled far back to hold the full ~7.5 m span × ~5.5 m height.
+CAM_EYE   = (980.0, -1180.0, 820.0)
+CAM_FOCAL = 25.0
 
 
 # ---------------------------------------------------------------------------
@@ -280,6 +295,39 @@ def solar_group() -> str:
     return f'def Xform "SolarArray"\n{{\n{indent(body, "    ")}\n}}'
 
 
+def radiator_panel(name: str, cx: float, cy: float, cz: float) -> str:
+    """One radiation_panel_3d_model.usdz panel, rotateX=90 (large-face normal
+    → -Y, ⊥ the solar +X) and scaled up on its face only (thickness ×1). Ops
+    apply scale, then rotateX, then translate. Keeps the asset's own materials."""
+    s = RAD_FACE_SCALE
+    return (
+        f'def Xform "{name}" (\n'
+        f'    prepend references = @{RAD_REF}@\n'
+        f')\n'
+        f'{{\n'
+        f'    double3 xformOp:translate = ({cx:.4f}, {cy:.4f}, {cz:.4f})\n'
+        f'    float xformOp:rotateX = {RAD_RX}\n'
+        f'    double3 xformOp:scale = ({s:.4f}, {s:.4f}, 1.0)\n'
+        f'    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]\n'
+        f'}}'
+    )
+
+
+def radiator_group() -> str:
+    """A boom off each ±Z spine end with one oversized radiator beyond it."""
+    rad_z = RAD_NATIVE[1] * RAD_FACE_SCALE        # world-Z extent after rotateX
+    parts = []
+    for tag, dirn in (("Top", 1.0), ("Bot", -1.0)):
+        end_z = SPINE_END_Z * dirn
+        boom_far = end_z + dirn * RAD_BOOM_LEN
+        parts.append(box_mesh(f"RadBoom{tag}", RAD_X, 0.0, (end_z + boom_far) / 2.0,
+                              RAD_BOOM_THICK, RAD_BOOM_THICK, RAD_BOOM_LEN, "SolarFrame"))
+        parts.append(radiator_panel(f"Radiator{tag}", RAD_X, 0.0,
+                                    boom_far + dirn * rad_z / 2.0))
+    body = "\n".join(parts)
+    return f'def Xform "RadiatorArray"\n{{\n{indent(body, "    ")}\n}}'
+
+
 def satellite_prim() -> str:
     backbone = (
         f'def Xform "Backbone" (\n'
@@ -288,7 +336,7 @@ def satellite_prim() -> str:
         f'{{\n'
         f'}}'
     )
-    inner = "\n\n".join([backbone, servers_group(), solar_group()])
+    inner = "\n\n".join([backbone, servers_group(), solar_group(), radiator_group()])
     return f"""def Xform "Satellite"
 {{
     double3 xformOp:scale = ({BACKBONE_SCALE}, {BACKBONE_SCALE}, {BACKBONE_SCALE})
