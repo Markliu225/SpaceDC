@@ -25,7 +25,11 @@ def Xform "World"
             float inputs:angle = 0.53
             float inputs:intensity = 2800
             color3f inputs:color = (1.0, 0.96, 0.88)
-            float3 xformOp:rotateXYZ = (-35, 0, 40)
+            # Azimuth 270° aims the sun at the solar wings' +X cell faces
+            # (rz=40 lit them at -0.37, i.e. back-lit; rz=270 lights them at
+            # +0.64). space.demo.scene now oscillates the azimuth about 270 so
+            # the array stays sun-facing. Elevation -40 keeps the sun high.
+            float3 xformOp:rotateXYZ = (-40, 0, 270)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
         # Earth albedo — reflected earthshine from below.

@@ -71,7 +71,12 @@ SAT_VARIANT_TARGETS = [
 # satellite.sun_factor so the body genuinely darkens in eclipse instead of
 # staying washed-out by static fills. Each entry: (path, min, max) intensity.
 SUN_LIGHT_PATH = "/World/Environment/Key"
-SUN_BASE_RY_DEG = 40.0       # base rotateXYZ z-component from satellite.usda
+# Base azimuth (rotateXYZ z) — 270° aims the Key sun at the solar wings' +X cell
+# faces. The azimuth oscillates ±SUN_AZ_SWEEP_DEG about this so the array stays
+# sun-facing rather than the sun crawling a full 360° (which back-lit it half
+# the orbit). See usd/satellite.usda for the matching authored value.
+SUN_BASE_RY_DEG = 270.0
+SUN_AZ_SWEEP_DEG = 45.0
 SUN_DRIVEN_LIGHTS = [
     # Key sun — full dynamic range, near-dark in eclipse. Daytime max
     # dropped 3200 → 2000 to stop the gold MLI body from blowing out at
@@ -960,7 +965,10 @@ def apply_sun(sun_factor: float, sim_now_s: float | None = None) -> bool:
         # sitting static — gentle (~one sweep per 2 min sim).
         rot_attr = sun.GetAttribute("xformOp:rotateXYZ")
         if rot_attr.IsValid() and sim_now_s is not None:
-            az = (SUN_BASE_RY_DEG + (sim_now_s * 3.0)) % 360.0
+            # Oscillate the azimuth about the solar-facing base (instead of a
+            # full 360° crawl) so the wings stay lit; the highlight still
+            # travels gently (~one cycle per 2 min sim).
+            az = SUN_BASE_RY_DEG + SUN_AZ_SWEEP_DEG * math.sin(sim_now_s * 0.05)
             cur = rot_attr.Get()
             if cur is not None:
                 rot_attr.Set(Gf.Vec3f(float(cur[0]), float(cur[1]), float(az)))

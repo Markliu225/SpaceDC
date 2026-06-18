@@ -128,8 +128,8 @@ BOOM_THICK   = 0.012      # thin square support-rod cross-section (was 0.030)
 # thickness held (native-Z ×1).
 RAD_REF        = "./assets/radiation_panel_3d_model.usdz"
 RAD_NATIVE     = (0.9824, 0.6377, 0.0528)   # long X, wide Y, thick Z (normal Z)
-RAD_LONG       = 1.25     # world-Z length (backbone-m) — the long axis up the boom
-RAD_RATIO      = 3.0      # long : short ≈ 3 : 1
+RAD_LONG       = 1.55     # world-Z length (backbone-m) — the long axis up the boom
+RAD_RATIO      = 2.5      # short : long = 2 : 5
 RAD_X          = 0.026    # centred on the spine axis
 SPINE_END_Z    = 0.50     # spine ±Z ends (backbone bbox is Z ∈ [-0.5, 0.5])
 RAD_BOOM_LEN   = 0.16     # boom reach along Z beyond the spine end
@@ -144,8 +144,8 @@ SOLAR_MATERIALS = {
 # Closeup camera — a true 3/4 (from +X / -Y / above) so the solar wings (face
 # +X) AND the perpendicular radiators (face ±Y, top/bottom) are both readable.
 # Pulled far back to hold the full ~7.5 m span × ~5.5 m height.
-CAM_EYE   = (1080.0, -1300.0, 900.0)
-CAM_FOCAL = 24.0
+CAM_EYE   = (1250.0, -1500.0, 1050.0)
+CAM_FOCAL = 22.0
 
 
 # ---------------------------------------------------------------------------
