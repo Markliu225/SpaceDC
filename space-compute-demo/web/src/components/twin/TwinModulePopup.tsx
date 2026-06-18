@@ -1,84 +1,86 @@
 import { useEffect, useMemo } from 'react'
 import { useDemoStore } from '../../store/demoStore'
 import { PopupChrome } from './panels/PopupPrimitives'
-import { ShellPanel } from './panels/ShellPanel'
-import { RadarPanel } from './panels/RadarPanel'
 import { GpuPanel } from './panels/GpuPanel'
 import { SolarPanel } from './panels/SolarPanel'
+import { RadiatorPanel } from './panels/RadiatorPanel'
+import { StructurePanel, type StructureSub } from './panels/StructurePanel'
 
 /**
- * TwinModulePopup — dispatcher for the Satellite Twin viewport's click-to-
- * info popup. Reads selectedPrim from demoStore, matches it against the
- * three module kinds authored under /World/Satellite/Bus by the Tripo
- * satellite_body.usdz (payload bay shell, radar dish, and the row of GPU
- * modules), and renders the matching sub-panel anchored top-right of the
- * viewport.
+ * TwinModulePopup — component-level click-to-info for the Satellite Twin
+ * viewport. Reads selectedPrim from demoStore (set from Kit's selection
+ * round-trip, or driven directly for tests) and matches it against the
+ * current twin model authored by tools/gen_twin_satellite.py:
  *
- * Selection flow recap:
- *   click prim in WebRTC stream
- *     → Kit's space.demo.selection extension catches USD SELECTION_CHANGED
- *     → POST /selection {prim_path} to backend
- *     → backend broadcasts `selection_changed` WS envelope
- *     → demoStore.selectedPrim updates
- *     → THIS component matches & renders the right sub-panel
+ *   /World/Satellite/Servers/Server_<rack>_<i>      → server (GPU blade)
+ *   /World/Satellite/SolarArray/Wing{Pos,Neg}Y/…    → solar wing
+ *   /World/Satellite/RadiatorArray/Radiator{Top,Bot}→ radiator panel
+ *   /World/Satellite/Backbone/…/tripo_part_<n>      → backbone structure
  *
- * Close: × button OR Escape both call selectObject('') which round-trips
- * a clear through the same path, so every web client closes in lockstep.
+ * Matching is by ANCESTOR keyword (not the exact leaf) so whichever sub-mesh
+ * Kit reports as selected still resolves to the right component card.
+ *
+ * Close: × button OR Escape both call selectObject('') which round-trips a
+ * clear through the same path, so every web client closes in lockstep.
  */
 
-// Path-suffix anchored: the asset's /root/ParentNode is wrapped at runtime
-// under /World/Satellite/Bus/<...>/, but every selection_changed path ends
-// with .../tripo_part_<N>(/Mesh_<M>)?. Order matters — shell + radar are
-// disjoint singletons, GPU is the row.
-const MATCHERS: { kind: 'shell' | 'radar' | 'gpu' | 'solar'; re: RegExp }[] = [
-  { kind: 'shell', re: /.*\/tripo_part_9(\/Mesh_\d+)?$/ },
-  { kind: 'radar', re: /.*\/tripo_part_4(\/Mesh_\d+)?$/ },
-  { kind: 'gpu',   re: /.*\/tripo_part_(1|11|12|13|14|15|16)(\/Mesh_\d+)?$/ },
-  // Solar wings — clicking any descendant of PanelLeft/PanelRight (the
-  // wrapper Xform, the referenced tripo_node, or its mesh) opens the wing
-  // popup. Side captured in group 1.
-  { kind: 'solar', re: /.*\/(PanelLeft|PanelRight)(?:\/.*)?$/ },
-]
-
-// The 7 GPU prims in the asset, listed by ascending source-X (the visible
-// row order from left to right). Drives a stable "Module · NN" label so a
-// user clicking the leftmost prim sees Module 01, not Module 13.
-const GPU_PART_ORDER = [
-  'tripo_part_13', // x ≈ -0.31
-  'tripo_part_1',  // x ≈ -0.20
-  'tripo_part_15', // x ≈ -0.10
-  'tripo_part_12', // x ≈  0.00
-  'tripo_part_14', // x ≈  0.11
-  'tripo_part_16', // x ≈  0.22
-  'tripo_part_11', // x ≈  0.32
-] as const
+type Kind = 'server' | 'solar' | 'radiator' | 'structure'
 
 interface Match {
-  kind: 'shell' | 'radar' | 'gpu' | 'solar'
-  partId: string
+  kind: Kind
+  /** Header subtitle. */
+  subtitle: string
+  /** server: 1-based index · solar: 'Pos'|'Neg' · radiator: 'Top'|'Bot' ·
+   *  structure: StructureSub */
+  ref: string
+}
+
+// Rack order → contiguous 1..12 server numbering (left-to-right, top-to-bottom).
+const RACK_ORDER: Record<string, number> = { UpY: 0, UnY: 1, LpY: 2, LnY: 3 }
+
+// Backbone tripo_part_<n> → structural role.
+function structureSub(part: string): StructureSub {
+  if (part === '1') return 'spine'
+  if (part === '2' || part === '8') return 'thruster'
+  if (part === '6' || part === '7') return 'tank'
+  if (part === '0' || part === '3' || part === '4' || part === '5') return 'rack'
+  return 'antenna' // new_0 / new_1 + any other
 }
 
 function matchSelection(path: string | null): Match | null {
   if (!path) return null
-  for (const { kind, re } of MATCHERS) {
-    const m = re.exec(path)
-    if (!m) continue
-    let partId: string
-    if (kind === 'gpu')        partId = `tripo_part_${m[1]}`
-    else if (kind === 'shell') partId = 'tripo_part_9'
-    else if (kind === 'radar') partId = 'tripo_part_4'
-    else                       partId = m[1]   // 'PanelLeft' | 'PanelRight'
-    return { kind, partId }
+
+  let m = /\/Servers\/Server_([A-Za-z]+)_(\d+)/.exec(path)
+  if (m) {
+    const rack = m[1]
+    const idx = Number(m[2])
+    const num = (RACK_ORDER[rack] ?? 0) * 3 + idx + 1
+    return { kind: 'server', subtitle: `Blade ${String(num).padStart(2, '0')} · live`, ref: String(num) }
+  }
+
+  m = /\/SolarArray\/Wing(Pos|Neg)Y/.exec(path)
+  if (m) return { kind: 'solar', subtitle: `${m[1] === 'Pos' ? '+Y' : '−Y'} wing · live`, ref: m[1] }
+
+  m = /\/RadiatorArray\/(?:Radiator|RadBoom)(Top|Bot)/.exec(path)
+  if (m) return { kind: 'radiator', subtitle: `${m[1] === 'Top' ? '+Z' : '−Z'} panel · live`, ref: m[1] }
+
+  m = /\/Backbone\/.*tripo_part_(new_\d+|\d+)/.exec(path)
+  if (m) {
+    const sub = structureSub(m[1])
+    return { kind: 'structure', subtitle: 'Platform · backbone', ref: sub }
+  }
+  if (path.includes('/Backbone')) {
+    return { kind: 'structure', subtitle: 'Platform · backbone', ref: 'spine' }
   }
   return null
 }
 
-const HEADER = {
-  shell: { title: 'Payload Bay',      subtitle: 'Shell · MLI / Radiator', swatch: '#B69755' },
-  radar: { title: 'Maritime Payload', subtitle: 'X-band SAR · Comms',     swatch: '#3B9EFF' },
-  gpu:   { title: 'GPU Compute',      subtitle: '',                       swatch: '#E8EEFB' },
-  solar: { title: 'Solar Wing',       subtitle: 'PV array · radiator',    swatch: '#22D3EE' },
-} as const
+const HEADER: Record<Kind, { title: string; swatch: string }> = {
+  server:    { title: 'Compute Server',  swatch: '#E8EEFB' },
+  solar:     { title: 'Solar Wing',      swatch: '#22D3EE' },
+  radiator:  { title: 'Radiator',        swatch: '#F59E0B' },
+  structure: { title: 'Structure',       swatch: '#B69755' },
+}
 
 export function TwinModulePopup() {
   const selected  = useDemoStore((s) => s.selectedPrim)
@@ -97,28 +99,20 @@ export function TwinModulePopup() {
   if (!match) return null
 
   const close = () => selectObj('')
-  const gpuIdx = match.kind === 'gpu'
-    ? (GPU_PART_ORDER.indexOf(match.partId as typeof GPU_PART_ORDER[number]) + 1) || 1
-    : 0
-
   const head = HEADER[match.kind]
-  const subtitle =
-    match.kind === 'gpu'   ? `Card ${String(gpuIdx).padStart(2, '0')} · live` :
-    match.kind === 'solar' ? `${match.partId === 'PanelLeft' ? 'East' : 'West'} wing · live`
-                           : head.subtitle
 
   return (
     <div className="pointer-events-none absolute right-3 top-3 z-40">
       <PopupChrome
         title={head.title}
-        subtitle={subtitle}
+        subtitle={match.subtitle}
         swatchColor={head.swatch}
         onClose={close}
       >
-        {match.kind === 'shell' && <ShellPanel />}
-        {match.kind === 'radar' && <RadarPanel />}
-        {match.kind === 'gpu'   && <GpuPanel cardIdx={gpuIdx} />}
-        {match.kind === 'solar' && <SolarPanel side={match.partId as 'PanelLeft' | 'PanelRight'} />}
+        {match.kind === 'server'    && <GpuPanel cardIdx={Number(match.ref)} />}
+        {match.kind === 'solar'     && <SolarPanel wing={match.ref as 'Pos' | 'Neg'} />}
+        {match.kind === 'radiator'  && <RadiatorPanel which={match.ref as 'Top' | 'Bot'} />}
+        {match.kind === 'structure' && <StructurePanel sub={match.ref as StructureSub} />}
       </PopupChrome>
     </div>
   )

@@ -10,7 +10,7 @@ import {
  * (material, size, area, efficiency, peak rating) alongside the live
  * solar-input power so the user can see how the chosen panel size is
  * generating right now. */
-export function SolarPanel({ side }: { side: 'PanelLeft' | 'PanelRight' }) {
+export function SolarPanel({ wing }: { wing: 'Pos' | 'Neg' }) {
   const sat = useDemoStore((s) => s.lastState?.satellite)
   const cfg = useTelemetryStore((s) => s.satConfig)
   const mat  = solarMaterial(cfg.solar_material)
@@ -24,7 +24,7 @@ export function SolarPanel({ side }: { side: 'PanelLeft' | 'PanelRight' }) {
   const liveShareW = liveTotalW != null ? liveTotalW / Math.max(1, size.panel_count) : null
   const sunlit = sat?.sunlit
 
-  const sideLabel = side === 'PanelLeft' ? 'East wing' : 'West wing'
+  const sideLabel = wing === 'Pos' ? '+Y wing' : '−Y wing'
 
   return (
     <>

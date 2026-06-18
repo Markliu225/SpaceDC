@@ -1,7 +1,7 @@
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
 import {
-  AdditiveBlending, BackSide, BufferAttribute, BufferGeometry,
+  AdditiveBlending, BufferAttribute, BufferGeometry,
   CatmullRomCurve3, DoubleSide, Group, Mesh, MeshBasicMaterial,
   ShaderMaterial, TubeGeometry, Vector3,
 } from 'three'

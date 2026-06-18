@@ -151,10 +151,6 @@ export function SatelliteDetail() {
   }
 
   const orbitType = orbitTypeFromAlt(sat.altitudeKm)
-  const tempTone: Tone =
-    tele.temp > 75 ? 'err' : tele.temp > 60 ? 'warn' : 'ok'
-  const socTone: Tone =
-    tele.soc < 0.3 ? 'err' : tele.soc < 0.5 ? 'warn' : 'ok'
 
   // GPU Util / Battery / Temp move out of the param row and become a horizontal
   // 3-up bar strip below the params. Downlink is dropped entirely — it duplicated

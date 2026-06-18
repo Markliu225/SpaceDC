@@ -130,3 +130,9 @@ export const useDemoStore = create<DemoStore>((set, get) => ({
   startMission: () => get().send('start_mission'),
   stopMission: () => get().send('stop_mission'),
 }));
+
+// Dev-only handle so a prim selection can be driven without the Kit stream
+// (used by the layout/popup screenshot checks). No-op in production builds.
+if (import.meta.env.DEV) {
+  ;(window as unknown as { __demoStore?: typeof useDemoStore }).__demoStore = useDemoStore
+}
