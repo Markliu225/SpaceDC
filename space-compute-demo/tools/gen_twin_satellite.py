@@ -119,15 +119,17 @@ BOOM_Y1      = 0.42       # boom tip / first-panel inner edge (clear of racks @0
 BOOM_THICK   = 0.012      # thin square support-rod cross-section (was 0.030)
 
 # --- Radiator panels --------------------------------------------------------
-# A boom off each ±Z end of the spine carries one oversized radiator. Its
-# large-face normal is perpendicular to the solar panels' (solar faces +X; the
-# radiator faces ±Y) — rotateX=90 turns the asset's native +Z normal to -Y and
-# stands the big face in the X-Z plane. The module is a single panel scaled up
-# on its face only (thickness ×1, no tiling).
+# A boom off each ±Z end of the spine carries one long radiator. Its large-face
+# normal is perpendicular to the solar panels' (solar faces +X; the radiator
+# faces ±Y), and its SHORT edge meets the boom so the panel runs out along Z.
+# rotateZ=90 then rotateX=90 maps the asset's native long-X → world Z (the long
+# axis, up the boom), native wide-Y → world X (short edge), and the native +Z
+# normal → world -Y. A single module (no tiling) scaled to a ~1:3 face with the
+# thickness held (native-Z ×1).
 RAD_REF        = "./assets/radiation_panel_3d_model.usdz"
 RAD_NATIVE     = (0.9824, 0.6377, 0.0528)   # long X, wide Y, thick Z (normal Z)
-RAD_RX         = 90.0     # normal Z→-Y (⊥ solar +X); native X→world X, Y→world Z
-RAD_FACE_SCALE = 1.35     # enlarge the large face (native X & Y); thickness ×1
+RAD_LONG       = 1.25     # world-Z length (backbone-m) — the long axis up the boom
+RAD_RATIO      = 3.0      # long : short ≈ 3 : 1
 RAD_X          = 0.026    # centred on the spine axis
 SPINE_END_Z    = 0.50     # spine ±Z ends (backbone bbox is Z ∈ [-0.5, 0.5])
 RAD_BOOM_LEN   = 0.16     # boom reach along Z beyond the spine end
@@ -142,8 +144,8 @@ SOLAR_MATERIALS = {
 # Closeup camera — a true 3/4 (from +X / -Y / above) so the solar wings (face
 # +X) AND the perpendicular radiators (face ±Y, top/bottom) are both readable.
 # Pulled far back to hold the full ~7.5 m span × ~5.5 m height.
-CAM_EYE   = (980.0, -1180.0, 820.0)
-CAM_FOCAL = 25.0
+CAM_EYE   = (1080.0, -1300.0, 900.0)
+CAM_FOCAL = 24.0
 
 
 # ---------------------------------------------------------------------------
@@ -296,26 +298,30 @@ def solar_group() -> str:
 
 
 def radiator_panel(name: str, cx: float, cy: float, cz: float) -> str:
-    """One radiation_panel_3d_model.usdz panel, rotateX=90 (large-face normal
-    → -Y, ⊥ the solar +X) and scaled up on its face only (thickness ×1). Ops
-    apply scale, then rotateX, then translate. Keeps the asset's own materials."""
-    s = RAD_FACE_SCALE
+    """One radiation_panel_3d_model.usdz panel: rotateZ=90 then rotateX=90 so
+    the native long-X runs along world Z (the long axis), native wide-Y along
+    world X (short edge), and the +Z normal → world -Y (⊥ solar +X). Scaled to
+    a ~1:3 face with thickness held (native-Z ×1). Ops apply scale, rotateZ,
+    rotateX, then translate. Keeps the asset's own materials."""
+    sx = RAD_LONG / RAD_NATIVE[0]                 # native X → world Z (long)
+    sy = (RAD_LONG / RAD_RATIO) / RAD_NATIVE[1]   # native Y → world X (short)
     return (
         f'def Xform "{name}" (\n'
         f'    prepend references = @{RAD_REF}@\n'
         f')\n'
         f'{{\n'
         f'    double3 xformOp:translate = ({cx:.4f}, {cy:.4f}, {cz:.4f})\n'
-        f'    float xformOp:rotateX = {RAD_RX}\n'
-        f'    double3 xformOp:scale = ({s:.4f}, {s:.4f}, 1.0)\n'
-        f'    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]\n'
+        f'    float xformOp:rotateX = 90\n'
+        f'    float xformOp:rotateZ = 90\n'
+        f'    double3 xformOp:scale = ({sx:.4f}, {sy:.4f}, 1.0)\n'
+        f'    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:rotateZ", "xformOp:scale"]\n'
         f'}}'
     )
 
 
 def radiator_group() -> str:
-    """A boom off each ±Z spine end with one oversized radiator beyond it."""
-    rad_z = RAD_NATIVE[1] * RAD_FACE_SCALE        # world-Z extent after rotateX
+    """A boom off each ±Z spine end with one long radiator beyond it — the
+    radiator's short edge meets the boom tip, the long axis runs out along Z."""
     parts = []
     for tag, dirn in (("Top", 1.0), ("Bot", -1.0)):
         end_z = SPINE_END_Z * dirn
@@ -323,7 +329,7 @@ def radiator_group() -> str:
         parts.append(box_mesh(f"RadBoom{tag}", RAD_X, 0.0, (end_z + boom_far) / 2.0,
                               RAD_BOOM_THICK, RAD_BOOM_THICK, RAD_BOOM_LEN, "SolarFrame"))
         parts.append(radiator_panel(f"Radiator{tag}", RAD_X, 0.0,
-                                    boom_far + dirn * rad_z / 2.0))
+                                    boom_far + dirn * RAD_LONG / 2.0))
     body = "\n".join(parts)
     return f'def Xform "RadiatorArray"\n{{\n{indent(body, "    ")}\n}}'
 

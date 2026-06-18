@@ -747,10 +747,11 @@ def Xform "World"
                 prepend references = @./assets/radiation_panel_3d_model.usdz@
             )
             {
-                double3 xformOp:translate = (0.0260, 0.0000, 1.0904)
-                float xformOp:rotateX = 90.0
-                double3 xformOp:scale = (1.3500, 1.3500, 1.0)
-                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+                double3 xformOp:translate = (0.0260, 0.0000, 1.2850)
+                float xformOp:rotateX = 90
+                float xformOp:rotateZ = 90
+                double3 xformOp:scale = (1.2724, 0.6534, 1.0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:rotateZ", "xformOp:scale"]
             }
             def Mesh "RadBoomBot" (
                 prepend apiSchemas = ["MaterialBindingAPI"]
@@ -768,10 +769,11 @@ def Xform "World"
                 prepend references = @./assets/radiation_panel_3d_model.usdz@
             )
             {
-                double3 xformOp:translate = (0.0260, 0.0000, -1.0904)
-                float xformOp:rotateX = 90.0
-                double3 xformOp:scale = (1.3500, 1.3500, 1.0)
-                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:scale"]
+                double3 xformOp:translate = (0.0260, 0.0000, -1.2850)
+                float xformOp:rotateX = 90
+                float xformOp:rotateZ = 90
+                double3 xformOp:scale = (1.2724, 0.6534, 1.0)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:rotateZ", "xformOp:scale"]
             }
         }
     }
@@ -780,14 +782,14 @@ def Xform "World"
     {
         def Camera "Closeup"
         {
-            float focalLength = 25.0
-            float focusDistance = 1739
+            float focalLength = 24.0
+            float focusDistance = 1915
             float2 clippingRange = (1, 5000)
             matrix4d xformOp:transform = (
-                    (0.76929, 0.63890, -0.00000, 0.00000),
-                    (-0.30121, 0.36268, 0.88189, 0.00000),
-                    (0.56344, -0.67843, 0.47145, 0.00000),
-                    (980.00000, -1180.00000, 820.00000, 1.00000)
+                    (0.76919, 0.63902, -0.00000, 0.00000),
+                    (-0.30036, 0.36154, 0.88265, 0.00000),
+                    (0.56403, -0.67893, 0.47003, 0.00000),
+                    (1080.00000, -1300.00000, 900.00000, 1.00000)
             )
             uniform token[] xformOpOrder = ["xformOp:transform"]
         }
