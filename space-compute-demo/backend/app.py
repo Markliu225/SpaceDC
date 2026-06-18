@@ -2,9 +2,13 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+import subprocess
+import sys
 import time
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -161,6 +165,53 @@ async def http_post_satellite_config(patch: dict[str, Any]):
         raise HTTPException(422, f"invalid satellite_config patch: {e}") from e
     await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
     return {"ok": True, "satellite_config": new_cfg.model_dump()}
+
+
+# --- Twin deployable geometry (Feature 3) ---------------------------------
+# usd/twin_params.json drives tools/gen_twin_satellite.py; regenerating the
+# .usda lets Kit reload the layer with the new solar count / radiator size.
+_REPO_ROOT   = Path(__file__).resolve().parent.parent
+_TWIN_PARAMS = _REPO_ROOT / "usd" / "twin_params.json"
+_GEN_SCRIPT  = _REPO_ROOT / "tools" / "gen_twin_satellite.py"
+
+
+def _regenerate_twin(geom: dict[str, Any]) -> bool:
+    """Write twin_params.json and re-run the USD generator with this Python
+    (the backend venv has pxr). Returns True on a clean regenerate."""
+    try:
+        _TWIN_PARAMS.write_text(json.dumps({
+            "solar_clusters_per_side": geom["solar_clusters_per_side"],
+            "radiator_long": geom["radiator_long"],
+            "radiator_ratio": geom["radiator_ratio"],
+        }, indent=2), encoding="utf-8")
+        r = subprocess.run([sys.executable, str(_GEN_SCRIPT)],
+                           capture_output=True, text=True, timeout=120)
+        if r.returncode != 0:
+            log.error("twin regen failed: %s", r.stderr[-500:])
+            return False
+        log.info("twin regen ok: %s", r.stdout.strip().splitlines()[-1] if r.stdout else "")
+        return True
+    except Exception as e:  # noqa: BLE001
+        log.error("twin regen error: %s", e)
+        return False
+
+
+@app.get("/twin_geometry")
+async def http_get_twin_geometry():
+    return engine.twin_geometry.model_dump()
+
+
+@app.post("/twin_geometry")
+async def http_post_twin_geometry(patch: dict[str, Any]):
+    """Set deployable geometry → regenerate the USD → broadcast so Web sees the
+    new numbers and Kit can reload the bumped layer version."""
+    try:
+        geom = engine.set_twin_geometry(patch)
+    except Exception as e:
+        raise HTTPException(422, f"invalid twin_geometry patch: {e}") from e
+    regen_ok = await asyncio.to_thread(_regenerate_twin, geom.model_dump())
+    await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
+    return {"ok": True, "regenerated": regen_ok, "twin_geometry": geom.model_dump()}
 
 
 @app.post("/mission/start")

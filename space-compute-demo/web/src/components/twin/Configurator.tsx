@@ -1,5 +1,6 @@
-import { Cpu, Snowflake, Sun } from 'lucide-react'
+import { Cpu, Maximize2, Snowflake, Sun } from 'lucide-react'
 import { Card } from '../primitives'
+import { useTwinGeometry, GEOM_RANGE } from '../../hooks/useTwinGeometry'
 import {
   GPU_OPTIONS,
   RADIATOR_MATERIAL_OPTIONS,
@@ -98,8 +99,72 @@ export function Configurator() {
         />
       </Section>
 
+      <GeometryControls />
+
       <DesignSummary />
     </Card>
+  )
+}
+
+const round2 = (n: number) => Math.round(n * 100) / 100
+
+/** Deployable-geometry controls (Feature 3): add/remove solar clusters per
+ * side, and resize / reshape the radiators. Each step POSTs /twin_geometry,
+ * which regenerates the USD model and bumps the version for Kit to reload. */
+function GeometryControls() {
+  const { geom, update } = useTwinGeometry()
+  const R = GEOM_RANGE
+  const solar = geom.solar_clusters_per_side
+  const long  = geom.radiator_long
+  const ratio = geom.radiator_ratio
+  return (
+    <Section title="Deployables" icon={<Maximize2 size={12} strokeWidth={1.8} className="text-accent" />}>
+      <Stepper
+        label="Solar / side"
+        value={`${solar}×`}
+        onDec={() => update({ solar_clusters_per_side: solar - 1 })}
+        onInc={() => update({ solar_clusters_per_side: solar + 1 })}
+        decDisabled={solar <= R.solar_clusters_per_side.min}
+        incDisabled={solar >= R.solar_clusters_per_side.max}
+      />
+      <Stepper
+        label="Radiator size"
+        value={`${(long * 1.8).toFixed(1)} m`}
+        onDec={() => update({ radiator_long: round2(long - R.radiator_long.step) })}
+        onInc={() => update({ radiator_long: round2(long + R.radiator_long.step) })}
+        decDisabled={long <= R.radiator_long.min + 1e-6}
+        incDisabled={long >= R.radiator_long.max - 1e-6}
+      />
+      <Stepper
+        label="Radiator ratio"
+        value={`1:${ratio.toFixed(1)}`}
+        onDec={() => update({ radiator_ratio: round2(ratio - R.radiator_ratio.step) })}
+        onInc={() => update({ radiator_ratio: round2(ratio + R.radiator_ratio.step) })}
+        decDisabled={ratio <= R.radiator_ratio.min + 1e-6}
+        incDisabled={ratio >= R.radiator_ratio.max - 1e-6}
+      />
+    </Section>
+  )
+}
+
+function Stepper({
+  label, value, onDec, onInc, decDisabled, incDisabled,
+}: {
+  label: string; value: string
+  onDec: () => void; onInc: () => void
+  decDisabled?: boolean; incDisabled?: boolean
+}) {
+  const btn = 'flex h-5 w-5 items-center justify-center rounded border border-border-weak text-text-md ' +
+    'hover:bg-bg-cardHi hover:text-text-hi disabled:opacity-30 disabled:cursor-not-allowed'
+  return (
+    <div className="flex items-center justify-between rounded border border-border-weak bg-bg-inset/40 px-2 py-1">
+      <span className="text-[11px] text-text-md">{label}</span>
+      <div className="flex items-center gap-1.5">
+        <button type="button" onClick={onDec} disabled={decDisabled} className={btn} aria-label={`decrease ${label}`}>−</button>
+        <span className="w-12 text-right font-mono tabular-nums text-[11px] text-text-hi">{value}</span>
+        <button type="button" onClick={onInc} disabled={incDisabled} className={btn} aria-label={`increase ${label}`}>+</button>
+      </div>
+    </div>
   )
 }
 

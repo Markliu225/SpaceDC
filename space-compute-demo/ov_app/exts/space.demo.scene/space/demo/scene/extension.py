@@ -1029,6 +1029,28 @@ def apply_satellite_config(cfg: dict) -> bool:
     return applied
 
 
+def reload_twin_layer() -> bool:
+    """Reload usd/twin_satellite.usda (a sublayer of the satellite stage) after
+    the backend regenerates it (Feature 3 — solar count / radiator size), so
+    the new geometry shows in the live viewport without reopening the stage."""
+    if not _HAS_KIT:
+        return False
+    try:
+        from pxr import Sdf  # type: ignore
+        base = os.environ.get(USD_ROOT_ENV, "C:/Workspace/SpaceDC/space-compute-demo/usd")
+        twin_path = os.path.join(base, "twin_satellite.usda").replace("\\", "/")
+        layer = Sdf.Layer.FindOrOpen(twin_path)
+        if layer is None:
+            _log(f"twin layer not resident, skip reload: {twin_path}")
+            return False
+        layer.Reload(force=True)
+        _log(f"reloaded twin layer {twin_path}")
+        return True
+    except Exception as exc:  # noqa: BLE001
+        _log(f"twin reload error: {exc}")
+        return False
+
+
 async def _deferred_bind(cam_path: str) -> None:
     app = omni.kit.app.get_app()
     for tick in range(30):
@@ -1071,6 +1093,7 @@ if _HAS_KIT:
             # as /state. Re-applied to the satellite stage every time it
             # changes OR the satellite stage is (re)opened.
             self._sat_config: Optional[dict] = None
+            self._geom_version: int = -1   # twin_geometry.version last reloaded
             # 天数天算 mission snapshot (from /state.mission) — drives the
             # overview-stage choreography (AOI / data packet / ISL-GSL beams)
             # and the cinematic MissionCam.
@@ -1170,6 +1193,18 @@ if _HAS_KIT:
                     state = await asyncio.to_thread(fetch_state)
                     if state is not None:
                         self._on_poll(state)
+                        # Feature 3: when the deployable-geometry version bumps,
+                        # the backend has regenerated twin_satellite.usda —
+                        # reload that layer so the live stage picks up the new
+                        # solar count / radiator size.
+                        geom = state.get("twin_geometry")
+                        if geom is not None:
+                            v = int(geom.get("version", 0))
+                            if v != self._geom_version:
+                                if self._geom_version >= 0 and \
+                                   self._current_stage == self._stages.get("satellite"):
+                                    reload_twin_layer()
+                                self._geom_version = v
                 except Exception as exc:  # noqa: BLE001
                     _log(f"poll error: {exc}")
 

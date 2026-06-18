@@ -19,6 +19,7 @@ from models import (
     Mode,
     Parameters,
     SatelliteConfig,
+    TwinGeometry,
     SatelliteState,
     StatePacket,
     TaskState,
@@ -162,6 +163,7 @@ class StateEngine:
         self._fleet_snapshot: FleetSnapshot = FleetSnapshot()
         # Reconfigurable hardware loadout — Twin page mutates via set_config.
         self._config: SatelliteConfig = SatelliteConfig()
+        self._twin_geometry: TwinGeometry = TwinGeometry()
         # 天数天算 mission — phase machine on a wall-clock timeline. The clock
         # (_mission_start_wall) only starts once the scene is loaded; until
         # then the mission holds on 'acquire'. _mission_request_wall marks when
@@ -233,6 +235,22 @@ class StateEngine:
     @property
     def satellite_config(self) -> SatelliteConfig:
         return self._config
+
+    @property
+    def twin_geometry(self) -> TwinGeometry:
+        return self._twin_geometry
+
+    def set_twin_geometry(self, patch: dict[str, Any]) -> TwinGeometry:
+        """Merge deployable-geometry knobs and bump the version. Clamped to the
+        same ranges gen_twin_satellite.py enforces. Returns the new geometry."""
+        cleaned = {k: v for k, v in patch.items() if v is not None and k != "version"}
+        merged = self._twin_geometry.model_copy(update=cleaned)
+        merged.solar_clusters_per_side = max(1, min(8, int(merged.solar_clusters_per_side)))
+        merged.radiator_long = max(0.3, min(3.0, float(merged.radiator_long)))
+        merged.radiator_ratio = max(1.2, min(6.0, float(merged.radiator_ratio)))
+        merged.version = self._twin_geometry.version + 1
+        self._twin_geometry = TwinGeometry.model_validate(merged.model_dump())
+        return self._twin_geometry
 
     # ---- 天数天算 mission ----
     def start_mission(self) -> MissionState:
@@ -406,6 +424,7 @@ class StateEngine:
             camera_preset=self._camera_preset,
             running=self._running,
             satellite_config=self._config.model_copy(),
+            twin_geometry=self._twin_geometry.model_copy(),
             mission=self._mission.model_copy(),
         )
 

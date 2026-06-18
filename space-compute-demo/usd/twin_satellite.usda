@@ -783,13 +783,13 @@ def Xform "World"
         def Camera "Closeup"
         {
             float focalLength = 22.0
-            float focusDistance = 2217
+            float focusDistance = 2188
             float2 clippingRange = (1, 5000)
             matrix4d xformOp:transform = (
                     (0.76822, 0.64018, -0.00000, 0.00000),
                     (-0.30320, 0.36384, 0.88073, 0.00000),
                     (0.56383, -0.67660, 0.47362, 0.00000),
-                    (1250.00000, -1500.00000, 1050.00000, 1.00000)
+                    (1233.60386, -1480.32463, 1036.22724, 1.00000)
             )
             uniform token[] xformOpOrder = ["xformOp:transform"]
         }

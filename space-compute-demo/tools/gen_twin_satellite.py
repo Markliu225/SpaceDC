@@ -352,11 +352,21 @@ def satellite_prim() -> str:
 }}"""
 
 
+def _frame_radius_cm() -> float:
+    """Largest deployed extent (solar tip along Y, radiator tip along Z) in cm,
+    so the camera distance scales with whatever geometry is configured."""
+    solar_tip = (BOOM_Y1 + N_PANELS * (SOLAR_NATIVE[1] * PANEL_SCALE[1])) * BACKBONE_SCALE
+    rad_tip   = (SPINE_END_Z + RAD_BOOM_LEN + RAD_LONG) * BACKBONE_SCALE
+    return max(solar_tip, rad_tip)
+
+
 def cameras_scope() -> str:
-    """Closeup camera — front-on from far +X (with a slight -Y/+Z tilt) so the
-    deployed solar sail and the backbone both fit. The wings dominate the frame
-    (~5 m span vs the 1.8 m body), exactly the over-sized look intended."""
-    eye = CAM_EYE
+    """Closeup camera — a far 3/4 view (CAM_EYE direction) auto-pulled back to
+    the configured frame radius, so any solar count / radiator size stays in
+    frame after a regenerate."""
+    dn = math.sqrt(sum(c * c for c in CAM_EYE)) or 1.0
+    dist = _frame_radius_cm() * 5.5
+    eye = tuple(c / dn * dist for c in CAM_EYE)
     target = (0.0, 0.0, 0.0)
     fx, fy, fz = (target[i] - eye[i] for i in range(3))
     fn = math.sqrt(fx*fx + fy*fy + fz*fz) or 1.0
@@ -414,7 +424,28 @@ def build_usda() -> str:
     return "\n".join(parts)
 
 
+def _load_params() -> dict:
+    """Optional runtime geometry overrides written by the backend
+    (usd/twin_params.json): solar_clusters_per_side, radiator_long,
+    radiator_ratio. Absent file → built-in defaults."""
+    import json
+    pf = ROOT / "usd" / "twin_params.json"
+    if pf.exists():
+        try:
+            return json.loads(pf.read_text(encoding="utf-8"))
+        except Exception as e:  # noqa: BLE001 — never let a bad file break gen
+            print(f"[gen] WARN ignoring bad twin_params.json: {e}")
+    return {}
+
+
 def main() -> None:
+    global N_PANELS, RAD_LONG, RAD_RATIO
+    p = _load_params()
+    N_PANELS  = max(1, min(8, int(p.get("solar_clusters_per_side", N_PANELS))))
+    RAD_LONG  = max(0.3, min(3.0, float(p.get("radiator_long", RAD_LONG))))
+    RAD_RATIO = max(1.2, min(6.0, float(p.get("radiator_ratio", RAD_RATIO))))
+    if p:
+        print(f"[gen] params: solar/side={N_PANELS} rad_long={RAD_LONG} rad_ratio={RAD_RATIO}")
     out = build_usda()
     OUT.write_text(out, encoding="utf-8")
     print(f"[gen] wrote {OUT} ({len(out):,} bytes)")

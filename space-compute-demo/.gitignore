@@ -60,3 +60,6 @@ usd/aeco_city/
 
 # Logs
 *.log
+
+# Runtime deployable-geometry overrides (Feature 3) — written by the backend.
+usd/twin_params.json

@@ -139,6 +139,15 @@ export interface SatelliteConfig {
   radiator_size: RadiatorSize;
 }
 
+/** Deployable geometry knobs (Feature 3) — solar count per side + radiator
+ * size/ratio. Drives the regenerated USD model and the physics areas. */
+export interface TwinGeometry {
+  solar_clusters_per_side: number;
+  radiator_long: number;
+  radiator_ratio: number;
+  version: number;
+}
+
 /** 天数天算 mission phase. idle = not running; the rest advance in order. */
 export type MissionPhase =
   | 'idle' | 'acquire' | 'capture' | 'route' | 'compute' | 'downlink' | 'deliver';
@@ -178,6 +187,8 @@ export interface StatePacket {
   compare: CompareMetrics | null;
   /** Optional in Phase 1 — backend hasn't started broadcasting it yet. */
   satellite_config?: SatelliteConfig;
+  /** Deployable geometry (solar count, radiator size) — Feature 3. */
+  twin_geometry?: TwinGeometry;
   /** Optional until backend MissionEngine lands. */
   mission?: MissionState;
 }

@@ -158,6 +158,19 @@ class SatelliteConfig(BaseModel):
     radiator_size: RadiatorSize = "Standard"
 
 
+class TwinGeometry(BaseModel):
+    """Deployable-geometry knobs that drive the regenerated USD model
+    (tools/gen_twin_satellite.py via usd/twin_params.json) AND the physics
+    areas. `solar_clusters_per_side` is the number of 2×2 panel clusters per
+    wing (panels only extend along the two sides); `radiator_long` /
+    `radiator_ratio` size and shape the two radiator panels. `version` bumps
+    on every change so Kit can reload the regenerated layer."""
+    solar_clusters_per_side: int = 2
+    radiator_long: float = 1.55
+    radiator_ratio: float = 2.5
+    version: int = 0
+
+
 class Envelope(BaseModel):
     type: str
     ts: float
@@ -175,4 +188,5 @@ class StatePacket(BaseModel):
     camera_preset: str = "overview"
     running: bool = True
     satellite_config: SatelliteConfig = Field(default_factory=SatelliteConfig)
+    twin_geometry: TwinGeometry = Field(default_factory=TwinGeometry)
     mission: MissionState = Field(default_factory=MissionState)
