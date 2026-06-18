@@ -19,15 +19,15 @@ import { ViewModeTabs, type TwinViewMode } from '../components/twin/ViewModeTabs
  *  ┌────────────────────────────────────────────────────────────────────┐
  *  │ Header: sat picker · view-mode tabs · LIVE                  56px   │
  *  ├──────────────────────────────────────────────┬─────────────────────┤
- *  │ Omniverse viewport (col-8)            1fr    │ Configurator col-4  │
- *  │                                              │   3 sections + Δ    │
- *  ├──────────────────────────────────────────────┴─────────────────────┤
- *  │ TimeSeriesStrip · 5 sparklines · 120 s        col-12 · 160 px      │
+ *  │ Omniverse viewport (col-9)            1fr      │ Configurator col-3│
+ *  │                                                │   3 sections + Δ  │
+ *  ├────────────────────────────────────────────────┴───────────────────┤
+ *  │ TimeSeriesStrip · 5 sparklines · 120 s        col-12 · 150 px      │
  *  ├────────────────────────────────────────────────────────────────────┤
- *  │ SubsystemHealthRow · 4 cards                  col-12 · 120 px      │
+ *  │ SubsystemHealthRow · 4 cards                  col-12 · 88 px       │
  *  └────────────────────────────────────────────────────────────────────┘
  *
- * Tracks: 56 / 1fr / 160 / 120. The viewport keeps a satellite-preset
+ * Tracks: 56 / 1fr / 150 / 88. The viewport keeps a satellite-preset
  * camera (Kit will respond once Phase 3 lands); the Configurator + bars
  * stay reactive in Phase 1 via the local useTwinTelemetry synth.
  */
@@ -51,7 +51,7 @@ export function SatelliteTwinPage() {
       style={{
         height: 'calc(100vh - 44px - 24px - 4px)',
         gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
-        gridTemplateRows: '56px minmax(0, 1fr) 220px 110px',
+        gridTemplateRows: '56px minmax(0, 1fr) 150px 88px',
       }}
     >
       {/* Row 1 — Header strip. */}
@@ -71,12 +71,12 @@ export function SatelliteTwinPage() {
       {/* Row 2 — Viewport + Configurator. The viewport cell is `relative` so
           the HUD overlays (MiniOrbitHud bottom-left, TwinModulePopup top-right
           when a module is clicked) can anchor inside it. */}
-      <div className="col-span-8 min-h-0 overflow-hidden relative">
+      <div className="col-span-9 min-h-0 overflow-hidden relative">
         <EarthViewport />
         <MiniOrbitHud />
         <TwinModulePopup />
       </div>
-      <div className="col-span-4 min-h-0 overflow-visible relative z-20">
+      <div className="col-span-3 min-h-0 overflow-visible relative z-20">
         <Configurator />
       </div>
 
