@@ -103,7 +103,7 @@ SOLAR_REF    = "./assets/solar_panel_3d_model.usdz"
 SOLAR_NATIVE = (0.981, 0.777, 0.054)
 SOLAR_MAT    = "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"  # asset's material
 SOLAR_GLOSS_ROUGH = 0.08    # was 0.9 (very matte) → glossy
-SOLAR_GLOSS_METAL = 0.6     # was 0.0 → catches sun/earth reflections
+SOLAR_GLOSS_METAL = 0.95    # was 0.0 → strongly mirror-like, catches sun/earth reflections
 PANEL_RY     = 90.0
 # Per-panel scale (height, deploy, thickness) — non-uniform so the panel reads
 # oversized and thin. Height 0.978×1.45≈1.42 (≈2.6 m on stage, taller than the

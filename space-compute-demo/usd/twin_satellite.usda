@@ -667,7 +667,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -688,7 +688,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -709,7 +709,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -730,7 +730,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -751,7 +751,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -772,7 +772,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -793,7 +793,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -814,7 +814,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -835,7 +835,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -856,7 +856,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -877,7 +877,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -898,7 +898,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -934,7 +934,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -955,7 +955,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -976,7 +976,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -997,7 +997,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -1018,7 +1018,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -1039,7 +1039,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -1060,7 +1060,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -1081,7 +1081,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -1102,7 +1102,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -1123,7 +1123,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -1144,7 +1144,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
@@ -1165,7 +1165,7 @@ def Xform "World"
                             over "Principled_BSDF"
                             {
                                 float inputs:roughness = 0.08
-                                float inputs:metallic = 0.6
+                                float inputs:metallic = 0.95
                             }
                         }
                     }
