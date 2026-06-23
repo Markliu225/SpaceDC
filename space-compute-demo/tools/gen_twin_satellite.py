@@ -169,13 +169,12 @@ RAD_BOOM_THICK = 0.014    # thin square support rod
 
 SOLAR_MATERIALS = {
     # Brushed-aluminium support boom (panels keep the asset's own materials).
-    # Rough brushed-silver metal for the connecting boom — clearly silver but
-    # matte/coarse (high roughness), not the old near-white gloss.
-    "SolarFrame": {"diffuse": (0.520, 0.530, 0.550), "metallic": 0.92,
-                   "roughness": 0.80, "emissive": (0.0, 0.0, 0.0)},
-    # Hinge pin/axle — same silver, a touch smoother so it still reads as the axle.
-    "HingePinMetal": {"diffuse": (0.560, 0.570, 0.590), "metallic": 0.92,
-                      "roughness": 0.55, "emissive": (0.0, 0.0, 0.0)},
+    # Connecting boom + hinge pin — SAME clean shiny metal as the backbone
+    # (identical colour + gloss), kept in sync via the BACKBONE_* constants.
+    "SolarFrame": {"diffuse": BACKBONE_DIFFUSE, "metallic": BACKBONE_METALLIC,
+                   "roughness": BACKBONE_ROUGHNESS, "emissive": (0.0, 0.0, 0.0)},
+    "HingePinMetal": {"diffuse": BACKBONE_DIFFUSE, "metallic": BACKBONE_METALLIC,
+                      "roughness": BACKBONE_ROUGHNESS, "emissive": (0.0, 0.0, 0.0)},
     # Glossy specular radiator finish (rebinds the texture-driven asset material
     # so the radiators reflect strongly) — bright OSR/quartz-mirror silver.
     "RadiatorGlossy": {"diffuse": (0.720, 0.745, 0.790), "metallic": 0.90,
