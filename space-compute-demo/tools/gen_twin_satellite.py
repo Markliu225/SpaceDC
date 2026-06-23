@@ -159,6 +159,24 @@ SOLAR_MATERIALS = {
 CAM_EYE   = (1250.0, -1500.0, 1050.0)
 CAM_FOCAL = 22.0
 
+# --- Celestial context (Earth + Sun) ---------------------------------------
+# In the twin view the Earth + Sun appear at realistic ANGULAR scale and
+# position (literal 1:1 distances would wreck the depth buffer): the Earth fills
+# ~64° below (the LEO horizon) and the Sun is a ~0.53° disk in the sun
+# direction. Authored in absolute cm as siblings of the ×180 Satellite, so they
+# sit at their true directions and sweep correctly as the camera orbits.
+# Distances are compressed (literal 700 km would wreck the depth buffer) but the
+# ANGULAR sizes are kept real: asin(R/D)=64° gives the true LEO Earth horizon,
+# and the Sun spans the true ~0.53°. Earth surface sits ~2.5 m below the body.
+EARTH_RADIUS_CM = 22_000.0                     # ~49° angular radius from the cam:
+EARTH_CENTER    = (0.0, 0.0, -28_000.0)        # a big curved planet across the lower frame
+EARTH_TEX       = "./textures/earth_day.jpg"
+SUN_TEX         = "./textures/sun_surface.png"
+SUN_EMIT        = (7.0, 5.2, 2.2)              # HDR multiplier on the sun texture → glows
+SUN_DIST_CM     = 50_000.0
+SUN_RADIUS_CM   = 231.0                        # 50000·tan(0.265°) → ~0.53° disk
+SUN_DIR         = (0.643, 0.0, 0.766)          # default Key sun source (+X / +Z)
+
 
 # ---------------------------------------------------------------------------
 def _c3(t: tuple[float, float, float]) -> str:
@@ -184,9 +202,93 @@ def material_block(name: str, p: dict) -> str:
     }}"""
 
 
+def textured_material(name: str, tex: str, metallic: float, roughness: float,
+                      emissive: tuple[float, float, float]) -> str:
+    """A diffuse-textured UsdPreviewSurface (UsdUVTexture ← st reader). Used for
+    the photovoltaic panels and the equirectangular Earth."""
+    return f"""
+    def Material "{name}"
+    {{
+        token outputs:surface.connect = </World/Looks/{name}/Shader.outputs:surface>
+        def Shader "Shader"
+        {{
+            uniform token info:id = "UsdPreviewSurface"
+            color3f inputs:diffuseColor.connect = </World/Looks/{name}/Tex.outputs:rgb>
+            color3f inputs:emissiveColor = {_c3(emissive)}
+            float inputs:metallic = {metallic:.3f}
+            float inputs:roughness = {roughness:.3f}
+            int inputs:useSpecularWorkflow = 0
+            token outputs:surface
+        }}
+        def Shader "Tex"
+        {{
+            uniform token info:id = "UsdUVTexture"
+            asset inputs:file = @{tex}@
+            float2 inputs:st.connect = </World/Looks/{name}/St.outputs:result>
+            token inputs:wrapS = "repeat"
+            token inputs:wrapT = "repeat"
+            float3 outputs:rgb
+        }}
+        def Shader "St"
+        {{
+            uniform token info:id = "UsdPrimvarReader_float2"
+            token inputs:varname = "st"
+            float2 outputs:result
+        }}
+    }}"""
+
+
+def sun_material() -> str:
+    """The Sun — a granulated solar-surface texture driving BOTH diffuse and
+    (HDR-scaled) emissive, so the disk shows surface detail and glows like a
+    star (with Kit bloom). UsdUVTexture inputs:scale lifts the 0..1 texture
+    into HDR for the emissive path."""
+    sc = SUN_EMIT
+    return f"""
+    def Material "SunMat"
+    {{
+        token outputs:surface.connect = </World/Looks/SunMat/Shader.outputs:surface>
+        def Shader "Shader"
+        {{
+            uniform token info:id = "UsdPreviewSurface"
+            color3f inputs:diffuseColor.connect = </World/Looks/SunMat/Tex.outputs:rgb>
+            color3f inputs:emissiveColor.connect = </World/Looks/SunMat/Emit.outputs:rgb>
+            float inputs:metallic = 0.0
+            float inputs:roughness = 1.0
+            int inputs:useSpecularWorkflow = 0
+            token outputs:surface
+        }}
+        def Shader "Tex"
+        {{
+            uniform token info:id = "UsdUVTexture"
+            asset inputs:file = @{SUN_TEX}@
+            float2 inputs:st.connect = </World/Looks/SunMat/St.outputs:result>
+            float3 outputs:rgb
+        }}
+        def Shader "Emit"
+        {{
+            uniform token info:id = "UsdUVTexture"
+            asset inputs:file = @{SUN_TEX}@
+            float2 inputs:st.connect = </World/Looks/SunMat/St.outputs:result>
+            float4 inputs:scale = ({sc[0]:.2f}, {sc[1]:.2f}, {sc[2]:.2f}, 1.0)
+            float3 outputs:rgb
+        }}
+        def Shader "St"
+        {{
+            uniform token info:id = "UsdPrimvarReader_float2"
+            token inputs:varname = "st"
+            float2 outputs:result
+        }}
+    }}"""
+
+
 def looks_scope() -> str:
     blocks = [material_block(k, v) for k, v in SERVER_MATERIALS.items()]
     blocks += [material_block(k, v) for k, v in SOLAR_MATERIALS.items()]
+    # Textured: equirectangular day-Earth (faint emissive so the night side
+    # isn't pure black) + the emissive Sun-surface sphere.
+    blocks.append(textured_material("EarthMat", EARTH_TEX, 0.0, 0.9, (0.04, 0.06, 0.10)))
+    blocks.append(sun_material())
     return f"""def Scope "Looks"
 {{{''.join(blocks)}
 }}"""
@@ -369,6 +471,58 @@ def radiator_group() -> str:
     return f'def Xform "RadiatorArray"\n{{\n{indent(body, "    ")}\n}}'
 
 
+def uv_sphere(name: str, center: tuple[float, float, float], radius: float,
+              material: str, stacks: int = 36, slices: int = 72) -> str:
+    """An equirectangular-UV sphere Mesh (lon→u, lat→v) so a lon/lat texture
+    maps cleanly and every renderer draws it as real geometry."""
+    cx, cy, cz = center
+    pts, sts = [], []
+    for j in range(stacks + 1):
+        phi = -math.pi / 2 + math.pi * j / stacks
+        cphi, sphi = math.cos(phi), math.sin(phi)
+        for i in range(slices + 1):
+            th = 2 * math.pi * i / slices
+            pts.append((cx + radius * cphi * math.cos(th),
+                        cy + radius * cphi * math.sin(th),
+                        cz + radius * sphi))
+            sts.append((i / slices, j / stacks))
+    row = slices + 1
+    idx, counts = [], []
+    for j in range(stacks):
+        for i in range(slices):
+            a = j * row + i
+            idx += [a, a + 1, a + row + 1, a + row]
+            counts.append(4)
+    pstr = ", ".join(f"({p[0]:.2f}, {p[1]:.2f}, {p[2]:.2f})" for p in pts)
+    ststr = ", ".join(f"({s[0]:.4f}, {s[1]:.4f})" for s in sts)
+    return (
+        f'def Mesh "{name}" (\n'
+        f'    prepend apiSchemas = ["MaterialBindingAPI"]\n'
+        f')\n'
+        f'{{\n'
+        f'    float3[] extent = [({cx-radius:.1f}, {cy-radius:.1f}, {cz-radius:.1f}), '
+        f'({cx+radius:.1f}, {cy+radius:.1f}, {cz+radius:.1f})]\n'
+        f'    int[] faceVertexCounts = [{", ".join(map(str, counts))}]\n'
+        f'    int[] faceVertexIndices = [{", ".join(map(str, idx))}]\n'
+        f'    point3f[] points = [{pstr}]\n'
+        f'    texCoord2f[] primvars:st = [{ststr}] (interpolation = "vertex")\n'
+        f'    uniform token subdivisionScheme = "none"\n'
+        f'    rel material:binding = </World/Looks/{material}>\n'
+        f'}}'
+    )
+
+
+def celestial_group() -> str:
+    """Earth (textured, ~64° below) + Sun (HDR-emissive ~0.53° disk in the sun
+    direction). Siblings of the ×180 Satellite, in absolute cm, so they hold
+    realistic angular scale + position and sweep correctly as the camera orbits."""
+    sun_c = tuple(SUN_DIR[i] * SUN_DIST_CM for i in range(3))
+    earth = uv_sphere("Earth", EARTH_CENTER, EARTH_RADIUS_CM, "EarthMat", 48, 96)
+    sun = uv_sphere("Sun", sun_c, SUN_RADIUS_CM, "SunMat", 20, 32)
+    body = earth + "\n" + sun
+    return f'def Xform "Celestial"\n{{\n{indent(body, "    ")}\n}}'
+
+
 def satellite_prim() -> str:
     backbone = (
         f'def Xform "Backbone" (\n'
@@ -427,7 +581,7 @@ def cameras_scope() -> str:
     {{
         float focalLength = {CAM_FOCAL:.1f}
         float focusDistance = {focus:.0f}
-        float2 clippingRange = (1, 5000)
+        float2 clippingRange = (1, 90000)
         matrix4d xformOp:transform = (
                 {rows_text}
         )
@@ -451,6 +605,8 @@ def build_usda() -> str:
         indent(looks_scope(), '    '),
         '',
         indent(satellite_prim(), '    '),
+        '',
+        indent(celestial_group(), '    '),
         '',
         indent(cameras_scope(), '    '),
         '}',

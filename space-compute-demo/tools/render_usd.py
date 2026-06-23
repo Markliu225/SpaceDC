@@ -142,6 +142,25 @@ def basis(view, eye=None, target=None):
     return r, u, f
 
 
+def clip_near(tri, eye, f, near):
+    """Sutherland-Hodgman clip a triangle (3 world pts) to the half-space
+    depth>=near, depth(P)=(P-eye)·f. Returns the clipped polygon's world points
+    ([] if fully behind). Stops a huge close body (the Earth) whose triangles
+    cross the camera plane from smearing across the frame."""
+    out = []
+    n = len(tri)
+    for i in range(n):
+        P0 = tri[i]; P1 = tri[(i + 1) % n]
+        d0 = float((P0 - eye) @ f) - near
+        d1 = float((P1 - eye) @ f) - near
+        if d0 >= 0:
+            out.append(P0)
+        if (d0 >= 0) != (d1 >= 0):
+            s = d0 / (d0 - d1)
+            out.append(P0 + (P1 - P0) * s)
+    return out
+
+
 def render_persp(meshes, out, eye, target, focal=35.0, hap=20.955, vap=15.2908,
                  size=1100, by_part=True, lit=None):
     """Perspective render matching USD Camera semantics (focalLength + film
@@ -168,52 +187,59 @@ def render_persp(meshes, out, eye, target, focal=35.0, hap=20.955, vap=15.2908,
     parts = sorted({k for k, _, _ in meshes})
     hues = {p: (i / max(1, len(parts))) for i, p in enumerate(parts)}
     light = np.array([0.4, -0.5, 0.75]); light /= np.linalg.norm(light)
+    near = 1.0          # cm — near plane for clipping straddling triangles
     faces = []
     for key, Wpts, tris in meshes:
         rel = Wpts - eye
         depth = rel @ f
         sx = rel @ r; sy = rel @ u
         safe = np.where(depth <= 1e-6, 1e-6, depth)
-        ndc_x = (sx / safe) / tan_h
-        ndc_y = (sy / safe) / tan_v
-        px = (ndc_x * 0.5 + 0.5) * W
-        py = (1.0 - (ndc_y * 0.5 + 0.5)) * H
+        px = ((sx / safe) / tan_h * 0.5 + 0.5) * W
+        py = (1.0 - ((sy / safe) / tan_v * 0.5 + 0.5)) * H
         h = hues[key] if by_part else 0.58
         tv = Wpts[tris]
         nrm = np.cross(tv[:, 1] - tv[:, 0], tv[:, 2] - tv[:, 0])
         nl = np.linalg.norm(nrm, axis=1, keepdims=True); nl[nl == 0] = 1
         unit = nrm / nl
         cen = tv.mean(axis=1)
-        to_cam = eye - cen
-        flip = np.sum(unit * to_cam, axis=1) < 0
+        flip = np.sum(unit * (eye - cen), axis=1) < 0
         unit[flip] = -unit[flip]            # orient toward the camera
-        zc = depth[tris].mean(axis=1)
-        if lit is not None:
-            ambient, dirs = lit
-            base = np.array(colorsys.hsv_to_rgb(h, 0.30, 1.0)) if by_part else np.array([0.7, 0.72, 0.78])
-            for t in range(tris.shape[0]):
-                a, b, c = tris[t]
-                if depth[a] <= 0 and depth[b] <= 0 and depth[c] <= 0:
+        ambient, dirs = lit if lit is not None else (None, None)
+        base = (np.array(colorsys.hsv_to_rgb(h, 0.30, 1.0)) if by_part
+                else np.array([0.7, 0.72, 0.78])) if lit is not None else None
+        lam = np.abs(unit @ light) if lit is None else None
+        for t in range(tris.shape[0]):
+            a, b, c = tris[t]
+            da, db, dc = depth[a], depth[b], depth[c]
+            if da >= near and db >= near and dc >= near:        # fast path
+                poly = [(px[a], py[a]), (px[b], py[b]), (px[c], py[c])]
+                zc = (da + db + dc) / 3.0
+            elif da < near and db < near and dc < near:
+                continue
+            else:                                               # straddles → clip
+                cp = clip_near((Wpts[a], Wpts[b], Wpts[c]), eye, f, near)
+                if len(cp) < 3:
                     continue
+                rel2 = np.asarray(cp, float) - eye
+                d2 = rel2 @ f
+                pxx = ((rel2 @ r) / d2 / tan_h * 0.5 + 0.5) * W
+                pyy = (1.0 - ((rel2 @ u) / d2 / tan_v * 0.5 + 0.5)) * H
+                poly = list(zip(pxx, pyy))
+                zc = float(d2.mean())
+            if lit is not None:
                 acc = ambient.copy()
                 n = unit[t]
                 for L, rgb in dirs:
-                    d = n @ L
-                    if d > 0:
-                        acc = acc + rgb * d
+                    dd = n @ L
+                    if dd > 0:
+                        acc = acc + rgb * dd
                 val = base * acc * _LIT_EXPOSURE
                 col = tuple(int(255 * (1.0 - np.exp(-max(0.0, v)))) for v in val)
-                faces.append((zc[t], [(px[a], py[a]), (px[b], py[b]), (px[c], py[c])], col))
-        else:
-            lam = np.abs(unit @ light)
-            for t in range(tris.shape[0]):
-                a, b, c = tris[t]
-                if depth[a] <= 0 and depth[b] <= 0 and depth[c] <= 0:
-                    continue
-                poly = [(px[a], py[a]), (px[b], py[b]), (px[c], py[c])]
+            else:
                 shade = 0.22 + 0.78 * float(lam[t])
                 rr, gg, bb = colorsys.hsv_to_rgb(h, 0.55, shade)
-                faces.append((zc[t], poly, (int(rr*255), int(gg*255), int(bb*255))))
+                col = (int(rr * 255), int(gg * 255), int(bb * 255))
+            faces.append((zc, poly, col))
     faces.sort(key=lambda e: -e[0])
     for _, poly, col in faces:
         draw.polygon(poly, fill=col, outline=None)
