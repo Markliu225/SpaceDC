@@ -173,11 +173,14 @@ EARTH_CENTER    = (0.0, 0.0, -28_000.0)        # a big curved planet across the 
 EARTH_TEX       = "./textures/earth_day.jpg"
 EARTH_NIGHT_TEX = "./textures/earth_night.jpg"
 EARTH_NIGHT_EMIT = (0.95, 0.78, 0.45)          # warm city-light glow on the dark side
-CLOUD_TEX       = "./textures/earth_clouds.jpg"
+# Contrast-processed cloud map (clouds-on-transparent, murky mid-grays removed)
+# so the cloud shell shows clouds where there ARE clouds and is clear elsewhere
+# instead of veiling the whole Earth. See tools/make_cloud_alpha (generator note).
+CLOUD_TEX       = "./textures/earth_clouds_alpha.png"
 CLOUD_SCALE     = 1.004                         # cloud shell just above the surface
 ATMOS_SCALE     = 1.024                         # thin atmosphere shell
 ATMOS_COLOR     = (0.35, 0.55, 1.00)           # sky-blue limb glow
-ATMOS_OPACITY   = 0.16
+ATMOS_OPACITY   = 0.09                          # subtle — must not veil the texture
 SUN_TEX         = "./textures/sun_surface.png"
 SUN_EMIT        = (7.0, 5.2, 2.2)              # HDR multiplier on the sun texture → glows
 SUN_DIST_CM     = 50_000.0
