@@ -51,15 +51,17 @@ def Xform "World"
             float3 xformOp:rotateXYZ = (15, 0, -120)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
-        # Deep space — the DomeLight IS the rendered background, so it stays
-        # DARK (near-black space). It must NOT be cranked for fill: a bright
-        # dome turns the whole background white. The satellite is lit by the
-        # directional Key sun + the FillPort/FillStarboard side fills below, so
-        # the ±Y radiators read without washing out the black sky.
+        # Deep space — the DomeLight IS the rendered background. It now carries a
+        # starfield + Milky Way latlong texture so the satellite floats in a real
+        # cosmos instead of flat black. The texture is mostly black (low average
+        # → little IBL, so it won't wash the scene); the Key sun + side fills
+        # still do the actual lighting. Intensity is moderate so the band glows
+        # softly and the stars read as points — tune in the live viewport.
         def DomeLight "Space"
         {
-            color3f inputs:color = (0.018, 0.023, 0.040)
-            float inputs:intensity = 200.0
+            color3f inputs:color = (1.0, 1.0, 1.0)
+            float inputs:intensity = 650.0
+            asset inputs:texture:file = @./textures/starfield.png@
             token inputs:texture:format = "latlong"
         }
         # Side fills (NOT sun-driven → always on) that light the ±Y-facing

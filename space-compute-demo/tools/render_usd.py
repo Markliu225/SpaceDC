@@ -20,7 +20,7 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageDraw
-from pxr import Usd, UsdGeom, UsdLux, Gf
+from pxr import Usd, UsdGeom, UsdLux, UsdShade, Gf, Sdf
 
 # Keep in sync with ov_app/.../extension.py SUN_DRIVEN_LIGHTS (lo, hi). The
 # --sun f flag previews the runtime intensity lo+f*(hi-lo) for these lights.
@@ -94,12 +94,36 @@ def _part_key(path: str) -> str:
     return segs[-2] if len(segs) >= 2 else path
 
 
+def _is_transparent(prim):
+    """True if the mesh's bound UsdPreviewSurface has opacity < 1 or a connected
+    opacity (e.g. the cloud / atmosphere shells). This software renderer can't
+    alpha-blend, so such meshes are skipped rather than drawn opaque."""
+    try:
+        mat = UsdShade.MaterialBindingAPI(prim).ComputeBoundMaterial()[0]
+        if not mat or not mat.GetPrim().IsValid():
+            return False
+        shader = mat.ComputeSurfaceSource()[0]
+        if not shader or not shader.GetPrim().IsValid():
+            return False
+        op = shader.GetInput("opacity")
+        if not op:
+            return False
+        if op.HasConnectedSource():
+            return True
+        v = op.Get()
+        return v is not None and float(v) < 0.999
+    except Exception:
+        return False
+
+
 def gather(stage):
     """Return list of (part_key, Nx3 world points, list-of-tri-index)."""
     xfc = UsdGeom.XformCache(Usd.TimeCode.Default())
     meshes = []
     for prim in stage.Traverse():
         if not prim.IsA(UsdGeom.Mesh):
+            continue
+        if _is_transparent(prim):
             continue
         m = UsdGeom.Mesh(prim)
         pts = m.GetPointsAttr().Get()
@@ -161,8 +185,41 @@ def clip_near(tri, eye, f, near):
     return out
 
 
+def dome_texture(stage):
+    """The DomeLight latlong texture (resolved path) if any, else None — used to
+    paint the starfield background in a perspective render."""
+    for prim in stage.Traverse():
+        if prim.IsA(UsdLux.DomeLight):
+            a = prim.GetAttribute("inputs:texture:file").Get()
+            if a and getattr(a, "resolvedPath", ""):
+                return a.resolvedPath
+    return None
+
+
+def _dome_background(W, H, r, u, f, tan_h, tan_v, dome_img, gain=2.4):
+    """Sample the equirectangular dome texture along each pixel's world ray so
+    the starfield/Milky Way shows as the background (lon=atan2(y,x), lat=asin(z),
+    Z-up). Tonemapped with `gain` so stars read without washing out."""
+    xs = (np.arange(W) + 0.5) / W * 2.0 - 1.0
+    ys = 1.0 - (np.arange(H) + 0.5) / H * 2.0
+    NX, NY = np.meshgrid(xs, ys)
+    rays = (f[None, None, :]
+            + (NX * tan_h)[..., None] * r[None, None, :]
+            + (NY * tan_v)[..., None] * u[None, None, :])
+    rays /= np.linalg.norm(rays, axis=2, keepdims=True)
+    lon = np.arctan2(rays[..., 1], rays[..., 0])
+    lat = np.arcsin(np.clip(rays[..., 2], -1.0, 1.0))
+    uu = lon / (2 * np.pi) + 0.5
+    vv = 0.5 - lat / np.pi
+    Hd, Wd = dome_img.shape[:2]
+    ui = np.clip((uu * Wd).astype(int), 0, Wd - 1)
+    vi = np.clip((vv * Hd).astype(int), 0, Hd - 1)
+    bg = 1.0 - np.exp(-dome_img[vi, ui] * gain)
+    return Image.fromarray((np.clip(bg, 0, 1) * 255).astype("uint8"), "RGB")
+
+
 def render_persp(meshes, out, eye, target, focal=35.0, hap=20.955, vap=15.2908,
-                 size=1100, by_part=True, lit=None):
+                 size=1100, by_part=True, lit=None, dome=None):
     """Perspective render matching USD Camera semantics (focalLength + film
     aperture). If `lit` = (ambient, dirs) the triangles are shaded by the scene
     lights (Lambertian + ambient, normals flipped toward the camera so the dark
@@ -174,15 +231,17 @@ def render_persp(meshes, out, eye, target, focal=35.0, hap=20.955, vap=15.2908,
     tan_v = (vap / 2.0) / focal
     W = size
     H = int(round(size * vap / hap))
-    # In a lit render the DomeLight IS the background (Kit renders the dome as
-    # the sky). Tonemap its ambient as the bg so "black space vs white bg" is
-    # verifiable; non-lit keeps the neutral dark slate.
-    if lit is not None:
-        amb = lit[0] * _LIT_EXPOSURE
-        bg = tuple(int(255 * (1.0 - np.exp(-max(0.0, v)))) for v in amb)
+    # Background: a starfield dome texture if present (the cosmos), else the
+    # tonemapped dome ambient (lit) / neutral slate (flat).
+    if dome is not None:
+        img = _dome_background(W, H, r, u, f, tan_h, tan_v, dome)
     else:
-        bg = (8, 10, 16)
-    img = Image.new("RGB", (W, H), bg)
+        if lit is not None:
+            amb = lit[0] * _LIT_EXPOSURE
+            bg = tuple(int(255 * (1.0 - np.exp(-max(0.0, v)))) for v in amb)
+        else:
+            bg = (8, 10, 16)
+        img = Image.new("RGB", (W, H), bg)
     draw = ImageDraw.Draw(img)
     parts = sorted({k for k, _, _ in meshes})
     hues = {p: (i / max(1, len(parts))) for i, p in enumerate(parts)}
@@ -249,7 +308,7 @@ def render_persp(meshes, out, eye, target, focal=35.0, hap=20.955, vap=15.2908,
 
 def render(path, out, view="iso", size=1100, by_part=True, label=False, only=None,
            eye=None, target=None, persp=False, focal=35.0, lit=False, sun=None,
-           key_rot=None):
+           key_rot=None, stars=True):
     stage = Usd.Stage.Open(str(path))
     meshes = gather(stage)
     if only:
@@ -259,8 +318,13 @@ def render(path, out, view="iso", size=1100, by_part=True, label=False, only=Non
         print("no meshes"); return
     lit_lights = gather_lights(stage, sun, key_rot=key_rot) if lit else None
     if persp and eye is not None and target is not None:
+        dome = None
+        if stars:
+            dt = dome_texture(stage)
+            if dt:
+                dome = np.asarray(Image.open(dt).convert("RGB"), float) / 255.0
         render_persp(meshes, out, eye, target, focal=focal, size=size,
-                     by_part=by_part, lit=lit_lights)
+                     by_part=by_part, lit=lit_lights, dome=dome)
         return
     r, u, f = basis(view, eye, target)
 
@@ -345,5 +409,7 @@ if __name__ == "__main__":
     sun = float(args[args.index("--sun") + 1]) if "--sun" in args else None
     key_rot = ([float(x) for x in args[args.index("--keyrot") + 1].split(",")]
                if "--keyrot" in args else None)
+    stars = "--no-stars" not in args
     render(src, out, view=view, size=size, label=label, only=only, eye=eye,
-           target=target, persp=persp, focal=focal, lit=lit, sun=sun, key_rot=key_rot)
+           target=target, persp=persp, focal=focal, lit=lit, sun=sun, key_rot=key_rot,
+           stars=stars)

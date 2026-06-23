@@ -171,6 +171,13 @@ CAM_FOCAL = 22.0
 EARTH_RADIUS_CM = 22_000.0                     # ~49° angular radius from the cam:
 EARTH_CENTER    = (0.0, 0.0, -28_000.0)        # a big curved planet across the lower frame
 EARTH_TEX       = "./textures/earth_day.jpg"
+EARTH_NIGHT_TEX = "./textures/earth_night.jpg"
+EARTH_NIGHT_EMIT = (0.95, 0.78, 0.45)          # warm city-light glow on the dark side
+CLOUD_TEX       = "./textures/earth_clouds.jpg"
+CLOUD_SCALE     = 1.004                         # cloud shell just above the surface
+ATMOS_SCALE     = 1.024                         # thin atmosphere shell
+ATMOS_COLOR     = (0.35, 0.55, 1.00)           # sky-blue limb glow
+ATMOS_OPACITY   = 0.16
 SUN_TEX         = "./textures/sun_surface.png"
 SUN_EMIT        = (7.0, 5.2, 2.2)              # HDR multiplier on the sun texture → glows
 SUN_DIST_CM     = 50_000.0
@@ -282,12 +289,113 @@ def sun_material() -> str:
     }}"""
 
 
+def earth_material() -> str:
+    """Cinematic Earth — daytime map on diffuse, city-lights map on a warm
+    HDR-scaled emissive. Where the sun lights the surface the day map dominates;
+    on the dark hemisphere only the emissive city lights show, so the day/night
+    terminator sweeps across the limb."""
+    e = EARTH_NIGHT_EMIT
+    return f"""
+    def Material "EarthMat"
+    {{
+        token outputs:surface.connect = </World/Looks/EarthMat/Shader.outputs:surface>
+        def Shader "Shader"
+        {{
+            uniform token info:id = "UsdPreviewSurface"
+            color3f inputs:diffuseColor.connect = </World/Looks/EarthMat/Day.outputs:rgb>
+            color3f inputs:emissiveColor.connect = </World/Looks/EarthMat/Night.outputs:rgb>
+            float inputs:metallic = 0.0
+            float inputs:roughness = 0.85
+            int inputs:useSpecularWorkflow = 0
+            token outputs:surface
+        }}
+        def Shader "Day"
+        {{
+            uniform token info:id = "UsdUVTexture"
+            asset inputs:file = @{EARTH_TEX}@
+            float2 inputs:st.connect = </World/Looks/EarthMat/St.outputs:result>
+            float3 outputs:rgb
+        }}
+        def Shader "Night"
+        {{
+            uniform token info:id = "UsdUVTexture"
+            asset inputs:file = @{EARTH_NIGHT_TEX}@
+            float2 inputs:st.connect = </World/Looks/EarthMat/St.outputs:result>
+            float4 inputs:scale = ({e[0]:.2f}, {e[1]:.2f}, {e[2]:.2f}, 1.0)
+            float3 outputs:rgb
+        }}
+        def Shader "St"
+        {{
+            uniform token info:id = "UsdPrimvarReader_float2"
+            token inputs:varname = "st"
+            float2 outputs:result
+        }}
+    }}"""
+
+
+def cloud_material() -> str:
+    """A drifting white cloud shell — the cloud map drives BOTH the white diffuse
+    and the opacity, so it's opaque where clouds are and clear (sees Earth) where
+    not. Lit by the sun so the day side reads bright."""
+    return f"""
+    def Material "CloudMat"
+    {{
+        token outputs:surface.connect = </World/Looks/CloudMat/Shader.outputs:surface>
+        def Shader "Shader"
+        {{
+            uniform token info:id = "UsdPreviewSurface"
+            color3f inputs:diffuseColor = (1.0, 1.0, 1.0)
+            float inputs:opacity.connect = </World/Looks/CloudMat/Tex.outputs:r>
+            float inputs:metallic = 0.0
+            float inputs:roughness = 1.0
+            int inputs:useSpecularWorkflow = 0
+            token outputs:surface
+        }}
+        def Shader "Tex"
+        {{
+            uniform token info:id = "UsdUVTexture"
+            asset inputs:file = @{CLOUD_TEX}@
+            float2 inputs:st.connect = </World/Looks/CloudMat/St.outputs:result>
+            float outputs:r
+        }}
+        def Shader "St"
+        {{
+            uniform token info:id = "UsdPrimvarReader_float2"
+            token inputs:varname = "st"
+            float2 outputs:result
+        }}
+    }}"""
+
+
+def atmos_material() -> str:
+    """A thin blue atmosphere shell — soft sky-blue emissive at low opacity, so
+    the limb glows with that iconic blue arc (the shell is deeper along grazing
+    sightlines, so the edge reads brighter)."""
+    c = ATMOS_COLOR
+    return f"""
+    def Material "AtmosMat"
+    {{
+        token outputs:surface.connect = </World/Looks/AtmosMat/Shader.outputs:surface>
+        def Shader "Shader"
+        {{
+            uniform token info:id = "UsdPreviewSurface"
+            color3f inputs:diffuseColor = ({c[0]:.3f}, {c[1]:.3f}, {c[2]:.3f})
+            color3f inputs:emissiveColor = ({c[0]*0.6:.3f}, {c[1]*0.6:.3f}, {c[2]*0.6:.3f})
+            float inputs:opacity = {ATMOS_OPACITY:.3f}
+            float inputs:metallic = 0.0
+            float inputs:roughness = 1.0
+            int inputs:useSpecularWorkflow = 0
+            token outputs:surface
+        }}
+    }}"""
+
+
 def looks_scope() -> str:
     blocks = [material_block(k, v) for k, v in SERVER_MATERIALS.items()]
     blocks += [material_block(k, v) for k, v in SOLAR_MATERIALS.items()]
-    # Textured: equirectangular day-Earth (faint emissive so the night side
-    # isn't pure black) + the emissive Sun-surface sphere.
-    blocks.append(textured_material("EarthMat", EARTH_TEX, 0.0, 0.9, (0.04, 0.06, 0.10)))
+    blocks.append(earth_material())
+    blocks.append(cloud_material())
+    blocks.append(atmos_material())
     blocks.append(sun_material())
     return f"""def Scope "Looks"
 {{{''.join(blocks)}
@@ -472,7 +580,8 @@ def radiator_group() -> str:
 
 
 def uv_sphere(name: str, center: tuple[float, float, float], radius: float,
-              material: str, stacks: int = 36, slices: int = 72) -> str:
+              material: str, stacks: int = 36, slices: int = 72,
+              double_sided: bool = False) -> str:
     """An equirectangular-UV sphere Mesh (lon→u, lat→v) so a lon/lat texture
     maps cleanly and every renderer draws it as real geometry."""
     cx, cy, cz = center
@@ -507,19 +616,24 @@ def uv_sphere(name: str, center: tuple[float, float, float], radius: float,
         f'    point3f[] points = [{pstr}]\n'
         f'    texCoord2f[] primvars:st = [{ststr}] (interpolation = "vertex")\n'
         f'    uniform token subdivisionScheme = "none"\n'
+        f'    uniform bool doubleSided = {1 if double_sided else 0}\n'
         f'    rel material:binding = </World/Looks/{material}>\n'
         f'}}'
     )
 
 
 def celestial_group() -> str:
-    """Earth (textured, ~64° below) + Sun (HDR-emissive ~0.53° disk in the sun
-    direction). Siblings of the ×180 Satellite, in absolute cm, so they hold
-    realistic angular scale + position and sweep correctly as the camera orbits."""
+    """Earth (day + night-lights), a drifting cloud shell, a blue atmosphere rim,
+    and the HDR-emissive Sun. Siblings of the ×180 Satellite, in absolute cm, so
+    they hold realistic angular scale + position and sweep as the camera orbits."""
     sun_c = tuple(SUN_DIR[i] * SUN_DIST_CM for i in range(3))
     earth = uv_sphere("Earth", EARTH_CENTER, EARTH_RADIUS_CM, "EarthMat", 48, 96)
+    clouds = uv_sphere("Clouds", EARTH_CENTER, EARTH_RADIUS_CM * CLOUD_SCALE,
+                       "CloudMat", 48, 96)
+    atmos = uv_sphere("Atmosphere", EARTH_CENTER, EARTH_RADIUS_CM * ATMOS_SCALE,
+                      "AtmosMat", 40, 80, double_sided=True)
     sun = uv_sphere("Sun", sun_c, SUN_RADIUS_CM, "SunMat", 20, 32)
-    body = earth + "\n" + sun
+    body = "\n".join([earth, clouds, atmos, sun])
     return f'def Xform "Celestial"\n{{\n{indent(body, "    ")}\n}}'
 
 
