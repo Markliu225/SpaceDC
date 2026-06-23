@@ -77,7 +77,8 @@ def main():
     D /= np.linalg.norm(D, axis=2, keepdims=True)
 
     # textures + constants
-    day = load(G.EARTH_TEX); night = load(G.EARTH_NIGHT_TEX); cloud = load(G.CLOUD_TEX)
+    day = load(G.EARTH_TEX); night = load(G.EARTH_NIGHT_TEX)
+    cloud = load(G.CLOUD_TEX) if hasattr(G, "CLOUD_TEX") else None
     stars = load("./textures/starfield.png"); suntex = load(G.SUN_TEX)
     C = np.array(G.EARTH_CENTER); Re = G.EARTH_RADIUS_CM
     sun_dir = np.array(G.SUN_DIR); sun_dir = sun_dir / np.linalg.norm(sun_dir)
@@ -97,13 +98,13 @@ def main():
     earth = sample(day, eu, ev) * (AMB + ndl) + sample(night, eu, ev) * np.array(G.EARTH_NIGHT_EMIT)
     img = np.where(eh[..., None], earth, img)
 
-    # --- Clouds: white * (amb + N·sun), opacity = cloud-map red, over earth/stars ---
-    ch, ct, cP, cN = intersect(O, D, C, Re * G.CLOUD_SCALE)
-    cu, cv = equirect_uv(cN)
-    cndl = np.clip(np.sum(cN * sun_dir, axis=2), 0, 1)[..., None]
-    ca = sample(cloud, cu, cv)[..., 0:1] * ch[..., None]
-    cloud_col = np.array([1.0, 1.0, 1.0]) * (AMB + cndl)
-    img = img * (1 - ca) + cloud_col * ca
+    # --- Clouds (optional): white * (amb + N·sun), opacity = cloud-map red ---
+    if cloud is not None:
+        ch, ct, cP, cN = intersect(O, D, C, Re * G.CLOUD_SCALE)
+        cu, cv = equirect_uv(cN)
+        cndl = np.clip(np.sum(cN * sun_dir, axis=2), 0, 1)[..., None]
+        ca = sample(cloud, cu, cv)[..., 0:1] * ch[..., None]
+        img = img * (1 - ca) + (np.array([1.0, 1.0, 1.0]) * (AMB + cndl)) * ca
 
     # --- Atmosphere: blue diffuse*(amb+N·sun)+emissive, uniform opacity ---
     ah, at_, aP, aN = intersect(O, D, C, Re * G.ATMOS_SCALE)
@@ -120,7 +121,7 @@ def main():
 
     img = np.clip(img, 0, 1)
     Image.fromarray((img * 255).astype("uint8")).save(out)
-    print(f"[celestial] {out}  {W}x{H}  focal={focal}  cloudtex={G.CLOUD_TEX}")
+    print(f"[celestial] {out}  {W}x{H}  focal={focal}  clouds={cloud is not None}")
 
 
 if __name__ == "__main__":

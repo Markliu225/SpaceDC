@@ -173,11 +173,6 @@ EARTH_CENTER    = (0.0, 0.0, -28_000.0)        # a big curved planet across the 
 EARTH_TEX       = "./textures/earth_day.jpg"
 EARTH_NIGHT_TEX = "./textures/earth_night.jpg"
 EARTH_NIGHT_EMIT = (0.95, 0.78, 0.45)          # warm city-light glow on the dark side
-# Contrast-processed cloud map (clouds-on-transparent, murky mid-grays removed)
-# so the cloud shell shows clouds where there ARE clouds and is clear elsewhere
-# instead of veiling the whole Earth. See tools/make_cloud_alpha (generator note).
-CLOUD_TEX       = "./textures/earth_clouds_alpha.png"
-CLOUD_SCALE     = 1.004                         # cloud shell just above the surface
 ATMOS_SCALE     = 1.024                         # thin atmosphere shell
 ATMOS_COLOR     = (0.35, 0.55, 1.00)           # sky-blue limb glow
 ATMOS_OPACITY   = 0.09                          # subtle — must not veil the texture
@@ -336,40 +331,6 @@ def earth_material() -> str:
     }}"""
 
 
-def cloud_material() -> str:
-    """A drifting white cloud shell — the cloud map drives BOTH the white diffuse
-    and the opacity, so it's opaque where clouds are and clear (sees Earth) where
-    not. Lit by the sun so the day side reads bright."""
-    return f"""
-    def Material "CloudMat"
-    {{
-        token outputs:surface.connect = </World/Looks/CloudMat/Shader.outputs:surface>
-        def Shader "Shader"
-        {{
-            uniform token info:id = "UsdPreviewSurface"
-            color3f inputs:diffuseColor = (1.0, 1.0, 1.0)
-            float inputs:opacity.connect = </World/Looks/CloudMat/Tex.outputs:r>
-            float inputs:metallic = 0.0
-            float inputs:roughness = 1.0
-            int inputs:useSpecularWorkflow = 0
-            token outputs:surface
-        }}
-        def Shader "Tex"
-        {{
-            uniform token info:id = "UsdUVTexture"
-            asset inputs:file = @{CLOUD_TEX}@
-            float2 inputs:st.connect = </World/Looks/CloudMat/St.outputs:result>
-            float outputs:r
-        }}
-        def Shader "St"
-        {{
-            uniform token info:id = "UsdPrimvarReader_float2"
-            token inputs:varname = "st"
-            float2 outputs:result
-        }}
-    }}"""
-
-
 def atmos_material() -> str:
     """A thin blue atmosphere shell — soft sky-blue emissive at low opacity, so
     the limb glows with that iconic blue arc (the shell is deeper along grazing
@@ -397,7 +358,6 @@ def looks_scope() -> str:
     blocks = [material_block(k, v) for k, v in SERVER_MATERIALS.items()]
     blocks += [material_block(k, v) for k, v in SOLAR_MATERIALS.items()]
     blocks.append(earth_material())
-    blocks.append(cloud_material())
     blocks.append(atmos_material())
     blocks.append(sun_material())
     return f"""def Scope "Looks"
@@ -626,17 +586,15 @@ def uv_sphere(name: str, center: tuple[float, float, float], radius: float,
 
 
 def celestial_group() -> str:
-    """Earth (day + night-lights), a drifting cloud shell, a blue atmosphere rim,
-    and the HDR-emissive Sun. Siblings of the ×180 Satellite, in absolute cm, so
-    they hold realistic angular scale + position and sweep as the camera orbits."""
+    """Earth (day + night-lights), a thin blue atmosphere rim, and the
+    HDR-emissive Sun. Siblings of the ×180 Satellite, in absolute cm, so they
+    hold realistic angular scale + position and sweep as the camera orbits."""
     sun_c = tuple(SUN_DIR[i] * SUN_DIST_CM for i in range(3))
     earth = uv_sphere("Earth", EARTH_CENTER, EARTH_RADIUS_CM, "EarthMat", 48, 96)
-    clouds = uv_sphere("Clouds", EARTH_CENTER, EARTH_RADIUS_CM * CLOUD_SCALE,
-                       "CloudMat", 48, 96)
     atmos = uv_sphere("Atmosphere", EARTH_CENTER, EARTH_RADIUS_CM * ATMOS_SCALE,
                       "AtmosMat", 40, 80, double_sided=True)
     sun = uv_sphere("Sun", sun_c, SUN_RADIUS_CM, "SunMat", 20, 32)
-    body = "\n".join([earth, clouds, atmos, sun])
+    body = "\n".join([earth, atmos, sun])
     return f'def Xform "Celestial"\n{{\n{indent(body, "    ")}\n}}'
 
 
