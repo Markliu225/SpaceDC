@@ -147,7 +147,15 @@ def render_persp(meshes, out, eye, target, focal=35.0, hap=20.955, vap=15.2908,
     tan_v = (vap / 2.0) / focal
     W = size
     H = int(round(size * vap / hap))
-    img = Image.new("RGB", (W, H), (8, 10, 16))
+    # In a lit render the DomeLight IS the background (Kit renders the dome as
+    # the sky). Tonemap its ambient as the bg so "black space vs white bg" is
+    # verifiable; non-lit keeps the neutral dark slate.
+    if lit is not None:
+        amb = lit[0] * _LIT_EXPOSURE
+        bg = tuple(int(255 * (1.0 - np.exp(-max(0.0, v)))) for v in amb)
+    else:
+        bg = (8, 10, 16)
+    img = Image.new("RGB", (W, H), bg)
     draw = ImageDraw.Draw(img)
     parts = sorted({k for k, _, _ in meshes})
     hues = {p: (i / max(1, len(parts))) for i, p in enumerate(parts)}

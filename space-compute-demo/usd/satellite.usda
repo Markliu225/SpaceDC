@@ -51,17 +51,37 @@ def Xform "World"
             float3 xformOp:rotateXYZ = (15, 0, -120)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
-        # Deep space ambient — the always-on, all-direction fill (NOT in
-        # SUN_DRIVEN_LIGHTS, so it holds through eclipse). This is the master
-        # brightness knob: the old near-black colour (0.03) made it negligible,
-        # leaving the ±Y radiators and the shadow side pitch black. Raised to a
-        # real cool-grey ambient so the whole satellite reads clearly and the
-        # glossy panels have a bright environment to reflect.
+        # Deep space — the DomeLight IS the rendered background, so it stays
+        # DARK (near-black space). It must NOT be cranked for fill: a bright
+        # dome turns the whole background white. The satellite is lit by the
+        # directional Key sun + the FillPort/FillStarboard side fills below, so
+        # the ±Y radiators read without washing out the black sky.
         def DomeLight "Space"
         {
-            color3f inputs:color = (0.60, 0.66, 0.80)
-            float inputs:intensity = 1500.0
+            color3f inputs:color = (0.018, 0.023, 0.040)
+            float inputs:intensity = 200.0
             token inputs:texture:format = "latlong"
+        }
+        # Side fills (NOT sun-driven → always on) that light the ±Y-facing
+        # radiators and the shadow side WITHOUT touching the black background,
+        # since DistantLights never illuminate the dome. FillPort emits +Y to
+        # light the camera-facing (−Y) faces; FillStarboard emits −Y for the far
+        # faces, dimmer for shape.
+        def DistantLight "FillPort"
+        {
+            float inputs:angle = 6.0
+            float inputs:intensity = 1900
+            color3f inputs:color = (0.55, 0.62, 0.80)
+            float3 xformOp:rotateXYZ = (90, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
+        }
+        def DistantLight "FillStarboard"
+        {
+            float inputs:angle = 6.0
+            float inputs:intensity = 1000
+            color3f inputs:color = (0.50, 0.58, 0.78)
+            float3 xformOp:rotateXYZ = (-90, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
 
         # --- Bay interior lights ---
