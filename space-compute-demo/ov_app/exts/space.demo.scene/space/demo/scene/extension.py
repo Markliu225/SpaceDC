@@ -78,15 +78,15 @@ SUN_LIGHT_PATH = "/World/Environment/Key"
 SUN_BASE_RY_DEG = 270.0
 SUN_AZ_SWEEP_DEG = 45.0
 SUN_DRIVEN_LIGHTS = [
-    # Key sun — stronger daylight (max 2000 → 2800) and a much higher eclipse
-    # floor (60 → 200) so the night side no longer goes near-black. The glossy
-    # solar/radiator panels now read the brighter key as bright specular glints.
-    ("/World/Environment/Key",         200.0, 2800.0),
+    # Key sun — strong daylight (max 4000) with a high eclipse floor (400) so
+    # the sunlit side is bright and the dark side never collapses. The bright
+    # always-on DomeLight (see satellite.usda) carries the overall fill.
+    ("/World/Environment/Key",         400.0, 4000.0),
     # Sharp sun-side rim — tracks the sun; lifted in lockstep with Key.
-    ("/World/Environment/Rim",         130.0,  900.0),
-    # Earthshine bounce — always present (planet fills the dark side). Floor
-    # raised 320 → 600 so eclipse keeps clearly-readable detail.
-    ("/World/Environment/EarthBounce", 600.0,  950.0),
+    ("/World/Environment/Rim",         300.0, 1300.0),
+    # Earthshine bounce — always present (planet fills the dark side). Strong
+    # floor (1000) so eclipse stays clearly readable.
+    ("/World/Environment/EarthBounce", 1000.0, 1600.0),
 ]
 
 USD_ROOT_ENV = "SPACE_DEMO_USD_ROOT"

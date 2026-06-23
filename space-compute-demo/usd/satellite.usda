@@ -23,7 +23,7 @@ def Xform "World"
         def DistantLight "Key"
         {
             float inputs:angle = 0.53
-            float inputs:intensity = 2800
+            float inputs:intensity = 3500
             color3f inputs:color = (1.0, 0.96, 0.88)
             # Azimuth 270° aims the sun at the solar wings' +X cell faces
             # (rz=40 lit them at -0.37, i.e. back-lit; rz=270 lights them at
@@ -36,8 +36,8 @@ def Xform "World"
         def DistantLight "EarthBounce"
         {
             float inputs:angle = 45.0
-            float inputs:intensity = 700
-            color3f inputs:color = (0.30, 0.48, 0.78)
+            float inputs:intensity = 1400
+            color3f inputs:color = (0.34, 0.52, 0.82)
             float3 xformOp:rotateXYZ = (70, 0, 150)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
@@ -46,19 +46,21 @@ def Xform "World"
         def DistantLight "Rim"
         {
             float inputs:angle = 1.5
-            float inputs:intensity = 900
+            float inputs:intensity = 1300
             color3f inputs:color = (0.55, 0.7, 0.95)
             float3 xformOp:rotateXYZ = (15, 0, -120)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
-        # Deep space ambient — the always-on fill (NOT in SUN_DRIVEN_LIGHTS, so
-        # it holds through eclipse). Raised 45 → 120 and warmed/brightened so
-        # the night side is clearly readable instead of near-black, and so the
-        # glossy panels have an environment to reflect.
+        # Deep space ambient — the always-on, all-direction fill (NOT in
+        # SUN_DRIVEN_LIGHTS, so it holds through eclipse). This is the master
+        # brightness knob: the old near-black colour (0.03) made it negligible,
+        # leaving the ±Y radiators and the shadow side pitch black. Raised to a
+        # real cool-grey ambient so the whole satellite reads clearly and the
+        # glossy panels have a bright environment to reflect.
         def DomeLight "Space"
         {
-            color3f inputs:color = (0.030, 0.038, 0.060)
-            float inputs:intensity = 120.0
+            color3f inputs:color = (0.60, 0.66, 0.80)
+            float inputs:intensity = 1500.0
             token inputs:texture:format = "latlong"
         }
 
