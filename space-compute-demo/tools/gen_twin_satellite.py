@@ -171,8 +171,7 @@ CAM_FOCAL = 22.0
 EARTH_RADIUS_CM = 22_000.0                     # ~49° angular radius from the cam:
 EARTH_CENTER    = (0.0, 0.0, -28_000.0)        # a big curved planet across the lower frame
 EARTH_TEX       = "./textures/earth_day.jpg"
-EARTH_NIGHT_TEX = "./textures/earth_night.jpg"
-EARTH_NIGHT_EMIT = (0.95, 0.78, 0.45)          # warm city-light glow on the dark side
+EARTH_EMIT      = (0.30, 0.30, 0.30)           # dim self-emissive of the day map so the whole globe shows the texture
 ATMOS_SCALE     = 1.024                         # thin atmosphere shell
 ATMOS_COLOR     = (0.35, 0.55, 1.00)           # sky-blue limb glow
 ATMOS_OPACITY   = 0.09                          # subtle — must not veil the texture
@@ -288,11 +287,10 @@ def sun_material() -> str:
 
 
 def earth_material() -> str:
-    """Cinematic Earth — daytime map on diffuse, city-lights map on a warm
-    HDR-scaled emissive. Where the sun lights the surface the day map dominates;
-    on the dark hemisphere only the emissive city lights show, so the day/night
-    terminator sweeps across the limb."""
-    e = EARTH_NIGHT_EMIT
+    """Plain day Earth — earth_day.jpg on diffuse, plus a dimmed self-emissive of
+    the SAME map so the whole globe shows the texture (brighter where the sun
+    hits) instead of going black on the shadow side."""
+    e = EARTH_EMIT
     return f"""
     def Material "EarthMat"
     {{
@@ -301,9 +299,9 @@ def earth_material() -> str:
         {{
             uniform token info:id = "UsdPreviewSurface"
             color3f inputs:diffuseColor.connect = </World/Looks/EarthMat/Day.outputs:rgb>
-            color3f inputs:emissiveColor.connect = </World/Looks/EarthMat/Night.outputs:rgb>
+            color3f inputs:emissiveColor.connect = </World/Looks/EarthMat/Emit.outputs:rgb>
             float inputs:metallic = 0.0
-            float inputs:roughness = 0.85
+            float inputs:roughness = 0.9
             int inputs:useSpecularWorkflow = 0
             token outputs:surface
         }}
@@ -314,10 +312,10 @@ def earth_material() -> str:
             float2 inputs:st.connect = </World/Looks/EarthMat/St.outputs:result>
             float3 outputs:rgb
         }}
-        def Shader "Night"
+        def Shader "Emit"
         {{
             uniform token info:id = "UsdUVTexture"
-            asset inputs:file = @{EARTH_NIGHT_TEX}@
+            asset inputs:file = @{EARTH_TEX}@
             float2 inputs:st.connect = </World/Looks/EarthMat/St.outputs:result>
             float4 inputs:scale = ({e[0]:.2f}, {e[1]:.2f}, {e[2]:.2f}, 1.0)
             float3 outputs:rgb

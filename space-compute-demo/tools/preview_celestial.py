@@ -77,7 +77,7 @@ def main():
     D /= np.linalg.norm(D, axis=2, keepdims=True)
 
     # textures + constants
-    day = load(G.EARTH_TEX); night = load(G.EARTH_NIGHT_TEX)
+    day = load(G.EARTH_TEX)
     cloud = load(G.CLOUD_TEX) if hasattr(G, "CLOUD_TEX") else None
     stars = load("./textures/starfield.png"); suntex = load(G.SUN_TEX)
     C = np.array(G.EARTH_CENTER); Re = G.EARTH_RADIUS_CM
@@ -91,11 +91,12 @@ def main():
     img = 1.0 - np.exp(-bg * 2.4)
 
     O = eye.astype(float)
-    # --- Earth (opaque): day diffuse * (amb + N·sun) + night emissive ---
+    # --- Earth (opaque): day diffuse * (amb + N·sun) + dimmed day self-emissive ---
     eh, et, eP, eN = intersect(O, D, C, Re)
     eu, ev = equirect_uv(eN)
     ndl = np.clip(np.sum(eN * sun_dir, axis=2), 0, 1)[..., None]
-    earth = sample(day, eu, ev) * (AMB + ndl) + sample(night, eu, ev) * np.array(G.EARTH_NIGHT_EMIT)
+    dayrgb = sample(day, eu, ev)
+    earth = dayrgb * (AMB + ndl) + dayrgb * np.array(G.EARTH_EMIT)
     img = np.where(eh[..., None], earth, img)
 
     # --- Clouds (optional): white * (amb + N·sun), opacity = cloud-map red ---
