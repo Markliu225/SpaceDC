@@ -172,9 +172,6 @@ EARTH_RADIUS_CM = 22_000.0                     # ~49° angular radius from the c
 EARTH_CENTER    = (0.0, 0.0, -28_000.0)        # a big curved planet across the lower frame
 EARTH_TEX       = "./textures/earth_day.jpg"
 EARTH_EMIT      = (0.30, 0.30, 0.30)           # dim self-emissive of the day map so the whole globe shows the texture
-ATMOS_SCALE     = 1.024                         # thin atmosphere shell
-ATMOS_COLOR     = (0.35, 0.55, 1.00)           # sky-blue limb glow
-ATMOS_OPACITY   = 0.09                          # subtle — must not veil the texture
 SUN_TEX         = "./textures/sun_surface.png"
 SUN_EMIT        = (7.0, 5.2, 2.2)              # HDR multiplier on the sun texture → glows
 SUN_DIST_CM     = 50_000.0
@@ -329,34 +326,10 @@ def earth_material() -> str:
     }}"""
 
 
-def atmos_material() -> str:
-    """A thin blue atmosphere shell — soft sky-blue emissive at low opacity, so
-    the limb glows with that iconic blue arc (the shell is deeper along grazing
-    sightlines, so the edge reads brighter)."""
-    c = ATMOS_COLOR
-    return f"""
-    def Material "AtmosMat"
-    {{
-        token outputs:surface.connect = </World/Looks/AtmosMat/Shader.outputs:surface>
-        def Shader "Shader"
-        {{
-            uniform token info:id = "UsdPreviewSurface"
-            color3f inputs:diffuseColor = ({c[0]:.3f}, {c[1]:.3f}, {c[2]:.3f})
-            color3f inputs:emissiveColor = ({c[0]*0.6:.3f}, {c[1]*0.6:.3f}, {c[2]*0.6:.3f})
-            float inputs:opacity = {ATMOS_OPACITY:.3f}
-            float inputs:metallic = 0.0
-            float inputs:roughness = 1.0
-            int inputs:useSpecularWorkflow = 0
-            token outputs:surface
-        }}
-    }}"""
-
-
 def looks_scope() -> str:
     blocks = [material_block(k, v) for k, v in SERVER_MATERIALS.items()]
     blocks += [material_block(k, v) for k, v in SOLAR_MATERIALS.items()]
     blocks.append(earth_material())
-    blocks.append(atmos_material())
     blocks.append(sun_material())
     return f"""def Scope "Looks"
 {{{''.join(blocks)}
@@ -584,15 +557,13 @@ def uv_sphere(name: str, center: tuple[float, float, float], radius: float,
 
 
 def celestial_group() -> str:
-    """Earth (day + night-lights), a thin blue atmosphere rim, and the
-    HDR-emissive Sun. Siblings of the ×180 Satellite, in absolute cm, so they
-    hold realistic angular scale + position and sweep as the camera orbits."""
+    """Earth (plain day texture) + the HDR-emissive Sun. Siblings of the ×180
+    Satellite, in absolute cm, so they hold realistic angular scale + position
+    and sweep as the camera orbits."""
     sun_c = tuple(SUN_DIR[i] * SUN_DIST_CM for i in range(3))
     earth = uv_sphere("Earth", EARTH_CENTER, EARTH_RADIUS_CM, "EarthMat", 48, 96)
-    atmos = uv_sphere("Atmosphere", EARTH_CENTER, EARTH_RADIUS_CM * ATMOS_SCALE,
-                      "AtmosMat", 40, 80, double_sided=True)
     sun = uv_sphere("Sun", sun_c, SUN_RADIUS_CM, "SunMat", 20, 32)
-    body = "\n".join([earth, atmos, sun])
+    body = "\n".join([earth, sun])
     return f'def Xform "Celestial"\n{{\n{indent(body, "    ")}\n}}'
 
 

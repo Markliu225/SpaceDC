@@ -107,13 +107,6 @@ def main():
         ca = sample(cloud, cu, cv)[..., 0:1] * ch[..., None]
         img = img * (1 - ca) + (np.array([1.0, 1.0, 1.0]) * (AMB + cndl)) * ca
 
-    # --- Atmosphere: blue diffuse*(amb+N·sun)+emissive, uniform opacity ---
-    ah, at_, aP, aN = intersect(O, D, C, Re * G.ATMOS_SCALE)
-    andl = np.clip(np.sum(aN * sun_dir, axis=2), 0, 1)[..., None]
-    ac = (np.array(G.ATMOS_COLOR) * (AMB + andl) + np.array(G.ATMOS_COLOR) * 0.6)
-    aa = G.ATMOS_OPACITY * ah[..., None]
-    img = img * (1 - aa) + ac * aa
-
     # --- Sun (emissive disk) ---
     sh, st_, sP, sN = intersect(O, D, sun_c, G.SUN_RADIUS_CM)
     su, sv = equirect_uv(sN)
