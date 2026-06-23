@@ -79,10 +79,10 @@ def Xform "World"
             def Shader "Shader"
             {
                 uniform token info:id = "UsdPreviewSurface"
-                color3f inputs:diffuseColor = (0.420, 0.430, 0.450)
+                color3f inputs:diffuseColor = (0.520, 0.530, 0.550)
                 color3f inputs:emissiveColor = (0.000, 0.000, 0.000)
-                float inputs:metallic = 0.900
-                float inputs:roughness = 0.620
+                float inputs:metallic = 0.920
+                float inputs:roughness = 0.800
                 int inputs:useSpecularWorkflow = 0
                 token outputs:surface
             }
@@ -96,7 +96,7 @@ def Xform "World"
                 color3f inputs:diffuseColor = (0.560, 0.570, 0.590)
                 color3f inputs:emissiveColor = (0.000, 0.000, 0.000)
                 float inputs:metallic = 0.920
-                float inputs:roughness = 0.400
+                float inputs:roughness = 0.550
                 int inputs:useSpecularWorkflow = 0
                 token outputs:surface
             }
@@ -196,6 +196,141 @@ def Xform "World"
             prepend references = @./assets/SpaceDcBackbone.usdz@
         )
         {
+            over "_materials"
+            {
+                over "tripo_part_0_material"
+                {
+                    over "Principled_BSDF"
+                    {
+                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
+                        color3f inputs:diffuseColor.connect = None
+                        float inputs:metallic = 0.95
+                        float inputs:metallic.connect = None
+                        float inputs:roughness = 0.18
+                        float inputs:roughness.connect = None
+                    }
+                }
+                over "tripo_part_1_material"
+                {
+                    over "Principled_BSDF"
+                    {
+                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
+                        color3f inputs:diffuseColor.connect = None
+                        float inputs:metallic = 0.95
+                        float inputs:metallic.connect = None
+                        float inputs:roughness = 0.18
+                        float inputs:roughness.connect = None
+                    }
+                }
+                over "tripo_part_2_material"
+                {
+                    over "Principled_BSDF"
+                    {
+                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
+                        color3f inputs:diffuseColor.connect = None
+                        float inputs:metallic = 0.95
+                        float inputs:metallic.connect = None
+                        float inputs:roughness = 0.18
+                        float inputs:roughness.connect = None
+                    }
+                }
+                over "tripo_part_3_material"
+                {
+                    over "Principled_BSDF"
+                    {
+                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
+                        color3f inputs:diffuseColor.connect = None
+                        float inputs:metallic = 0.95
+                        float inputs:metallic.connect = None
+                        float inputs:roughness = 0.18
+                        float inputs:roughness.connect = None
+                    }
+                }
+                over "tripo_part_4_material"
+                {
+                    over "Principled_BSDF"
+                    {
+                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
+                        color3f inputs:diffuseColor.connect = None
+                        float inputs:metallic = 0.95
+                        float inputs:metallic.connect = None
+                        float inputs:roughness = 0.18
+                        float inputs:roughness.connect = None
+                    }
+                }
+                over "tripo_part_5_material"
+                {
+                    over "Principled_BSDF"
+                    {
+                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
+                        color3f inputs:diffuseColor.connect = None
+                        float inputs:metallic = 0.95
+                        float inputs:metallic.connect = None
+                        float inputs:roughness = 0.18
+                        float inputs:roughness.connect = None
+                    }
+                }
+                over "tripo_part_6_material"
+                {
+                    over "Principled_BSDF"
+                    {
+                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
+                        color3f inputs:diffuseColor.connect = None
+                        float inputs:metallic = 0.95
+                        float inputs:metallic.connect = None
+                        float inputs:roughness = 0.18
+                        float inputs:roughness.connect = None
+                    }
+                }
+                over "tripo_part_7_material"
+                {
+                    over "Principled_BSDF"
+                    {
+                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
+                        color3f inputs:diffuseColor.connect = None
+                        float inputs:metallic = 0.95
+                        float inputs:metallic.connect = None
+                        float inputs:roughness = 0.18
+                        float inputs:roughness.connect = None
+                    }
+                }
+                over "tripo_part_8_material"
+                {
+                    over "Principled_BSDF"
+                    {
+                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
+                        color3f inputs:diffuseColor.connect = None
+                        float inputs:metallic = 0.95
+                        float inputs:metallic.connect = None
+                        float inputs:roughness = 0.18
+                        float inputs:roughness.connect = None
+                    }
+                }
+                over "tripo_part_new_0_material"
+                {
+                    over "Principled_BSDF"
+                    {
+                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
+                        color3f inputs:diffuseColor.connect = None
+                        float inputs:metallic = 0.95
+                        float inputs:metallic.connect = None
+                        float inputs:roughness = 0.18
+                        float inputs:roughness.connect = None
+                    }
+                }
+                over "tripo_part_new_1_material"
+                {
+                    over "Principled_BSDF"
+                    {
+                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
+                        color3f inputs:diffuseColor.connect = None
+                        float inputs:metallic = 0.95
+                        float inputs:metallic.connect = None
+                        float inputs:roughness = 0.18
+                        float inputs:roughness.connect = None
+                    }
+                }
+            }
         }
 
         def Xform "Servers"

@@ -47,6 +47,15 @@ OUT  = ROOT / "usd" / "twin_satellite.usda"
 # over). Authored on /World/Satellite so the servers inherit the same scale.
 BACKBONE_REF   = "./assets/SpaceDcBackbone.usdz"
 BACKBONE_SCALE = 180.0
+# The backbone's 11 materials drive diffuse/metallic/roughness from grungy
+# textures. Override each in place to clean shiny metal: constant clean colour,
+# high metallic, low roughness, and BLOCK the dirty texture connections (the
+# normal map is left connected for panel/bolt detail).
+BACKBONE_MATS = ([f"tripo_part_{i}_material" for i in range(9)]
+                 + ["tripo_part_new_0_material", "tripo_part_new_1_material"])
+BACKBONE_DIFFUSE   = (0.620, 0.635, 0.660)     # clean neutral metal
+BACKBONE_METALLIC  = 0.95
+BACKBONE_ROUGHNESS = 0.18
 
 # --- Server slots -----------------------------------------------------------
 # Slot Z-centres are the mid-points of each frame's rail pair (the six area
@@ -160,14 +169,13 @@ RAD_BOOM_THICK = 0.014    # thin square support rod
 
 SOLAR_MATERIALS = {
     # Brushed-aluminium support boom (panels keep the asset's own materials).
-    # Rough, darker silver metal for the connecting boom — brushed/raw, not the
-    # bright near-white of before.
-    "SolarFrame": {"diffuse": (0.420, 0.430, 0.450), "metallic": 0.90,
-                   "roughness": 0.62, "emissive": (0.0, 0.0, 0.0)},
-    # Hinge pin/axle — a touch brighter + smoother than the arm so it still reads
-    # as the axle, but no longer white.
+    # Rough brushed-silver metal for the connecting boom — clearly silver but
+    # matte/coarse (high roughness), not the old near-white gloss.
+    "SolarFrame": {"diffuse": (0.520, 0.530, 0.550), "metallic": 0.92,
+                   "roughness": 0.80, "emissive": (0.0, 0.0, 0.0)},
+    # Hinge pin/axle — same silver, a touch smoother so it still reads as the axle.
     "HingePinMetal": {"diffuse": (0.560, 0.570, 0.590), "metallic": 0.92,
-                      "roughness": 0.40, "emissive": (0.0, 0.0, 0.0)},
+                      "roughness": 0.55, "emissive": (0.0, 0.0, 0.0)},
     # Glossy specular radiator finish (rebinds the texture-driven asset material
     # so the radiators reflect strongly) — bright OSR/quartz-mirror silver.
     "RadiatorGlossy": {"diffuse": (0.720, 0.745, 0.790), "metallic": 0.90,
@@ -731,12 +739,36 @@ def celestial_group() -> str:
     return f'def Xform "Celestial"\n{{\n{indent(body, "    ")}\n}}'
 
 
+def backbone_override() -> str:
+    """Clean every backbone material to shiny metal: constant clean diffuse,
+    high metallic, low roughness, and block the grungy texture connections."""
+    d = BACKBONE_DIFFUSE
+    mats = []
+    for m in BACKBONE_MATS:
+        mats.append(
+            f'over "{m}"\n'
+            f'{{\n'
+            f'    over "Principled_BSDF"\n'
+            f'    {{\n'
+            f'        color3f inputs:diffuseColor = ({d[0]:.3f}, {d[1]:.3f}, {d[2]:.3f})\n'
+            f'        color3f inputs:diffuseColor.connect = None\n'
+            f'        float inputs:metallic = {BACKBONE_METALLIC}\n'
+            f'        float inputs:metallic.connect = None\n'
+            f'        float inputs:roughness = {BACKBONE_ROUGHNESS}\n'
+            f'        float inputs:roughness.connect = None\n'
+            f'    }}\n'
+            f'}}'
+        )
+    return f'over "_materials"\n{{\n{indent(chr(10).join(mats), "    ")}\n}}'
+
+
 def satellite_prim() -> str:
     backbone = (
         f'def Xform "Backbone" (\n'
         f'    prepend references = @{BACKBONE_REF}@\n'
         f')\n'
         f'{{\n'
+        f'{indent(backbone_override(), "    ")}\n'
         f'}}'
     )
     inner = "\n\n".join([backbone, servers_group(), solar_group(), radiator_group()])
