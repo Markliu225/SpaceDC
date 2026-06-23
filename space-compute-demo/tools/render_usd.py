@@ -116,11 +116,15 @@ def _is_transparent(prim):
         return False
 
 
-def gather(stage):
-    """Return list of (part_key, Nx3 world points, list-of-tri-index)."""
+def gather(stage, proxies=False):
+    """Return list of (part_key, Nx3 world points, list-of-tri-index). With
+    proxies=True, descend into USD instances (needed to draw instanced assets
+    like the referenced DGX) — heavy, so off by default."""
     xfc = UsdGeom.XformCache(Usd.TimeCode.Default())
     meshes = []
-    for prim in stage.Traverse():
+    it = (Usd.PrimRange.Stage(stage, Usd.TraverseInstanceProxies())
+          if proxies else stage.Traverse())
+    for prim in it:
         if not prim.IsA(UsdGeom.Mesh):
             continue
         if _is_transparent(prim):
@@ -308,9 +312,9 @@ def render_persp(meshes, out, eye, target, focal=35.0, hap=20.955, vap=15.2908,
 
 def render(path, out, view="iso", size=1100, by_part=True, label=False, only=None,
            eye=None, target=None, persp=False, focal=35.0, lit=False, sun=None,
-           key_rot=None, stars=True):
+           key_rot=None, stars=True, proxies=False):
     stage = Usd.Stage.Open(str(path))
-    meshes = gather(stage)
+    meshes = gather(stage, proxies=proxies)
     if only:
         keys = [k.strip() for k in only.split(",")]
         meshes = [m for m in meshes if any(k in m[0] for k in keys)]
@@ -410,6 +414,7 @@ if __name__ == "__main__":
     key_rot = ([float(x) for x in args[args.index("--keyrot") + 1].split(",")]
                if "--keyrot" in args else None)
     stars = "--no-stars" not in args
+    proxies = "--proxies" in args
     render(src, out, view=view, size=size, label=label, only=only, eye=eye,
            target=target, persp=persp, focal=focal, lit=lit, sun=sun, key_rot=key_rot,
-           stars=stars)
+           stars=stars, proxies=proxies)

@@ -79,10 +79,10 @@ def Xform "World"
             def Shader "Shader"
             {
                 uniform token info:id = "UsdPreviewSurface"
-                color3f inputs:diffuseColor = (0.600, 0.630, 0.700)
+                color3f inputs:diffuseColor = (0.420, 0.430, 0.450)
                 color3f inputs:emissiveColor = (0.000, 0.000, 0.000)
-                float inputs:metallic = 0.850
-                float inputs:roughness = 0.350
+                float inputs:metallic = 0.900
+                float inputs:roughness = 0.620
                 int inputs:useSpecularWorkflow = 0
                 token outputs:surface
             }
@@ -93,10 +93,10 @@ def Xform "World"
             def Shader "Shader"
             {
                 uniform token info:id = "UsdPreviewSurface"
-                color3f inputs:diffuseColor = (0.780, 0.790, 0.810)
+                color3f inputs:diffuseColor = (0.560, 0.570, 0.590)
                 color3f inputs:emissiveColor = (0.000, 0.000, 0.000)
-                float inputs:metallic = 0.950
-                float inputs:roughness = 0.200
+                float inputs:metallic = 0.920
+                float inputs:roughness = 0.400
                 int inputs:useSpecularWorkflow = 0
                 token outputs:surface
             }
@@ -200,1337 +200,101 @@ def Xform "World"
 
         def Xform "Servers"
         {
-            def Xform "Server_UpY_0"
+            def Xform "Server_UpY_0" (
+                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
+                instanceable = true
+            )
             {
-                def Mesh "Chassis" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.05750, 0.09950), (0.06500, 0.21250, 0.13350)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.05750, 0.09950), (0.06500, 0.05750, 0.09950), (0.06500, 0.21250, 0.09950), (-0.06500, 0.21250, 0.09950), (-0.06500, 0.05750, 0.13350), (0.06500, 0.05750, 0.13350), (0.06500, 0.21250, 0.13350), (-0.06500, 0.21250, 0.13350)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerChassis>
-                }
-                def Mesh "Front" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    int[] faceVertexCounts = [4]
-                    int[] faceVertexIndices = [0, 1, 2, 3]
-                    point3f[] points = [(-0.06500, 0.21350, 0.09950), (0.06500, 0.21350, 0.09950), (0.06500, 0.21350, 0.13350), (-0.06500, 0.21350, 0.13350)]
-                    texCoord2f[] primvars:st = [(0.000, 0.000), (1.000, 0.000), (1.000, 1.000), (0.000, 1.000)] (interpolation = "vertex")
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerFront>
-                }
-                def Mesh "Heatsink" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.04550, 0.06835, 0.13050), (0.04550, 0.20165, 0.13650)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.04550, 0.06835, 0.13050), (0.04550, 0.06835, 0.13050), (0.04550, 0.20165, 0.13050), (-0.04550, 0.20165, 0.13050), (-0.04550, 0.06835, 0.13650), (0.04550, 0.06835, 0.13650), (0.04550, 0.20165, 0.13650), (-0.04550, 0.20165, 0.13650)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameTop" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.20650, 0.12950), (0.06500, 0.21250, 0.13350)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.20650, 0.12950), (0.06500, 0.20650, 0.12950), (0.06500, 0.21250, 0.12950), (-0.06500, 0.21250, 0.12950), (-0.06500, 0.20650, 0.13350), (0.06500, 0.20650, 0.13350), (0.06500, 0.21250, 0.13350), (-0.06500, 0.21250, 0.13350)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameBot" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.20650, 0.09950), (0.06500, 0.21250, 0.10350)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.20650, 0.09950), (0.06500, 0.20650, 0.09950), (0.06500, 0.21250, 0.09950), (-0.06500, 0.21250, 0.09950), (-0.06500, 0.20650, 0.10350), (0.06500, 0.20650, 0.10350), (0.06500, 0.21250, 0.10350), (-0.06500, 0.21250, 0.10350)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.20650, 0.09950), (-0.06000, 0.21250, 0.13350)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.20650, 0.09950), (-0.06000, 0.20650, 0.09950), (-0.06000, 0.21250, 0.09950), (-0.06500, 0.21250, 0.09950), (-0.06500, 0.20650, 0.13350), (-0.06000, 0.20650, 0.13350), (-0.06000, 0.21250, 0.13350), (-0.06500, 0.21250, 0.13350)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06000, 0.20650, 0.09950), (0.06500, 0.21250, 0.13350)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06000, 0.20650, 0.09950), (0.06500, 0.20650, 0.09950), (0.06500, 0.21250, 0.09950), (0.06000, 0.21250, 0.09950), (0.06000, 0.20650, 0.13350), (0.06500, 0.20650, 0.13350), (0.06500, 0.21250, 0.13350), (0.06000, 0.21250, 0.13350)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.07500, 0.20650, 0.10460), (-0.06500, 0.21850, 0.12840)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.07500, 0.20650, 0.10460), (-0.06500, 0.20650, 0.10460), (-0.06500, 0.21850, 0.10460), (-0.07500, 0.21850, 0.10460), (-0.07500, 0.20650, 0.12840), (-0.06500, 0.20650, 0.12840), (-0.06500, 0.21850, 0.12840), (-0.07500, 0.21850, 0.12840)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06500, 0.20650, 0.10460), (0.07500, 0.21850, 0.12840)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06500, 0.20650, 0.10460), (0.07500, 0.20650, 0.10460), (0.07500, 0.21850, 0.10460), (0.06500, 0.21850, 0.10460), (0.06500, 0.20650, 0.12840), (0.07500, 0.20650, 0.12840), (0.07500, 0.21850, 0.12840), (0.06500, 0.21850, 0.12840)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
+                matrix4d xformOp:transform = ((0.00000000, 0.00167549, 0.00000000, 0.00000000), (-0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (0.06497306, 0.20344395, 0.09929394, 1.00000000))
+                uniform token[] xformOpOrder = ["xformOp:transform"]
             }
-            def Xform "Server_UpY_1"
+            def Xform "Server_UpY_1" (
+                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
+                instanceable = true
+            )
             {
-                def Mesh "Chassis" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.05750, 0.19050), (0.06500, 0.21250, 0.22450)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.05750, 0.19050), (0.06500, 0.05750, 0.19050), (0.06500, 0.21250, 0.19050), (-0.06500, 0.21250, 0.19050), (-0.06500, 0.05750, 0.22450), (0.06500, 0.05750, 0.22450), (0.06500, 0.21250, 0.22450), (-0.06500, 0.21250, 0.22450)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerChassis>
-                }
-                def Mesh "Front" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    int[] faceVertexCounts = [4]
-                    int[] faceVertexIndices = [0, 1, 2, 3]
-                    point3f[] points = [(-0.06500, 0.21350, 0.19050), (0.06500, 0.21350, 0.19050), (0.06500, 0.21350, 0.22450), (-0.06500, 0.21350, 0.22450)]
-                    texCoord2f[] primvars:st = [(0.000, 0.000), (1.000, 0.000), (1.000, 1.000), (0.000, 1.000)] (interpolation = "vertex")
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerFront>
-                }
-                def Mesh "Heatsink" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.04550, 0.06835, 0.22150), (0.04550, 0.20165, 0.22750)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.04550, 0.06835, 0.22150), (0.04550, 0.06835, 0.22150), (0.04550, 0.20165, 0.22150), (-0.04550, 0.20165, 0.22150), (-0.04550, 0.06835, 0.22750), (0.04550, 0.06835, 0.22750), (0.04550, 0.20165, 0.22750), (-0.04550, 0.20165, 0.22750)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameTop" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.20650, 0.22050), (0.06500, 0.21250, 0.22450)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.20650, 0.22050), (0.06500, 0.20650, 0.22050), (0.06500, 0.21250, 0.22050), (-0.06500, 0.21250, 0.22050), (-0.06500, 0.20650, 0.22450), (0.06500, 0.20650, 0.22450), (0.06500, 0.21250, 0.22450), (-0.06500, 0.21250, 0.22450)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameBot" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.20650, 0.19050), (0.06500, 0.21250, 0.19450)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.20650, 0.19050), (0.06500, 0.20650, 0.19050), (0.06500, 0.21250, 0.19050), (-0.06500, 0.21250, 0.19050), (-0.06500, 0.20650, 0.19450), (0.06500, 0.20650, 0.19450), (0.06500, 0.21250, 0.19450), (-0.06500, 0.21250, 0.19450)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.20650, 0.19050), (-0.06000, 0.21250, 0.22450)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.20650, 0.19050), (-0.06000, 0.20650, 0.19050), (-0.06000, 0.21250, 0.19050), (-0.06500, 0.21250, 0.19050), (-0.06500, 0.20650, 0.22450), (-0.06000, 0.20650, 0.22450), (-0.06000, 0.21250, 0.22450), (-0.06500, 0.21250, 0.22450)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06000, 0.20650, 0.19050), (0.06500, 0.21250, 0.22450)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06000, 0.20650, 0.19050), (0.06500, 0.20650, 0.19050), (0.06500, 0.21250, 0.19050), (0.06000, 0.21250, 0.19050), (0.06000, 0.20650, 0.22450), (0.06500, 0.20650, 0.22450), (0.06500, 0.21250, 0.22450), (0.06000, 0.21250, 0.22450)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.07500, 0.20650, 0.19560), (-0.06500, 0.21850, 0.21940)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.07500, 0.20650, 0.19560), (-0.06500, 0.20650, 0.19560), (-0.06500, 0.21850, 0.19560), (-0.07500, 0.21850, 0.19560), (-0.07500, 0.20650, 0.21940), (-0.06500, 0.20650, 0.21940), (-0.06500, 0.21850, 0.21940), (-0.07500, 0.21850, 0.21940)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06500, 0.20650, 0.19560), (0.07500, 0.21850, 0.21940)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06500, 0.20650, 0.19560), (0.07500, 0.20650, 0.19560), (0.07500, 0.21850, 0.19560), (0.06500, 0.21850, 0.19560), (0.06500, 0.20650, 0.21940), (0.07500, 0.20650, 0.21940), (0.07500, 0.21850, 0.21940), (0.06500, 0.21850, 0.21940)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
+                matrix4d xformOp:transform = ((0.00000000, 0.00167549, 0.00000000, 0.00000000), (-0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (0.06497306, 0.20344395, 0.19029394, 1.00000000))
+                uniform token[] xformOpOrder = ["xformOp:transform"]
             }
-            def Xform "Server_UpY_2"
+            def Xform "Server_UpY_2" (
+                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
+                instanceable = true
+            )
             {
-                def Mesh "Chassis" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.05750, 0.28100), (0.06500, 0.21250, 0.31500)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.05750, 0.28100), (0.06500, 0.05750, 0.28100), (0.06500, 0.21250, 0.28100), (-0.06500, 0.21250, 0.28100), (-0.06500, 0.05750, 0.31500), (0.06500, 0.05750, 0.31500), (0.06500, 0.21250, 0.31500), (-0.06500, 0.21250, 0.31500)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerChassis>
-                }
-                def Mesh "Front" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    int[] faceVertexCounts = [4]
-                    int[] faceVertexIndices = [0, 1, 2, 3]
-                    point3f[] points = [(-0.06500, 0.21350, 0.28100), (0.06500, 0.21350, 0.28100), (0.06500, 0.21350, 0.31500), (-0.06500, 0.21350, 0.31500)]
-                    texCoord2f[] primvars:st = [(0.000, 0.000), (1.000, 0.000), (1.000, 1.000), (0.000, 1.000)] (interpolation = "vertex")
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerFront>
-                }
-                def Mesh "Heatsink" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.04550, 0.06835, 0.31200), (0.04550, 0.20165, 0.31800)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.04550, 0.06835, 0.31200), (0.04550, 0.06835, 0.31200), (0.04550, 0.20165, 0.31200), (-0.04550, 0.20165, 0.31200), (-0.04550, 0.06835, 0.31800), (0.04550, 0.06835, 0.31800), (0.04550, 0.20165, 0.31800), (-0.04550, 0.20165, 0.31800)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameTop" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.20650, 0.31100), (0.06500, 0.21250, 0.31500)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.20650, 0.31100), (0.06500, 0.20650, 0.31100), (0.06500, 0.21250, 0.31100), (-0.06500, 0.21250, 0.31100), (-0.06500, 0.20650, 0.31500), (0.06500, 0.20650, 0.31500), (0.06500, 0.21250, 0.31500), (-0.06500, 0.21250, 0.31500)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameBot" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.20650, 0.28100), (0.06500, 0.21250, 0.28500)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.20650, 0.28100), (0.06500, 0.20650, 0.28100), (0.06500, 0.21250, 0.28100), (-0.06500, 0.21250, 0.28100), (-0.06500, 0.20650, 0.28500), (0.06500, 0.20650, 0.28500), (0.06500, 0.21250, 0.28500), (-0.06500, 0.21250, 0.28500)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.20650, 0.28100), (-0.06000, 0.21250, 0.31500)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.20650, 0.28100), (-0.06000, 0.20650, 0.28100), (-0.06000, 0.21250, 0.28100), (-0.06500, 0.21250, 0.28100), (-0.06500, 0.20650, 0.31500), (-0.06000, 0.20650, 0.31500), (-0.06000, 0.21250, 0.31500), (-0.06500, 0.21250, 0.31500)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06000, 0.20650, 0.28100), (0.06500, 0.21250, 0.31500)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06000, 0.20650, 0.28100), (0.06500, 0.20650, 0.28100), (0.06500, 0.21250, 0.28100), (0.06000, 0.21250, 0.28100), (0.06000, 0.20650, 0.31500), (0.06500, 0.20650, 0.31500), (0.06500, 0.21250, 0.31500), (0.06000, 0.21250, 0.31500)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.07500, 0.20650, 0.28610), (-0.06500, 0.21850, 0.30990)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.07500, 0.20650, 0.28610), (-0.06500, 0.20650, 0.28610), (-0.06500, 0.21850, 0.28610), (-0.07500, 0.21850, 0.28610), (-0.07500, 0.20650, 0.30990), (-0.06500, 0.20650, 0.30990), (-0.06500, 0.21850, 0.30990), (-0.07500, 0.21850, 0.30990)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06500, 0.20650, 0.28610), (0.07500, 0.21850, 0.30990)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06500, 0.20650, 0.28610), (0.07500, 0.20650, 0.28610), (0.07500, 0.21850, 0.28610), (0.06500, 0.21850, 0.28610), (0.06500, 0.20650, 0.30990), (0.07500, 0.20650, 0.30990), (0.07500, 0.21850, 0.30990), (0.06500, 0.21850, 0.30990)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
+                matrix4d xformOp:transform = ((0.00000000, 0.00167549, 0.00000000, 0.00000000), (-0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (0.06497306, 0.20344395, 0.28079394, 1.00000000))
+                uniform token[] xformOpOrder = ["xformOp:transform"]
             }
-            def Xform "Server_UnY_0"
+            def Xform "Server_UnY_0" (
+                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
+                instanceable = true
+            )
             {
-                def Mesh "Chassis" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, 0.09950), (0.06500, -0.05750, 0.13350)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, 0.09950), (0.06500, -0.21250, 0.09950), (0.06500, -0.05750, 0.09950), (-0.06500, -0.05750, 0.09950), (-0.06500, -0.21250, 0.13350), (0.06500, -0.21250, 0.13350), (0.06500, -0.05750, 0.13350), (-0.06500, -0.05750, 0.13350)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerChassis>
-                }
-                def Mesh "Front" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    int[] faceVertexCounts = [4]
-                    int[] faceVertexIndices = [0, 1, 2, 3]
-                    point3f[] points = [(0.06500, -0.21350, 0.09950), (-0.06500, -0.21350, 0.09950), (-0.06500, -0.21350, 0.13350), (0.06500, -0.21350, 0.13350)]
-                    texCoord2f[] primvars:st = [(0.000, 0.000), (1.000, 0.000), (1.000, 1.000), (0.000, 1.000)] (interpolation = "vertex")
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerFront>
-                }
-                def Mesh "Heatsink" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.04550, -0.20165, 0.13050), (0.04550, -0.06835, 0.13650)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.04550, -0.20165, 0.13050), (0.04550, -0.20165, 0.13050), (0.04550, -0.06835, 0.13050), (-0.04550, -0.06835, 0.13050), (-0.04550, -0.20165, 0.13650), (0.04550, -0.20165, 0.13650), (0.04550, -0.06835, 0.13650), (-0.04550, -0.06835, 0.13650)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameTop" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, 0.12950), (0.06500, -0.20650, 0.13350)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, 0.12950), (0.06500, -0.21250, 0.12950), (0.06500, -0.20650, 0.12950), (-0.06500, -0.20650, 0.12950), (-0.06500, -0.21250, 0.13350), (0.06500, -0.21250, 0.13350), (0.06500, -0.20650, 0.13350), (-0.06500, -0.20650, 0.13350)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameBot" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, 0.09950), (0.06500, -0.20650, 0.10350)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, 0.09950), (0.06500, -0.21250, 0.09950), (0.06500, -0.20650, 0.09950), (-0.06500, -0.20650, 0.09950), (-0.06500, -0.21250, 0.10350), (0.06500, -0.21250, 0.10350), (0.06500, -0.20650, 0.10350), (-0.06500, -0.20650, 0.10350)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, 0.09950), (-0.06000, -0.20650, 0.13350)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, 0.09950), (-0.06000, -0.21250, 0.09950), (-0.06000, -0.20650, 0.09950), (-0.06500, -0.20650, 0.09950), (-0.06500, -0.21250, 0.13350), (-0.06000, -0.21250, 0.13350), (-0.06000, -0.20650, 0.13350), (-0.06500, -0.20650, 0.13350)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06000, -0.21250, 0.09950), (0.06500, -0.20650, 0.13350)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06000, -0.21250, 0.09950), (0.06500, -0.21250, 0.09950), (0.06500, -0.20650, 0.09950), (0.06000, -0.20650, 0.09950), (0.06000, -0.21250, 0.13350), (0.06500, -0.21250, 0.13350), (0.06500, -0.20650, 0.13350), (0.06000, -0.20650, 0.13350)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.07500, -0.21850, 0.10460), (-0.06500, -0.20650, 0.12840)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.07500, -0.21850, 0.10460), (-0.06500, -0.21850, 0.10460), (-0.06500, -0.20650, 0.10460), (-0.07500, -0.20650, 0.10460), (-0.07500, -0.21850, 0.12840), (-0.06500, -0.21850, 0.12840), (-0.06500, -0.20650, 0.12840), (-0.07500, -0.20650, 0.12840)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06500, -0.21850, 0.10460), (0.07500, -0.20650, 0.12840)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06500, -0.21850, 0.10460), (0.07500, -0.21850, 0.10460), (0.07500, -0.20650, 0.10460), (0.06500, -0.20650, 0.10460), (0.06500, -0.21850, 0.12840), (0.07500, -0.21850, 0.12840), (0.07500, -0.20650, 0.12840), (0.06500, -0.20650, 0.12840)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
+                matrix4d xformOp:transform = ((0.00000000, -0.00167549, 0.00000000, 0.00000000), (0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (-0.06497306, -0.20344395, 0.09929394, 1.00000000))
+                uniform token[] xformOpOrder = ["xformOp:transform"]
             }
-            def Xform "Server_UnY_1"
+            def Xform "Server_UnY_1" (
+                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
+                instanceable = true
+            )
             {
-                def Mesh "Chassis" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, 0.19050), (0.06500, -0.05750, 0.22450)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, 0.19050), (0.06500, -0.21250, 0.19050), (0.06500, -0.05750, 0.19050), (-0.06500, -0.05750, 0.19050), (-0.06500, -0.21250, 0.22450), (0.06500, -0.21250, 0.22450), (0.06500, -0.05750, 0.22450), (-0.06500, -0.05750, 0.22450)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerChassis>
-                }
-                def Mesh "Front" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    int[] faceVertexCounts = [4]
-                    int[] faceVertexIndices = [0, 1, 2, 3]
-                    point3f[] points = [(0.06500, -0.21350, 0.19050), (-0.06500, -0.21350, 0.19050), (-0.06500, -0.21350, 0.22450), (0.06500, -0.21350, 0.22450)]
-                    texCoord2f[] primvars:st = [(0.000, 0.000), (1.000, 0.000), (1.000, 1.000), (0.000, 1.000)] (interpolation = "vertex")
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerFront>
-                }
-                def Mesh "Heatsink" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.04550, -0.20165, 0.22150), (0.04550, -0.06835, 0.22750)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.04550, -0.20165, 0.22150), (0.04550, -0.20165, 0.22150), (0.04550, -0.06835, 0.22150), (-0.04550, -0.06835, 0.22150), (-0.04550, -0.20165, 0.22750), (0.04550, -0.20165, 0.22750), (0.04550, -0.06835, 0.22750), (-0.04550, -0.06835, 0.22750)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameTop" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, 0.22050), (0.06500, -0.20650, 0.22450)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, 0.22050), (0.06500, -0.21250, 0.22050), (0.06500, -0.20650, 0.22050), (-0.06500, -0.20650, 0.22050), (-0.06500, -0.21250, 0.22450), (0.06500, -0.21250, 0.22450), (0.06500, -0.20650, 0.22450), (-0.06500, -0.20650, 0.22450)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameBot" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, 0.19050), (0.06500, -0.20650, 0.19450)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, 0.19050), (0.06500, -0.21250, 0.19050), (0.06500, -0.20650, 0.19050), (-0.06500, -0.20650, 0.19050), (-0.06500, -0.21250, 0.19450), (0.06500, -0.21250, 0.19450), (0.06500, -0.20650, 0.19450), (-0.06500, -0.20650, 0.19450)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, 0.19050), (-0.06000, -0.20650, 0.22450)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, 0.19050), (-0.06000, -0.21250, 0.19050), (-0.06000, -0.20650, 0.19050), (-0.06500, -0.20650, 0.19050), (-0.06500, -0.21250, 0.22450), (-0.06000, -0.21250, 0.22450), (-0.06000, -0.20650, 0.22450), (-0.06500, -0.20650, 0.22450)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06000, -0.21250, 0.19050), (0.06500, -0.20650, 0.22450)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06000, -0.21250, 0.19050), (0.06500, -0.21250, 0.19050), (0.06500, -0.20650, 0.19050), (0.06000, -0.20650, 0.19050), (0.06000, -0.21250, 0.22450), (0.06500, -0.21250, 0.22450), (0.06500, -0.20650, 0.22450), (0.06000, -0.20650, 0.22450)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.07500, -0.21850, 0.19560), (-0.06500, -0.20650, 0.21940)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.07500, -0.21850, 0.19560), (-0.06500, -0.21850, 0.19560), (-0.06500, -0.20650, 0.19560), (-0.07500, -0.20650, 0.19560), (-0.07500, -0.21850, 0.21940), (-0.06500, -0.21850, 0.21940), (-0.06500, -0.20650, 0.21940), (-0.07500, -0.20650, 0.21940)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06500, -0.21850, 0.19560), (0.07500, -0.20650, 0.21940)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06500, -0.21850, 0.19560), (0.07500, -0.21850, 0.19560), (0.07500, -0.20650, 0.19560), (0.06500, -0.20650, 0.19560), (0.06500, -0.21850, 0.21940), (0.07500, -0.21850, 0.21940), (0.07500, -0.20650, 0.21940), (0.06500, -0.20650, 0.21940)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
+                matrix4d xformOp:transform = ((0.00000000, -0.00167549, 0.00000000, 0.00000000), (0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (-0.06497306, -0.20344395, 0.19029394, 1.00000000))
+                uniform token[] xformOpOrder = ["xformOp:transform"]
             }
-            def Xform "Server_UnY_2"
+            def Xform "Server_UnY_2" (
+                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
+                instanceable = true
+            )
             {
-                def Mesh "Chassis" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, 0.28100), (0.06500, -0.05750, 0.31500)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, 0.28100), (0.06500, -0.21250, 0.28100), (0.06500, -0.05750, 0.28100), (-0.06500, -0.05750, 0.28100), (-0.06500, -0.21250, 0.31500), (0.06500, -0.21250, 0.31500), (0.06500, -0.05750, 0.31500), (-0.06500, -0.05750, 0.31500)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerChassis>
-                }
-                def Mesh "Front" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    int[] faceVertexCounts = [4]
-                    int[] faceVertexIndices = [0, 1, 2, 3]
-                    point3f[] points = [(0.06500, -0.21350, 0.28100), (-0.06500, -0.21350, 0.28100), (-0.06500, -0.21350, 0.31500), (0.06500, -0.21350, 0.31500)]
-                    texCoord2f[] primvars:st = [(0.000, 0.000), (1.000, 0.000), (1.000, 1.000), (0.000, 1.000)] (interpolation = "vertex")
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerFront>
-                }
-                def Mesh "Heatsink" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.04550, -0.20165, 0.31200), (0.04550, -0.06835, 0.31800)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.04550, -0.20165, 0.31200), (0.04550, -0.20165, 0.31200), (0.04550, -0.06835, 0.31200), (-0.04550, -0.06835, 0.31200), (-0.04550, -0.20165, 0.31800), (0.04550, -0.20165, 0.31800), (0.04550, -0.06835, 0.31800), (-0.04550, -0.06835, 0.31800)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameTop" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, 0.31100), (0.06500, -0.20650, 0.31500)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, 0.31100), (0.06500, -0.21250, 0.31100), (0.06500, -0.20650, 0.31100), (-0.06500, -0.20650, 0.31100), (-0.06500, -0.21250, 0.31500), (0.06500, -0.21250, 0.31500), (0.06500, -0.20650, 0.31500), (-0.06500, -0.20650, 0.31500)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameBot" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, 0.28100), (0.06500, -0.20650, 0.28500)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, 0.28100), (0.06500, -0.21250, 0.28100), (0.06500, -0.20650, 0.28100), (-0.06500, -0.20650, 0.28100), (-0.06500, -0.21250, 0.28500), (0.06500, -0.21250, 0.28500), (0.06500, -0.20650, 0.28500), (-0.06500, -0.20650, 0.28500)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, 0.28100), (-0.06000, -0.20650, 0.31500)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, 0.28100), (-0.06000, -0.21250, 0.28100), (-0.06000, -0.20650, 0.28100), (-0.06500, -0.20650, 0.28100), (-0.06500, -0.21250, 0.31500), (-0.06000, -0.21250, 0.31500), (-0.06000, -0.20650, 0.31500), (-0.06500, -0.20650, 0.31500)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06000, -0.21250, 0.28100), (0.06500, -0.20650, 0.31500)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06000, -0.21250, 0.28100), (0.06500, -0.21250, 0.28100), (0.06500, -0.20650, 0.28100), (0.06000, -0.20650, 0.28100), (0.06000, -0.21250, 0.31500), (0.06500, -0.21250, 0.31500), (0.06500, -0.20650, 0.31500), (0.06000, -0.20650, 0.31500)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.07500, -0.21850, 0.28610), (-0.06500, -0.20650, 0.30990)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.07500, -0.21850, 0.28610), (-0.06500, -0.21850, 0.28610), (-0.06500, -0.20650, 0.28610), (-0.07500, -0.20650, 0.28610), (-0.07500, -0.21850, 0.30990), (-0.06500, -0.21850, 0.30990), (-0.06500, -0.20650, 0.30990), (-0.07500, -0.20650, 0.30990)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06500, -0.21850, 0.28610), (0.07500, -0.20650, 0.30990)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06500, -0.21850, 0.28610), (0.07500, -0.21850, 0.28610), (0.07500, -0.20650, 0.28610), (0.06500, -0.20650, 0.28610), (0.06500, -0.21850, 0.30990), (0.07500, -0.21850, 0.30990), (0.07500, -0.20650, 0.30990), (0.06500, -0.20650, 0.30990)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
+                matrix4d xformOp:transform = ((0.00000000, -0.00167549, 0.00000000, 0.00000000), (0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (-0.06497306, -0.20344395, 0.28079394, 1.00000000))
+                uniform token[] xformOpOrder = ["xformOp:transform"]
             }
-            def Xform "Server_LpY_0"
+            def Xform "Server_LpY_0" (
+                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
+                instanceable = true
+            )
             {
-                def Mesh "Chassis" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.05750, -0.17920), (0.06500, 0.21250, -0.14520)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.05750, -0.17920), (0.06500, 0.05750, -0.17920), (0.06500, 0.21250, -0.17920), (-0.06500, 0.21250, -0.17920), (-0.06500, 0.05750, -0.14520), (0.06500, 0.05750, -0.14520), (0.06500, 0.21250, -0.14520), (-0.06500, 0.21250, -0.14520)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerChassis>
-                }
-                def Mesh "Front" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    int[] faceVertexCounts = [4]
-                    int[] faceVertexIndices = [0, 1, 2, 3]
-                    point3f[] points = [(-0.06500, 0.21350, -0.17920), (0.06500, 0.21350, -0.17920), (0.06500, 0.21350, -0.14520), (-0.06500, 0.21350, -0.14520)]
-                    texCoord2f[] primvars:st = [(0.000, 0.000), (1.000, 0.000), (1.000, 1.000), (0.000, 1.000)] (interpolation = "vertex")
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerFront>
-                }
-                def Mesh "Heatsink" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.04550, 0.06835, -0.14820), (0.04550, 0.20165, -0.14220)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.04550, 0.06835, -0.14820), (0.04550, 0.06835, -0.14820), (0.04550, 0.20165, -0.14820), (-0.04550, 0.20165, -0.14820), (-0.04550, 0.06835, -0.14220), (0.04550, 0.06835, -0.14220), (0.04550, 0.20165, -0.14220), (-0.04550, 0.20165, -0.14220)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameTop" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.20650, -0.14920), (0.06500, 0.21250, -0.14520)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.20650, -0.14920), (0.06500, 0.20650, -0.14920), (0.06500, 0.21250, -0.14920), (-0.06500, 0.21250, -0.14920), (-0.06500, 0.20650, -0.14520), (0.06500, 0.20650, -0.14520), (0.06500, 0.21250, -0.14520), (-0.06500, 0.21250, -0.14520)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameBot" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.20650, -0.17920), (0.06500, 0.21250, -0.17520)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.20650, -0.17920), (0.06500, 0.20650, -0.17920), (0.06500, 0.21250, -0.17920), (-0.06500, 0.21250, -0.17920), (-0.06500, 0.20650, -0.17520), (0.06500, 0.20650, -0.17520), (0.06500, 0.21250, -0.17520), (-0.06500, 0.21250, -0.17520)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.20650, -0.17920), (-0.06000, 0.21250, -0.14520)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.20650, -0.17920), (-0.06000, 0.20650, -0.17920), (-0.06000, 0.21250, -0.17920), (-0.06500, 0.21250, -0.17920), (-0.06500, 0.20650, -0.14520), (-0.06000, 0.20650, -0.14520), (-0.06000, 0.21250, -0.14520), (-0.06500, 0.21250, -0.14520)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06000, 0.20650, -0.17920), (0.06500, 0.21250, -0.14520)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06000, 0.20650, -0.17920), (0.06500, 0.20650, -0.17920), (0.06500, 0.21250, -0.17920), (0.06000, 0.21250, -0.17920), (0.06000, 0.20650, -0.14520), (0.06500, 0.20650, -0.14520), (0.06500, 0.21250, -0.14520), (0.06000, 0.21250, -0.14520)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.07500, 0.20650, -0.17410), (-0.06500, 0.21850, -0.15030)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.07500, 0.20650, -0.17410), (-0.06500, 0.20650, -0.17410), (-0.06500, 0.21850, -0.17410), (-0.07500, 0.21850, -0.17410), (-0.07500, 0.20650, -0.15030), (-0.06500, 0.20650, -0.15030), (-0.06500, 0.21850, -0.15030), (-0.07500, 0.21850, -0.15030)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06500, 0.20650, -0.17410), (0.07500, 0.21850, -0.15030)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06500, 0.20650, -0.17410), (0.07500, 0.20650, -0.17410), (0.07500, 0.21850, -0.17410), (0.06500, 0.21850, -0.17410), (0.06500, 0.20650, -0.15030), (0.07500, 0.20650, -0.15030), (0.07500, 0.21850, -0.15030), (0.06500, 0.21850, -0.15030)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
+                matrix4d xformOp:transform = ((0.00000000, 0.00167549, 0.00000000, 0.00000000), (-0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (0.06497306, 0.20344395, -0.17940606, 1.00000000))
+                uniform token[] xformOpOrder = ["xformOp:transform"]
             }
-            def Xform "Server_LpY_1"
+            def Xform "Server_LpY_1" (
+                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
+                instanceable = true
+            )
             {
-                def Mesh "Chassis" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.05750, -0.27040), (0.06500, 0.21250, -0.23640)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.05750, -0.27040), (0.06500, 0.05750, -0.27040), (0.06500, 0.21250, -0.27040), (-0.06500, 0.21250, -0.27040), (-0.06500, 0.05750, -0.23640), (0.06500, 0.05750, -0.23640), (0.06500, 0.21250, -0.23640), (-0.06500, 0.21250, -0.23640)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerChassis>
-                }
-                def Mesh "Front" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    int[] faceVertexCounts = [4]
-                    int[] faceVertexIndices = [0, 1, 2, 3]
-                    point3f[] points = [(-0.06500, 0.21350, -0.27040), (0.06500, 0.21350, -0.27040), (0.06500, 0.21350, -0.23640), (-0.06500, 0.21350, -0.23640)]
-                    texCoord2f[] primvars:st = [(0.000, 0.000), (1.000, 0.000), (1.000, 1.000), (0.000, 1.000)] (interpolation = "vertex")
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerFront>
-                }
-                def Mesh "Heatsink" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.04550, 0.06835, -0.23940), (0.04550, 0.20165, -0.23340)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.04550, 0.06835, -0.23940), (0.04550, 0.06835, -0.23940), (0.04550, 0.20165, -0.23940), (-0.04550, 0.20165, -0.23940), (-0.04550, 0.06835, -0.23340), (0.04550, 0.06835, -0.23340), (0.04550, 0.20165, -0.23340), (-0.04550, 0.20165, -0.23340)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameTop" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.20650, -0.24040), (0.06500, 0.21250, -0.23640)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.20650, -0.24040), (0.06500, 0.20650, -0.24040), (0.06500, 0.21250, -0.24040), (-0.06500, 0.21250, -0.24040), (-0.06500, 0.20650, -0.23640), (0.06500, 0.20650, -0.23640), (0.06500, 0.21250, -0.23640), (-0.06500, 0.21250, -0.23640)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameBot" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.20650, -0.27040), (0.06500, 0.21250, -0.26640)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.20650, -0.27040), (0.06500, 0.20650, -0.27040), (0.06500, 0.21250, -0.27040), (-0.06500, 0.21250, -0.27040), (-0.06500, 0.20650, -0.26640), (0.06500, 0.20650, -0.26640), (0.06500, 0.21250, -0.26640), (-0.06500, 0.21250, -0.26640)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.20650, -0.27040), (-0.06000, 0.21250, -0.23640)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.20650, -0.27040), (-0.06000, 0.20650, -0.27040), (-0.06000, 0.21250, -0.27040), (-0.06500, 0.21250, -0.27040), (-0.06500, 0.20650, -0.23640), (-0.06000, 0.20650, -0.23640), (-0.06000, 0.21250, -0.23640), (-0.06500, 0.21250, -0.23640)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06000, 0.20650, -0.27040), (0.06500, 0.21250, -0.23640)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06000, 0.20650, -0.27040), (0.06500, 0.20650, -0.27040), (0.06500, 0.21250, -0.27040), (0.06000, 0.21250, -0.27040), (0.06000, 0.20650, -0.23640), (0.06500, 0.20650, -0.23640), (0.06500, 0.21250, -0.23640), (0.06000, 0.21250, -0.23640)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.07500, 0.20650, -0.26530), (-0.06500, 0.21850, -0.24150)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.07500, 0.20650, -0.26530), (-0.06500, 0.20650, -0.26530), (-0.06500, 0.21850, -0.26530), (-0.07500, 0.21850, -0.26530), (-0.07500, 0.20650, -0.24150), (-0.06500, 0.20650, -0.24150), (-0.06500, 0.21850, -0.24150), (-0.07500, 0.21850, -0.24150)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06500, 0.20650, -0.26530), (0.07500, 0.21850, -0.24150)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06500, 0.20650, -0.26530), (0.07500, 0.20650, -0.26530), (0.07500, 0.21850, -0.26530), (0.06500, 0.21850, -0.26530), (0.06500, 0.20650, -0.24150), (0.07500, 0.20650, -0.24150), (0.07500, 0.21850, -0.24150), (0.06500, 0.21850, -0.24150)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
+                matrix4d xformOp:transform = ((0.00000000, 0.00167549, 0.00000000, 0.00000000), (-0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (0.06497306, 0.20344395, -0.27060606, 1.00000000))
+                uniform token[] xformOpOrder = ["xformOp:transform"]
             }
-            def Xform "Server_LpY_2"
+            def Xform "Server_LpY_2" (
+                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
+                instanceable = true
+            )
             {
-                def Mesh "Chassis" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.05750, -0.36160), (0.06500, 0.21250, -0.32760)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.05750, -0.36160), (0.06500, 0.05750, -0.36160), (0.06500, 0.21250, -0.36160), (-0.06500, 0.21250, -0.36160), (-0.06500, 0.05750, -0.32760), (0.06500, 0.05750, -0.32760), (0.06500, 0.21250, -0.32760), (-0.06500, 0.21250, -0.32760)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerChassis>
-                }
-                def Mesh "Front" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    int[] faceVertexCounts = [4]
-                    int[] faceVertexIndices = [0, 1, 2, 3]
-                    point3f[] points = [(-0.06500, 0.21350, -0.36160), (0.06500, 0.21350, -0.36160), (0.06500, 0.21350, -0.32760), (-0.06500, 0.21350, -0.32760)]
-                    texCoord2f[] primvars:st = [(0.000, 0.000), (1.000, 0.000), (1.000, 1.000), (0.000, 1.000)] (interpolation = "vertex")
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerFront>
-                }
-                def Mesh "Heatsink" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.04550, 0.06835, -0.33060), (0.04550, 0.20165, -0.32460)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.04550, 0.06835, -0.33060), (0.04550, 0.06835, -0.33060), (0.04550, 0.20165, -0.33060), (-0.04550, 0.20165, -0.33060), (-0.04550, 0.06835, -0.32460), (0.04550, 0.06835, -0.32460), (0.04550, 0.20165, -0.32460), (-0.04550, 0.20165, -0.32460)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameTop" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.20650, -0.33160), (0.06500, 0.21250, -0.32760)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.20650, -0.33160), (0.06500, 0.20650, -0.33160), (0.06500, 0.21250, -0.33160), (-0.06500, 0.21250, -0.33160), (-0.06500, 0.20650, -0.32760), (0.06500, 0.20650, -0.32760), (0.06500, 0.21250, -0.32760), (-0.06500, 0.21250, -0.32760)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameBot" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.20650, -0.36160), (0.06500, 0.21250, -0.35760)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.20650, -0.36160), (0.06500, 0.20650, -0.36160), (0.06500, 0.21250, -0.36160), (-0.06500, 0.21250, -0.36160), (-0.06500, 0.20650, -0.35760), (0.06500, 0.20650, -0.35760), (0.06500, 0.21250, -0.35760), (-0.06500, 0.21250, -0.35760)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, 0.20650, -0.36160), (-0.06000, 0.21250, -0.32760)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, 0.20650, -0.36160), (-0.06000, 0.20650, -0.36160), (-0.06000, 0.21250, -0.36160), (-0.06500, 0.21250, -0.36160), (-0.06500, 0.20650, -0.32760), (-0.06000, 0.20650, -0.32760), (-0.06000, 0.21250, -0.32760), (-0.06500, 0.21250, -0.32760)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06000, 0.20650, -0.36160), (0.06500, 0.21250, -0.32760)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06000, 0.20650, -0.36160), (0.06500, 0.20650, -0.36160), (0.06500, 0.21250, -0.36160), (0.06000, 0.21250, -0.36160), (0.06000, 0.20650, -0.32760), (0.06500, 0.20650, -0.32760), (0.06500, 0.21250, -0.32760), (0.06000, 0.21250, -0.32760)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.07500, 0.20650, -0.35650), (-0.06500, 0.21850, -0.33270)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.07500, 0.20650, -0.35650), (-0.06500, 0.20650, -0.35650), (-0.06500, 0.21850, -0.35650), (-0.07500, 0.21850, -0.35650), (-0.07500, 0.20650, -0.33270), (-0.06500, 0.20650, -0.33270), (-0.06500, 0.21850, -0.33270), (-0.07500, 0.21850, -0.33270)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06500, 0.20650, -0.35650), (0.07500, 0.21850, -0.33270)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06500, 0.20650, -0.35650), (0.07500, 0.20650, -0.35650), (0.07500, 0.21850, -0.35650), (0.06500, 0.21850, -0.35650), (0.06500, 0.20650, -0.33270), (0.07500, 0.20650, -0.33270), (0.07500, 0.21850, -0.33270), (0.06500, 0.21850, -0.33270)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
+                matrix4d xformOp:transform = ((0.00000000, 0.00167549, 0.00000000, 0.00000000), (-0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (0.06497306, 0.20344395, -0.36180606, 1.00000000))
+                uniform token[] xformOpOrder = ["xformOp:transform"]
             }
-            def Xform "Server_LnY_0"
+            def Xform "Server_LnY_0" (
+                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
+                instanceable = true
+            )
             {
-                def Mesh "Chassis" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, -0.17920), (0.06500, -0.05750, -0.14520)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, -0.17920), (0.06500, -0.21250, -0.17920), (0.06500, -0.05750, -0.17920), (-0.06500, -0.05750, -0.17920), (-0.06500, -0.21250, -0.14520), (0.06500, -0.21250, -0.14520), (0.06500, -0.05750, -0.14520), (-0.06500, -0.05750, -0.14520)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerChassis>
-                }
-                def Mesh "Front" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    int[] faceVertexCounts = [4]
-                    int[] faceVertexIndices = [0, 1, 2, 3]
-                    point3f[] points = [(0.06500, -0.21350, -0.17920), (-0.06500, -0.21350, -0.17920), (-0.06500, -0.21350, -0.14520), (0.06500, -0.21350, -0.14520)]
-                    texCoord2f[] primvars:st = [(0.000, 0.000), (1.000, 0.000), (1.000, 1.000), (0.000, 1.000)] (interpolation = "vertex")
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerFront>
-                }
-                def Mesh "Heatsink" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.04550, -0.20165, -0.14820), (0.04550, -0.06835, -0.14220)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.04550, -0.20165, -0.14820), (0.04550, -0.20165, -0.14820), (0.04550, -0.06835, -0.14820), (-0.04550, -0.06835, -0.14820), (-0.04550, -0.20165, -0.14220), (0.04550, -0.20165, -0.14220), (0.04550, -0.06835, -0.14220), (-0.04550, -0.06835, -0.14220)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameTop" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, -0.14920), (0.06500, -0.20650, -0.14520)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, -0.14920), (0.06500, -0.21250, -0.14920), (0.06500, -0.20650, -0.14920), (-0.06500, -0.20650, -0.14920), (-0.06500, -0.21250, -0.14520), (0.06500, -0.21250, -0.14520), (0.06500, -0.20650, -0.14520), (-0.06500, -0.20650, -0.14520)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameBot" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, -0.17920), (0.06500, -0.20650, -0.17520)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, -0.17920), (0.06500, -0.21250, -0.17920), (0.06500, -0.20650, -0.17920), (-0.06500, -0.20650, -0.17920), (-0.06500, -0.21250, -0.17520), (0.06500, -0.21250, -0.17520), (0.06500, -0.20650, -0.17520), (-0.06500, -0.20650, -0.17520)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, -0.17920), (-0.06000, -0.20650, -0.14520)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, -0.17920), (-0.06000, -0.21250, -0.17920), (-0.06000, -0.20650, -0.17920), (-0.06500, -0.20650, -0.17920), (-0.06500, -0.21250, -0.14520), (-0.06000, -0.21250, -0.14520), (-0.06000, -0.20650, -0.14520), (-0.06500, -0.20650, -0.14520)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06000, -0.21250, -0.17920), (0.06500, -0.20650, -0.14520)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06000, -0.21250, -0.17920), (0.06500, -0.21250, -0.17920), (0.06500, -0.20650, -0.17920), (0.06000, -0.20650, -0.17920), (0.06000, -0.21250, -0.14520), (0.06500, -0.21250, -0.14520), (0.06500, -0.20650, -0.14520), (0.06000, -0.20650, -0.14520)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.07500, -0.21850, -0.17410), (-0.06500, -0.20650, -0.15030)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.07500, -0.21850, -0.17410), (-0.06500, -0.21850, -0.17410), (-0.06500, -0.20650, -0.17410), (-0.07500, -0.20650, -0.17410), (-0.07500, -0.21850, -0.15030), (-0.06500, -0.21850, -0.15030), (-0.06500, -0.20650, -0.15030), (-0.07500, -0.20650, -0.15030)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06500, -0.21850, -0.17410), (0.07500, -0.20650, -0.15030)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06500, -0.21850, -0.17410), (0.07500, -0.21850, -0.17410), (0.07500, -0.20650, -0.17410), (0.06500, -0.20650, -0.17410), (0.06500, -0.21850, -0.15030), (0.07500, -0.21850, -0.15030), (0.07500, -0.20650, -0.15030), (0.06500, -0.20650, -0.15030)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
+                matrix4d xformOp:transform = ((0.00000000, -0.00167549, 0.00000000, 0.00000000), (0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (-0.06497306, -0.20344395, -0.17940606, 1.00000000))
+                uniform token[] xformOpOrder = ["xformOp:transform"]
             }
-            def Xform "Server_LnY_1"
+            def Xform "Server_LnY_1" (
+                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
+                instanceable = true
+            )
             {
-                def Mesh "Chassis" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, -0.27040), (0.06500, -0.05750, -0.23640)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, -0.27040), (0.06500, -0.21250, -0.27040), (0.06500, -0.05750, -0.27040), (-0.06500, -0.05750, -0.27040), (-0.06500, -0.21250, -0.23640), (0.06500, -0.21250, -0.23640), (0.06500, -0.05750, -0.23640), (-0.06500, -0.05750, -0.23640)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerChassis>
-                }
-                def Mesh "Front" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    int[] faceVertexCounts = [4]
-                    int[] faceVertexIndices = [0, 1, 2, 3]
-                    point3f[] points = [(0.06500, -0.21350, -0.27040), (-0.06500, -0.21350, -0.27040), (-0.06500, -0.21350, -0.23640), (0.06500, -0.21350, -0.23640)]
-                    texCoord2f[] primvars:st = [(0.000, 0.000), (1.000, 0.000), (1.000, 1.000), (0.000, 1.000)] (interpolation = "vertex")
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerFront>
-                }
-                def Mesh "Heatsink" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.04550, -0.20165, -0.23940), (0.04550, -0.06835, -0.23340)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.04550, -0.20165, -0.23940), (0.04550, -0.20165, -0.23940), (0.04550, -0.06835, -0.23940), (-0.04550, -0.06835, -0.23940), (-0.04550, -0.20165, -0.23340), (0.04550, -0.20165, -0.23340), (0.04550, -0.06835, -0.23340), (-0.04550, -0.06835, -0.23340)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameTop" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, -0.24040), (0.06500, -0.20650, -0.23640)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, -0.24040), (0.06500, -0.21250, -0.24040), (0.06500, -0.20650, -0.24040), (-0.06500, -0.20650, -0.24040), (-0.06500, -0.21250, -0.23640), (0.06500, -0.21250, -0.23640), (0.06500, -0.20650, -0.23640), (-0.06500, -0.20650, -0.23640)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameBot" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, -0.27040), (0.06500, -0.20650, -0.26640)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, -0.27040), (0.06500, -0.21250, -0.27040), (0.06500, -0.20650, -0.27040), (-0.06500, -0.20650, -0.27040), (-0.06500, -0.21250, -0.26640), (0.06500, -0.21250, -0.26640), (0.06500, -0.20650, -0.26640), (-0.06500, -0.20650, -0.26640)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, -0.27040), (-0.06000, -0.20650, -0.23640)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, -0.27040), (-0.06000, -0.21250, -0.27040), (-0.06000, -0.20650, -0.27040), (-0.06500, -0.20650, -0.27040), (-0.06500, -0.21250, -0.23640), (-0.06000, -0.21250, -0.23640), (-0.06000, -0.20650, -0.23640), (-0.06500, -0.20650, -0.23640)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06000, -0.21250, -0.27040), (0.06500, -0.20650, -0.23640)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06000, -0.21250, -0.27040), (0.06500, -0.21250, -0.27040), (0.06500, -0.20650, -0.27040), (0.06000, -0.20650, -0.27040), (0.06000, -0.21250, -0.23640), (0.06500, -0.21250, -0.23640), (0.06500, -0.20650, -0.23640), (0.06000, -0.20650, -0.23640)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.07500, -0.21850, -0.26530), (-0.06500, -0.20650, -0.24150)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.07500, -0.21850, -0.26530), (-0.06500, -0.21850, -0.26530), (-0.06500, -0.20650, -0.26530), (-0.07500, -0.20650, -0.26530), (-0.07500, -0.21850, -0.24150), (-0.06500, -0.21850, -0.24150), (-0.06500, -0.20650, -0.24150), (-0.07500, -0.20650, -0.24150)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06500, -0.21850, -0.26530), (0.07500, -0.20650, -0.24150)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06500, -0.21850, -0.26530), (0.07500, -0.21850, -0.26530), (0.07500, -0.20650, -0.26530), (0.06500, -0.20650, -0.26530), (0.06500, -0.21850, -0.24150), (0.07500, -0.21850, -0.24150), (0.07500, -0.20650, -0.24150), (0.06500, -0.20650, -0.24150)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
+                matrix4d xformOp:transform = ((0.00000000, -0.00167549, 0.00000000, 0.00000000), (0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (-0.06497306, -0.20344395, -0.27060606, 1.00000000))
+                uniform token[] xformOpOrder = ["xformOp:transform"]
             }
-            def Xform "Server_LnY_2"
+            def Xform "Server_LnY_2" (
+                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
+                instanceable = true
+            )
             {
-                def Mesh "Chassis" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, -0.36160), (0.06500, -0.05750, -0.32760)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, -0.36160), (0.06500, -0.21250, -0.36160), (0.06500, -0.05750, -0.36160), (-0.06500, -0.05750, -0.36160), (-0.06500, -0.21250, -0.32760), (0.06500, -0.21250, -0.32760), (0.06500, -0.05750, -0.32760), (-0.06500, -0.05750, -0.32760)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerChassis>
-                }
-                def Mesh "Front" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    int[] faceVertexCounts = [4]
-                    int[] faceVertexIndices = [0, 1, 2, 3]
-                    point3f[] points = [(0.06500, -0.21350, -0.36160), (-0.06500, -0.21350, -0.36160), (-0.06500, -0.21350, -0.32760), (0.06500, -0.21350, -0.32760)]
-                    texCoord2f[] primvars:st = [(0.000, 0.000), (1.000, 0.000), (1.000, 1.000), (0.000, 1.000)] (interpolation = "vertex")
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerFront>
-                }
-                def Mesh "Heatsink" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.04550, -0.20165, -0.33060), (0.04550, -0.06835, -0.32460)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.04550, -0.20165, -0.33060), (0.04550, -0.20165, -0.33060), (0.04550, -0.06835, -0.33060), (-0.04550, -0.06835, -0.33060), (-0.04550, -0.20165, -0.32460), (0.04550, -0.20165, -0.32460), (0.04550, -0.06835, -0.32460), (-0.04550, -0.06835, -0.32460)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameTop" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, -0.33160), (0.06500, -0.20650, -0.32760)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, -0.33160), (0.06500, -0.21250, -0.33160), (0.06500, -0.20650, -0.33160), (-0.06500, -0.20650, -0.33160), (-0.06500, -0.21250, -0.32760), (0.06500, -0.21250, -0.32760), (0.06500, -0.20650, -0.32760), (-0.06500, -0.20650, -0.32760)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FrameBot" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, -0.36160), (0.06500, -0.20650, -0.35760)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, -0.36160), (0.06500, -0.21250, -0.36160), (0.06500, -0.20650, -0.36160), (-0.06500, -0.20650, -0.36160), (-0.06500, -0.21250, -0.35760), (0.06500, -0.21250, -0.35760), (0.06500, -0.20650, -0.35760), (-0.06500, -0.20650, -0.35760)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.06500, -0.21250, -0.36160), (-0.06000, -0.20650, -0.32760)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.06500, -0.21250, -0.36160), (-0.06000, -0.21250, -0.36160), (-0.06000, -0.20650, -0.36160), (-0.06500, -0.20650, -0.36160), (-0.06500, -0.21250, -0.32760), (-0.06000, -0.21250, -0.32760), (-0.06000, -0.20650, -0.32760), (-0.06500, -0.20650, -0.32760)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "FramePostR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06000, -0.21250, -0.36160), (0.06500, -0.20650, -0.32760)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06000, -0.21250, -0.36160), (0.06500, -0.21250, -0.36160), (0.06500, -0.20650, -0.36160), (0.06000, -0.20650, -0.36160), (0.06000, -0.21250, -0.32760), (0.06500, -0.21250, -0.32760), (0.06500, -0.20650, -0.32760), (0.06000, -0.20650, -0.32760)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarL" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(-0.07500, -0.21850, -0.35650), (-0.06500, -0.20650, -0.33270)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(-0.07500, -0.21850, -0.35650), (-0.06500, -0.21850, -0.35650), (-0.06500, -0.20650, -0.35650), (-0.07500, -0.20650, -0.35650), (-0.07500, -0.21850, -0.33270), (-0.06500, -0.21850, -0.33270), (-0.06500, -0.20650, -0.33270), (-0.07500, -0.20650, -0.33270)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
-                def Mesh "EarR" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.06500, -0.21850, -0.35650), (0.07500, -0.20650, -0.33270)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.06500, -0.21850, -0.35650), (0.07500, -0.21850, -0.35650), (0.07500, -0.20650, -0.35650), (0.06500, -0.20650, -0.35650), (0.06500, -0.21850, -0.33270), (0.07500, -0.21850, -0.33270), (0.07500, -0.20650, -0.33270), (0.06500, -0.20650, -0.33270)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/ServerHeatsink>
-                }
+                matrix4d xformOp:transform = ((0.00000000, -0.00167549, 0.00000000, 0.00000000), (0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (-0.06497306, -0.20344395, -0.36180606, 1.00000000))
+                uniform token[] xformOpOrder = ["xformOp:transform"]
             }
         }
 
@@ -1798,6 +562,174 @@ def Xform "World"
                 )
                 {
                     double3 xformOp:translate = (0.0300, 1.8477, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.95
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster2_00" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 2.2557, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.95
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster2_01" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 2.6636, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.95
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster2_10" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 2.2557, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.95
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster2_11" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 2.6636, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.95
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster3_00" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 3.0715, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.95
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster3_01" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 3.4794, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.95
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster3_10" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 3.0715, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.95
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster3_11" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 3.4794, -0.3796)
                     float xformOp:rotateY = 90.0
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
                     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
@@ -2093,6 +1025,174 @@ def Xform "World"
                         }
                     }
                 }
+                def Xform "Cluster2_00" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -2.6636, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.95
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster2_01" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -2.2557, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.95
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster2_10" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -2.6636, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.95
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster2_11" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -2.2557, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.95
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster3_00" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -3.4794, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.95
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster3_01" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -3.0715, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.95
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster3_10" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -3.4794, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.95
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster3_11" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -3.0715, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.95
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -2114,10 +1214,10 @@ def Xform "World"
                 prepend references = @./assets/radiation_panel_3d_model.usdz@
             )
             {
-                double3 xformOp:translate = (0.0260, 0.0000, 1.8100)
+                double3 xformOp:translate = (0.0260, 0.0000, 1.4350)
                 float xformOp:rotateX = 90
                 float xformOp:rotateZ = 90
-                double3 xformOp:scale = (2.3412, 1.4427, 1.0)
+                double3 xformOp:scale = (1.5778, 0.9722, 1.0)
                 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:rotateZ", "xformOp:scale"]
 
                 over "tripo_node_592ee2f8_9809_4148_9d8c_fd736a77b899"
@@ -2144,10 +1244,10 @@ def Xform "World"
                 prepend references = @./assets/radiation_panel_3d_model.usdz@
             )
             {
-                double3 xformOp:translate = (0.0260, 0.0000, -1.8100)
+                double3 xformOp:translate = (0.0260, 0.0000, -1.4350)
                 float xformOp:rotateX = 90
                 float xformOp:rotateZ = 90
-                double3 xformOp:scale = (2.3412, 1.4427, 1.0)
+                double3 xformOp:scale = (1.5778, 0.9722, 1.0)
                 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:rotateZ", "xformOp:scale"]
 
                 over "tripo_node_592ee2f8_9809_4148_9d8c_fd736a77b899"
@@ -2196,13 +1296,13 @@ def Xform "World"
         def Camera "Closeup"
         {
             float focalLength = 22.0
-            float focusDistance = 2930
+            float focusDistance = 3647
             float2 clippingRange = (1, 90000)
             matrix4d xformOp:transform = (
                     (0.76822, 0.64018, -0.00000, 0.00000),
                     (-0.30320, 0.36384, 0.88073, 0.00000),
                     (0.56383, -0.67660, 0.47362, 0.00000),
-                    (1652.24771, -1982.69725, 1387.88807, 1.00000)
+                    (2056.04365, -2467.25238, 1727.07667, 1.00000)
             )
             uniform token[] xformOpOrder = ["xformOp:transform"]
         }
