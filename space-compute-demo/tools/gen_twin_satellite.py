@@ -98,8 +98,12 @@ SOLAR_REF    = "./assets/solar_panel_3d_model.usdz"
 # Panel native (m): long 0.981 (X), wide 0.777 (Y), thick 0.054 (Z); the cell
 # face is along ±Z. rotateY=90 stands the panel up: long→Z (wing height),
 # wide→Y (deploy), and the cell normal Z→+X (the sun / camera side). The panels
-# keep solar_panel_3d_model.usdz's own default materials — no override.
+# keep solar_panel_3d_model.usdz's own texture COLOUR — we only sharpen the
+# finish in place (roughness 0.9→low, metallic up) so they reflect strongly.
 SOLAR_NATIVE = (0.981, 0.777, 0.054)
+SOLAR_MAT    = "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"  # asset's material
+SOLAR_GLOSS_ROUGH = 0.08    # was 0.9 (very matte) → glossy
+SOLAR_GLOSS_METAL = 0.6     # was 0.0 → catches sun/earth reflections
 PANEL_RY     = 90.0
 # Per-panel scale (height, deploy, thickness) — non-uniform so the panel reads
 # oversized and thin. Height 0.978×1.45≈1.42 (≈2.6 m on stage, taller than the
@@ -128,6 +132,10 @@ BOOM_THICK   = 0.012      # thin square support-rod cross-section (was 0.030)
 # thickness held (native-Z ×1).
 RAD_REF        = "./assets/radiation_panel_3d_model.usdz"
 RAD_NATIVE     = (0.9824, 0.6377, 0.0528)   # long X, wide Y, thick Z (normal Z)
+# The radiator asset drives roughness/metallic from textures (can't be tuned in
+# place), so each radiator mesh is rebound to a glossy specular RadiatorGlossy.
+RAD_NODE       = "tripo_node_592ee2f8_9809_4148_9d8c_fd736a77b899"
+RAD_MESH       = "tripo_mesh_592ee2f8_9809_4148_9d8c_fd736a77b899"
 RAD_LONG       = 1.55     # world-Z length (backbone-m) — the long axis up the boom
 RAD_RATIO      = 2.5      # short : long = 2 : 5
 RAD_X          = 0.026    # centred on the spine axis
@@ -139,6 +147,10 @@ SOLAR_MATERIALS = {
     # Brushed-aluminium support boom (panels keep the asset's own materials).
     "SolarFrame": {"diffuse": (0.600, 0.630, 0.700), "metallic": 0.85,
                    "roughness": 0.35, "emissive": (0.0, 0.0, 0.0)},
+    # Glossy specular radiator finish (rebinds the texture-driven asset material
+    # so the radiators reflect strongly) — bright OSR/quartz-mirror silver.
+    "RadiatorGlossy": {"diffuse": (0.720, 0.745, 0.790), "metallic": 0.90,
+                       "roughness": 0.06, "emissive": (0.0, 0.0, 0.0)},
 }
 
 # Closeup camera — a true 3/4 (from +X / -Y / above) so the solar wings (face
@@ -244,7 +256,8 @@ def solar_panel(name: str, cx: float, cy: float, cz: float,
     """One solar_panel_3d_model.usdz panel referenced + stood upright
     (rotateY=90) and scaled. Op order applies scale, then rotateY, then
     translate (USD reads the list last-first), so the scale is in the asset's
-    native axes. The panel keeps the asset's own default materials."""
+    native axes. Keeps the asset's texture COLOUR but sharpens the finish in
+    place (low roughness + metallic) so the cells reflect strongly."""
     sx, sy, sz = scale
     return (
         f'def Xform "{name}" (\n'
@@ -255,6 +268,18 @@ def solar_panel(name: str, cx: float, cy: float, cz: float,
         f'    float xformOp:rotateY = {PANEL_RY}\n'
         f'    double3 xformOp:scale = ({sx:.4f}, {sy:.4f}, {sz:.4f})\n'
         f'    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]\n'
+        f'\n'
+        f'    over "_materials"\n'
+        f'    {{\n'
+        f'        over "{SOLAR_MAT}"\n'
+        f'        {{\n'
+        f'            over "Principled_BSDF"\n'
+        f'            {{\n'
+        f'                float inputs:roughness = {SOLAR_GLOSS_ROUGH}\n'
+        f'                float inputs:metallic = {SOLAR_GLOSS_METAL}\n'
+        f'            }}\n'
+        f'        }}\n'
+        f'    }}\n'
         f'}}'
     )
 
@@ -302,7 +327,9 @@ def radiator_panel(name: str, cx: float, cy: float, cz: float) -> str:
     the native long-X runs along world Z (the long axis), native wide-Y along
     world X (short edge), and the +Z normal → world -Y (⊥ solar +X). Scaled to
     a ~1:3 face with thickness held (native-Z ×1). Ops apply scale, rotateZ,
-    rotateX, then translate. Keeps the asset's own materials."""
+    rotateX, then translate. The mesh is rebound to the glossy RadiatorGlossy
+    so it reflects strongly (its asset roughness/metallic are texture-driven and
+    can't be tuned in place)."""
     sx = RAD_LONG / RAD_NATIVE[0]                 # native X → world Z (long)
     sy = (RAD_LONG / RAD_RATIO) / RAD_NATIVE[1]   # native Y → world X (short)
     return (
@@ -315,6 +342,14 @@ def radiator_panel(name: str, cx: float, cy: float, cz: float) -> str:
         f'    float xformOp:rotateZ = 90\n'
         f'    double3 xformOp:scale = ({sx:.4f}, {sy:.4f}, 1.0)\n'
         f'    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:rotateZ", "xformOp:scale"]\n'
+        f'\n'
+        f'    over "{RAD_NODE}"\n'
+        f'    {{\n'
+        f'        over "{RAD_MESH}"\n'
+        f'        {{\n'
+        f'            rel material:binding = </World/Looks/RadiatorGlossy>\n'
+        f'        }}\n'
+        f'    }}\n'
         f'}}'
     )
 

@@ -78,16 +78,15 @@ SUN_LIGHT_PATH = "/World/Environment/Key"
 SUN_BASE_RY_DEG = 270.0
 SUN_AZ_SWEEP_DEG = 45.0
 SUN_DRIVEN_LIGHTS = [
-    # Key sun — full dynamic range, near-dark in eclipse. Daytime max
-    # dropped 3200 → 2000 to stop the gold MLI body from blowing out at
-    # sun_factor=1 (was washing out surface detail).
-    ("/World/Environment/Key",         60.0,  2000.0),
-    # Sharp sun-side rim — tracks the sun. Trimmed in lockstep with Key.
-    ("/World/Environment/Rim",         80.0,   650.0),
-    # Earthshine bounce — always present (planet fills the dark side) but
-    # dimmer when the sat itself is in shadow; never goes fully black. Min
-    # nudged up so the shadow side keeps some readable detail at noon.
-    ("/World/Environment/EarthBounce", 320.0,  700.0),
+    # Key sun — stronger daylight (max 2000 → 2800) and a much higher eclipse
+    # floor (60 → 200) so the night side no longer goes near-black. The glossy
+    # solar/radiator panels now read the brighter key as bright specular glints.
+    ("/World/Environment/Key",         200.0, 2800.0),
+    # Sharp sun-side rim — tracks the sun; lifted in lockstep with Key.
+    ("/World/Environment/Rim",         130.0,  900.0),
+    # Earthshine bounce — always present (planet fills the dark side). Floor
+    # raised 320 → 600 so eclipse keeps clearly-readable detail.
+    ("/World/Environment/EarthBounce", 600.0,  950.0),
 ]
 
 USD_ROOT_ENV = "SPACE_DEMO_USD_ROOT"
