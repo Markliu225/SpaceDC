@@ -6,6 +6,7 @@ import { Earth } from './Earth'
 import { Atmosphere } from './Atmosphere'
 import { Stars } from './Stars'
 import { OrbitRibbons } from './OrbitRibbons'
+import { DawnDuskOrbit } from './DawnDuskOrbit'
 import { Satellites } from './Satellites'
 
 /**
@@ -40,6 +41,7 @@ export function FallbackEarth() {
         <Earth />
         <Atmosphere />
         <OrbitRibbons />
+        <DawnDuskOrbit />
         <Satellites />
       </Suspense>
       <OrbitControls

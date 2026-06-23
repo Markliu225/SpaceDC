@@ -173,6 +173,12 @@ _TLE_ISS = (
     "1 25544U 98067A   24235.50000000  .00012345  00000-0  22000-3 0  9990",
     "2 25544  51.6400 100.0000 0006000  90.0000 270.0000 15.50000000123456",
 )
+# Dawn-dusk Sun-synchronous (terminator) orbit: 98.2° inc, RAAN at the 6 am/pm
+# line, ~705 km (mean motion 14.57). A sat here never enters Earth's shadow.
+_TLE_DAWNDUSK = (
+    "1 39084U 13008A   24235.50000000  .00000100  00000-0  20000-3 0  9990",
+    "2 39084  98.2000   6.0000 0001200  90.0000 270.0000 14.57000000123456",
+)
 
 
 PRESETS: dict[str, ConstellationPreset] = {
@@ -230,6 +236,18 @@ PRESETS: dict[str, ConstellationPreset] = {
         online_rate=1.0, standby_rate=0.0,
         throughput_per_sat_mbps=120.0, duty_factor=0.5, isl_per_sat=0,
         gsl_total=2, coverage_pct=9.0,
+    ),
+    "dawn_dusk_sso": ConstellationPreset(
+        id="dawn_dusk_sso",
+        name="Dawn-Dusk Sun-Synchronous",
+        description="Terminator SSO — never eclipsed, Sun stays normal to the "
+                    "panels. 98.2° inc, ~705 km.",
+        base_tle_line1=_TLE_DAWNDUSK[0],
+        base_tle_line2=_TLE_DAWNDUSK[1],
+        planes=2, sats_per_plane=6, phasing=1,
+        online_rate=1.0, standby_rate=0.0,
+        throughput_per_sat_mbps=200.0, duty_factor=0.7, isl_per_sat=2,
+        gsl_total=8, coverage_pct=100.0,
     ),
 }
 

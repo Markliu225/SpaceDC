@@ -32,11 +32,13 @@ _DRIVEN_RANGES = {
 _LIT_EXPOSURE = 1.0 / 1600.0   # tonemap scale for the lit preview
 
 
-def gather_lights(stage, sun=None):
+def gather_lights(stage, sun=None, key_rot=None):
     """Scene lights for the lit preview: returns (ambient rgb, [(L_unit, rgb)]).
     DistantLight emits along local -Z; L = -emit is the to-light direction.
     DomeLight contributes uniform ambient. `sun` (0..1), if given, applies the
-    extension's lo+f*(hi-lo) ramp to the SUN_DRIVEN lights."""
+    extension's lo+f*(hi-lo) ramp to the SUN_DRIVEN lights. `key_rot` (rx,ry,rz
+    deg), if given, overrides the Key light's direction (e.g. the dawn-dusk
+    sun pinned normal to the panels)."""
     tc = Usd.TimeCode.Default()
     ambient = np.zeros(3)
     dirs = []
@@ -49,8 +51,14 @@ def gather_lights(stage, sun=None):
                 lo, hi = _DRIVEN_RANGES[nm]
                 inten = lo + max(0.0, min(1.0, sun)) * (hi - lo)
             col = lt.GetColorAttr().Get() or Gf.Vec3f(1, 1, 1)
-            xf = UsdGeom.Xformable(prim).ComputeLocalToWorldTransform(tc)
-            emit = np.array(xf.TransformDir(Gf.Vec3d(0, 0, -1)))
+            if key_rot is not None and nm == "Key":
+                R = (Gf.Matrix3d(Gf.Rotation(Gf.Vec3d(1, 0, 0), key_rot[0]))
+                     * Gf.Matrix3d(Gf.Rotation(Gf.Vec3d(0, 1, 0), key_rot[1]))
+                     * Gf.Matrix3d(Gf.Rotation(Gf.Vec3d(0, 0, 1), key_rot[2])))
+                emit = np.array(Gf.Vec3d(0, 0, -1) * R)
+            else:
+                xf = UsdGeom.Xformable(prim).ComputeLocalToWorldTransform(tc)
+                emit = np.array(xf.TransformDir(Gf.Vec3d(0, 0, -1)))
             n = np.linalg.norm(emit) or 1.0
             L = -emit / n
             dirs.append((L, np.array([col[0], col[1], col[2]]) * inten))
@@ -214,7 +222,8 @@ def render_persp(meshes, out, eye, target, focal=35.0, hap=20.955, vap=15.2908,
 
 
 def render(path, out, view="iso", size=1100, by_part=True, label=False, only=None,
-           eye=None, target=None, persp=False, focal=35.0, lit=False, sun=None):
+           eye=None, target=None, persp=False, focal=35.0, lit=False, sun=None,
+           key_rot=None):
     stage = Usd.Stage.Open(str(path))
     meshes = gather(stage)
     if only:
@@ -222,7 +231,7 @@ def render(path, out, view="iso", size=1100, by_part=True, label=False, only=Non
         meshes = [m for m in meshes if any(k in m[0] for k in keys)]
     if not meshes:
         print("no meshes"); return
-    lit_lights = gather_lights(stage, sun) if lit else None
+    lit_lights = gather_lights(stage, sun, key_rot=key_rot) if lit else None
     if persp and eye is not None and target is not None:
         render_persp(meshes, out, eye, target, focal=focal, size=size,
                      by_part=by_part, lit=lit_lights)
@@ -308,5 +317,7 @@ if __name__ == "__main__":
     focal = float(args[args.index("--focal") + 1]) if "--focal" in args else 35.0
     lit = "--lit" in args
     sun = float(args[args.index("--sun") + 1]) if "--sun" in args else None
+    key_rot = ([float(x) for x in args[args.index("--keyrot") + 1].split(",")]
+               if "--keyrot" in args else None)
     render(src, out, view=view, size=size, label=label, only=only, eye=eye,
-           target=target, persp=persp, focal=focal, lit=lit, sun=sun)
+           target=target, persp=persp, focal=focal, lit=lit, sun=sun, key_rot=key_rot)

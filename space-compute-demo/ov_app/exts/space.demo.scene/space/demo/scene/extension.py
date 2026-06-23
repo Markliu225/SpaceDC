@@ -929,21 +929,22 @@ def swap_stage(path: str, preset: str | None = None) -> bool:
         return False
 
 
-def apply_sun(sun_factor: float, sim_now_s: float | None = None) -> bool:
+def apply_sun(sun_factor: float, sim_now_s: float | None = None,
+              is_dawn_dusk: bool = False) -> bool:
     """Drive the satellite-stage Sun (DistantLight) from the backend's
     normalised solar incidence so the lighting tracks the orbit:
-      * intensity ramps SUN_INTENSITY_MIN .. SUN_INTENSITY_MAX with
-        sun_factor (0 in eclipse → near-dark, lit by earthshine only;
-        1 at solar noon → full brightness).
-      * the light's azimuth sweeps slowly with sim time so the highlight
-        visibly travels across the body rather than sitting static.
+      * intensity ramps lo..hi with sun_factor (0 eclipse → 1 solar noon).
+      * the azimuth sweeps slowly so the highlight travels across the body.
+    On the dawn-dusk (terminator) orbit the Sun is pinned full + normal to the
+    +X panel faces (elevation -90, az 270 → emits straight -X), so it always
+    directly hits the solar panels with no eclipse and no sweep.
     Returns True iff the light attributes were written."""
     if not _HAS_KIT:
         return False
     stage = omni.usd.get_context().get_stage()
     if stage is None:
         return False
-    f = max(0.0, min(1.0, sun_factor))
+    f = 1.0 if is_dawn_dusk else max(0.0, min(1.0, sun_factor))
     wrote = False
     for path, lo, hi in SUN_DRIVEN_LIGHTS:
         light = stage.GetPrimAtPath(path)
@@ -960,17 +961,18 @@ def apply_sun(sun_factor: float, sim_now_s: float | None = None) -> bool:
         color_attr = sun.GetAttribute("inputs:color")
         if color_attr.IsValid():
             color_attr.Set(Gf.Vec3f(1.0, 0.93 + 0.05 * f, 0.88 + 0.10 * f))
-        # Sweep azimuth so the highlight crawls across the body rather than
-        # sitting static — gentle (~one sweep per 2 min sim).
         rot_attr = sun.GetAttribute("xformOp:rotateXYZ")
-        if rot_attr.IsValid() and sim_now_s is not None:
-            # Oscillate the azimuth about the solar-facing base (instead of a
-            # full 360° crawl) so the wings stay lit; the highlight still
-            # travels gently (~one cycle per 2 min sim).
-            az = SUN_BASE_RY_DEG + SUN_AZ_SWEEP_DEG * math.sin(sim_now_s * 0.05)
-            cur = rot_attr.Get()
-            if cur is not None:
-                rot_attr.Set(Gf.Vec3f(float(cur[0]), float(cur[1]), float(az)))
+        if rot_attr.IsValid():
+            if is_dawn_dusk:
+                # Pin the Sun normal to the +X panel faces — always direct.
+                rot_attr.Set(Gf.Vec3f(-90.0, 0.0, SUN_BASE_RY_DEG))
+            elif sim_now_s is not None:
+                # Oscillate the azimuth about the solar-facing base so the
+                # highlight travels gently (~one cycle per 2 min sim).
+                az = SUN_BASE_RY_DEG + SUN_AZ_SWEEP_DEG * math.sin(sim_now_s * 0.05)
+                cur = rot_attr.Get()
+                if cur is not None:
+                    rot_attr.Set(Gf.Vec3f(float(cur[0]), float(cur[1]), float(az)))
     return wrote
 
 
@@ -1301,12 +1303,14 @@ if _HAS_KIT:
             # Orbit-tracking Sun. Only matters on the satellite stage; the
             # overview stage has no /World/Environment/Key so this no-ops.
             if self._current_stage == self._stages.get("satellite"):
-                sun_factor = float(state.get("satellite", {}).get("sun_factor", 1.0))
+                sat = state.get("satellite", {})
+                sun_factor = float(sat.get("sun_factor", 1.0))
+                is_dawn_dusk = bool(sat.get("is_dawn_dusk", False))
                 sim_now = (
                     self._anchor_sim_s + (time.monotonic() - self._anchor_wall_s)
                     if self._anchor_sim_s is not None else 0.0
                 )
-                apply_sun(sun_factor, sim_now)
+                apply_sun(sun_factor, sim_now, is_dawn_dusk)
 
             # Cache the mission snapshot + the wall time it arrived, so the
             # per-frame driver can interpolate phase_progress between polls.

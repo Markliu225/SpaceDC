@@ -515,6 +515,13 @@ class StateEngine:
         # Normalised incidence for the Kit Sun driver — 0 in eclipse, 1 at
         # solar noon. Same cos_a the solar-input model uses.
         self._sat.sun_factor = max(0.0, cos_a)
+        # Dawn-dusk SSO rides the terminator → never eclipsed, and the panels
+        # track the Sun, so it stays at full direct incidence at all times.
+        is_dawn_dusk = (self._constellation_id == "dawn_dusk_sso")
+        self._sat.is_dawn_dusk = is_dawn_dusk
+        if is_dawn_dusk:
+            self._sat.sunlit = True
+            self._sat.sun_factor = 1.0
 
         # --- Reconfigurable hardware lookups ----------------------------------
         cfg     = self._config
@@ -531,7 +538,8 @@ class StateEngine:
         radiator_area_m2 = _radiator_area_m2(geom)
 
         # --- Solar input (front of panel) -------------------------------------
-        incidence = max(0.0, cos_a) if self._sat.sunlit else 0.0
+        # Dawn-dusk: panels track the Sun → full direct incidence (1.0).
+        incidence = 1.0 if is_dawn_dusk else (max(0.0, cos_a) if self._sat.sunlit else 0.0)
         self._sat.solar_input_w = (
             s_mat["efficiency"] * panel_area_m2 * _SOLAR_CONSTANT_W_M2 * incidence
         )

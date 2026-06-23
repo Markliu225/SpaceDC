@@ -29,6 +29,9 @@ class SatelliteState(BaseModel):
     # and the sub-solar direction)). 0 in eclipse, 1 at solar noon. Drives
     # the satellite-stage Sun light in Kit so the lighting tracks the orbit.
     sun_factor: float = 1.0
+    # True on the dawn-dusk Sun-synchronous (terminator) orbit: never eclipsed,
+    # panels track the Sun, so the twin keeps the Sun normal to the panels.
+    is_dawn_dusk: bool = False
     solar_input_w: float = 0.0
     payload_power_w: float = 0.0
     platform_power_w: float = 0.0
