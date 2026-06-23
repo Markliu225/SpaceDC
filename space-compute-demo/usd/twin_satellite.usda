@@ -813,6 +813,342 @@ def Xform "World"
                         }
                     }
                 }
+                def Xform "Cluster2_00" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 2.2557, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster2_01" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 2.6636, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster2_10" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 2.2557, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster2_11" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 2.6636, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster3_00" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 3.0715, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster3_01" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 3.4794, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster3_10" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 3.0715, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster3_11" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 3.4794, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster4_00" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 3.8874, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster4_01" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 4.2953, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster4_10" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 3.8874, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster4_11" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 4.2953, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster5_00" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 4.7032, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster5_01" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 5.1111, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster5_10" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 4.7032, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster5_11" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 5.1111, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
             }
             def Xform "WingNegY"
             {
@@ -996,6 +1332,342 @@ def Xform "World"
                         }
                     }
                 }
+                def Xform "Cluster2_00" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -2.6636, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster2_01" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -2.2557, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster2_10" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -2.6636, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster2_11" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -2.2557, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster3_00" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -3.4794, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster3_01" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -3.0715, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster3_10" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -3.4794, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster3_11" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -3.0715, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster4_00" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -4.2953, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster4_01" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -3.8874, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster4_10" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -4.2953, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster4_11" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -3.8874, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster5_00" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -5.1111, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster5_01" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -4.7032, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster5_10" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -5.1111, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
+                def Xform "Cluster5_11" (
+                    prepend references = @./assets/solar_panel_3d_model.usdz@
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -4.7032, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+
+                    over "_materials"
+                    {
+                        over "tripo_mat_a4f32a50_bfaf_4ef6_a7aa_25f0c33672fc"
+                        {
+                            over "Principled_BSDF"
+                            {
+                                float inputs:roughness = 0.08
+                                float inputs:metallic = 0.6
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -1017,10 +1689,10 @@ def Xform "World"
                 prepend references = @./assets/radiation_panel_3d_model.usdz@
             )
             {
-                double3 xformOp:translate = (0.0260, 0.0000, 1.4350)
+                double3 xformOp:translate = (0.0260, 0.0000, 2.1600)
                 float xformOp:rotateX = 90
                 float xformOp:rotateZ = 90
-                double3 xformOp:scale = (1.5778, 0.9722, 1.0)
+                double3 xformOp:scale = (3.0537, 3.9203, 1.0)
                 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:rotateZ", "xformOp:scale"]
 
                 over "tripo_node_592ee2f8_9809_4148_9d8c_fd736a77b899"
@@ -1047,10 +1719,10 @@ def Xform "World"
                 prepend references = @./assets/radiation_panel_3d_model.usdz@
             )
             {
-                double3 xformOp:translate = (0.0260, 0.0000, -1.4350)
+                double3 xformOp:translate = (0.0260, 0.0000, -2.1600)
                 float xformOp:rotateX = 90
                 float xformOp:rotateZ = 90
-                double3 xformOp:scale = (1.5778, 0.9722, 1.0)
+                double3 xformOp:scale = (3.0537, 3.9203, 1.0)
                 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:rotateZ", "xformOp:scale"]
 
                 over "tripo_node_592ee2f8_9809_4148_9d8c_fd736a77b899"
@@ -1097,13 +1769,13 @@ def Xform "World"
         def Camera "Closeup"
         {
             float focalLength = 22.0
-            float focusDistance = 2188
+            float focusDistance = 5262
             float2 clippingRange = (1, 90000)
             matrix4d xformOp:transform = (
                     (0.76822, 0.64018, -0.00000, 0.00000),
                     (-0.30320, 0.36384, 0.88073, 0.00000),
                     (0.56383, -0.67660, 0.47362, 0.00000),
-                    (1233.60386, -1480.32463, 1036.22724, 1.00000)
+                    (2966.84520, -3560.21424, 2492.14997, 1.00000)
             )
             uniform token[] xformOpOrder = ["xformOp:transform"]
         }
