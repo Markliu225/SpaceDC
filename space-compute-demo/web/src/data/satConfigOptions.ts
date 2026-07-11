@@ -29,11 +29,13 @@ export interface GpuOption {
   tint: string
 }
 
+// pflops_per_card = peak dense FP8 tensor PFLOPS (datasheet, no sparsity) —
+// mirrors backend state_engine._GPU_TABLE / ai_workloads.GPU_SPECS.
 export const GPU_OPTIONS: GpuOption[] = [
-  { id: 'H100',   label: 'H100 SXM',        pflops_per_card: 0.98, tdp_w: 700,  cost_k: 30, tint: '#4A5568' },
-  { id: 'H200',   label: 'H200 SXM',        pflops_per_card: 1.50, tdp_w: 700,  cost_k: 40, tint: '#3B82F6' },
-  { id: 'B200',   label: 'Blackwell B200',  pflops_per_card: 2.50, tdp_w: 1000, cost_k: 45, tint: '#0F172A' },
-  { id: 'MI300X', label: 'AMD MI300X',      pflops_per_card: 1.30, tdp_w: 750,  cost_k: 28, tint: '#DC2626' },
+  { id: 'H100',   label: 'H100 SXM',        pflops_per_card: 1.98, tdp_w: 700,  cost_k: 30, tint: '#4A5568' },
+  { id: 'H200',   label: 'H200 SXM',        pflops_per_card: 1.98, tdp_w: 700,  cost_k: 40, tint: '#3B82F6' },
+  { id: 'B200',   label: 'Blackwell B200',  pflops_per_card: 4.50, tdp_w: 1000, cost_k: 45, tint: '#0F172A' },
+  { id: 'MI300X', label: 'AMD MI300X',      pflops_per_card: 2.62, tdp_w: 750,  cost_k: 28, tint: '#DC2626' },
 ]
 
 export const GPU_CARDS_PER_SAT = 8

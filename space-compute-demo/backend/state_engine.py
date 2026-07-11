@@ -74,11 +74,15 @@ def _ang_dist(lat_a: float, lon_a: float, lat_b: float, lon_b: float) -> float:
 # and web/src/data/satConfigOptions.ts so the backend physics, Web optimistic
 # UI, and USD VariantSet selections all agree on the same numbers.
 
+# pflops = peak dense FP8 tensor PFLOPS per card — the same datasheet column
+# ai_workloads.GPU_SPECS uses, so "Compute N PF" on the cards back-solves
+# consistently against the workload panel's effective-TFLOPS numbers.
+# (H200 shares the GH100 compute die with H100 — it differs in HBM, not PF.)
 _GPU_TABLE: dict[str, dict[str, float]] = {
-    "H100":   {"pflops": 0.98, "tdp_w": 700.0,  "cost_k": 30.0},
-    "H200":   {"pflops": 1.50, "tdp_w": 700.0,  "cost_k": 40.0},
-    "B200":   {"pflops": 2.50, "tdp_w": 1000.0, "cost_k": 45.0},
-    "MI300X": {"pflops": 1.30, "tdp_w": 750.0,  "cost_k": 28.0},
+    "H100":   {"pflops": 1.98, "tdp_w": 700.0,  "cost_k": 30.0},
+    "H200":   {"pflops": 1.98, "tdp_w": 700.0,  "cost_k": 40.0},
+    "B200":   {"pflops": 4.50, "tdp_w": 1000.0, "cost_k": 45.0},
+    "MI300X": {"pflops": 2.62, "tdp_w": 750.0,  "cost_k": 28.0},
 }
 _GPU_CARDS_PER_SAT = 8
 

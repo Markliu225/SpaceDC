@@ -258,7 +258,9 @@ function deriveSample(cfg: SatelliteConfig, simT: number) {
   const g  = gpuOption(cfg.gpu)
   const sm = solarMaterial(cfg.solar_material)
   const rm = radiatorMaterial(cfg.radiator_material)
-  const geom = useDemoStore.getState().lastState?.twin_geometry ?? GEOMETRY_DEFAULT
+  const last = useDemoStore.getState().lastState
+  const geom = last?.twin_geometry ?? GEOMETRY_DEFAULT
+  const cards = last?.satellite?.gpu_count ?? GPU_CARDS_PER_SAT
 
   // Orbit phase — ISS-ish period of 5400 s scaled 60× = 90 s demo period.
   const orbitPhase = (simT * 60) / 5400
@@ -268,7 +270,7 @@ function deriveSample(cfg: SatelliteConfig, simT: number) {
   const solar_w = sm.efficiency * solarAreaM2(geom) * SOLAR_CONSTANT_W_M2 * (sunlit ? 0.95 : 0)
 
   const gpu_util  = Math.max(0.05, sunlit ? 0.45 + 0.35 * Math.sin(simT / 12) : 0.2)
-  const payload_w = g.tdp_w * GPU_CARDS_PER_SAT * (0.15 + 0.85 * gpu_util)
+  const payload_w = g.tdp_w * cards * (0.15 + 0.85 * gpu_util)
 
   // Stefan-Boltzmann equilibrium at the current dissipation (the backend
   // integrates toward this with a ~30 s time constant; equilibrium is close

@@ -50,11 +50,14 @@ function structureSub(part: string): StructureSub {
 function matchSelection(path: string | null): Match | null {
   if (!path) return null
 
-  let m = /\/Servers\/Server_([A-Za-z]+)_(\d+)/.exec(path)
+  // Server groups: "Servers" (single truss) or "ServersU"/"ServersD" (the
+  // twin-truss tower's two segments); blades carry the matching U/D suffix.
+  let m = /\/Servers([UD])?\/Server_([A-Za-z]+)_(\d+)([UD])?/.exec(path)
   if (m) {
-    const rack = m[1]
-    const idx = Number(m[2])
-    const num = (RACK_ORDER[rack] ?? 0) * 3 + idx + 1
+    const seg  = m[1] ?? m[4]           // undefined on the single truss
+    const rack = m[2]
+    const idx  = Number(m[3])
+    const num  = (seg === 'D' ? 12 : 0) + (RACK_ORDER[rack] ?? 0) * 3 + idx + 1
     return { kind: 'server', subtitle: `Blade ${String(num).padStart(2, '0')} · live`, ref: String(num) }
   }
 
@@ -64,13 +67,15 @@ function matchSelection(path: string | null): Match | null {
   m = /\/RadiatorArray\/(?:Radiator|RadBoom)(Top|Bot)/.exec(path)
   if (m) return { kind: 'radiator', subtitle: `${m[1] === 'Top' ? '+Z' : '−Z'} panel · live`, ref: m[1] }
 
-  m = /\/Backbone\/.*tripo_part_(new_\d+|\d+)/.exec(path)
+  // Hull prims: "Backbone" / twin-truss "BackboneUp"/"BackboneDown" — the
+  // tripo part id classifies the module either way.
+  m = /\/Backbone(?:Up|Down)?\/.*tripo_part_(new_\d+|\d+)/.exec(path)
   if (m) {
     const sub = structureSub(m[1])
     return { kind: 'structure', subtitle: 'Platform · backbone', ref: sub }
   }
-  if (path.includes('/Backbone')) {
-    return { kind: 'structure', subtitle: 'Platform · backbone', ref: 'spine' }
+  if (path.includes('/Backbone') || path.includes('/Hull')) {
+    return { kind: 'structure', subtitle: 'Platform · hull', ref: 'spine' }
   }
   return null
 }

@@ -168,7 +168,8 @@ function computeCard(
   // actually simulating; falls back to the generic line offline.
   const hint =
     health !== 'nominal' ? 'Payload offline — power or thermal cut'
-    : wd && wd.model !== '-' ? `${wd.model} ${wd.precision} · ${wd.job_label}`
+    : wd && wd.model !== '-' ? [wd.model, wd.precision !== '-' ? wd.precision : '']
+        .filter(Boolean).join(' ') + ` · ${wd.job_label}`
     : wd ? wd.job_label
     : `${cfg.gpu} × ${cards} cards running inference`
   const throughput: CardMetric =

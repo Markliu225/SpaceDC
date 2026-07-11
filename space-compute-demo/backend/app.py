@@ -278,7 +278,7 @@ _preview_semaphore = asyncio.Semaphore(1)
 
 # Bump when the render pipeline itself changes (view, filters, lite mode…)
 # so cached PNGs from the old look regenerate.
-_PREVIEW_PIPELINE_V = 2
+_PREVIEW_PIPELINE_V = 3
 
 
 def _design_fingerprint(preset: design_presets.DesignPreset) -> str:

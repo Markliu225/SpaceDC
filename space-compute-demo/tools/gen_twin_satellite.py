@@ -220,14 +220,20 @@ DISH_REF    = "./assets/Satellite_v022.usdc"
 # Native bboxes (asset units — both were authored in mm):
 #   LUMID:          2129 × 746 × 1919, cross panels in the X/Z plane
 #   Satellite_v022:  106 × 168 × 168, dish axis along +X
+# Both assets' pivots sit far from their bbox centers, so the hull prim must
+# recenter (translate by −scale·center) or the radiator booms — placed
+# assuming a centered hull — float in free space (~40-50 cm gaps).
 LUMID_NATIVE_Z  = 1919.0
+LUMID_NATIVE_CENTER = (112.4, 170.2, 114.0)
 DISH_NATIVE_YZ  = 168.0
+DISH_NATIVE_CENTER  = (-13.6, -5.1, 1.3)
 # Hull scale targets, in backbone units (1 unit = BACKBONE_SCALE cm = 1.8 m):
 LUMID_TARGET_U  = 3.1          # ≈ 5.6 m tall smallsat
 DISH_TARGET_U   = 3.4          # ≈ 6.1 m across the windmill wings
-# Radiator boom mount Z (backbone units) per hull:
-LUMID_RAD_Z     = 1.60
-DISH_RAD_Z      = 1.80
+# Radiator boom mount Z (backbone units) per hull — boom roots seat slightly
+# inside the (recentered) hull envelope: LUMID half-height 1.55, dish 1.70.
+LUMID_RAD_Z     = 1.50
+DISH_RAD_Z      = 1.65
 
 # Closeup camera — a true 3/4 (from +X / -Y / above) so the solar wings (face
 # +X) AND the perpendicular radiators (face ±Y, top/bottom) are both readable.
@@ -927,19 +933,28 @@ def _backbone_prim(name: str = "Backbone", z_off: float = 0.0) -> str:
 
 
 def _hull_prim(ref: str, native_size: float, target_u: float,
+               native_center: tuple[float, float, float],
                rotate_z: float = 0.0) -> str:
     """A complete-satellite hull asset (LUMID / dish), uniformly scaled so its
-    largest native dimension spans `target_u` backbone units. These usdc
-    hulls carry their own Looks scopes, so no material overrides needed."""
+    largest native dimension spans `target_u` backbone units and RECENTERED
+    on the satellite origin (the assets' pivots sit far from their bbox
+    centers). Ops apply scale, then rotateZ, then translate; the translate is
+    −R(θ)·(s·center) so the bbox center lands exactly at the origin. These
+    usdc hulls carry their own Looks scopes, so no material overrides."""
     s = target_u / native_size
+    cx, cy, cz = (s * c for c in native_center)
+    if rotate_z == 180.0:
+        cx, cy = -cx, -cy
+    tx, ty, tz = -cx, -cy, -cz
     rot = f'    float xformOp:rotateZ = {rotate_z}\n' if rotate_z else ''
-    order = ('["xformOp:rotateZ", "xformOp:scale"]' if rotate_z
-             else '["xformOp:scale"]')
+    order = ('["xformOp:translate", "xformOp:rotateZ", "xformOp:scale"]' if rotate_z
+             else '["xformOp:translate", "xformOp:scale"]')
     return (
         f'def Xform "Hull" (\n'
         f'    prepend references = @{ref}@\n'
         f')\n'
         f'{{\n'
+        f'    double3 xformOp:translate = ({tx:.4f}, {ty:.4f}, {tz:.4f})\n'
         f'{rot}'
         f'    double3 xformOp:scale = ({s:.6f}, {s:.6f}, {s:.6f})\n'
         f'    uniform token[] xformOpOrder = {order}\n'
@@ -961,14 +976,16 @@ def _architecture_parts() -> list[str]:
         ]
     if ARCHITECTURE == "lumid":
         return [
-            _hull_prim(LUMID_REF, LUMID_NATIVE_Z, LUMID_TARGET_U),
+            _hull_prim(LUMID_REF, LUMID_NATIVE_Z, LUMID_TARGET_U,
+                       LUMID_NATIVE_CENTER),
             radiator_group(),
         ]
     if ARCHITECTURE == "dish":
         # rotateZ=180 turns the dish boresight to -X: the +X face belongs to
         # the sun-tracking cells, the dish looks back at Earth's horizon.
         return [
-            _hull_prim(DISH_REF, DISH_NATIVE_YZ, DISH_TARGET_U, rotate_z=180.0),
+            _hull_prim(DISH_REF, DISH_NATIVE_YZ, DISH_TARGET_U,
+                       DISH_NATIVE_CENTER, rotate_z=180.0),
             radiator_group(),
         ]
     # truss + blanket share the single-spine hull.
