@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useDemoStore } from '../store/demoStore'
 import { useTelemetryStore } from '../store/useTelemetryStore'
 import type { EventEntry } from '../store/useTelemetryStore'
 
@@ -85,10 +86,16 @@ export function useMockTelemetryFeed() {
         }
       })
 
+      // When the backend WS is live it owns the fleet KPIs (bridged from
+      // state_update by useBackendBridge) and the sim clock — the mock must
+      // not clobber either, or the real physics gets overwritten ≤1 s after
+      // every broadcast. Offline, the mock keeps everything moving.
+      const backendLive = useDemoStore.getState().connected
+
       // ---- Network KPIs derived from satellite states.
       const onlineCount = sats.filter((x) => x.status === 'online').length
       const agg = sats.reduce((sum, x) => sum + x.downlink_mbps, 0)
-      const network = {
+      const network = backendLive ? s.network : {
         ...s.network,
         online: onlineCount,
         coverage_pct: 84 + 4 * Math.sin(s.sim_time_s / 11),
@@ -102,7 +109,7 @@ export function useMockTelemetryFeed() {
       }))
 
       s.applyTick({
-        sim_time_s: s.sim_time_s + 1,
+        ...(backendLive ? {} : { sim_time_s: s.sim_time_s + 1 }),
         sats,
         network,
         downlink_history: [...s.downlink_history.slice(1), dlNext],

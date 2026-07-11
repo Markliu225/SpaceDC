@@ -149,6 +149,47 @@ export interface TwinGeometry {
   version: number;
 }
 
+/** Derived headline stats for one design preset — computed backend-side with
+ *  the same formulas the physics engine uses (GET /designs). */
+export interface DesignStats {
+  solar_area_m2: number;
+  radiator_area_m2: number;
+  peak_solar_w: number;
+  compute_pflops: number;
+  mass_kg: number;
+  gpu_tdp_w: number;
+  radiator_emissivity: number;
+  workload_avg_util: number;
+  workload_label: string;
+}
+
+/** One complete satellite design (backend design_presets.py): hardware
+ *  loadout + deployable geometry + workload profile + platform constants.
+ *  Applying it via POST /designs/{id}/apply swaps the 3D model (USD regen +
+ *  Kit layer reload) and the physics inputs together. */
+export interface DesignPresetInfo {
+  id: string;
+  name: string;
+  tagline: string;
+  description: string;
+  config: SatelliteConfig;
+  solar_clusters_per_side: number;
+  radiator_long: number;
+  radiator_ratio: number;
+  workload_profile: string;
+  battery_capacity_wh: number;
+  platform_power_w: number;
+  stats: DesignStats;
+  /** Backend-relative path of the software-rendered thumbnail. */
+  preview_url: string;
+}
+
+/** GET /designs response. `active` is "custom" after any manual edit. */
+export interface DesignsResponse {
+  active: string;
+  designs: DesignPresetInfo[];
+}
+
 /** 天数天算 mission phase. idle = not running; the rest advance in order. */
 export type MissionPhase =
   | 'idle' | 'acquire' | 'capture' | 'route' | 'compute' | 'downlink' | 'deliver';
@@ -192,6 +233,10 @@ export interface StatePacket {
   twin_geometry?: TwinGeometry;
   /** Optional until backend MissionEngine lands. */
   mission?: MissionState;
+  /** Active design preset id ("custom" after manual config/geometry edits). */
+  design_id?: string;
+  /** Workload profile id the GPU job schedule is running. */
+  workload_profile?: string;
 }
 
 export interface Parameters {

@@ -1,7 +1,7 @@
 import { Section, Row } from './PopupPrimitives'
 import { useDemoStore } from '../../../store/demoStore'
 import { useTelemetryStore } from '../../../store/useTelemetryStore'
-import { deriveStats } from '../../../data/satConfigOptions'
+import { deriveStats, GEOMETRY_DEFAULT } from '../../../data/satConfigOptions'
 
 /**
  * Sub-panel for the SpaceDcBackbone structural parts (spine, thrusters, the
@@ -22,7 +22,8 @@ const ROLE: Record<StructureSub, { heading: string; rows: Array<[string, string,
 
 export function StructurePanel({ sub }: { sub: StructureSub }) {
   const cfg   = useTelemetryStore((s) => s.satConfig)
-  const stats = deriveStats(cfg)
+  const geom  = useDemoStore((s) => s.lastState?.twin_geometry) ?? GEOMETRY_DEFAULT
+  const stats = deriveStats(cfg, geom)
   const sat   = useDemoStore((s) => s.lastState?.satellite)
   const info  = ROLE[sub]
 

@@ -1,7 +1,7 @@
 import { useDemoStore } from '../../store/demoStore'
 import { useTelemetryStore } from '../../store/useTelemetryStore'
 import {
-  gpuOption, GPU_CARDS_PER_SAT, deriveStats,
+  gpuOption, GPU_CARDS_PER_SAT, deriveStats, GEOMETRY_DEFAULT,
 } from '../../data/satConfigOptions'
 
 /**
@@ -59,10 +59,11 @@ function batteryTone(minutes: number): Tone {
 }
 
 export function DesignSummary() {
-  const sat = useDemoStore((s) => s.lastState?.satellite)
+  const sat  = useDemoStore((s) => s.lastState?.satellite)
+  const geom = useDemoStore((s) => s.lastState?.twin_geometry) ?? GEOMETRY_DEFAULT
   const cfg = useTelemetryStore((s) => s.satConfig)
   const gpu = gpuOption(cfg.gpu)
-  const stats = deriveStats(cfg)
+  const stats = deriveStats(cfg, geom)
 
   // Power balance (W) — supply minus demand on average.
   const solarSupply = sat?.solar_supply_avg_w ?? 0
@@ -74,10 +75,13 @@ export function DesignSummary() {
   const thermDemand = sat?.thermal_peak_demand_w ?? 0
   const thermMargin = thermMax - thermDemand
 
-  // Eclipse autonomy (min) — battery Wh ÷ peak payload draw.
+  // Eclipse autonomy (min) — battery Wh ÷ the LIVE total draw (payload +
+  // platform from the physics engine); the static TDP peak is only the
+  // offline fallback. Designs with throttled workloads or non-600 W
+  // platforms now show their real autonomy.
   const cap_wh   = sat?.battery_capacity_wh ?? 1500
-  // Peak payload: TDP × 8 + 600 W platform (real-world peak under workload=1).
-  const peakLoad = gpu.tdp_w * GPU_CARDS_PER_SAT + 600
+  const liveLoad = (sat?.payload_power_w ?? 0) + (sat?.platform_power_w ?? 0)
+  const peakLoad = liveLoad > 1 ? liveLoad : gpu.tdp_w * GPU_CARDS_PER_SAT + 600
   const autonomy_min = (cap_wh / Math.max(1, peakLoad)) * 60
   // Scale by the actual SOC so we're showing the remaining runtime, not the
   // theoretical maximum from a full pack.

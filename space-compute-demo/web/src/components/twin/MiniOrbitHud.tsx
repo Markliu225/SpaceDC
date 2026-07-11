@@ -6,6 +6,7 @@ import {
   ShaderMaterial, TubeGeometry, Vector3,
 } from 'three'
 import { useFleetPositions } from '../../hooks/useFleetPositions'
+import { useDemoStore } from '../../store/demoStore'
 import { useTelemetryStore } from '../../store/useTelemetryStore'
 import type { ConstellationDetail } from '../../types/messages'
 
@@ -247,8 +248,20 @@ export function MiniOrbitHud() {
   const selected  = useTelemetryStore((s) => s.selectedSatIdx)
   const detail    = useTelemetryStore((s) => s.constellationDetail)
   const simTime   = useTelemetryStore((s) => s.sim_time_s)
-  const sat       = fleet[selected]
   const timeScale = detail?.time_scale ?? 60
+  // The physics engine tracks fleet[0]; when it is the selected sat and the
+  // backend is live, the badge + LAT/LON/ALT read the engine's authoritative
+  // values so the HUD can never contradict the telemetry panels (the local
+  // propagation only positions the 3D dot).
+  const backendSat = useDemoStore((s) => s.lastState?.satellite)
+  const local = fleet[selected]
+  const sat = (selected === 0 && backendSat && local)
+    ? { ...local,
+        sunlit: backendSat.sunlit,
+        lat: backendSat.lat,
+        lon: backendSat.lon,
+        altitudeKm: backendSat.altitude_km }
+    : local
 
   const sunDir = useMemo(
     () => new Vector3(...eciToDisplay(SUN_DIR_ECI)).normalize(),

@@ -4,12 +4,12 @@ import { useDemoStore } from '../store/demoStore'
 import type { SatelliteConfig, SatelliteState } from '../types/messages'
 import {
   GPU_CARDS_PER_SAT,
-  RADIATOR_PANELS_PER_SAT,
+  GEOMETRY_DEFAULT,
   gpuOption,
   radiatorMaterial,
-  radiatorSize,
+  radiatorEmitAreaM2,
+  solarAreaM2,
   solarMaterial,
-  solarSize,
 } from '../data/satConfigOptions'
 
 const HISTORY_LEN = 120
@@ -86,11 +86,15 @@ export function useTwinTelemetry(): TwinTelemetrySnapshot {
     const sat = useDemoStore.getState().lastState?.satellite
     const seedCfg  = useTelemetryStore.getState().satConfig
     const seedSimT = useTelemetryStore.getState().sim_time_s
-    // Prefill the buffer with a backward-time synthetic history so the
-    // chart shows the orbit-driven solar + sinusoidal payload pattern
-    // from the first render rather than 120 s of an identical seed value.
-    // Newest sample at the tail; oldest at the head.
-    const seedNow = sat ? backendSample(sat) : deriveSample(seedCfg, seedSimT)
+    // Backend connected → seed the whole window flat at the CURRENT backend
+    // values: honest "no history yet", and real samples scroll in from the
+    // right within seconds. Only the offline fallback pre-fills a synthetic
+    // orbit pattern (there is nothing real to show in that mode anyway).
+    if (sat) {
+      const seedNow = backendSample(sat)
+      return { current: seedNow, series: flatSeries(seedNow), scars: [] }
+    }
+    const seedNow = deriveSample(seedCfg, seedSimT)
     const series = backfillSeries(seedCfg, seedSimT, seedNow)
     return { current: seedNow, series, scars: [] }
   })
@@ -164,6 +168,18 @@ function backendSample(sat: SatelliteState): TwinTelemetrySnapshot['current'] {
   }
 }
 
+/** Whole-window flat prefill at one sample — the honest "connected but no
+ *  history yet" seed. */
+function flatSeries(s: TwinTelemetrySnapshot['current']): TwinSeries {
+  return {
+    solar_w:     new Array<number>(HISTORY_LEN).fill(s.solar_w),
+    payload_w:   new Array<number>(HISTORY_LEN).fill(s.payload_w),
+    battery_soc: new Array<number>(HISTORY_LEN).fill(s.battery_soc),
+    temp_c:      new Array<number>(HISTORY_LEN).fill(s.temp_c),
+    gpu_util:    new Array<number>(HISTORY_LEN).fill(s.gpu_util),
+  }
+}
+
 /** Synthesise a backward-time history (oldest first, newest at tail) so the
  *  chart shows orbit-driven solar + sinusoidal load motion right away
  *  instead of a flat line that takes 120 s of real time to populate.
@@ -233,33 +249,40 @@ function advance(
 
 const SOLAR_CONSTANT_W_M2 = 1361
 
-/** One-tick derivation — mirrors backend's _update_placeholder_physics. */
+/** One-tick derivation for the OFFLINE fallback — mirrors the backend's
+ *  current physics: geometry-driven areas (twin_geometry, not the size
+ *  tables), sun-tracking arrays (0.95 incidence while sunlit), the 15 % TDP
+ *  idle floor, and a Stefan-Boltzmann equilibrium temperature. Approximate
+ *  by design — it only ever renders when no backend is pushing. */
 function deriveSample(cfg: SatelliteConfig, simT: number) {
   const g  = gpuOption(cfg.gpu)
   const sm = solarMaterial(cfg.solar_material)
-  const ss = solarSize(cfg.solar_size)
   const rm = radiatorMaterial(cfg.radiator_material)
-  const rs = radiatorSize(cfg.radiator_size)
+  const geom = useDemoStore.getState().lastState?.twin_geometry ?? GEOMETRY_DEFAULT
 
   // Orbit phase — ISS-ish period of 5400 s scaled 60× = 90 s demo period.
   const orbitPhase = (simT * 60) / 5400
-  const sunlit     = Math.sin(orbitPhase * Math.PI * 2) > -0.2
-  const cosA       = Math.max(0, Math.sin(orbitPhase * Math.PI * 2 + 0.2))
+  const sunlit     = Math.sin(orbitPhase * Math.PI * 2) > -0.05
 
-  const solar_w =
-    sm.efficiency * ss.area_m2_per_panel * ss.panel_count * SOLAR_CONSTANT_W_M2 * cosA * (sunlit ? 1 : 0)
+  // Sun-tracking wings: near-normal incidence whenever sunlit.
+  const solar_w = sm.efficiency * solarAreaM2(geom) * SOLAR_CONSTANT_W_M2 * (sunlit ? 0.95 : 0)
 
-  const gpu_util  = sunlit ? 0.45 + 0.35 * Math.sin(simT / 12) : 0
-  const payload_w = g.tdp_w * GPU_CARDS_PER_SAT * gpu_util
+  const gpu_util  = Math.max(0.05, sunlit ? 0.45 + 0.35 * Math.sin(simT / 12) : 0.2)
+  const payload_w = g.tdp_w * GPU_CARDS_PER_SAT * (0.15 + 0.85 * gpu_util)
 
-  // Linear thermal proxy from the implementation doc.
-  const radiator_capacity = rm.emissivity * RADIATOR_PANELS_PER_SAT * rs.area_m2_per_panel
-  const temp_c = 28 + (50 * gpu_util) / Math.max(0.05, radiator_capacity)
+  // Stefan-Boltzmann equilibrium at the current dissipation (the backend
+  // integrates toward this with a ~30 s time constant; equilibrium is close
+  // enough for a fallback trace).
+  const platform_w = 600
+  const SIGMA = 5.67e-8
+  const T_BG4 = 250 ** 4
+  const q_in = (payload_w + platform_w) * 0.95
+  const emitArea = Math.max(0.1, rm.emissivity * radiatorEmitAreaM2(geom))
+  const temp_c = Math.max(-80, Math.min(95,
+    Math.pow(q_in / (SIGMA * emitArea) + T_BG4, 0.25) - 273.15))
 
   // Battery — slow drift. Net power positive when solar > payload + platform.
-  const platform_w = 600
   const net_w = solar_w - payload_w - platform_w
-  // 1Hz tick × tiny normalization keeps SOC inside [0, 1] for the demo timescale.
   const drift = Math.max(-0.005, Math.min(0.005, net_w / 80000))
   // Use a tiny pseudo-state via sim time so we don't need to thread through prev state.
   const battery_soc = Math.max(

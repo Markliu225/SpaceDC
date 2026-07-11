@@ -1,9 +1,10 @@
 import { Cpu, RadioTower, Snowflake, Zap, type LucideIcon } from 'lucide-react'
 import { Card, Dot, Num } from '../primitives'
 import { colors } from '../../design/tokens'
+import { useDemoStore } from '../../store/demoStore'
 import { useSatConfig } from '../../hooks/useSatConfig'
 import { useTwinTelemetry, type TwinTelemetrySnapshot } from '../../hooks/useTwinTelemetry'
-import type { SatelliteConfig } from '../../types/messages'
+import type { SatelliteConfig, SatelliteState } from '../../types/messages'
 
 type Health = 'nominal' | 'warn' | 'fault'
 
@@ -43,12 +44,16 @@ interface SubCard {
 export function SubsystemHealthRow() {
   const { cfg } = useSatConfig()
   const tel = useTwinTelemetry().current
+  // Authoritative physics fields not carried by the telemetry ring buffer
+  // (battery net power, platform power, real downlink). Null when offline —
+  // each card falls back to its local approximation then.
+  const sat = useDemoStore((s) => s.lastState?.satellite)
 
   const cards: SubCard[] = [
-    powerCard(cfg, tel),
+    powerCard(cfg, tel, sat),
     thermalCard(cfg, tel),
     computeCard(cfg, tel),
-    commsCard(cfg, tel),
+    commsCard(cfg, tel, sat),
   ]
 
   return (
@@ -96,12 +101,29 @@ function SubsystemCard({ card }: { card: SubCard }) {
   )
 }
 
-function powerCard(_cfg: SatelliteConfig, tel: TwinTelemetrySnapshot['current']): SubCard {
-  const platform = 600
-  const margin = tel.solar_w - tel.payload_w - platform
-  const health: Health = margin >= 0 ? 'nominal' : margin > -300 ? 'warn' : 'fault'
+function powerCard(
+  _cfg: SatelliteConfig,
+  tel: TwinTelemetrySnapshot['current'],
+  sat: SatelliteState | undefined,
+): SubCard {
+  // Margin = the engine's own battery net power (solar − payload − platform);
+  // the local reconstruction (with its hard-coded 600 W platform) is only
+  // the offline fallback.
+  const margin = sat?.battery_charge_w
+    ?? (tel.solar_w - tel.payload_w - 600)
+  // In eclipse every design draws from the battery by construction — that is
+  // nominal night operation, not a fault, as long as the pack holds charge.
+  const inEclipse = !(sat?.sunlit ?? tel.sunlit)
+  const soc = sat?.battery_soc ?? tel.battery_soc
+  const health: Health =
+    margin >= 0 ? 'nominal'
+    : inEclipse ? (soc > 0.25 ? 'nominal' : soc > 0.15 ? 'warn' : 'fault')
+    : margin > -300 ? 'warn' : 'fault'
   const hint =
-    health === 'nominal' ? 'Surplus power — battery charging' :
+    margin >= 0          ? 'Surplus power — battery charging' :
+    inEclipse            ? (health === 'nominal'
+                              ? 'Eclipse — riding the battery as designed'
+                              : 'Eclipse deficit — battery running low') :
     health === 'warn'    ? 'Insufficient solar — drawing from battery' :
                            'Significant deficit — SOC will drop'
   return {
@@ -150,9 +172,14 @@ function computeCard(cfg: SatelliteConfig, tel: TwinTelemetrySnapshot['current']
   }
 }
 
-function commsCard(_cfg: SatelliteConfig, tel: TwinTelemetrySnapshot['current']): SubCard {
-  // Demo placeholder — comms not yet parameterised.
-  const downlink_mbps = tel.payload_w > 100 ? 120 : 0
+function commsCard(
+  _cfg: SatelliteConfig,
+  tel: TwinTelemetrySnapshot['current'],
+  sat: SatelliteState | undefined,
+): SubCard {
+  // Real backend downlink (ground-station visibility windows); the payload
+  // heuristic is only the offline fallback.
+  const downlink_mbps = sat?.downlink_mbps ?? (tel.payload_w > 100 ? 120 : 0)
   const health: Health = downlink_mbps > 0 ? 'nominal' : 'warn'
   return {
     title: 'Comms',

@@ -50,14 +50,25 @@ export function useBackendBridge() {
   }, [setPresets, setActive])
 
   // Bridge demoStore.lastState.constellation -> telemetryStore.fleet,
-  // and lastState.satellite_config -> telemetryStore.satConfig.
+  // lastState.satellite_config -> telemetryStore.satConfig, and re-base the
+  // local sim clock onto the backend's sim_time_s so every consumer of the
+  // shared clock (MiniOrbitHud orbit dot, fleet propagation, chart time
+  // labels) runs in the SAME time frame as the physics engine instead of a
+  // free-running local counter.
   useEffect(() => {
     return useDemoStore.subscribe((s, prev) => {
       if (s.lastState === prev.lastState) return
-      type Echo = { constellation?: FleetSnapshot; satellite_config?: SatelliteConfig }
+      type Echo = {
+        constellation?: FleetSnapshot
+        satellite_config?: SatelliteConfig
+        sim_time_s?: number
+      }
       const last = s.lastState as Echo | null
       if (last?.constellation)     applyFleet(last.constellation)
       if (last?.satellite_config)  setSatConfig(last.satellite_config)
+      if (typeof last?.sim_time_s === 'number') {
+        useTelemetryStore.getState().applyTick({ sim_time_s: last.sim_time_s })
+      }
     })
   }, [applyFleet, setSatConfig])
 

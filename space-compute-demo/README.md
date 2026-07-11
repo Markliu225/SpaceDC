@@ -41,6 +41,7 @@ Geometry is parameterised at runtime via `usd/twin_params.json` (written by the 
 2. **Component-level interaction** — clicking a server, solar wing, radiator, or backbone part opens its info card (matched from the selected prim path).
 3. **Deployables editing** — the *Deployables* controls add/remove solar clusters (sides only) and resize / reshape the radiators; each change regenerates the USD model and reloads it in Kit.
 4. **Real-time physics** — solar illumination · panel area × efficiency · GPU workload · device power · radiator area × emissivity all feed a live power / thermal balance shown in the status cards and component panels. Editing the geometry changes the numbers immediately. See **[docs/physics.md](docs/physics.md)** for the full model.
+5. **Design library** — the *Designs* chip on the Twin page opens a gallery of complete satellite designs (`backend/design_presets.py`), each with a software-rendered thumbnail (`GET /designs/{id}/preview.png`, cached) and derived stats. Applying one (`POST /designs/{id}/apply`) switches the hardware loadout, deployable geometry (USD regen + Kit layer reload), GPU workload profile and platform constants together; hand-editing any knob afterwards degrades the active design to `custom`.
 
 ## Getting started
 
@@ -65,7 +66,7 @@ npm run dev            # http://localhost:5173
 
 | Script | Purpose |
 |--------|---------|
-| `tools/gen_twin_satellite.py` | Generate the satellite USD (reads `usd/twin_params.json`) |
+| `tools/gen_twin_satellite.py` | Generate the satellite USD (reads `usd/twin_params.json`; `--params p.json --out stage.usda` for the design-preview stages, with `use_dgx` / `preview_lite` keys) |
 | `tools/render_usd.py` | GL-free software renderer — preview any USD/USDZ without Kit |
 | `tools/inspect_backbone.py`, `tools/analyze_slots.py` | Geometry / slot surveys for the backbone |
 

@@ -181,6 +181,23 @@ SOLAR_MATERIALS = {
                        "roughness": 0.06, "emissive": (0.0, 0.0, 0.0)},
 }
 
+# Dark photovoltaic blue for the PREVIEW_LITE box panels (the scanned solar
+# usdz is ~1.9 M tris per tile — far too heavy for thumbnails). Kept OUT of
+# SOLAR_MATERIALS: looks_scope() emits it only in lite mode, so the live
+# no-arg output stays byte-identical to the historical generator.
+LITE_MATERIALS = {
+    "SolarCellLite": {"diffuse": (0.050, 0.095, 0.280), "metallic": 0.40,
+                      "roughness": 0.30, "emissive": (0.004, 0.008, 0.024)},
+}
+
+# PREVIEW_LITE (twin_params.json key "preview_lite") swaps the two scanned
+# multi-million-triangle deployable assets (solar tile / radiator panel) for
+# same-footprint box meshes so tools/render_usd.py can rasterize a design
+# thumbnail in seconds instead of minutes. The backbone reference stays — it
+# is what makes the thumbnail recognizably *this* satellite. Never used for
+# the live usd/twin_satellite.usda.
+PREVIEW_LITE = False
+
 # Closeup camera — a true 3/4 (from +X / -Y / above) so the solar wings (face
 # +X) AND the perpendicular radiators (face ±Y, top/bottom) are both readable.
 # Pulled far back to hold the full ~7.5 m span × ~5.5 m height.
@@ -401,6 +418,8 @@ def looks_scope() -> str:
     blocks = [material_block(k, v) for k, v in SERVER_MATERIALS.items()]
     blocks.append(server_front_material())
     blocks += [material_block(k, v) for k, v in SOLAR_MATERIALS.items()]
+    if PREVIEW_LITE:
+        blocks += [material_block(k, v) for k, v in LITE_MATERIALS.items()]
     blocks.append(earth_material())
     blocks.append(sun_material())
     return f"""def Scope "Looks"
@@ -554,35 +573,80 @@ def servers_group() -> str:
     return f'def Xform "Servers"\n{{\n{indent(body, "    ")}\n}}'
 
 
+def deployable_prototypes() -> str:
+    """Shared prototypes for the instanced deployables (full-asset mode only).
+
+    Every solar tile / radiator panel used to carry its own reference to the
+    ~1.9 M-triangle scanned usdz — 40-64 independent composition arcs that Kit
+    had to load one by one (the main cause of slow satellite-stage loads).
+    Instead we author ONE `class` prototype per asset (abstract → never
+    rendered/traversed itself) holding the asset reference + shared material
+    overrides, and each placement is an `instanceable` internal reference.
+    Kit then composes each usdz once and instances it on the GPU.
+
+    Transforms stay on each instance root: local opinions there
+    (xformOpOrder) would mask any prototype-side ops, so authoring them in
+    one place — the instance — is the only non-brittle split."""
+    return (
+        f'class Xform "_Protos"\n'
+        f'{{\n'
+        f'    def Xform "SolarTile" (\n'
+        f'        prepend references = @{SOLAR_REF}@\n'
+        f'    )\n'
+        f'    {{\n'
+        f'        over "_materials"\n'
+        f'        {{\n'
+        f'            over "{SOLAR_MAT}"\n'
+        f'            {{\n'
+        f'                over "Principled_BSDF"\n'
+        f'                {{\n'
+        f'                    float inputs:roughness = {SOLAR_GLOSS_ROUGH}\n'
+        f'                    float inputs:metallic = {SOLAR_GLOSS_METAL}\n'
+        f'                }}\n'
+        f'            }}\n'
+        f'        }}\n'
+        f'    }}\n'
+        f'\n'
+        f'    def Xform "RadiatorPanel" (\n'
+        f'        prepend references = @{RAD_REF}@\n'
+        f'    )\n'
+        f'    {{\n'
+        f'        over "{RAD_NODE}"\n'
+        f'        {{\n'
+        f'            over "{RAD_MESH}"\n'
+        f'            {{\n'
+        f'                rel material:binding = </World/Looks/RadiatorGlossy>\n'
+        f'            }}\n'
+        f'        }}\n'
+        f'    }}\n'
+        f'}}'
+    )
+
+
 def solar_panel(name: str, cx: float, cy: float, cz: float,
                 scale: tuple[float, float, float]) -> str:
-    """One solar_panel_3d_model.usdz panel referenced + stood upright
-    (rotateY=90) and scaled. Op order applies scale, then rotateY, then
-    translate (USD reads the list last-first), so the scale is in the asset's
-    native axes. Keeps the asset's texture COLOUR but sharpens the finish in
-    place (low roughness + metallic) so the cells reflect strongly."""
+    """One solar tile. Full-asset mode: an instanceable internal reference to
+    the shared /World/Satellite/_Protos/SolarTile prototype (rotate/scale/
+    material live there) carrying only this tile's translate. Lite mode: a
+    12-tri box with the same world footprint for the software previews."""
     sx, sy, sz = scale
+    if PREVIEW_LITE:
+        # Same world-space footprint as the rotated+scaled asset (native X →
+        # world Z height, native Y → world Y deploy, native Z → world X
+        # thickness), as a 12-tri box instead of a 1.9 M-tri scan.
+        return box_mesh(name, cx, cy, cz,
+                        SOLAR_NATIVE[2] * sz, SOLAR_NATIVE[1] * sy,
+                        SOLAR_NATIVE[0] * sx, "SolarCellLite")
     return (
         f'def Xform "{name}" (\n'
-        f'    prepend references = @{SOLAR_REF}@\n'
+        f'    instanceable = true\n'
+        f'    prepend references = </World/Satellite/_Protos/SolarTile>\n'
         f')\n'
         f'{{\n'
         f'    double3 xformOp:translate = ({cx:.4f}, {cy:.4f}, {cz:.4f})\n'
         f'    float xformOp:rotateY = {PANEL_RY}\n'
         f'    double3 xformOp:scale = ({sx:.4f}, {sy:.4f}, {sz:.4f})\n'
         f'    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]\n'
-        f'\n'
-        f'    over "_materials"\n'
-        f'    {{\n'
-        f'        over "{SOLAR_MAT}"\n'
-        f'        {{\n'
-        f'            over "Principled_BSDF"\n'
-        f'            {{\n'
-        f'                float inputs:roughness = {SOLAR_GLOSS_ROUGH}\n'
-        f'                float inputs:metallic = {SOLAR_GLOSS_METAL}\n'
-        f'            }}\n'
-        f'        }}\n'
-        f'    }}\n'
         f'}}'
     )
 
@@ -645,11 +709,17 @@ def radiator_panel(name: str, cx: float, cy: float, cz: float) -> str:
     rotateX, then translate. The mesh is rebound to the glossy RadiatorGlossy
     so it reflects strongly (its asset roughness/metallic are texture-driven and
     can't be tuned in place)."""
+    short_x = RAD_LONG / RAD_RATIO                # world X extent (short edge)
+    if PREVIEW_LITE:
+        # Long axis up world Z, short edge along X, native thickness along Y.
+        return box_mesh(name, cx, cy, cz,
+                        short_x, RAD_NATIVE[2], RAD_LONG, "RadiatorGlossy")
     sx = RAD_LONG / RAD_NATIVE[0]                 # native X → world Z (long)
-    sy = (RAD_LONG / RAD_RATIO) / RAD_NATIVE[1]   # native Y → world X (short)
+    sy = short_x / RAD_NATIVE[1]                  # native Y → world X (short)
     return (
         f'def Xform "{name}" (\n'
-        f'    prepend references = @{RAD_REF}@\n'
+        f'    instanceable = true\n'
+        f'    prepend references = </World/Satellite/_Protos/RadiatorPanel>\n'
         f')\n'
         f'{{\n'
         f'    double3 xformOp:translate = ({cx:.4f}, {cy:.4f}, {cz:.4f})\n'
@@ -657,14 +727,6 @@ def radiator_panel(name: str, cx: float, cy: float, cz: float) -> str:
         f'    float xformOp:rotateZ = 90\n'
         f'    double3 xformOp:scale = ({sx:.4f}, {sy:.4f}, 1.0)\n'
         f'    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:rotateZ", "xformOp:scale"]\n'
-        f'\n'
-        f'    over "{RAD_NODE}"\n'
-        f'    {{\n'
-        f'        over "{RAD_MESH}"\n'
-        f'        {{\n'
-        f'            rel material:binding = </World/Looks/RadiatorGlossy>\n'
-        f'        }}\n'
-        f'    }}\n'
         f'}}'
     )
 
@@ -770,7 +832,12 @@ def satellite_prim() -> str:
         f'{indent(backbone_override(), "    ")}\n'
         f'}}'
     )
-    inner = "\n\n".join([backbone, servers_group(), solar_group(), radiator_group()])
+    parts = [backbone, servers_group(), solar_group(), radiator_group()]
+    if not PREVIEW_LITE:
+        # Shared instancing prototypes for the heavy scanned deployables —
+        # must sit under /World/Satellite so instances inherit the ×180 frame.
+        parts.insert(0, deployable_prototypes())
+    inner = "\n\n".join(parts)
     return f"""def Xform "Satellite"
 {{
     double3 xformOp:scale = ({BACKBONE_SCALE}, {BACKBONE_SCALE}, {BACKBONE_SCALE})
@@ -854,31 +921,65 @@ def build_usda() -> str:
     return "\n".join(parts)
 
 
-def _load_params() -> dict:
+def _load_params(params_path: Path | None = None) -> dict:
     """Optional runtime geometry overrides written by the backend
-    (usd/twin_params.json): solar_clusters_per_side, radiator_long,
-    radiator_ratio. Absent file → built-in defaults."""
+    (usd/twin_params.json, or an explicit --params file): keys
+    solar_clusters_per_side, radiator_long, radiator_ratio, use_dgx.
+    Absent file → built-in defaults."""
     import json
-    pf = ROOT / "usd" / "twin_params.json"
+    pf = params_path if params_path is not None else ROOT / "usd" / "twin_params.json"
     if pf.exists():
         try:
             return json.loads(pf.read_text(encoding="utf-8"))
         except Exception as e:  # noqa: BLE001 — never let a bad file break gen
-            print(f"[gen] WARN ignoring bad twin_params.json: {e}")
+            print(f"[gen] WARN ignoring bad {pf.name}: {e}")
     return {}
 
 
-def main() -> None:
-    global N_PANELS, RAD_LONG, RAD_RATIO
-    p = _load_params()
+def _parse_cli(argv: list[str]) -> tuple[Path | None, Path]:
+    """--params <json> reads geometry from an alternate file (the live
+    twin_params.json stays untouched); --out <usda> writes the stage
+    somewhere other than usd/twin_satellite.usda. Both optional — the
+    no-arg invocation is byte-identical to the historical behaviour.
+    The backend uses the pair to build per-design preview stages."""
+    params_path: Path | None = None
+    out_path = OUT
+    i = 0
+    while i < len(argv):
+        if argv[i] == "--params" and i + 1 < len(argv):
+            params_path = Path(argv[i + 1]); i += 2
+        elif argv[i] == "--out" and i + 1 < len(argv):
+            out_path = Path(argv[i + 1]); i += 2
+        else:
+            raise SystemExit(f"[gen] unknown arg {argv[i]!r} "
+                             "(usage: gen_twin_satellite.py [--params p.json] [--out stage.usda])")
+    return params_path, out_path
+
+
+def main(argv: list[str] | None = None) -> None:
+    global N_PANELS, RAD_LONG, RAD_RATIO, USE_DGX, PREVIEW_LITE
+    import sys
+    params_path, out_path = _parse_cli(sys.argv[1:] if argv is None else argv)
+    p = _load_params(params_path)
     N_PANELS  = max(1, min(8, int(p.get("solar_clusters_per_side", N_PANELS))))
     RAD_LONG  = max(0.3, min(3.0, float(p.get("radiator_long", RAD_LONG))))
     RAD_RATIO = max(1.2, min(6.0, float(p.get("radiator_ratio", RAD_RATIO))))
+    # Previews render with the lightweight procedural blades — the DGX asset
+    # is ~150 MB and only worth composing in the live Kit stage.
+    USE_DGX = bool(p.get("use_dgx", USE_DGX))
+    PREVIEW_LITE = bool(p.get("preview_lite", PREVIEW_LITE))
     if p:
-        print(f"[gen] params: solar/side={N_PANELS} rad_long={RAD_LONG} rad_ratio={RAD_RATIO}")
+        print(f"[gen] params: solar/side={N_PANELS} rad_long={RAD_LONG} "
+              f"rad_ratio={RAD_RATIO} dgx={USE_DGX} lite={PREVIEW_LITE}")
     out = build_usda()
-    OUT.write_text(out, encoding="utf-8")
-    print(f"[gen] wrote {OUT} ({len(out):,} bytes)")
+    # Atomic publish: Kit force-reloads this layer the moment the backend
+    # bumps the geometry version, and an unrelated earlier reload could also
+    # land mid-write — never let a reader see a half-written stage.
+    import os
+    tmp_path = out_path.with_name(out_path.name + ".tmp")
+    tmp_path.write_text(out, encoding="utf-8")
+    os.replace(tmp_path, out_path)
+    print(f"[gen] wrote {out_path} ({len(out):,} bytes)")
 
 
 if __name__ == "__main__":

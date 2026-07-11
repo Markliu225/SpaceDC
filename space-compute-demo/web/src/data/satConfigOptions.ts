@@ -122,12 +122,52 @@ export function radiatorSize(id: RadiatorSize): RadiatorSizeOption {
 
 // ---------------------------------------------------------------------------
 // Derived stats — same formulas as backend's _update_placeholder_physics so
-// the Web-side delta panel matches the eventual state_update echo.
+// the Web-side delta panel matches the eventual state_update echo. Areas come
+// from the DEPLOYABLE GEOMETRY (twin_geometry — solar cluster count, radiator
+// dims), mirroring state_engine._solar_area_m2/_radiator_area_m2; the old
+// S/M/L/XL / Compact..Wide size tables are dropdown metadata only and no
+// longer drive any physics-facing number.
 // ---------------------------------------------------------------------------
 
 const SOLAR_CONSTANT_W_M2 = 1361
 const BUS_MASS_KG         = 300
 const BUS_BASE_CAPEX_USD_M = 3.0
+
+// Mirrors state_engine.py: one 2×2 solar cluster's active area (m²) and the
+// stage scale for radiator dims.
+const BACKBONE_SCALE   = 1.8
+const SOLAR_CLUSTER_M2 = (0.981 * 1.45 * BACKBONE_SCALE) * (0.777 * 1.05 * BACKBONE_SCALE)
+
+/** Geometry knobs deriveStats needs — subset of TwinGeometry. */
+export interface GeometryLike {
+  solar_clusters_per_side: number
+  radiator_long: number
+  radiator_ratio: number
+}
+
+/** Engine-default geometry — used when no live twin_geometry is available. */
+export const GEOMETRY_DEFAULT: GeometryLike = {
+  solar_clusters_per_side: 2,
+  radiator_long: 1.55,
+  radiator_ratio: 2.5,
+}
+
+/** Total active solar cell area (both wings), m². */
+export function solarAreaM2(geom: GeometryLike): number {
+  return geom.solar_clusters_per_side * 2 * SOLAR_CLUSTER_M2
+}
+
+/** Physical radiator panel area (2 panels, single face), m² — for mass/cost. */
+export function radiatorPanelAreaM2(geom: GeometryLike): number {
+  const long_m  = geom.radiator_long * BACKBONE_SCALE
+  const short_m = (geom.radiator_long / Math.max(0.1, geom.radiator_ratio)) * BACKBONE_SCALE
+  return 2 * long_m * short_m
+}
+
+/** Emitting radiator area (2 panels × 2 faces), m² — what the physics uses. */
+export function radiatorEmitAreaM2(geom: GeometryLike): number {
+  return 2 * radiatorPanelAreaM2(geom)
+}
 
 export interface DerivedStats {
   /** Solar input at sunlit, normal-incidence conditions (worst-case max). */
@@ -142,31 +182,34 @@ export interface DerivedStats {
   thermal_index: number
 }
 
-export function deriveStats(cfg: SatelliteConfig): DerivedStats {
+export function deriveStats(
+  cfg: SatelliteConfig,
+  geom: GeometryLike = GEOMETRY_DEFAULT,
+): DerivedStats {
   const gpu  = gpuOption(cfg.gpu)
   const sMat = solarMaterial(cfg.solar_material)
-  const sSz  = solarSize(cfg.solar_size)
   const rMat = radiatorMaterial(cfg.radiator_material)
-  const rSz  = radiatorSize(cfg.radiator_size)
 
-  const solar_input_max_w =
-    sMat.efficiency * sSz.area_m2_per_panel * sSz.panel_count * SOLAR_CONSTANT_W_M2
+  const solarArea    = solarAreaM2(geom)
+  const radPanelArea = radiatorPanelAreaM2(geom)
+
+  const solar_input_max_w = sMat.efficiency * solarArea * SOLAR_CONSTANT_W_M2
 
   const compute_pflops = gpu.pflops_per_card * GPU_CARDS_PER_SAT
 
   const launch_mass_kg =
     BUS_MASS_KG
-    + sSz.panel_count * sSz.area_m2_per_panel * sMat.density_kg_m2
-    + RADIATOR_PANELS_PER_SAT * rSz.area_m2_per_panel * rMat.density_kg_m2
+    + solarArea * sMat.density_kg_m2
+    + radPanelArea * rMat.density_kg_m2
 
   const capex_usd_m =
     BUS_BASE_CAPEX_USD_M
     + (gpu.cost_k * GPU_CARDS_PER_SAT) / 1000
-    + 0.05 * sSz.panel_count * sSz.area_m2_per_panel
-    + 0.02 * RADIATOR_PANELS_PER_SAT * rSz.area_m2_per_panel
+    + 0.05 * solarArea
+    + 0.02 * radPanelArea
 
   // Thermal index — lower is better. Proxy: payload power / radiator capacity.
-  const radiator_capacity = rMat.emissivity * RADIATOR_PANELS_PER_SAT * rSz.area_m2_per_panel
+  const radiator_capacity = rMat.emissivity * radiatorEmitAreaM2(geom)
   const thermal_index = (gpu.tdp_w * GPU_CARDS_PER_SAT) / Math.max(0.05, radiator_capacity)
 
   return {

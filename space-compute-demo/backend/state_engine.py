@@ -8,9 +8,12 @@ phases without disturbing the orbit layer.
 from __future__ import annotations
 
 import asyncio
+import logging
 import math
 import time
 from typing import Any, Callable, Optional
+
+log = logging.getLogger("space_compute_demo.engine")
 
 from models import (
     FleetSnapshot,
@@ -104,6 +107,14 @@ _RAD_SIZE_TABLE = {
 _RAD_PANELS_PER_SAT = 2
 
 _SOLAR_CONSTANT_W_M2 = 1361.0
+# Sun-tracking array model: pointing/temperature losses while tracking, and
+# the sunlit fraction of a LEO orbit under the scene's fixed sun direction
+# (measured 0.52 for single_iss with the engine's own propagator; 0.5 is the
+# slightly conservative design number). solar_supply_avg_w and the per-tick
+# solar_input_w now use the SAME model, so the design-check margins match
+# what the simulation actually delivers.
+_POINTING_EFF    = 0.95
+_SUNLIT_FRACTION = 0.5
 
 # --- Deployable-geometry areas (Feature 4) --------------------------------
 # Mirror tools/gen_twin_satellite.py: a solar "cluster" is a 2×2 grid filling
@@ -126,40 +137,98 @@ def _radiator_area_m2(geom) -> float:
     return 4.0 * long_m * short_m
 
 
-# Deterministic compute-job schedule. (start_s, duration_s, util_target).
-# This is the GPU's queue — a fixed sequence of inference / training /
-# downlink-preprocessing jobs that repeats every JOB_CYCLE_S. No sinusoid,
-# no mod-based step folding: each tuple is one concrete job arriving at
-# its scheduled sim time and holding the GPUs at a target utilization for
-# its duration. The schedule is hand-picked to cover idle gaps, sustained
-# medium load, and short peak bursts the way a real maritime-detection
-# pipeline would (target-of-interest spikes vs steady inference batches).
-_JOB_SCHEDULE: list[tuple[float, float, float]] = [
-    (  0.0,  18.0, 0.10),   # cold boot — housekeeping idle
-    ( 18.0,  42.0, 0.65),   # batch inference on imagery
-    ( 60.0,  18.0, 0.92),   # target acquired — burst classification
-    ( 78.0,  36.0, 0.75),   # continued tracking
-    (114.0,  24.0, 0.20),   # downlinking results, GPU mostly idle
-    (138.0,  60.0, 0.55),   # medium training batch
-    (198.0,  48.0, 0.85),   # heavy compute run
-    (246.0,  30.0, 0.30),   # cooldown gap
-    (276.0,  72.0, 0.70),   # sustained mid-high
-    (348.0,  18.0, 0.95),   # peak burst — emergency re-classify
-    (366.0,  34.0, 0.40),   # decaying back to idle
-]
-_JOB_CYCLE_S = 400.0
+# Deterministic compute-job schedules — (start_s, duration_s, util_target).
+# Each profile is the GPU's queue: a fixed sequence of jobs repeating every
+# cycle. No sinusoid, no mod-based step folding: each tuple is one concrete
+# job arriving at its scheduled sim time and holding the GPUs at a target
+# utilization for its duration. Hand-authored so config changes interact
+# with a *consistent* workload trace — the design choice is the only moving
+# variable. Design presets (design_presets.py) pick a profile by id.
+_WORKLOAD_PROFILES: dict[str, dict] = {
+    # The historical maritime-detection mix: idle gaps, sustained medium
+    # load, and short peak bursts.
+    "balanced": {
+        "label": "Mixed inference",
+        "cycle_s": 400.0,
+        "schedule": [
+            (  0.0,  18.0, 0.10),   # cold boot — housekeeping idle
+            ( 18.0,  42.0, 0.65),   # batch inference on imagery
+            ( 60.0,  18.0, 0.92),   # target acquired — burst classification
+            ( 78.0,  36.0, 0.75),   # continued tracking
+            (114.0,  24.0, 0.20),   # downlinking results, GPU mostly idle
+            (138.0,  60.0, 0.55),   # medium training batch
+            (198.0,  48.0, 0.85),   # heavy compute run
+            (246.0,  30.0, 0.30),   # cooldown gap
+            (276.0,  72.0, 0.70),   # sustained mid-high
+            (348.0,  18.0, 0.95),   # peak burst — emergency re-classify
+            (366.0,  34.0, 0.40),   # decaying back to idle
+        ],
+    },
+    # Near-flat-out training with brief checkpoint dips.
+    "training": {
+        "label": "Sustained training",
+        "cycle_s": 360.0,
+        "schedule": [
+            (  0.0,  80.0, 0.90),   # epoch
+            ( 80.0,  10.0, 0.35),   # checkpoint write
+            ( 90.0,  86.0, 0.92),   # epoch
+            (176.0,  10.0, 0.35),   # checkpoint write
+            (186.0,  90.0, 0.88),   # epoch
+            (276.0,  14.0, 0.50),   # eval pass
+            (290.0,  70.0, 0.94),   # epoch
+        ],
+    },
+    # Mostly quiet with tall target-of-opportunity spikes.
+    "burst": {
+        "label": "Burst response",
+        "cycle_s": 300.0,
+        "schedule": [
+            (  0.0,  50.0, 0.12),   # standby scan
+            ( 50.0,  16.0, 1.00),   # alert! full-rate classification
+            ( 66.0,  40.0, 0.15),   # standby
+            (106.0,  22.0, 0.95),   # second contact burst
+            (128.0,  60.0, 0.10),   # long quiet stretch
+            (188.0,  12.0, 1.00),   # flash tasking
+            (200.0,  46.0, 0.30),   # post-burst downlink prep
+            (246.0,  54.0, 0.12),   # standby scan
+        ],
+    },
+    # Housekeeping idle with one modest daily-batch window.
+    "low_duty": {
+        "label": "Low duty cycle",
+        "cycle_s": 400.0,
+        "schedule": [
+            (  0.0, 150.0, 0.08),   # housekeeping
+            (150.0,  60.0, 0.50),   # scheduled batch window
+            (210.0,  30.0, 0.20),   # results packaging
+            (240.0, 160.0, 0.08),   # housekeeping
+        ],
+    },
+}
+_DEFAULT_WORKLOAD_PROFILE = "balanced"
 
 
-def _gpu_workload_util(t: float) -> float:
-    """Walk the fixed _JOB_SCHEDULE — NOT a sinusoid, NOT a mod-folded step
-    wave. At sim time t we wrap into the schedule's cycle and pick the
-    single active job's target utilization, falling back to a 0.05 idle
-    floor if t lands in a gap. The schedule is hand-authored so config
-    changes (GPU model, panel size, etc.) interact with a *consistent*
-    workload trace and the user sees their design choice as the only
-    moving variable."""
-    ct = t % _JOB_CYCLE_S
-    for start, dur, u in _JOB_SCHEDULE:
+def _profile(profile_id: str) -> dict:
+    return _WORKLOAD_PROFILES.get(profile_id, _WORKLOAD_PROFILES[_DEFAULT_WORKLOAD_PROFILE])
+
+
+def workload_profile_stats(profile_id: str) -> dict:
+    """Headline numbers for a profile — duration-weighted mean utilization
+    plus display labels. Used by the /designs gallery cards."""
+    prof = _profile(profile_id)
+    sched = prof["schedule"]
+    total = sum(d for _, d, _ in sched)
+    avg = sum(d * u for _, d, u in sched) / total if total > 0 else 0.30
+    return {"label": prof["label"], "avg_util": round(avg, 2)}
+
+
+def _gpu_workload_util(t: float, profile_id: str) -> float:
+    """Walk a profile's fixed schedule. At sim time t we wrap into the
+    schedule's cycle and pick the single active job's target utilization,
+    falling back to a 0.05 idle floor if t lands in a gap."""
+    prof = _profile(profile_id)
+    ct = t % prof["cycle_s"]
+    for start, dur, u in prof["schedule"]:
         if start <= ct < start + dur:
             return u
     return 0.05
@@ -184,6 +253,15 @@ class StateEngine:
         # Reconfigurable hardware loadout — Twin page mutates via set_config.
         self._config: SatelliteConfig = SatelliteConfig()
         self._twin_geometry: TwinGeometry = TwinGeometry()
+        # Active design preset (design_presets.py). Applying a preset swaps
+        # config + geometry + workload profile + platform constants together;
+        # any manual edit afterwards degrades the id to "custom". Boots as
+        # "custom" — the engine's defaults (and whatever twin model is on
+        # disk from a previous session) don't necessarily match any preset,
+        # so claiming one would lie to the gallery.
+        self._design_id: str = "custom"
+        self._workload_profile: str = _DEFAULT_WORKLOAD_PROFILE
+        self._platform_power_w: float = 600.0
         # 天数天算 mission — phase machine on a wall-clock timeline. The clock
         # (_mission_start_wall) only starts once the scene is loaded; until
         # then the mission holds on 'acquire'. _mission_request_wall marks when
@@ -219,7 +297,12 @@ class StateEngine:
 
     def reset(self) -> None:
         self._sim_time_s = 0.0
+        # Rebuild the telemetry state but keep design-owned hardware constants:
+        # battery capacity is stamped by apply_design and must survive a sim
+        # reset or the active design's power story runs on the wrong pack.
+        battery_capacity_wh = self._sat.battery_capacity_wh
         self._sat = SatelliteState()
+        self._sat.battery_capacity_wh = battery_capacity_wh
         self._gs = GroundStationState()
         self._task = None
 
@@ -241,7 +324,7 @@ class StateEngine:
     def set_camera_preset(self, preset: str) -> None:
         self._camera_preset = preset
 
-    def set_config(self, patch: dict[str, Any]) -> SatelliteConfig:
+    def set_config(self, patch: dict[str, Any], *, mark_custom: bool = True) -> SatelliteConfig:
         """Merge a partial hardware loadout into the active config. Returns
         the new full config so the handler can echo it back. Unknown keys
         are ignored; bad values raise the underlying Pydantic ValidationError."""
@@ -250,6 +333,8 @@ class StateEngine:
         # Pydantic re-validates via model_validate to ensure literals are
         # actually one of the allowed enum strings (model_copy alone does not).
         self._config = SatelliteConfig.model_validate(self._config.model_dump())
+        if mark_custom and cleaned:
+            self._design_id = "custom"
         return self._config
 
     @property
@@ -260,17 +345,55 @@ class StateEngine:
     def twin_geometry(self) -> TwinGeometry:
         return self._twin_geometry
 
-    def set_twin_geometry(self, patch: dict[str, Any]) -> TwinGeometry:
-        """Merge deployable-geometry knobs and bump the version. Clamped to the
-        same ranges gen_twin_satellite.py enforces. Returns the new geometry."""
+    def set_twin_geometry(self, patch: dict[str, Any], *, mark_custom: bool = True) -> TwinGeometry:
+        """Merge deployable-geometry knobs. Clamped to the same ranges
+        gen_twin_satellite.py enforces. Returns the new geometry. Does NOT
+        bump `version` — the handler bumps it via bump_twin_version() only
+        after the regenerated USD is fully on disk, otherwise Kit's 5 Hz
+        /state poll sees the new version first and force-reloads the STALE
+        (or half-written) twin_satellite.usda."""
         cleaned = {k: v for k, v in patch.items() if v is not None and k != "version"}
         merged = self._twin_geometry.model_copy(update=cleaned)
         merged.solar_clusters_per_side = max(1, min(8, int(merged.solar_clusters_per_side)))
         merged.radiator_long = max(0.3, min(3.0, float(merged.radiator_long)))
         merged.radiator_ratio = max(1.2, min(6.0, float(merged.radiator_ratio)))
-        merged.version = self._twin_geometry.version + 1
         self._twin_geometry = TwinGeometry.model_validate(merged.model_dump())
+        if mark_custom and cleaned:
+            self._design_id = "custom"
         return self._twin_geometry
+
+    def bump_twin_version(self) -> TwinGeometry:
+        """Signal Kit to reload the twin layer. Call ONLY once the regenerated
+        usd/twin_satellite.usda is fully written."""
+        self._twin_geometry = self._twin_geometry.model_copy(
+            update={"version": self._twin_geometry.version + 1})
+        return self._twin_geometry
+
+    # ---- design presets (design_presets.py) ----
+    @property
+    def design_id(self) -> str:
+        return self._design_id
+
+    @property
+    def workload_profile(self) -> str:
+        return self._workload_profile
+
+    def apply_design(self, preset: Any) -> TwinGeometry:
+        """Switch the whole satellite design in one shot: hardware loadout,
+        deployable geometry (the handler then regenerates the USD and bumps
+        the version so Kit reloads), workload profile, and platform
+        constants. `preset` is a design_presets.DesignPreset."""
+        self.set_config(preset.config.model_dump(), mark_custom=False)
+        geom = self.set_twin_geometry(preset.geometry_patch(), mark_custom=False)
+        self._workload_profile = (preset.workload_profile
+                                  if preset.workload_profile in _WORKLOAD_PROFILES
+                                  else _DEFAULT_WORKLOAD_PROFILE)
+        self._platform_power_w = float(preset.platform_power_w)
+        # Battery: swap capacity, keep the current charge fraction so the
+        # switch doesn't teleport the SOC story.
+        self._sat.battery_capacity_wh = float(preset.battery_capacity_wh)
+        self._design_id = preset.id
+        return geom
 
     # ---- 天数天算 mission ----
     def start_mission(self) -> MissionState:
@@ -446,6 +569,8 @@ class StateEngine:
             satellite_config=self._config.model_copy(),
             twin_geometry=self._twin_geometry.model_copy(),
             mission=self._mission.model_copy(),
+            design_id=self._design_id,
+            workload_profile=self._workload_profile,
         )
 
     # ---- inner loop ----
@@ -453,13 +578,22 @@ class StateEngine:
         dt = 1.0 / TICK_HZ
         while True:
             await asyncio.sleep(dt)
-            if self._running:
-                self._sim_time_s += dt
+            if not self._running:
+                continue
+            self._sim_time_s += dt
+            # Physics MUST be inside its own try: an uncaught exception here
+            # would end the asyncio task silently — /state would keep serving
+            # frozen values with running=true and there is no restart path.
+            # A transient failure (e.g. an sgp4 hiccup) now just skips a tick.
+            try:
                 self._update_placeholder_physics(dt)
-                try:
-                    await _maybe_await(self._on_state(self.snapshot()))
-                except Exception:
-                    pass
+            except Exception:
+                log.exception("physics tick failed (sim_t=%.0f) — skipping tick",
+                              self._sim_time_s)
+            try:
+                await _maybe_await(self._on_state(self.snapshot()))
+            except Exception:
+                log.exception("state broadcast failed")
 
     def _update_placeholder_physics(self, dt: float) -> None:
         t = self._sim_time_s
@@ -538,8 +672,14 @@ class StateEngine:
         radiator_area_m2 = _radiator_area_m2(geom)
 
         # --- Solar input (front of panel) -------------------------------------
-        # Dawn-dusk: panels track the Sun → full direct incidence (1.0).
-        incidence = 1.0 if is_dawn_dusk else (max(0.0, cos_a) if self._sat.sunlit else 0.0)
+        # The wings ride a sun-tracking drive (SADA), like every real orbital
+        # power system: while sunlit the cells hold near-normal incidence and
+        # deliver _POINTING_EFF × peak; in eclipse they deliver nothing. (The
+        # old model reused the position-vector/sun cosine as "incidence",
+        # which averaged only ~0.22 over an orbit — no physically plausible
+        # array could ever close the power budget, so the battery pinned at 0
+        # and the physics looked dead.) Dawn-dusk SSO: permanent full sun.
+        incidence = 1.0 if is_dawn_dusk else (_POINTING_EFF if self._sat.sunlit else 0.0)
         self._sat.solar_input_w = (
             s_mat["efficiency"] * panel_area_m2 * _SOLAR_CONSTANT_W_M2 * incidence
         )
@@ -548,7 +688,7 @@ class StateEngine:
         # Superposition of square jobs with mismatched periods so the curve
         # has burstiness (high/mid/low steps) rather than a clean sinusoid.
         # Eclipse triggers low-power mode (clamped down further below).
-        workload = _gpu_workload_util(t)
+        workload = _gpu_workload_util(t, self._workload_profile)
         if not self._sat.sunlit and self._sat.battery_soc < 0.4:
             workload = min(workload, 0.20)  # power save: drop to baseline
         self._sat.workload = workload
@@ -558,7 +698,7 @@ class StateEngine:
         IDLE_FRAC = 0.15
         gpu_w_per_card = gpu["tdp_w"] * (IDLE_FRAC + (1.0 - IDLE_FRAC) * workload)
         payload_w = gpu_w_per_card * _GPU_CARDS_PER_SAT
-        platform_w = 600.0
+        platform_w = self._platform_power_w
         self._sat.gpu_utilization = workload
         self._sat.payload_power_w = payload_w
         self._sat.platform_power_w = platform_w
@@ -597,20 +737,26 @@ class StateEngine:
         self._gs.rx_mbps = self._sat.downlink_mbps
 
         # --- Design check (solar supply vs avg demand; thermal headroom) ------
-        # Average workload across the _JOB_SCHEDULE — duration-weighted mean
-        # of each block's target util. This is the same number the visible
-        # workload trace will tend to (over a cycle), so the user sees the
-        # demand the SCHEDULE actually produces, not a hand-typed 0.40.
-        sched_total_dt = sum(d for _, d, _ in _JOB_SCHEDULE)
-        avg_workload = (sum(d * u for _, d, u in _JOB_SCHEDULE) / sched_total_dt
+        # Average workload across the ACTIVE profile's schedule — duration-
+        # weighted mean of each block's target util. This is the same number
+        # the visible workload trace will tend to (over a cycle), so the user
+        # sees the demand the schedule actually produces, not a hand-typed
+        # 0.40 — and switching designs moves the demand side too.
+        _sched = _profile(self._workload_profile)["schedule"]
+        sched_total_dt = sum(d for _, d, _ in _sched)
+        avg_workload = (sum(d * u for _, d, u in _sched) / sched_total_dt
                         if sched_total_dt > 0 else 0.30)
         avg_card_w = gpu["tdp_w"] * (IDLE_FRAC + (1.0 - IDLE_FRAC) * avg_workload)
         avg_payload_w = avg_card_w * _GPU_CARDS_PER_SAT
         solar_demand_avg_w = avg_payload_w + platform_w
         peak_solar_w = s_mat["efficiency"] * panel_area_m2 * _SOLAR_CONSTANT_W_M2
-        # Sat is sunlit ~50 % of an orbit; the BATTERY needs to round-trip
-        # the night, so average solar supply is 0.5 × peak.
-        solar_supply_avg_w = peak_solar_w * 0.5
+        # Orbit-average supply under the SAME sun-tracking model the per-tick
+        # solar_input_w uses: tracking losses × the sunlit fraction (the
+        # battery round-trips the night). Dawn-dusk never sees eclipse.
+        if is_dawn_dusk:
+            solar_supply_avg_w = peak_solar_w
+        else:
+            solar_supply_avg_w = peak_solar_w * _POINTING_EFF * _SUNLIT_FRACTION
 
         # Thermal peak demand: worst case is sustained 100 % workload.
         peak_card_w = gpu["tdp_w"] * (IDLE_FRAC + (1.0 - IDLE_FRAC) * 1.0)

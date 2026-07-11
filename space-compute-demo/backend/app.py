@@ -11,11 +11,15 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
+import hashlib
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from fastapi import HTTPException
 
+import design_presets
 from models import Envelope, StatePacket
 from services import constellations, orbit_catalog
 from state_engine import StateEngine
@@ -68,13 +72,37 @@ async def broadcast_state(pkt: StatePacket) -> None:
 engine = StateEngine(on_state=broadcast_state)
 
 
+def _restore_geometry_from_disk() -> None:
+    """Boot coherence: usd/twin_satellite.usda on disk was generated from the
+    last session's twin_params.json, and Kit will happily show that model.
+    Seed the engine's geometry from the same file (no version bump — nothing
+    changed on disk) so the physics areas match the model in the viewport
+    instead of silently reverting to the 2-cluster defaults."""
+    try:
+        params = json.loads(_TWIN_PARAMS.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    try:
+        engine.set_twin_geometry(
+            {k: params.get(k) for k in
+             ("solar_clusters_per_side", "radiator_long", "radiator_ratio")},
+            mark_custom=False)
+        log.info("twin geometry restored from disk: %s",
+                 engine.twin_geometry.model_dump())
+    except Exception as e:  # noqa: BLE001
+        log.warning("could not restore twin geometry: %s", e)
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    _restore_geometry_from_disk()
     await engine.start()
     log.info("state engine started")
+    prewarm = asyncio.create_task(_prewarm_previews())
     try:
         yield
     finally:
+        prewarm.cancel()
         await engine.stop()
         log.info("state engine stopped")
 
@@ -173,6 +201,23 @@ async def http_post_satellite_config(patch: dict[str, Any]):
 _REPO_ROOT   = Path(__file__).resolve().parent.parent
 _TWIN_PARAMS = _REPO_ROOT / "usd" / "twin_params.json"
 _GEN_SCRIPT  = _REPO_ROOT / "tools" / "gen_twin_satellite.py"
+# Serialize regens: rapid stepper clicks (or a design apply racing a manual
+# edit) must not interleave twin_params.json writes with gen subprocesses.
+_regen_lock = asyncio.Lock()
+
+
+async def _regenerate_twin_latest() -> bool:
+    """Regenerate the live twin USD from the engine's CURRENT geometry,
+    one regen at a time. Sampling the geometry inside the lock means queued
+    regens converge on the latest state regardless of arrival order. The
+    version bump (Kit's reload trigger) happens strictly AFTER the file is
+    on disk so Kit can never reload a stale or half-written layer."""
+    async with _regen_lock:
+        ok = await asyncio.to_thread(
+            _regenerate_twin, engine.twin_geometry.model_dump())
+        if ok:
+            engine.bump_twin_version()
+        return ok
 
 
 def _regenerate_twin(geom: dict[str, Any]) -> bool:
@@ -206,12 +251,170 @@ async def http_post_twin_geometry(patch: dict[str, Any]):
     """Set deployable geometry → regenerate the USD → broadcast so Web sees the
     new numbers and Kit can reload the bumped layer version."""
     try:
-        geom = engine.set_twin_geometry(patch)
+        engine.set_twin_geometry(patch)
     except Exception as e:
         raise HTTPException(422, f"invalid twin_geometry patch: {e}") from e
-    regen_ok = await asyncio.to_thread(_regenerate_twin, geom.model_dump())
+    regen_ok = await _regenerate_twin_latest()
     await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
-    return {"ok": True, "regenerated": regen_ok, "twin_geometry": geom.model_dump()}
+    return {"ok": True, "regenerated": regen_ok,
+            "twin_geometry": engine.twin_geometry.model_dump()}
+
+
+# --- Design presets (design gallery) ---------------------------------------
+# A preset switches hardware config + deployable geometry + workload profile
+# together. Geometry switches regenerate the USD (same pipeline as
+# /twin_geometry); the preview thumbnails are software-rendered offline via
+# tools/render_usd.py from a per-design stage that never touches the live
+# usd/twin_satellite.usda.
+_RENDER_SCRIPT = _REPO_ROOT / "tools" / "render_usd.py"
+_PREVIEW_DIR   = _REPO_ROOT / "usd" / "_design_previews"
+_PREVIEW_SIZE  = 560
+# One render at a time — the software rasterizer is CPU-bound and every
+# design's PNG is cached after its first render anyway.
+_preview_semaphore = asyncio.Semaphore(1)
+
+
+# Bump when the render pipeline itself changes (view, filters, lite mode…)
+# so cached PNGs from the old look regenerate.
+_PREVIEW_PIPELINE_V = 1
+
+
+def _design_fingerprint(preset: design_presets.DesignPreset) -> str:
+    """Cache key for the thumbnail — geometry is the only preset input the
+    render can show, so hash exactly that (+ renderer settings)."""
+    blob = (json.dumps(preset.geometry_patch(), sort_keys=True)
+            + f"|{_PREVIEW_SIZE}|v{_PREVIEW_PIPELINE_V}")
+    return hashlib.md5(blob.encode()).hexdigest()[:10]
+
+
+def _render_design_preview(preset: design_presets.DesignPreset) -> Path | None:
+    """Blocking: generate the per-design stage (procedural blades — the DGX
+    asset is too heavy for thumbnails) and software-render an iso PNG.
+    Cached by geometry fingerprint; returns the PNG path or None.
+
+    The renderer writes to a temp name that is os.replace'd into the cache
+    only on success — a killed/failed render can never leave a truncated PNG
+    that png.exists() would then serve forever."""
+    _PREVIEW_DIR.mkdir(exist_ok=True)
+    fp = _design_fingerprint(preset)
+    png = _PREVIEW_DIR / f"{preset.id}_{fp}.png"
+    if png.exists():
+        return png
+    # .png suffix retained so PIL picks the encoder from the extension.
+    tmp = _PREVIEW_DIR / f"_tmp_{preset.id}_{fp}.png"
+    stage = _REPO_ROOT / "usd" / f"_preview_design_{preset.id}.usda"
+    try:
+        params = _PREVIEW_DIR / f"{preset.id}_{fp}.params.json"
+        params.write_text(json.dumps({**preset.geometry_patch(),
+                                      "use_dgx": False, "preview_lite": True},
+                                     indent=2), encoding="utf-8")
+        # The stage must sit directly in usd/ so its ./assets and ./textures
+        # references resolve; the _preview_ prefix is git-ignored.
+        r = subprocess.run([sys.executable, str(_GEN_SCRIPT),
+                            "--params", str(params), "--out", str(stage)],
+                           capture_output=True, text=True, timeout=120)
+        if r.returncode != 0:
+            log.error("preview gen failed (%s): %s", preset.id, r.stderr[-500:])
+            return None
+        # --only keeps the satellite body (backbone parts / servers / wings /
+        # radiators) and drops the celestial context spheres, which would
+        # otherwise dominate the auto-framing.
+        r = subprocess.run([sys.executable, str(_RENDER_SCRIPT), str(stage), str(tmp),
+                            "--view", "iso", "--size", str(_PREVIEW_SIZE),
+                            "--only", "part,Server,Wing,Radiator"],
+                           capture_output=True, text=True, timeout=300)
+        if r.returncode != 0 or not tmp.exists():
+            log.error("preview render failed (%s): %s", preset.id, r.stderr[-500:])
+            return None
+        tmp.replace(png)
+        _prune_preview_artifacts(preset.id, keep_fp=fp)
+        log.info("design preview rendered: %s", png.name)
+        return png
+    except Exception as e:  # noqa: BLE001
+        log.error("preview error (%s): %s", preset.id, e)
+        return None
+    finally:
+        tmp.unlink(missing_ok=True)
+        stage.unlink(missing_ok=True)   # ~550 KB scratch, regenerable
+
+
+def _prune_preview_artifacts(design_id: str, keep_fp: str) -> None:
+    """Drop superseded {id}_{fp}.* cache entries (old geometry / pipeline
+    versions) so edited presets don't accumulate stale thumbnails."""
+    keep = {f"{design_id}_{keep_fp}.png", f"{design_id}_{keep_fp}.params.json"}
+    for p in _PREVIEW_DIR.glob(f"{design_id}_*"):
+        if p.name not in keep:
+            try:
+                p.unlink()
+            except OSError:
+                pass
+
+
+async def _preview_path(preset: design_presets.DesignPreset) -> Path | None:
+    async with _preview_semaphore:
+        return await asyncio.to_thread(_render_design_preview, preset)
+
+
+async def _prewarm_previews() -> None:
+    """Render any missing thumbnails in the background so the first gallery
+    open doesn't wait ~10 s per design. The preview PNGs ship in git, so this
+    is normally a no-op; the delay keeps the CPU free during the launch
+    window when Kit + the web dev server + the browser are all starting."""
+    await asyncio.sleep(45.0)
+    missing = [p for p in design_presets.PRESETS.values()
+               if not (_PREVIEW_DIR / f"{p.id}_{_design_fingerprint(p)}.png").exists()]
+    if missing:
+        log.info("prewarming %d design preview(s): %s",
+                 len(missing), [p.id for p in missing])
+    for preset in missing:
+        await _preview_path(preset)
+
+
+@app.get("/designs")
+async def http_list_designs():
+    """Gallery payload: every preset with derived stats + preview URL, plus
+    which design is currently applied ("custom" after manual edits). The
+    preview URL carries the cache fingerprint as ?v= so the browser cache
+    (Cache-Control max-age) invalidates in lockstep with the disk cache."""
+    designs = design_presets.list_summaries()
+    for d in designs:
+        preset = design_presets.get_preset(d["id"])
+        if preset is not None:
+            d["preview_url"] += f"?v={_design_fingerprint(preset)}"
+    return {"active": engine.design_id, "designs": designs}
+
+
+@app.post("/designs/{design_id}/apply")
+async def http_apply_design(design_id: str):
+    """Switch the whole satellite design: config + geometry + workload +
+    platform constants, then regenerate the USD (Kit reloads on the version
+    bump) and broadcast so every web client re-renders the new numbers."""
+    preset = design_presets.get_preset(design_id)
+    if preset is None:
+        raise HTTPException(404, f"unknown design {design_id!r}")
+    engine.apply_design(preset)
+    regen_ok = await _regenerate_twin_latest()
+    await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
+    return {
+        "ok": True,
+        "design_id": design_id,
+        "regenerated": regen_ok,
+        "satellite_config": engine.satellite_config.model_dump(),
+        "twin_geometry": engine.twin_geometry.model_dump(),
+        "workload_profile": engine.workload_profile,
+    }
+
+
+@app.get("/designs/{design_id}/preview.png")
+async def http_design_preview(design_id: str):
+    preset = design_presets.get_preset(design_id)
+    if preset is None:
+        raise HTTPException(404, f"unknown design {design_id!r}")
+    png = await _preview_path(preset)
+    if png is None:
+        raise HTTPException(503, "preview render failed — see backend log")
+    return FileResponse(png, media_type="image/png",
+                        headers={"Cache-Control": "public, max-age=3600"})
 
 
 @app.post("/mission/start")

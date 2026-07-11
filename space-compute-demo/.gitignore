@@ -63,3 +63,11 @@ usd/aeco_city/
 
 # Runtime deployable-geometry overrides (Feature 3) — written by the backend.
 usd/twin_params.json
+
+# Design-gallery preview artifacts. The rendered PNGs are COMMITTED (so a
+# fresh checkout never burns ~1 min of CPU re-rendering them at first boot);
+# the scratch stages + params sidecars are regenerable and stay ignored.
+usd/_preview_design_*.usda
+usd/_preview_test.usda
+usd/_design_previews/*.params.json
+usd/_design_previews/_tmp_*

@@ -197,3 +197,8 @@ class StatePacket(BaseModel):
     satellite_config: SatelliteConfig = Field(default_factory=SatelliteConfig)
     twin_geometry: TwinGeometry = Field(default_factory=TwinGeometry)
     mission: MissionState = Field(default_factory=MissionState)
+    # Active design preset id (design_presets.py) — "custom" at boot and
+    # after any manual config/geometry edit — plus the workload profile the
+    # GPUs are running.
+    design_id: str = "custom"
+    workload_profile: str = "balanced"

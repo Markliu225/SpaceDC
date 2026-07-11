@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import { useTelemetryStore, SAT_CONFIG_BASELINE } from '../store/useTelemetryStore'
 import { useDemoStore } from '../store/demoStore'
-import { deriveStats, type DerivedStats } from '../data/satConfigOptions'
+import { deriveStats, GEOMETRY_DEFAULT, type DerivedStats } from '../data/satConfigOptions'
 import type { SatelliteConfig } from '../types/messages'
 
 export interface UseSatConfigReturn {
@@ -28,8 +28,11 @@ export function useSatConfig(): UseSatConfigReturn {
   const cfg           = useTelemetryStore((s) => s.satConfig)
   const setSatConfig  = useTelemetryStore((s) => s.setSatConfig)
   const sendSetConfig = useDemoStore((s) => s.sendSetConfig)
+  // Live deployable geometry — mass/CAPEX/peak-solar must move when the
+  // Deployables steppers (or a design switch) change the actual wings.
+  const geom          = useDemoStore((s) => s.lastState?.twin_geometry) ?? GEOMETRY_DEFAULT
 
-  const stats         = useMemo(() => deriveStats(cfg),                 [cfg])
+  const stats         = useMemo(() => deriveStats(cfg, geom),           [cfg, geom])
   const baselineStats = useMemo(() => deriveStats(SAT_CONFIG_BASELINE), [])
 
   const update = useCallback((patch: Partial<SatelliteConfig>) => {

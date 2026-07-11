@@ -5,6 +5,7 @@ import { useMockTelemetryFeed } from '../hooks/useMockTelemetryFeed'
 import { EarthViewport } from '../components/overview/EarthViewport'
 import { SatelliteSelector } from '../components/overview/SatelliteSelector'
 import { Configurator } from '../components/twin/Configurator'
+import { DesignGallery } from '../components/twin/DesignGallery'
 import { MiniOrbitHud } from '../components/twin/MiniOrbitHud'
 import { TwinModulePopup } from '../components/twin/TwinModulePopup'
 import { SubsystemHealthRow } from '../components/twin/SubsystemHealthRow'
@@ -61,6 +62,7 @@ export function SatelliteTwinPage() {
             Satellite Twin
           </span>
           <SatelliteSelector />
+          <DesignGallery />
         </div>
         <ViewModeTabs value={viewMode} onChange={setViewMode} />
         <div className="text-[10px] uppercase tracking-[0.10em] text-text-lo">

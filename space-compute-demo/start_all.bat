@@ -5,7 +5,7 @@ REM   Double-click to start backend, web, and Kit streaming.
 REM   Each service opens in its own window. Close that window
 REM   to stop the corresponding service.
 REM ============================================================
-taskkill /F /IM hub.exe
+taskkill /F /IM hub.exe >nul 2>&1
 setlocal
 pushd "%~dp0"
 

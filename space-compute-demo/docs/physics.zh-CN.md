@@ -58,10 +58,18 @@ A_rad = 2 板 · 2 面 · (long · short) = 4 · long · short
 ```
 cos θ = (r · ŝ) / |r|
 sunlit = cos θ > −0.05            （留出少量晨昏余量）
-incidence = max(0, cos θ)  若 sunlit 否则 0
 ```
 
-`sun_factor = max(0, cos θ)` 同时导出用于驱动 Kit 主光。发电功率 = 效率 × 面积 × 辐照 × 入射余弦：
+太阳翼装有对日跟踪机构（SADA），与真实在轨电源系统一致：光照期内电池片保持近法向入射：
+
+```
+incidence = 0.95  若 sunlit 否则 0     （指向/温度损耗）
+incidence = 1.0   晨昏太阳同步轨道       （永不入影，恒定对日）
+```
+
+（早期版本误用 `max(0, cos θ)`——即**位置矢量**与太阳的夹角——作为板面入射率，轨道均值仅约 0.22，任何合理翼面积都无法闭合功率预算，电池长期钉死在 0%。）
+
+`sun_factor = max(0, cos θ)` 仍导出用于驱动 Kit 主光。发电功率 = 效率 × 面积 × 辐照 × 入射率：
 
 ```
 P_solar = η · A_solar · S · incidence
@@ -136,7 +144,8 @@ downlink = 可见时 120 Mbps，否则 0
 
 ```
 P_demand_avg = [TDP · (IDLE_FRAC + (1−IDLE_FRAC) · ū) · cards] + P_platform
-P_supply_avg = 0.5 · (η · A_solar · S)            （约 50% 轨道处于光照；电池需跨越夜面）
+P_supply_avg = 0.95 · 0.5 · (η · A_solar · S)     （跟踪损耗 × 光照占比；电池需跨越夜面）
+P_supply_avg = 1.0 · (η · A_solar · S)            （晨昏太阳同步轨道 — 永不入影）
 
 Q_peak_demand = (TDP · cards + P_platform) · 0.95            （持续 100% 利用率）
 Q_max_emit    = ε · σ · A_rad · (T_ceil⁴ − T_bg⁴),  T_ceil = 60 °C

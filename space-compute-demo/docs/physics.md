@@ -58,10 +58,18 @@ The sun is fixed in the inertial frame at unit direction `ŝ = (0.648, −0.648,
 ```
 cos θ = (r · ŝ) / |r|
 sunlit = cos θ > −0.05            (small dawn/dusk margin)
-incidence = max(0, cos θ)  if sunlit else 0
 ```
 
-`sun_factor = max(0, cos θ)` is also exported to drive the Kit key-light. Generated power is panel efficiency × area × flux × incidence:
+The wings ride a sun-tracking drive (SADA), like every real orbital power system: while sunlit the cells hold near-normal incidence, so
+
+```
+incidence = 0.95  if sunlit else 0          (pointing/temperature losses)
+incidence = 1.0   on the dawn-dusk SSO      (never eclipsed, sun-normal)
+```
+
+(Earlier builds reused `max(0, cos θ)` — the angle to the *position vector* — as panel incidence. That averaged only ≈0.22 over an orbit, so no plausible array could ever close the power budget and the battery pinned at 0.)
+
+`sun_factor = max(0, cos θ)` is still exported to drive the Kit key-light. Generated power is panel efficiency × area × flux × incidence:
 
 ```
 P_solar = η · A_solar · S · incidence
@@ -136,11 +144,14 @@ Steady-state sizing checks shown in the panels, computed from the schedule's **d
 
 ```
 P_demand_avg = [TDP · (IDLE_FRAC + (1−IDLE_FRAC) · ū) · cards] + P_platform
-P_supply_avg = 0.5 · (η · A_solar · S)           (≈50% of an orbit is sunlit; battery round-trips the night)
+P_supply_avg = 0.95 · 0.5 · (η · A_solar · S)    (tracking losses × sunlit fraction; battery round-trips the night)
+P_supply_avg = 1.0 · (η · A_solar · S)           (dawn-dusk SSO — never eclipsed)
 
 Q_peak_demand = (TDP · cards + P_platform) · 0.95            (sustained 100% util)
 Q_max_emit    = ε · σ · A_rad · (T_ceil⁴ − T_bg⁴),  T_ceil = 60 °C
 ```
+
+The supply check uses the **same tracking model** as the per-tick `P_solar`, so a design that passes the check really does hold its battery over an orbit in the running sim (and vice versa).
 
 `margin = supply − demand` (solar) and `Q_max_emit − Q_peak_demand` (thermal) drive the green/red status.
 
