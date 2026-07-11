@@ -140,9 +140,15 @@ export interface SatelliteConfig {
   radiator_size: RadiatorSize;
 }
 
-/** Deployable geometry knobs (Feature 3) — solar count per side + radiator
- * size/ratio. Drives the regenerated USD model and the physics areas. */
+/** Hull configuration — each is a genuinely different satellite shape. */
+export type Architecture = 'truss' | 'twin_truss' | 'blanket' | 'lumid' | 'dish';
+
+/** Deployable geometry knobs (Feature 3) — hull architecture + solar segment
+ * count + radiator size/ratio. Drives the regenerated USD model and the
+ * physics areas. `solar_clusters_per_side` is ignored by the hull
+ * architectures (lumid/dish), whose panels are integrated. */
 export interface TwinGeometry {
+  architecture?: Architecture;
   solar_clusters_per_side: number;
   radiator_long: number;
   radiator_ratio: number;

@@ -1,5 +1,6 @@
 import { Cpu, Maximize2, Snowflake, Sun } from 'lucide-react'
 import { Card } from '../primitives'
+import { hasFixedWings } from '../../data/satConfigOptions'
 import { useTwinGeometry, GEOM_RANGE } from '../../hooks/useTwinGeometry'
 import {
   GPU_OPTIONS,
@@ -117,15 +118,18 @@ function GeometryControls() {
   const solar = geom.solar_clusters_per_side
   const long  = geom.radiator_long
   const ratio = geom.radiator_ratio
+  // Hull architectures (LUMID / dish) fly integrated panels — the wing
+  // stepper has nothing to resize there.
+  const fixedWings = hasFixedWings(geom)
   return (
     <Section title="Deployables" icon={<Maximize2 size={12} strokeWidth={1.8} className="text-accent" />}>
       <Stepper
         label="Solar / side"
-        value={`${solar}×`}
+        value={fixedWings ? 'hull' : `${solar}×`}
         onDec={() => update({ solar_clusters_per_side: solar - 1 })}
         onInc={() => update({ solar_clusters_per_side: solar + 1 })}
-        decDisabled={solar <= R.solar_clusters_per_side.min}
-        incDisabled={solar >= R.solar_clusters_per_side.max}
+        decDisabled={fixedWings || solar <= R.solar_clusters_per_side.min}
+        incDisabled={fixedWings || solar >= R.solar_clusters_per_side.max}
       />
       <Stepper
         label="Radiator size"

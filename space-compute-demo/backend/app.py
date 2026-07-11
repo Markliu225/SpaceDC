@@ -85,7 +85,8 @@ def _restore_geometry_from_disk() -> None:
     try:
         engine.set_twin_geometry(
             {k: params.get(k) for k in
-             ("solar_clusters_per_side", "radiator_long", "radiator_ratio")},
+             ("architecture", "solar_clusters_per_side",
+              "radiator_long", "radiator_ratio")},
             mark_custom=False)
         log.info("twin geometry restored from disk: %s",
                  engine.twin_geometry.model_dump())
@@ -225,6 +226,7 @@ def _regenerate_twin(geom: dict[str, Any]) -> bool:
     (the backend venv has pxr). Returns True on a clean regenerate."""
     try:
         _TWIN_PARAMS.write_text(json.dumps({
+            "architecture": geom.get("architecture", "truss"),
             "solar_clusters_per_side": geom["solar_clusters_per_side"],
             "radiator_long": geom["radiator_long"],
             "radiator_ratio": geom["radiator_ratio"],
@@ -276,7 +278,7 @@ _preview_semaphore = asyncio.Semaphore(1)
 
 # Bump when the render pipeline itself changes (view, filters, lite mode…)
 # so cached PNGs from the old look regenerate.
-_PREVIEW_PIPELINE_V = 1
+_PREVIEW_PIPELINE_V = 2
 
 
 def _design_fingerprint(preset: design_presets.DesignPreset) -> str:
@@ -317,11 +319,11 @@ def _render_design_preview(preset: design_presets.DesignPreset) -> Path | None:
             log.error("preview gen failed (%s): %s", preset.id, r.stderr[-500:])
             return None
         # --only keeps the satellite body (backbone parts / servers / wings /
-        # radiators) and drops the celestial context spheres, which would
-        # otherwise dominate the auto-framing.
+        # radiators / the LUMID + dish hulls) and drops the celestial context
+        # spheres, which would otherwise dominate the auto-framing.
         r = subprocess.run([sys.executable, str(_RENDER_SCRIPT), str(stage), str(tmp),
                             "--view", "iso", "--size", str(_PREVIEW_SIZE),
-                            "--only", "part,Server,Wing,Radiator"],
+                            "--only", "part,Server,Wing,Radiator,Hull,LUMID,Satellite"],
                            capture_output=True, text=True, timeout=300)
         if r.returncode != 0 or not tmp.exists():
             log.error("preview render failed (%s): %s", preset.id, r.stderr[-500:])

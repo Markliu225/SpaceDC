@@ -165,13 +165,19 @@ class SatelliteConfig(BaseModel):
     radiator_size: RadiatorSize = "Standard"
 
 
+Architecture = Literal["truss", "twin_truss", "blanket", "lumid", "dish"]
+
+
 class TwinGeometry(BaseModel):
     """Deployable-geometry knobs that drive the regenerated USD model
     (tools/gen_twin_satellite.py via usd/twin_params.json) AND the physics
-    areas. `solar_clusters_per_side` is the number of 2×2 panel clusters per
-    wing (panels only extend along the two sides); `radiator_long` /
-    `radiator_ratio` size and shape the two radiator panels. `version` bumps
-    on every change so Kit can reload the regenerated layer."""
+    areas. `architecture` selects the hull CONFIGURATION (single truss /
+    stacked twin truss / ribbon-wing truss / LUMID smallsat / dish comms
+    hull); `solar_clusters_per_side` is the number of wing segments (ignored
+    by the hull architectures, whose panels are integrated); `radiator_long`
+    / `radiator_ratio` size and shape the two radiator panels. `version`
+    bumps on every change so Kit can reload the regenerated layer."""
+    architecture: Architecture = "truss"
     solar_clusters_per_side: int = 2
     radiator_long: float = 1.55
     radiator_ratio: float = 2.5

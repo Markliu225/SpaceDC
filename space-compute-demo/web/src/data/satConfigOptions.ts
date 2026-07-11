@@ -140,6 +140,7 @@ const SOLAR_CLUSTER_M2 = (0.981 * 1.45 * BACKBONE_SCALE) * (0.777 * 1.05 * BACKB
 
 /** Geometry knobs deriveStats needs — subset of TwinGeometry. */
 export interface GeometryLike {
+  architecture?: string
   solar_clusters_per_side: number
   radiator_long: number
   radiator_ratio: number
@@ -147,13 +148,26 @@ export interface GeometryLike {
 
 /** Engine-default geometry — used when no live twin_geometry is available. */
 export const GEOMETRY_DEFAULT: GeometryLike = {
+  architecture: 'truss',
   solar_clusters_per_side: 2,
   radiator_long: 1.55,
   radiator_ratio: 2.5,
 }
 
+/** Hull architectures fly integrated panels with fixed cell area — mirrors
+ *  state_engine._ARCH_FIXED_SOLAR_M2. */
+const ARCH_FIXED_SOLAR_M2: Record<string, number> = { lumid: 9.5, dish: 18.0 }
+
+/** Architectures whose solar panels are part of the hull (the wing-segment
+ *  stepper does not apply). */
+export function hasFixedWings(geom: GeometryLike): boolean {
+  return (geom.architecture ?? 'truss') in ARCH_FIXED_SOLAR_M2
+}
+
 /** Total active solar cell area (both wings), m². */
 export function solarAreaM2(geom: GeometryLike): number {
+  const fixed = ARCH_FIXED_SOLAR_M2[geom.architecture ?? 'truss']
+  if (fixed !== undefined) return fixed
   return geom.solar_clusters_per_side * 2 * SOLAR_CLUSTER_M2
 }
 

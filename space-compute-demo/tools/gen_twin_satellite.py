@@ -198,6 +198,37 @@ LITE_MATERIALS = {
 # the live usd/twin_satellite.usda.
 PREVIEW_LITE = False
 
+# --- Satellite architectures -------------------------------------------------
+# twin_params.json key "architecture" selects which HULL CONFIGURATION the
+# generator builds — completely different satellite shapes, not just scaled
+# wings (each design preset in backend/design_presets.py picks one):
+#   truss      — single SpaceDcBackbone spine, 12 blades, 2×2-cluster side
+#                wings, ±Z radiators (the classic orbital-DC look)
+#   twin_truss — TWO backbones stacked into a 2-segment tower (24 blades),
+#                wings mounted at the joint, radiators off the far ends
+#   blanket    — single spine, but each wing is a long single-row blanket
+#                (4 tiles per segment in a row) — an ISS-style ribbon wing
+#   lumid      — the LUMID smallsat hull (integrated cross panels) + our
+#                radiators; no external wings, GPUs ride inside the bus
+#   dish       — the parabolic-dish comms hull with windmill wings + our
+#                radiators; GPUs inside the bus
+ARCHITECTURES = ("truss", "twin_truss", "blanket", "lumid", "dish")
+ARCHITECTURE  = "truss"
+
+LUMID_REF   = "./assets/LUMID_colored.usdc"
+DISH_REF    = "./assets/Satellite_v022.usdc"
+# Native bboxes (asset units — both were authored in mm):
+#   LUMID:          2129 × 746 × 1919, cross panels in the X/Z plane
+#   Satellite_v022:  106 × 168 × 168, dish axis along +X
+LUMID_NATIVE_Z  = 1919.0
+DISH_NATIVE_YZ  = 168.0
+# Hull scale targets, in backbone units (1 unit = BACKBONE_SCALE cm = 1.8 m):
+LUMID_TARGET_U  = 3.1          # ≈ 5.6 m tall smallsat
+DISH_TARGET_U   = 3.4          # ≈ 6.1 m across the windmill wings
+# Radiator boom mount Z (backbone units) per hull:
+LUMID_RAD_Z     = 1.60
+DISH_RAD_Z      = 1.80
+
 # Closeup camera — a true 3/4 (from +X / -Y / above) so the solar wings (face
 # +X) AND the perpendicular radiators (face ±Y, top/bottom) are both readable.
 # Pulled far back to hold the full ~7.5 m span × ~5.5 m height.
@@ -562,18 +593,21 @@ def dgx_blade(name: str, cx: float, cy: float, cz: float, y_sign: float) -> str:
     )
 
 
-def servers_group() -> str:
+def servers_group(z_off: float = 0.0, tag: str = "") -> str:
+    """The 12 blades of one backbone segment. `z_off`/`tag` let twin_truss
+    stack a second segment's worth (Server_<rack>_<i>U / ...D)."""
     make = dgx_blade if USE_DGX else server_blade
     blades = []
     for rack_name, y_sign, zs in RACKS:
         cy = y_sign * SLOT_Y_ABS
         for i, cz in enumerate(zs):
-            blades.append(make(f"Server_{rack_name}_{i}", 0.0, cy, cz, y_sign))
+            blades.append(make(f"Server_{rack_name}_{i}{tag}", 0.0, cy, cz + z_off, y_sign))
     body = "\n".join(blades)
-    return f'def Xform "Servers"\n{{\n{indent(body, "    ")}\n}}'
+    name = f"Servers{tag}" if tag else "Servers"
+    return f'def Xform "{name}"\n{{\n{indent(body, "    ")}\n}}'
 
 
-def deployable_prototypes() -> str:
+def deployable_prototypes(include_solar: bool = True) -> str:
     """Shared prototypes for the instanced deployables (full-asset mode only).
 
     Every solar tile / radiator panel used to carry its own reference to the
@@ -586,10 +620,13 @@ def deployable_prototypes() -> str:
 
     Transforms stay on each instance root: local opinions there
     (xformOpOrder) would mask any prototype-side ops, so authoring them in
-    one place — the instance — is the only non-brittle split."""
-    return (
-        f'class Xform "_Protos"\n'
-        f'{{\n'
+    one place — the instance — is the only non-brittle split.
+
+    `include_solar=False` (hull architectures — lumid/dish carry their own
+    integrated panels) skips the SolarTile prototype entirely: even an
+    abstract class prim composes its reference arcs, so emitting it would
+    make Kit load the 78 MB tile asset for nothing."""
+    solar_proto = (
         f'    def Xform "SolarTile" (\n'
         f'        prepend references = @{SOLAR_REF}@\n'
         f'    )\n'
@@ -607,6 +644,11 @@ def deployable_prototypes() -> str:
         f'        }}\n'
         f'    }}\n'
         f'\n'
+    ) if include_solar else ''
+    return (
+        f'class Xform "_Protos"\n'
+        f'{{\n'
+        f'{solar_proto}'
         f'    def Xform "RadiatorPanel" (\n'
         f'        prepend references = @{RAD_REF}@\n'
         f'    )\n'
@@ -696,8 +738,41 @@ def solar_wing(side: float) -> str:
     return f'def Xform "{name}"\n{{\n{indent(body, "    ")}\n}}'
 
 
+def blanket_wing(side: float) -> str:
+    """ISS-style ribbon wing (the `blanket` architecture): each segment is a
+    single ROW of four tiles (1 tall × 4 wide along the deploy axis) instead
+    of the truss wings' 2×2 stack, so the wing reads as a long thin blanket.
+    Tile count per segment matches a truss cluster (4), so the physics area
+    formula (clusters × 2 × cluster-area) is IDENTICAL across both archs."""
+    s = side
+    H = SOLAR_NATIVE[0] * PANEL_SCALE[0]          # full-cluster height along Z
+    D = SOLAR_NATIVE[1] * PANEL_SCALE[1]          # full-cluster deploy along Y
+    sub = (PANEL_SCALE[0] * SUB_FRAC, PANEL_SCALE[1] * SUB_FRAC, PANEL_SCALE[2])
+    X = SOLAR_X
+    # Blanket rides the truss mid-line (Z = 0) so the ribbon reads symmetric.
+    Z = 0.0
+    parts = [
+        box_mesh("YokeBracket",  X, 0.085 * s, Z, 0.026, 0.060, 0.052, "SolarFrame"),
+        box_mesh("HingePin",     X, 0.130 * s, Z, 0.010, 0.012, 0.058, "HingePinMetal"),
+        box_mesh("ArmSeg1",      X, 0.190 * s, Z, 0.018, 0.086, 0.034, "SolarFrame"),
+        box_mesh("ArmSeg2",      X, 0.290 * s, Z, 0.014, 0.074, 0.026, "SolarFrame"),
+        box_mesh("ArmSeg3",      X, 0.380 * s, Z, 0.010, 0.080, 0.018, "SolarFrame"),
+    ]
+    # One segment = 4 tiles side by side along Y; segments chain outward.
+    seg_span = 4 * (D / 2.0)                       # 4 half-cluster-wide tiles
+    for i in range(N_PANELS):
+        seg_y0 = BOOM_Y1 + i * seg_span
+        for c in range(4):
+            cy = (seg_y0 + (c + 0.5) * (D / 2.0)) * s
+            parts.append(solar_panel(f"Cluster{i}_{c}", X, cy, Z, sub))
+    name = "WingPosY" if side > 0 else "WingNegY"
+    body = "\n".join(parts)
+    return f'def Xform "{name}"\n{{\n{indent(body, "    ")}\n}}'
+
+
 def solar_group() -> str:
-    body = solar_wing(1.0) + "\n" + solar_wing(-1.0)
+    wing = blanket_wing if ARCHITECTURE == "blanket" else solar_wing
+    body = wing(1.0) + "\n" + wing(-1.0)
     return f'def Xform "SolarArray"\n{{\n{indent(body, "    ")}\n}}'
 
 
@@ -731,12 +806,24 @@ def radiator_panel(name: str, cx: float, cy: float, cz: float) -> str:
     )
 
 
+def _radiator_mount_z() -> float:
+    """Where the radiator booms leave the hull along ±Z, per architecture."""
+    if ARCHITECTURE == "twin_truss":
+        return 2.0 * SPINE_END_Z       # two stacked segments span ±1.0
+    if ARCHITECTURE == "lumid":
+        return LUMID_RAD_Z
+    if ARCHITECTURE == "dish":
+        return DISH_RAD_Z
+    return SPINE_END_Z
+
+
 def radiator_group() -> str:
-    """A boom off each ±Z spine end with one long radiator beyond it — the
+    """A boom off each ±Z hull end with one long radiator beyond it — the
     radiator's short edge meets the boom tip, the long axis runs out along Z."""
     parts = []
+    mount = _radiator_mount_z()
     for tag, dirn in (("Top", 1.0), ("Bot", -1.0)):
-        end_z = SPINE_END_Z * dirn
+        end_z = mount * dirn
         boom_far = end_z + dirn * RAD_BOOM_LEN
         parts.append(box_mesh(f"RadBoom{tag}", RAD_X, 0.0, (end_z + boom_far) / 2.0,
                               RAD_BOOM_THICK, RAD_BOOM_THICK, RAD_BOOM_LEN, "SolarFrame"))
@@ -823,20 +910,84 @@ def backbone_override() -> str:
     return f'over "_materials"\n{{\n{indent(chr(10).join(mats), "    ")}\n}}'
 
 
-def satellite_prim() -> str:
-    backbone = (
-        f'def Xform "Backbone" (\n'
+def _backbone_prim(name: str = "Backbone", z_off: float = 0.0) -> str:
+    xform = ""
+    if z_off:
+        xform = (f'    double3 xformOp:translate = (0, 0, {z_off:.4f})\n'
+                 f'    uniform token[] xformOpOrder = ["xformOp:translate"]\n')
+    return (
+        f'def Xform "{name}" (\n'
         f'    prepend references = @{BACKBONE_REF}@\n'
         f')\n'
         f'{{\n'
+        f'{xform}'
         f'{indent(backbone_override(), "    ")}\n'
         f'}}'
     )
-    parts = [backbone, servers_group(), solar_group(), radiator_group()]
+
+
+def _hull_prim(ref: str, native_size: float, target_u: float,
+               rotate_z: float = 0.0) -> str:
+    """A complete-satellite hull asset (LUMID / dish), uniformly scaled so its
+    largest native dimension spans `target_u` backbone units. These usdc
+    hulls carry their own Looks scopes, so no material overrides needed."""
+    s = target_u / native_size
+    rot = f'    float xformOp:rotateZ = {rotate_z}\n' if rotate_z else ''
+    order = ('["xformOp:rotateZ", "xformOp:scale"]' if rotate_z
+             else '["xformOp:scale"]')
+    return (
+        f'def Xform "Hull" (\n'
+        f'    prepend references = @{ref}@\n'
+        f')\n'
+        f'{{\n'
+        f'{rot}'
+        f'    double3 xformOp:scale = ({s:.6f}, {s:.6f}, {s:.6f})\n'
+        f'    uniform token[] xformOpOrder = {order}\n'
+        f'}}'
+    )
+
+
+def _architecture_parts() -> list[str]:
+    """The hull + payload prims for the active ARCHITECTURE (everything under
+    /World/Satellite except the shared prototypes)."""
+    if ARCHITECTURE == "twin_truss":
+        return [
+            _backbone_prim("BackboneUp", +SPINE_END_Z),
+            _backbone_prim("BackboneDown", -SPINE_END_Z),
+            servers_group(+SPINE_END_Z, "U"),
+            servers_group(-SPINE_END_Z, "D"),
+            solar_group(),
+            radiator_group(),
+        ]
+    if ARCHITECTURE == "lumid":
+        return [
+            _hull_prim(LUMID_REF, LUMID_NATIVE_Z, LUMID_TARGET_U),
+            radiator_group(),
+        ]
+    if ARCHITECTURE == "dish":
+        # rotateZ=180 turns the dish boresight to -X: the +X face belongs to
+        # the sun-tracking cells, the dish looks back at Earth's horizon.
+        return [
+            _hull_prim(DISH_REF, DISH_NATIVE_YZ, DISH_TARGET_U, rotate_z=180.0),
+            radiator_group(),
+        ]
+    # truss + blanket share the single-spine hull.
+    return [
+        _backbone_prim(),
+        servers_group(),
+        solar_group(),
+        radiator_group(),
+    ]
+
+
+def satellite_prim() -> str:
+    parts = _architecture_parts()
     if not PREVIEW_LITE:
         # Shared instancing prototypes for the heavy scanned deployables —
         # must sit under /World/Satellite so instances inherit the ×180 frame.
-        parts.insert(0, deployable_prototypes())
+        # Hull architectures only instance the radiator panels.
+        parts.insert(0, deployable_prototypes(
+            include_solar=ARCHITECTURE not in ("lumid", "dish")))
     inner = "\n\n".join(parts)
     return f"""def Xform "Satellite"
 {{
@@ -850,8 +1001,15 @@ def satellite_prim() -> str:
 def _frame_radius_cm() -> float:
     """Largest deployed extent (solar tip along Y, radiator tip along Z) in cm,
     so the camera distance scales with whatever geometry is configured."""
-    solar_tip = (BOOM_Y1 + N_PANELS * (SOLAR_NATIVE[1] * PANEL_SCALE[1])) * BACKBONE_SCALE
-    rad_tip   = (SPINE_END_Z + RAD_BOOM_LEN + RAD_LONG) * BACKBONE_SCALE
+    deploy = SOLAR_NATIVE[1] * PANEL_SCALE[1]
+    if ARCHITECTURE == "blanket":
+        solar_tip = (BOOM_Y1 + N_PANELS * 2.0 * deploy) * BACKBONE_SCALE
+    elif ARCHITECTURE in ("lumid", "dish"):
+        hull_u = LUMID_TARGET_U if ARCHITECTURE == "lumid" else DISH_TARGET_U
+        solar_tip = (hull_u / 2.0) * BACKBONE_SCALE
+    else:
+        solar_tip = (BOOM_Y1 + N_PANELS * deploy) * BACKBONE_SCALE
+    rad_tip = (_radiator_mount_z() + RAD_BOOM_LEN + RAD_LONG) * BACKBONE_SCALE
     return max(solar_tip, rad_tip)
 
 
@@ -957,20 +1115,23 @@ def _parse_cli(argv: list[str]) -> tuple[Path | None, Path]:
 
 
 def main(argv: list[str] | None = None) -> None:
-    global N_PANELS, RAD_LONG, RAD_RATIO, USE_DGX, PREVIEW_LITE
+    global N_PANELS, RAD_LONG, RAD_RATIO, USE_DGX, PREVIEW_LITE, ARCHITECTURE
     import sys
     params_path, out_path = _parse_cli(sys.argv[1:] if argv is None else argv)
     p = _load_params(params_path)
     N_PANELS  = max(1, min(8, int(p.get("solar_clusters_per_side", N_PANELS))))
     RAD_LONG  = max(0.3, min(3.0, float(p.get("radiator_long", RAD_LONG))))
     RAD_RATIO = max(1.2, min(6.0, float(p.get("radiator_ratio", RAD_RATIO))))
+    arch = str(p.get("architecture", ARCHITECTURE))
+    ARCHITECTURE = arch if arch in ARCHITECTURES else "truss"
     # Previews render with the lightweight procedural blades — the DGX asset
     # is ~150 MB and only worth composing in the live Kit stage.
     USE_DGX = bool(p.get("use_dgx", USE_DGX))
     PREVIEW_LITE = bool(p.get("preview_lite", PREVIEW_LITE))
     if p:
-        print(f"[gen] params: solar/side={N_PANELS} rad_long={RAD_LONG} "
-              f"rad_ratio={RAD_RATIO} dgx={USE_DGX} lite={PREVIEW_LITE}")
+        print(f"[gen] params: arch={ARCHITECTURE} solar/side={N_PANELS} "
+              f"rad_long={RAD_LONG} rad_ratio={RAD_RATIO} "
+              f"dgx={USE_DGX} lite={PREVIEW_LITE}")
     out = build_usda()
     # Atomic publish: Kit force-reloads this layer the moment the backend
     # bumps the geometry version, and an unrelated earlier reload could also

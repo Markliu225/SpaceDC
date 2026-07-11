@@ -24,6 +24,9 @@ class DesignPreset(BaseModel):
     tagline: str
     description: str
     config: SatelliteConfig
+    # Hull configuration — one of gen_twin_satellite.py's ARCHITECTURES.
+    # Each preset is a genuinely different satellite SHAPE, not a rescale.
+    architecture: str = "truss"
     # Geometry knobs only — `version` is owned by the live engine state.
     solar_clusters_per_side: int
     radiator_long: float
@@ -34,6 +37,7 @@ class DesignPreset(BaseModel):
 
     def geometry_patch(self) -> dict:
         return {
+            "architecture": self.architecture,
             "solar_clusters_per_side": self.solar_clusters_per_side,
             "radiator_long": self.radiator_long,
             "radiator_ratio": self.radiator_ratio,
@@ -64,6 +68,7 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
             gpu="H100", solar_material="Si", solar_size="M",
             radiator_material="WhitePaint", radiator_size="Standard",
         ),
+        architecture="truss",
         solar_clusters_per_side=5, radiator_long=1.9, radiator_ratio=2.5,
         workload_profile="balanced",
         battery_capacity_wh=7000.0, platform_power_w=600.0,
@@ -71,16 +76,17 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
     DesignPreset(
         id="compute_max",
         name="Compute Max",
-        tagline="B200 · 6-cluster wings · graphite wide radiators",
+        tagline="B200 · twin-truss tower · graphite wide radiators",
         description=(
-            "Maximum on-orbit FLOPS: eight Blackwell B200s fed by six GaAs "
-            "clusters per wing, with oversized graphite radiators to dump "
-            "the 8 kW-class payload heat during sustained training runs."
+            "Maximum on-orbit FLOPS: TWO backbone segments stacked into a "
+            "24-blade tower, GaAs wings on the joint, and oversized graphite "
+            "radiators to dump the payload heat of sustained training runs."
         ),
         config=SatelliteConfig(
             gpu="B200", solar_material="GaAs", solar_size="L",
             radiator_material="Graphite", radiator_size="Wide",
         ),
+        architecture="twin_truss",
         solar_clusters_per_side=6, radiator_long=2.6, radiator_ratio=2.0,
         workload_profile="training",
         battery_capacity_wh=10500.0, platform_power_w=800.0,
@@ -88,16 +94,17 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
     DesignPreset(
         id="eco_light",
         name="Eco Light",
-        tagline="H100 · twin-cluster wings · slim radiators",
+        tagline="H100 · LUMID smallsat hull · integrated cross panels",
         description=(
-            "Minimum launch mass and CAPEX: two perovskite clusters per side "
-            "and slim radiators sized just past the duty cycle, flying a "
+            "Minimum launch mass and CAPEX on the LUMID smallsat bus: four "
+            "integrated perovskite cross panels and slim radiators, flying a "
             "low-duty housekeeping workload with occasional batch jobs."
         ),
         config=SatelliteConfig(
             gpu="H100", solar_material="Perovskite", solar_size="S",
             radiator_material="WhitePaint", radiator_size="Compact",
         ),
+        architecture="lumid",
         solar_clusters_per_side=2, radiator_long=1.75, radiator_ratio=3.0,
         workload_profile="low_duty",
         battery_capacity_wh=4600.0, platform_power_w=450.0,
@@ -105,16 +112,17 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
     DesignPreset(
         id="thermal_guard",
         name="Thermal Guard",
-        tagline="H200 · 3-cluster wings · OSR max-area radiators",
+        tagline="H200 · dish comms hull · OSR max-area radiators",
         description=(
-            "Built for spiky target-of-opportunity bursts: optical solar "
-            "reflector radiators at maximum span keep peak-load temperature "
-            "flat while H200s sprint through classification bursts."
+            "Built for spiky target-of-opportunity tasking: a parabolic-dish "
+            "comms hull with windmill wings, plus max-span optical solar "
+            "reflector radiators that keep burst temperature flat."
         ),
         config=SatelliteConfig(
             gpu="H200", solar_material="GaAs", solar_size="M",
             radiator_material="OSR", radiator_size="Wide",
         ),
+        architecture="dish",
         solar_clusters_per_side=3, radiator_long=3.0, radiator_ratio=1.5,
         workload_profile="burst",
         battery_capacity_wh=5000.0, platform_power_w=600.0,
@@ -122,16 +130,17 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
     DesignPreset(
         id="wide_wing",
         name="Wide Wing",
-        tagline="MI300X · 8-cluster wings · standard radiators",
+        tagline="MI300X · ISS-style ribbon wings · standard radiators",
         description=(
-            "Power-rich survey platform: the full eight-cluster wingspan "
-            "harvests enough for continuous MI300X inference plus battery "
+            "Power-rich survey platform: two 24 m single-row blanket wings "
+            "harvest enough for continuous MI300X inference plus battery "
             "margin for long eclipse seasons."
         ),
         config=SatelliteConfig(
             gpu="MI300X", solar_material="Perovskite", solar_size="XL",
             radiator_material="OSR", radiator_size="Standard",
         ),
+        architecture="blanket",
         solar_clusters_per_side=8, radiator_long=1.85, radiator_ratio=2.5,
         workload_profile="balanced",
         battery_capacity_wh=7500.0, platform_power_w=650.0,

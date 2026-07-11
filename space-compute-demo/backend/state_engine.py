@@ -124,9 +124,20 @@ _SUNLIT_FRACTION = 0.5
 _BACKBONE_SCALE = 1.8
 _SOLAR_CLUSTER_M2 = (0.981 * 1.45 * _BACKBONE_SCALE) * (0.777 * 1.05 * _BACKBONE_SCALE)
 
+# Hull architectures (lumid / dish) fly INTEGRATED panels — their active cell
+# area is fixed by the hull model, not by the wing-segment knob. Effective
+# areas sized from the scaled hulls (LUMID ≈5.6 m cross panels; the 6.1 m
+# windmill's four swept wings).
+_ARCH_FIXED_SOLAR_M2 = {"lumid": 9.5, "dish": 18.0}
+
 
 def _solar_area_m2(geom) -> float:
-    """Total active solar area: clusters/side × 2 sides × one-cluster area."""
+    """Total active solar area. Wing-segment archs: segments/side × 2 sides ×
+    one-cluster area (blanket lays the same 4 tiles in a row, so the formula
+    holds). Hull archs: fixed integrated-panel area."""
+    fixed = _ARCH_FIXED_SOLAR_M2.get(getattr(geom, "architecture", "truss"))
+    if fixed is not None:
+        return fixed
     return geom.solar_clusters_per_side * 2 * _SOLAR_CLUSTER_M2
 
 
