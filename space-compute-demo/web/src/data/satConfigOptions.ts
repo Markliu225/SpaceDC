@@ -199,6 +199,7 @@ export interface DerivedStats {
 export function deriveStats(
   cfg: SatelliteConfig,
   geom: GeometryLike = GEOMETRY_DEFAULT,
+  gpuCount: number = GPU_CARDS_PER_SAT,
 ): DerivedStats {
   const gpu  = gpuOption(cfg.gpu)
   const sMat = solarMaterial(cfg.solar_material)
@@ -209,7 +210,7 @@ export function deriveStats(
 
   const solar_input_max_w = sMat.efficiency * solarArea * SOLAR_CONSTANT_W_M2
 
-  const compute_pflops = gpu.pflops_per_card * GPU_CARDS_PER_SAT
+  const compute_pflops = gpu.pflops_per_card * gpuCount
 
   const launch_mass_kg =
     BUS_MASS_KG
@@ -218,13 +219,13 @@ export function deriveStats(
 
   const capex_usd_m =
     BUS_BASE_CAPEX_USD_M
-    + (gpu.cost_k * GPU_CARDS_PER_SAT) / 1000
+    + (gpu.cost_k * gpuCount) / 1000
     + 0.05 * solarArea
     + 0.02 * radPanelArea
 
   // Thermal index — lower is better. Proxy: payload power / radiator capacity.
   const radiator_capacity = rMat.emissivity * radiatorEmitAreaM2(geom)
-  const thermal_index = (gpu.tdp_w * GPU_CARDS_PER_SAT) / Math.max(0.05, radiator_capacity)
+  const thermal_index = (gpu.tdp_w * gpuCount) / Math.max(0.05, radiator_capacity)
 
   return {
     solar_input_max_w,

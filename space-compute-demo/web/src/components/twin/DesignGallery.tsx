@@ -208,7 +208,7 @@ function DesignCard({
         </span>
 
         <div className="mt-0.5 grid grid-cols-2 gap-x-2 gap-y-1">
-          <Stat icon={<Cpu size={10} />}         label={`${d.config.gpu} ×8`}            value={`${s.compute_pflops.toFixed(0)} PF`} />
+          <Stat icon={<Cpu size={10} />}         label={`${d.config.gpu} ×${d.gpu_count}`} value={`${s.compute_pflops.toFixed(0)} PF`} />
           <Stat icon={<Sun size={10} />}         label={`${s.solar_area_m2.toFixed(0)} m²`} value={`${(s.peak_solar_w / 1000).toFixed(1)} kW`} />
           <Stat icon={<Thermometer size={10} />} label={`${s.radiator_area_m2.toFixed(0)} m²`} value={`ε ${s.radiator_emissivity.toFixed(2)}`} />
           <Stat icon={<Scaling size={10} />}     label={`${s.mass_kg} kg`}               value={`${(s.workload_avg_util * 100).toFixed(0)}% load`} />

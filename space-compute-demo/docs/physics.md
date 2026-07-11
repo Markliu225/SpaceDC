@@ -81,7 +81,20 @@ P_solar = η · A_solar · S · incidence
 
 ## 4. Compute power (workload → device power)
 
-GPU utilisation follows a deterministic job schedule `_JOB_SCHEDULE` (a fixed queue of inference / training / downlink-prep jobs on a repeating cycle), **not** a sinusoid — so a config change is the only moving variable the user sees. In eclipse with a low battery the GPUs drop to a power-save floor:
+GPU utilisation follows a deterministic job schedule (`_WORKLOAD_PROFILES` — a fixed queue of **typed** jobs on a repeating cycle), **not** a sinusoid — so a config change is the only moving variable the user sees. Each schedule block names a concrete job from `ai_workloads.py`:
+
+| job | model | precision | nominal MFU | throughput law |
+|---|---|---|---|---|
+| LLM pretraining | Llama-3.3-70B | BF16 | 0.45 | tok/s = MFU·peak / (6·params) |
+| LLM adapter fine-tune | Llama-3.1-8B | BF16 | 0.45 | tok/s = MFU·peak / (6·params) |
+| LLM batched inference | Llama-3.3-70B | FP8 | 0.18 | tok/s = MFU·peak / (2·params) |
+| LLM interactive serving | Llama-3.3-70B | FP8 | 0.05 | (bandwidth-bound) |
+| EO imagery batch / burst | ViT-L/16 detector | FP8 | 0.35 / 0.45 | frames/s = MFU·peak / 0.30 TF |
+| housekeeping / checkpoint | — | — | 0 | — |
+
+Peak dense TFLOPS per card (datasheet, no sparsity): H100/H200 989 BF16 · 1979 FP8; B200 2250 · 4500; MI300X 1307 · 2615. MFU scales with the block's duty relative to the job's nominal duty (≤1.2×). The per-card **heat output equals the card's electrical power** — the state exposes the whole thing per tick as `satellite.workload_detail` (job, model, MFU, effective TFLOPS, tok/s or frames/s, W and heat per GPU).
+
+The card count is per design preset (`gpu_count` — e.g. 12×B200 on the twin-truss tower, 4×H100 in the LUMID bus). In eclipse with a low battery the GPUs drop to a power-save floor and the job degrades to housekeeping:
 
 ```
 util = schedule(t mod cycle)

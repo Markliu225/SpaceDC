@@ -27,6 +27,7 @@ from models import (
     StatePacket,
     TaskState,
 )
+import ai_workloads as _ai
 from services import orbit_catalog
 from services import constellations as _consts
 
@@ -148,45 +149,45 @@ def _radiator_area_m2(geom) -> float:
     return 4.0 * long_m * short_m
 
 
-# Deterministic compute-job schedules — (start_s, duration_s, util_target).
-# Each profile is the GPU's queue: a fixed sequence of jobs repeating every
-# cycle. No sinusoid, no mod-based step folding: each tuple is one concrete
-# job arriving at its scheduled sim time and holding the GPUs at a target
-# utilization for its duration. Hand-authored so config changes interact
-# with a *consistent* workload trace — the design choice is the only moving
-# variable. Design presets (design_presets.py) pick a profile by id.
+# Deterministic compute-job schedules — (start_s, duration_s, util, job_key).
+# Each profile is the GPU's queue: a fixed sequence of TYPED jobs repeating
+# every cycle. `util` is the block's power-duty fraction (drives the
+# electrical/thermal physics exactly as before); `job_key` names what the
+# GPUs are actually running (ai_workloads.JOB_TYPES — LLM pretraining /
+# fine-tune / batched or interactive inference / EO vision, each against a
+# concrete model) so the state can report MFU, effective TFLOPS, tokens/s or
+# frames/s and per-card heat. Design presets pick a profile by id.
 _WORKLOAD_PROFILES: dict[str, dict] = {
-    # The historical maritime-detection mix: idle gaps, sustained medium
-    # load, and short peak bursts.
+    # The maritime-detection mix: EO vision batches with LLM side-jobs.
     "balanced": {
         "label": "Mixed inference",
         "cycle_s": 400.0,
         "schedule": [
-            (  0.0,  18.0, 0.10),   # cold boot — housekeeping idle
-            ( 18.0,  42.0, 0.65),   # batch inference on imagery
-            ( 60.0,  18.0, 0.92),   # target acquired — burst classification
-            ( 78.0,  36.0, 0.75),   # continued tracking
-            (114.0,  24.0, 0.20),   # downlinking results, GPU mostly idle
-            (138.0,  60.0, 0.55),   # medium training batch
-            (198.0,  48.0, 0.85),   # heavy compute run
-            (246.0,  30.0, 0.30),   # cooldown gap
-            (276.0,  72.0, 0.70),   # sustained mid-high
-            (348.0,  18.0, 0.95),   # peak burst — emergency re-classify
-            (366.0,  34.0, 0.40),   # decaying back to idle
+            (  0.0,  18.0, 0.10, "housekeeping"),     # cold boot
+            ( 18.0,  42.0, 0.65, "vision_batch"),     # imagery batch inference
+            ( 60.0,  18.0, 0.92, "vision_burst"),     # target acquired
+            ( 78.0,  36.0, 0.75, "vision_batch"),     # continued tracking
+            (114.0,  24.0, 0.20, "llm_interactive"),  # ops queries while downlinking
+            (138.0,  60.0, 0.55, "llm_finetune"),     # onboard adapter fine-tune
+            (198.0,  48.0, 0.85, "llm_batch"),        # report/summary backlog
+            (246.0,  30.0, 0.30, "llm_interactive"),  # cooldown gap
+            (276.0,  72.0, 0.70, "vision_batch"),     # sustained survey
+            (348.0,  18.0, 0.95, "vision_burst"),     # emergency re-classify
+            (366.0,  34.0, 0.40, "llm_interactive"),  # decaying back to idle
         ],
     },
-    # Near-flat-out training with brief checkpoint dips.
+    # Near-flat-out 70B pretraining with checkpoint/eval dips.
     "training": {
         "label": "Sustained training",
         "cycle_s": 360.0,
         "schedule": [
-            (  0.0,  80.0, 0.90),   # epoch
-            ( 80.0,  10.0, 0.35),   # checkpoint write
-            ( 90.0,  86.0, 0.92),   # epoch
-            (176.0,  10.0, 0.35),   # checkpoint write
-            (186.0,  90.0, 0.88),   # epoch
-            (276.0,  14.0, 0.50),   # eval pass
-            (290.0,  70.0, 0.94),   # epoch
+            (  0.0,  80.0, 0.90, "llm_pretrain"),     # epoch
+            ( 80.0,  10.0, 0.35, "checkpoint_io"),    # checkpoint write
+            ( 90.0,  86.0, 0.92, "llm_pretrain"),     # epoch
+            (176.0,  10.0, 0.35, "checkpoint_io"),    # checkpoint write
+            (186.0,  90.0, 0.88, "llm_pretrain"),     # epoch
+            (276.0,  14.0, 0.50, "llm_eval"),         # eval pass
+            (290.0,  70.0, 0.94, "llm_pretrain"),     # epoch
         ],
     },
     # Mostly quiet with tall target-of-opportunity spikes.
@@ -194,14 +195,14 @@ _WORKLOAD_PROFILES: dict[str, dict] = {
         "label": "Burst response",
         "cycle_s": 300.0,
         "schedule": [
-            (  0.0,  50.0, 0.12),   # standby scan
-            ( 50.0,  16.0, 1.00),   # alert! full-rate classification
-            ( 66.0,  40.0, 0.15),   # standby
-            (106.0,  22.0, 0.95),   # second contact burst
-            (128.0,  60.0, 0.10),   # long quiet stretch
-            (188.0,  12.0, 1.00),   # flash tasking
-            (200.0,  46.0, 0.30),   # post-burst downlink prep
-            (246.0,  54.0, 0.12),   # standby scan
+            (  0.0,  50.0, 0.12, "housekeeping"),     # standby scan
+            ( 50.0,  16.0, 1.00, "vision_burst"),     # alert! full-rate classify
+            ( 66.0,  40.0, 0.15, "housekeeping"),     # standby
+            (106.0,  22.0, 0.95, "vision_burst"),     # second contact burst
+            (128.0,  60.0, 0.10, "housekeeping"),     # long quiet stretch
+            (188.0,  12.0, 1.00, "vision_burst"),     # flash tasking
+            (200.0,  46.0, 0.30, "llm_interactive"),  # post-burst downlink prep
+            (246.0,  54.0, 0.12, "housekeeping"),     # standby scan
         ],
     },
     # Housekeeping idle with one modest daily-batch window.
@@ -209,14 +210,15 @@ _WORKLOAD_PROFILES: dict[str, dict] = {
         "label": "Low duty cycle",
         "cycle_s": 400.0,
         "schedule": [
-            (  0.0, 150.0, 0.08),   # housekeeping
-            (150.0,  60.0, 0.50),   # scheduled batch window
-            (210.0,  30.0, 0.20),   # results packaging
-            (240.0, 160.0, 0.08),   # housekeeping
+            (  0.0, 150.0, 0.08, "housekeeping"),     # housekeeping
+            (150.0,  60.0, 0.50, "vision_batch"),     # scheduled batch window
+            (210.0,  30.0, 0.20, "llm_interactive"),  # results packaging
+            (240.0, 160.0, 0.08, "housekeeping"),     # housekeeping
         ],
     },
 }
 _DEFAULT_WORKLOAD_PROFILE = "balanced"
+_IDLE_JOB = "housekeeping"
 
 
 def _profile(profile_id: str) -> dict:
@@ -228,21 +230,21 @@ def workload_profile_stats(profile_id: str) -> dict:
     plus display labels. Used by the /designs gallery cards."""
     prof = _profile(profile_id)
     sched = prof["schedule"]
-    total = sum(d for _, d, _ in sched)
-    avg = sum(d * u for _, d, u in sched) / total if total > 0 else 0.30
+    total = sum(d for _, d, _, _ in sched)
+    avg = sum(d * u for _, d, u, _ in sched) / total if total > 0 else 0.30
     return {"label": prof["label"], "avg_util": round(avg, 2)}
 
 
-def _gpu_workload_util(t: float, profile_id: str) -> float:
+def _gpu_workload_util(t: float, profile_id: str) -> tuple[float, str]:
     """Walk a profile's fixed schedule. At sim time t we wrap into the
-    schedule's cycle and pick the single active job's target utilization,
-    falling back to a 0.05 idle floor if t lands in a gap."""
+    schedule's cycle and return the active block's (power-duty utilization,
+    typed job key), falling back to an idle floor if t lands in a gap."""
     prof = _profile(profile_id)
     ct = t % prof["cycle_s"]
-    for start, dur, u in prof["schedule"]:
+    for start, dur, u, job in prof["schedule"]:
         if start <= ct < start + dur:
-            return u
-    return 0.05
+            return u, job
+    return 0.05, _IDLE_JOB
 
 
 class StateEngine:
@@ -273,6 +275,7 @@ class StateEngine:
         self._design_id: str = "custom"
         self._workload_profile: str = _DEFAULT_WORKLOAD_PROFILE
         self._platform_power_w: float = 600.0
+        self._gpu_count: int = _GPU_CARDS_PER_SAT
         # 天数天算 mission — phase machine on a wall-clock timeline. The clock
         # (_mission_start_wall) only starts once the scene is loaded; until
         # then the mission holds on 'acquire'. _mission_request_wall marks when
@@ -400,6 +403,7 @@ class StateEngine:
                                   if preset.workload_profile in _WORKLOAD_PROFILES
                                   else _DEFAULT_WORKLOAD_PROFILE)
         self._platform_power_w = float(preset.platform_power_w)
+        self._gpu_count = max(1, int(preset.gpu_count))
         # Battery: swap capacity, keep the current charge fraction so the
         # switch doesn't teleport the SOC story.
         self._sat.battery_capacity_wh = float(preset.battery_capacity_wh)
@@ -696,23 +700,30 @@ class StateEngine:
         )
 
         # --- Workload-driven GPU utilization ----------------------------------
-        # Superposition of square jobs with mismatched periods so the curve
-        # has burstiness (high/mid/low steps) rather than a clean sinusoid.
-        # Eclipse triggers low-power mode (clamped down further below).
-        workload = _gpu_workload_util(t, self._workload_profile)
+        # The active schedule block names a TYPED job (LLM train/infer, EO
+        # vision — ai_workloads.py) plus its power-duty fraction. Eclipse
+        # with a low battery drops to power-save and the job degrades to
+        # housekeeping (the GPUs really are throttled to survival duty).
+        workload, job_key = _gpu_workload_util(t, self._workload_profile)
         if not self._sat.sunlit and self._sat.battery_soc < 0.4:
-            workload = min(workload, 0.20)  # power save: drop to baseline
+            if workload > 0.20:
+                workload, job_key = 0.20, _IDLE_JOB  # power save: survival duty
         self._sat.workload = workload
         # Real-design GPU power: idle floor at ~15% TDP, scales linearly with
         # util up to TDP. Datacenter GPUs (H100/H200/B200/MI300X) bench
         # within ~10% of this curve.
         IDLE_FRAC = 0.15
+        gpu_count = self._gpu_count
         gpu_w_per_card = gpu["tdp_w"] * (IDLE_FRAC + (1.0 - IDLE_FRAC) * workload)
-        payload_w = gpu_w_per_card * _GPU_CARDS_PER_SAT
+        payload_w = gpu_w_per_card * gpu_count
         platform_w = self._platform_power_w
         self._sat.gpu_utilization = workload
         self._sat.payload_power_w = payload_w
         self._sat.platform_power_w = platform_w
+        self._sat.gpu_count = gpu_count
+        # Per-GPU compute/throughput/heat detail for the panels.
+        self._sat.workload_detail = _ai.job_detail(
+            cfg.gpu, job_key, workload, gpu_w_per_card, gpu_count)
 
         # --- Battery (real Wh integration, accelerated 60x for visibility) ----
         # Net power into the battery. Surplus charges it; deficit discharges.
@@ -754,11 +765,11 @@ class StateEngine:
         # sees the demand the schedule actually produces, not a hand-typed
         # 0.40 — and switching designs moves the demand side too.
         _sched = _profile(self._workload_profile)["schedule"]
-        sched_total_dt = sum(d for _, d, _ in _sched)
-        avg_workload = (sum(d * u for _, d, u in _sched) / sched_total_dt
+        sched_total_dt = sum(d for _, d, _, _ in _sched)
+        avg_workload = (sum(d * u for _, d, u, _ in _sched) / sched_total_dt
                         if sched_total_dt > 0 else 0.30)
         avg_card_w = gpu["tdp_w"] * (IDLE_FRAC + (1.0 - IDLE_FRAC) * avg_workload)
-        avg_payload_w = avg_card_w * _GPU_CARDS_PER_SAT
+        avg_payload_w = avg_card_w * gpu_count
         solar_demand_avg_w = avg_payload_w + platform_w
         peak_solar_w = s_mat["efficiency"] * panel_area_m2 * _SOLAR_CONSTANT_W_M2
         # Orbit-average supply under the SAME sun-tracking model the per-tick
@@ -771,7 +782,7 @@ class StateEngine:
 
         # Thermal peak demand: worst case is sustained 100 % workload.
         peak_card_w = gpu["tdp_w"] * (IDLE_FRAC + (1.0 - IDLE_FRAC) * 1.0)
-        thermal_peak_demand_w = (peak_card_w * _GPU_CARDS_PER_SAT + platform_w) * 0.95
+        thermal_peak_demand_w = (peak_card_w * gpu_count + platform_w) * 0.95
         # Thermal supply: emit at the +60 °C safe-operating ceiling.
         T_max_K = 60.0 + 273.15
         thermal_max_emit_w = epsilon * SIGMA * radiator_area_m2 * (T_max_K**4 - T_BG_K**4)

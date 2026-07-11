@@ -63,7 +63,7 @@ export function DesignSummary() {
   const geom = useDemoStore((s) => s.lastState?.twin_geometry) ?? GEOMETRY_DEFAULT
   const cfg = useTelemetryStore((s) => s.satConfig)
   const gpu = gpuOption(cfg.gpu)
-  const stats = deriveStats(cfg, geom)
+  const stats = deriveStats(cfg, geom, sat?.gpu_count ?? GPU_CARDS_PER_SAT)
 
   // Power balance (W) — supply minus demand on average.
   const solarSupply = sat?.solar_supply_avg_w ?? 0

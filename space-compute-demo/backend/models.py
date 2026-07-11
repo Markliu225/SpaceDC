@@ -14,6 +14,25 @@ TaskPhase = Literal[
 ]
 
 
+class GpuJobDetail(BaseModel):
+    """What the payload GPUs are ACTUALLY running this tick — the typed job
+    from the active schedule block (ai_workloads.py) resolved against the
+    fitted GPU's datasheet: achieved MFU, effective TFLOPS, model-level
+    throughput, and per-card electrical/heat load."""
+    job: str = "housekeeping"
+    job_label: str = "Housekeeping / standby"
+    model: str = "-"
+    precision: str = "-"
+    mfu: float = 0.0
+    gpu_count: int = 8
+    power_w_per_gpu: float = 0.0
+    heat_w_per_gpu: float = 0.0
+    tflops_per_gpu: float = 0.0
+    throughput_per_gpu: float = 0.0
+    throughput_total: float = 0.0
+    throughput_unit: str = "-"
+
+
 class SatelliteState(BaseModel):
     id: str = "sat-001"
     orbit_type: OrbitType = "LEO"
@@ -49,6 +68,10 @@ class SatelliteState(BaseModel):
     # Workload (0..1) drives gpu_utilization; exposed so the UI can show
     # the upstream job pattern, not just the resulting load.
     workload: float = 0.0
+    # Number of accelerator cards fitted (per design preset).
+    gpu_count: int = 8
+    # Typed-job detail for the active schedule block.
+    workload_detail: Optional[GpuJobDetail] = None
     # Standing alarms — short string codes the web maps to localized labels.
     # Empty list while nominal.
     alarms: list[str] = []

@@ -7,6 +7,24 @@ export type TaskPhase =
   | 'idle' | 'created' | 'capturing' | 'inferencing'
   | 'packaging' | 'downlink' | 'delivered';
 
+/** What the payload GPUs are ACTUALLY running this tick — the typed job from
+ *  the active schedule block resolved against the fitted GPU's datasheet
+ *  (mirrors backend ai_workloads.py / models.GpuJobDetail). */
+export interface GpuJobDetail {
+  job: string;
+  job_label: string;
+  model: string;
+  precision: string;
+  mfu: number;
+  gpu_count: number;
+  power_w_per_gpu: number;
+  heat_w_per_gpu: number;
+  tflops_per_gpu: number;
+  throughput_per_gpu: number;
+  throughput_total: number;
+  throughput_unit: string;
+}
+
 export interface SatelliteState {
   id: string;
   orbit_type: OrbitType;
@@ -31,6 +49,10 @@ export interface SatelliteState {
   radiator_power_w?: number;
   /** Workload (0..1) — the upstream job pattern driving gpu_utilization. */
   workload?: number;
+  /** Accelerator cards fitted (per design preset). */
+  gpu_count?: number;
+  /** Typed-job detail for the active schedule block (ai_workloads.py). */
+  workload_detail?: GpuJobDetail;
   /** Standing alarm codes (e.g. 'low_battery', 'overtemp', 'undertemp',
    *  'eclipse_deficit', 'radiator_undersized', 'solar_undersized'). */
   alarms?: string[];
@@ -179,6 +201,8 @@ export interface DesignPresetInfo {
   tagline: string;
   description: string;
   config: SatelliteConfig;
+  architecture: string;
+  gpu_count: number;
   solar_clusters_per_side: number;
   radiator_long: number;
   radiator_ratio: number;

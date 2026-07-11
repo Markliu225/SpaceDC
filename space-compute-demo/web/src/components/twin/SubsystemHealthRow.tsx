@@ -52,7 +52,7 @@ export function SubsystemHealthRow() {
   const cards: SubCard[] = [
     powerCard(cfg, tel, sat),
     thermalCard(cfg, tel),
-    computeCard(cfg, tel),
+    computeCard(cfg, tel, sat),
     commsCard(cfg, tel, sat),
   ]
 
@@ -156,18 +156,39 @@ function thermalCard(_cfg: SatelliteConfig, tel: TwinTelemetrySnapshot['current'
   }
 }
 
-function computeCard(cfg: SatelliteConfig, tel: TwinTelemetrySnapshot['current']): SubCard {
+function computeCard(
+  cfg: SatelliteConfig,
+  tel: TwinTelemetrySnapshot['current'],
+  sat: SatelliteState | undefined,
+): SubCard {
   const health: Health = tel.payload_w > 0 ? 'nominal' : 'warn'
+  const wd = sat?.workload_detail
+  const cards = sat?.gpu_count ?? 8
+  // "Llama-3.3-70B FP8 · LLM pretraining" — the typed job the engine is
+  // actually simulating; falls back to the generic line offline.
+  const hint =
+    health !== 'nominal' ? 'Payload offline — power or thermal cut'
+    : wd && wd.model !== '-' ? `${wd.model} ${wd.precision} · ${wd.job_label}`
+    : wd ? wd.job_label
+    : `${cfg.gpu} × ${cards} cards running inference`
+  const throughput: CardMetric =
+    wd && wd.throughput_unit !== '-'
+      ? {
+          label: 'Rate',
+          value: wd.throughput_total >= 10_000
+            ? `${(wd.throughput_total / 1000).toFixed(1)}k`
+            : String(Math.round(wd.throughput_total)),
+          unit: wd.throughput_unit,
+        }
+      : { label: 'Payload', value: tel.payload_w, digits: 0, unit: 'W' }
   return {
     title: 'Compute',
     icon: Cpu,
     health,
-    hint: health === 'nominal'
-      ? `${cfg.gpu} × 8 cards running inference`
-      : 'Payload offline — power or thermal cut',
+    hint,
     metrics: [
-      { label: 'GPU',     value: cfg.gpu },
-      { label: 'Payload', value: tel.payload_w, digits: 0, unit: 'W' },
+      { label: 'GPU', value: `${cfg.gpu} ×${cards}` },
+      throughput,
     ],
   }
 }

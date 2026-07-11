@@ -32,6 +32,8 @@ class DesignPreset(BaseModel):
     radiator_long: float
     radiator_ratio: float
     workload_profile: str
+    # Accelerator cards fitted (drives payload power AND compute throughput).
+    gpu_count: int = 8
     battery_capacity_wh: float
     platform_power_w: float
 
@@ -70,31 +72,31 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
         ),
         architecture="truss",
         solar_clusters_per_side=5, radiator_long=1.9, radiator_ratio=2.5,
-        workload_profile="balanced",
+        workload_profile="balanced", gpu_count=8,
         battery_capacity_wh=7000.0, platform_power_w=600.0,
     ),
     DesignPreset(
         id="compute_max",
         name="Compute Max",
-        tagline="B200 · twin-truss tower · graphite wide radiators",
+        tagline="12x B200 · twin-truss tower · graphite wide radiators",
         description=(
             "Maximum on-orbit FLOPS: TWO backbone segments stacked into a "
-            "24-blade tower, GaAs wings on the joint, and oversized graphite "
-            "radiators to dump the payload heat of sustained training runs."
+            "24-slot tower carrying twelve B200s, perovskite wings on the "
+            "joint, and oversized graphite radiators for sustained training."
         ),
         config=SatelliteConfig(
-            gpu="B200", solar_material="GaAs", solar_size="L",
+            gpu="B200", solar_material="Perovskite", solar_size="L",
             radiator_material="Graphite", radiator_size="Wide",
         ),
         architecture="twin_truss",
-        solar_clusters_per_side=6, radiator_long=2.6, radiator_ratio=2.0,
-        workload_profile="training",
-        battery_capacity_wh=10500.0, platform_power_w=800.0,
+        solar_clusters_per_side=8, radiator_long=2.6, radiator_ratio=2.0,
+        workload_profile="training", gpu_count=12,
+        battery_capacity_wh=15000.0, platform_power_w=800.0,
     ),
     DesignPreset(
         id="eco_light",
         name="Eco Light",
-        tagline="H100 · LUMID smallsat hull · integrated cross panels",
+        tagline="4x H100 · LUMID smallsat hull · integrated cross panels",
         description=(
             "Minimum launch mass and CAPEX on the LUMID smallsat bus: four "
             "integrated perovskite cross panels and slim radiators, flying a "
@@ -106,8 +108,8 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
         ),
         architecture="lumid",
         solar_clusters_per_side=2, radiator_long=1.75, radiator_ratio=3.0,
-        workload_profile="low_duty",
-        battery_capacity_wh=4600.0, platform_power_w=450.0,
+        workload_profile="low_duty", gpu_count=4,
+        battery_capacity_wh=2600.0, platform_power_w=450.0,
     ),
     DesignPreset(
         id="thermal_guard",
@@ -124,7 +126,7 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
         ),
         architecture="dish",
         solar_clusters_per_side=3, radiator_long=3.0, radiator_ratio=1.5,
-        workload_profile="burst",
+        workload_profile="burst", gpu_count=8,
         battery_capacity_wh=5000.0, platform_power_w=600.0,
     ),
     DesignPreset(
@@ -142,7 +144,7 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
         ),
         architecture="blanket",
         solar_clusters_per_side=8, radiator_long=1.85, radiator_ratio=2.5,
-        workload_profile="balanced",
+        workload_profile="balanced", gpu_count=8,
         battery_capacity_wh=7500.0, platform_power_w=650.0,
     ),
 ]}
@@ -159,7 +161,7 @@ def preset_summary(p: DesignPreset) -> dict:
     # Local import — state_engine imports models like we do; keeping the
     # import inside the function avoids any module-init order surprises.
     from state_engine import (
-        _GPU_TABLE, _GPU_CARDS_PER_SAT, _SOLAR_MAT_TABLE, _RAD_MAT_TABLE,
+        _GPU_TABLE, _SOLAR_MAT_TABLE, _RAD_MAT_TABLE,
         _solar_area_m2, _radiator_area_m2, workload_profile_stats,
     )
 
@@ -173,7 +175,7 @@ def preset_summary(p: DesignPreset) -> dict:
     radiator_material_area = radiator_area / 2.0    # physical panel area for mass
 
     peak_solar_w = s_mat["efficiency"] * solar_area * 1361.0
-    compute_pflops = gpu["pflops"] * _GPU_CARDS_PER_SAT
+    compute_pflops = gpu["pflops"] * p.gpu_count
     mass_kg = (300.0
                + solar_area * s_mat["density_kg_m2"]
                + radiator_material_area * r_mat["density_kg_m2"])
