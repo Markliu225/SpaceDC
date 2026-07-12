@@ -10,6 +10,11 @@ import { ConfigDropdown } from './ConfigDropdown'
  * verdict); below it, the live typed-job readout: model + precision,
  * achieved MFU / effective TFLOPS, throughput, electrical draw and per-card
  * heat, and the cumulative output (tokens / frames / kWh) since the switch.
+ *
+ * LLM jobs resolve through the analytical performance/power/thermal engine
+ * (backend llm_perf.py): an extra strip shows the operating point — phase,
+ * decode batch, SM frequency the DVFS governor settled at, GPU die temp —
+ * and turns amber/red when the thermal limit throttles the cards.
  */
 export function WorkloadPanel() {
   const { profiles, active, applying, refresh, applyProfile } = useWorkloadProfiles()
@@ -77,6 +82,31 @@ export function WorkloadPanel() {
         <Row k="Heat/GPU" v={wd ? `${Math.round(wd.heat_w_per_gpu)} W` : '— —'} />
         <Row k="Radiated" v={sat?.radiator_power_w != null ? `${(sat.radiator_power_w / 1000).toFixed(2)} kW` : '— —'} />
       </div>
+
+      {/* Analytical operating point — LLM jobs only (llm_perf engine). */}
+      {wd?.engine === 'analytic' && (
+        <div
+          data-testid="llm-operating-point"
+          className={`flex items-center justify-between rounded border px-2 py-1 text-[10px] ${
+            wd.thermal_runaway ? 'border-err/60 bg-err/10'
+            : wd.thermal_throttled ? 'border-warn/60 bg-warn/10'
+            : 'border-border-weak bg-bg-inset/40'
+          }`}
+        >
+          <span className="uppercase tracking-[0.08em] text-text-lo">
+            {wd.exec_phase}{wd.exec_phase === 'decode' && wd.batch ? ` B${wd.batch}` : ''}
+          </span>
+          <span className="font-mono tabular-nums text-text-hi">
+            SM {Math.round((wd.freq_frac ?? 0) * 100)}%
+            {' · '}die {wd.gpu_die_temp_c?.toFixed(0)}°C
+            {wd.thermal_runaway ? (
+              <span className="ml-1.5 font-sans uppercase text-err">runaway</span>
+            ) : wd.thermal_throttled ? (
+              <span className="ml-1.5 font-sans uppercase text-warn">throttled</span>
+            ) : null}
+          </span>
+        </div>
+      )}
 
       {/* Cumulative output since the schedule was applied. */}
       {totals && (

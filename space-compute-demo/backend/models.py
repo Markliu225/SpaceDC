@@ -31,6 +31,21 @@ class GpuJobDetail(BaseModel):
     throughput_per_gpu: float = 0.0
     throughput_total: float = 0.0
     throughput_unit: str = "-"
+    # --- Analytical LLM engine (llm_perf.py) ---------------------------------
+    # engine == "analytic": the numbers above come from the coupled
+    # power-cap ∧ thermal-limit → DVFS frequency → tok/s solve, not the MFU
+    # heuristic. "mfu" for vision/idle jobs and unknown GPU/model combos.
+    engine: str = "mfu"
+    exec_phase: str = "-"            # decode | prefill | train
+    batch: int = 0                   # decode batch rows (0 when N/A)
+    context: int = 0                 # effective KV context per row (tokens)
+    power_cap_w: float = 0.0         # EPS budget handed to each card
+    freq_frac: float = 0.0           # x = f_sm/f_max the governor settles at
+    gpu_die_temp_c: float = 0.0      # junction temp via T_struct + P·R_th
+    thermal_throttled: bool = False  # thermal limit is the binding constraint
+    thermal_runaway: bool = False    # can't hold throttle target even parked
+    t_mem_ms: float = 0.0            # frequency-immune memory floor per step
+    t_comp_ms: float = 0.0           # frequency-scaled compute tail per step
 
 
 class WorkloadTotals(BaseModel):

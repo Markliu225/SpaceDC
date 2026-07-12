@@ -46,6 +46,7 @@
 7. **类型化 AI workload** —— 每个作业块都是具体任务（`backend/ai_workloads.py`）：Llama-3.3-70B 预训练/推理、Llama-3.1-8B 微调、ViT-L/16 对地检测——按所装 GPU 的数据手册稠密算力解析为每卡 MFU、有效 TFLOPS、tokens/s / frames/s 与产热，实时暴露于 `satellite.workload_detail` 与 GPU 模块弹窗。
 8. **Twin 页实时轨道运动** —— Kit 特写中，地球随实时星下点转动、太阳圆盘与主光沿真实天顶-太阳夹角（`satellite.sun_cos`）扫掠：地面轨迹、昼夜交替、进出地影都在视口中真实上演；流离线时视口回退为真实轨道追踪视图（`TwinOrbitFallback`），被跟踪卫星沿 SGP4 传播的轨道环滑行，左下 HUD 的卫星标记也在帧率级外插时钟上平滑运动。后端在每次 `/state` 读取时刷新被跟踪卫星的运动学（单次缓存 Satrec sgp4 调用），Kit 的 5Hz 轮询看到的是连续运动而非 1Hz 台阶。
 9. **Workload 选择器** —— Configurator 的 *Workload* 区实时切换 GPU 作业表（`POST /workload_profile`）；每个选项标注当前设计的适配度（`GET /workload_profiles`：平均需求 vs 太阳供给、散热上限、fit 判定、每周期预期 tokens/frames/kWh），面板实时显示在跑任务的模型、MFU、有效 TFLOPS、速率、电功耗、每卡产热、辐射功率与切换以来的累计产出。
+10. **LLM 推理解析引擎** —— LLM 作业不再用 MFU 估计：`backend/llm_perf.py` 从第一性原理解出真实工作点（DVFS 功耗聚合 `P = P_static + χ·x^θ`、计算受限的 prefill/训练幂律、含带宽平台的 decode 访存下限定律、自然功耗），并**与卫星热状态耦合**：结构就是 GPU 的冷板，`T_die = T_struct + P·R_th`，驱动通过收缩功率预算把结温压在节流目标上——散热板不足或涂层退化会直接表现为可计算的 tokens/s 损失（`gpu_thermal_throttle` / `gpu_thermal_runaway` 告警，结温 / SM 频率 / 执行相位实时显示在面板中）。模型按公开的 V100 功率上限实测研究校准，由 `tools/validate_llm_perf.py`（46 项）+ `tools/validate_llm_engine.py`（24 项闭环场景）验证；专设 *LLM serving (70B)* 档案飞 decode 主导的作业表来展示这一切。详见 **[docs/physics.md §4a](docs/physics.md)**。
 
 ## 快速开始
 

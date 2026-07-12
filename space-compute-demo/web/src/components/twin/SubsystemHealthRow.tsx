@@ -51,7 +51,7 @@ export function SubsystemHealthRow() {
 
   const cards: SubCard[] = [
     powerCard(cfg, tel, sat),
-    thermalCard(cfg, tel),
+    thermalCard(cfg, tel, sat),
     computeCard(cfg, tel, sat),
     commsCard(cfg, tel, sat),
   ]
@@ -138,12 +138,31 @@ function powerCard(
   }
 }
 
-function thermalCard(_cfg: SatelliteConfig, tel: TwinTelemetrySnapshot['current']): SubCard {
-  const health: Health = tel.temp_c < 70 ? 'nominal' : tel.temp_c < 85 ? 'warn' : 'fault'
+function thermalCard(
+  _cfg: SatelliteConfig,
+  tel: TwinTelemetrySnapshot['current'],
+  sat: SatelliteState | undefined,
+): SubCard {
+  // The analytical LLM engine's throttle state outranks the raw structure
+  // temperature: a hot structure that is ALREADY costing tokens/s is a
+  // warn/fault story even below the legacy 70 °C line.
+  const wd = sat?.workload_detail
+  const runaway = wd?.engine === 'analytic' && wd.thermal_runaway === true
+  const throttled = wd?.engine === 'analytic' && wd.thermal_throttled === true
+  const health: Health =
+    runaway ? 'fault'
+    : throttled ? 'warn'
+    : tel.temp_c < 70 ? 'nominal' : tel.temp_c < 85 ? 'warn' : 'fault'
   const hint =
+    runaway   ? 'GPU thermal runaway — clocks parked at idle floor' :
+    throttled ? `GPU throttled — die held at target, SM ${Math.round((wd?.freq_frac ?? 0) * 100)}% fmax` :
     health === 'nominal' ? 'Within radiator dissipation envelope' :
     health === 'warn'    ? 'Approaching GPU thermal limit' :
                            'Radiator undersized for payload load'
+  const dieMetric: CardMetric =
+    wd?.engine === 'analytic' && wd.gpu_die_temp_c != null
+      ? { label: 'Die', value: wd.gpu_die_temp_c, digits: 0, unit: '°C' }
+      : { label: 'Util', value: tel.gpu_util * 100, digits: 0, unit: '%' }
   return {
     title: 'Thermal',
     icon: Snowflake,
@@ -151,7 +170,7 @@ function thermalCard(_cfg: SatelliteConfig, tel: TwinTelemetrySnapshot['current'
     hint,
     metrics: [
       { label: 'Temp',  value: tel.temp_c,  digits: 1, unit: '°C' },
-      { label: 'Util',  value: tel.gpu_util * 100, digits: 0, unit: '%' },
+      dieMetric,
     ],
   }
 }

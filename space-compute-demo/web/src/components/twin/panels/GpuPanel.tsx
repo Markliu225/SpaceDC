@@ -7,7 +7,10 @@ import { gpuOption, GPU_CARDS_PER_SAT } from '../../../data/satConfigOptions'
  * static spec (per-card + per-sat aggregate) plus the LIVE typed workload
  * from the physics engine: which job/model the cards are running, achieved
  * MFU and effective TFLOPS, model-level throughput (tokens/s or frames/s),
- * and the per-card electrical/heat load. */
+ * and the per-card electrical/heat load. LLM jobs run the analytical
+ * llm_perf engine — the card then also reports its true operating point:
+ * execution phase, DVFS frequency, junction temperature and throttle
+ * state (structure temp is the cold plate; die = struct + P·R_th). */
 export function GpuPanel({ cardIdx }: { cardIdx: number }) {
   const sat = useDemoStore((s) => s.lastState?.satellite)
   const cfg = useTelemetryStore((s) => s.satConfig)
@@ -18,8 +21,16 @@ export function GpuPanel({ cardIdx }: { cardIdx: number }) {
   const perSatTdpKw  = (gpu.tdp_w * cards) / 1000
 
   const util = sat?.gpu_utilization
-  const die  = sat?.temperature_c
   const wd   = sat?.workload_detail
+  const analytic = wd?.engine === 'analytic'
+  // Junction temp exists only on the analytic path (die = struct + P·R_th);
+  // the MFU path knows just the structure temp (the card's cold plate) —
+  // label it as such rather than passing it off as a die reading.
+  const temp = analytic ? wd?.gpu_die_temp_c : sat?.temperature_c
+  const tempLabel = analytic ? 'Die' : 'Cold plate'
+  const tempHot = analytic
+    ? (wd!.thermal_throttled || wd!.thermal_runaway)
+    : (sat?.temperature_c ?? 0) > 70 // backend overtemp line
 
   const fmtThroughput = (v: number) =>
     v >= 10_000 ? `${(v / 1000).toFixed(1)}k` : v.toFixed(0)
@@ -57,6 +68,13 @@ export function GpuPanel({ cardIdx }: { cardIdx: number }) {
             ? fmtThroughput(wd.throughput_total) : '— —'}
           unit={wd?.throughput_unit !== '-' ? wd?.throughput_unit : undefined}
         />
+        {analytic && (
+          <Row
+            label="Phase"
+            value={`${wd!.exec_phase}${wd!.exec_phase === 'decode' && wd!.batch
+              ? ` · B=${wd!.batch} · ctx ${wd!.context}` : ''}`}
+          />
+        )}
       </Section>
       <Section title="Live card">
         <Row
@@ -75,7 +93,27 @@ export function GpuPanel({ cardIdx }: { cardIdx: number }) {
           value={wd != null ? Math.round(wd.heat_w_per_gpu).toString() : '— —'}
           unit="W"
         />
-        <Row label="Die" value={die != null ? die.toFixed(1) : '— —'} unit="°C" />
+        {analytic && (
+          <Row
+            label="SM clock"
+            value={Math.round((wd!.freq_frac ?? 0) * 100).toString()}
+            unit="% fmax"
+          />
+        )}
+        <Row
+          label={tempLabel}
+          value={temp != null ? temp.toFixed(1) : '— —'}
+          unit="°C"
+          tone={tempHot ? 'hot' : undefined}
+        />
+        {analytic && (
+          <Row
+            label="Thermal"
+            value={wd!.thermal_runaway ? 'RUNAWAY'
+              : wd!.thermal_throttled ? 'THROTTLED' : 'Nominal'}
+            tone={wd!.thermal_runaway || wd!.thermal_throttled ? 'hot' : undefined}
+          />
+        )}
       </Section>
     </>
   )

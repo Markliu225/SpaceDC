@@ -23,6 +23,30 @@ export interface GpuJobDetail {
   throughput_per_gpu: number;
   throughput_total: number;
   throughput_unit: string;
+  /** 'analytic' — the numbers come from the llm_perf operating-point solve
+   *  (power cap ∧ thermal limit → DVFS frequency → tokens/s, realized draw);
+   *  'mfu' — the heuristic path (vision / idle / unknown combos). */
+  engine?: 'analytic' | 'mfu';
+  /** Execution phase on the analytic path: 'decode' | 'prefill' | 'train'. */
+  exec_phase?: string;
+  /** Concurrent decode rows per GPU (0 when not decoding). */
+  batch?: number;
+  /** Effective KV context per row, tokens. */
+  context?: number;
+  /** EPS power budget handed to each card (W). */
+  power_cap_w?: number;
+  /** SM frequency fraction x = f_sm/f_max the DVFS governor settles at. */
+  freq_frac?: number;
+  /** GPU junction temperature: T_struct + draw · R_th (°C). */
+  gpu_die_temp_c?: number;
+  /** Thermal limit is cutting the realized draw (die held at target). */
+  thermal_throttled?: boolean;
+  /** Die cannot be held at the throttle target even at the idle floor. */
+  thermal_runaway?: boolean;
+  /** Frequency-immune memory floor per decode step (ms). */
+  t_mem_ms?: number;
+  /** Frequency-scaled compute time per step (ms). */
+  t_comp_ms?: number;
 }
 
 /** Cumulative payload output since the active workload profile (or design)
@@ -83,7 +107,8 @@ export interface SatelliteState {
   /** Cumulative output since the workload profile / design was applied. */
   workload_totals?: WorkloadTotals;
   /** Standing alarm codes (e.g. 'low_battery', 'overtemp', 'undertemp',
-   *  'eclipse_deficit', 'radiator_undersized', 'solar_undersized'). */
+   *  'eclipse_deficit', 'radiator_undersized', 'solar_undersized',
+   *  'gpu_thermal_throttle', 'gpu_thermal_runaway'). */
   alarms?: string[];
   /** Design-check numbers — supply vs demand for solar avg power and
    *  thermal peak emission. Margin = supply − demand; negative = the

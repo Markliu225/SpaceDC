@@ -195,6 +195,21 @@ _WORKLOAD_PROFILES: dict[str, dict] = {
             (290.0,  70.0, 0.94, "llm_pretrain"),     # epoch
         ],
     },
+    # Round-the-clock 70B token serving — decode-dominant, the workload the
+    # analytical llm_perf engine (power-cap ∧ thermal-limit → DVFS → tok/s)
+    # is built around: batched backlog with interactive/eval windows.
+    "inference": {
+        "label": "LLM serving (70B)",
+        "cycle_s": 360.0,
+        "schedule": [
+            (  0.0, 110.0, 0.85, "llm_batch"),        # batched decode backlog
+            (110.0,  40.0, 0.30, "llm_interactive"),  # interactive window
+            (150.0,  90.0, 0.85, "llm_batch"),        # batched decode
+            (240.0,  20.0, 0.50, "llm_eval"),         # long-context eval pass
+            (260.0,  70.0, 0.90, "llm_batch"),        # peak backlog
+            (330.0,  30.0, 0.30, "llm_interactive"),  # cooldown window
+        ],
+    },
     # Mostly quiet with tall target-of-opportunity spikes.
     "burst": {
         "label": "Burst response",
@@ -293,6 +308,9 @@ class StateEngine:
         self._mission_request_wall: Optional[float] = None
         # Cached fleet lat/lon (computed each tick) for mission cast picking.
         self._fleet_latlon: list[tuple[float, float]] = []
+        # Memoized schedule-average demand for the live design check —
+        # (inputs key, W). See _schedule_demand_avg_w.
+        self._demand_cache: Optional[tuple[tuple, float]] = None
 
     # ---- lifecycle ----
     async def start(self) -> None:
@@ -417,6 +435,35 @@ class StateEngine:
     def _reset_workload_totals(self) -> None:
         self._sat.workload_totals = WorkloadTotals()
 
+    def _schedule_demand_avg_w(self, profile_id: str) -> float:
+        """Duration-weighted average electrical demand of `profile_id`'s
+        schedule on the CURRENT loadout, using the same per-block operating
+        points the simulation actually flies (LLM blocks: analytic realized
+        draw at the 25 °C no-throttle baseline; others: the TDP-curve cap).
+        Shared by the live design check and workload_adaptation so the
+        standing alarm, the popup and the power trace tell ONE story.
+        Memoized on the inputs that move it — the schedule walk costs a few
+        closed-form solves, but this runs every tick."""
+        key = (profile_id, self._config.gpu, self._gpu_count,
+               self._platform_power_w)
+        if self._demand_cache is not None and self._demand_cache[0] == key:
+            return self._demand_cache[1]
+        sched = _profile(profile_id)["schedule"]
+        gpu = _GPU_TABLE.get(self._config.gpu, _GPU_TABLE["H100"])
+        total_dt = sum(d for _, d, _, _ in sched) or 1.0
+        IDLE_FRAC = 0.15
+        demand = 0.0
+        for _, dur, util, job_key in sched:
+            card_w = gpu["tdp_w"] * (IDLE_FRAC + (1.0 - IDLE_FRAC) * util)
+            det = _ai.job_detail(self._config.gpu, job_key, util, card_w,
+                                 self._gpu_count, t_struct_c=25.0)
+            if det is not None and det.engine == "analytic":
+                card_w = det.power_w_per_gpu
+            demand += ((card_w * self._gpu_count + self._platform_power_w)
+                       * dur / total_dt)
+        self._demand_cache = (key, demand)
+        return demand
+
     def workload_adaptation(self, profile_id: str) -> dict:
         """How the CURRENT design would cope with `profile_id`: average power
         demand vs solar supply, thermal peak vs radiator emission ceiling,
@@ -436,7 +483,6 @@ class StateEngine:
 
         total_dt = sum(d for _, d, _, _ in sched) or 1.0
         avg_util = sum(d * u for _, d, u, _ in sched) / total_dt
-        demand_avg_w = gpu["tdp_w"] * (IDLE_FRAC + (1 - IDLE_FRAC) * avg_util) * n + platform_w
         peak_solar_w = s_mat["efficiency"] * _solar_area_m2(geom) * _SOLAR_CONSTANT_W_M2
         supply_avg_w = peak_solar_w * _POINTING_EFF * _SUNLIT_FRACTION
 
@@ -445,16 +491,25 @@ class StateEngine:
         thermal_emit_w = (r_mat["emissivity"] * SIGMA * _radiator_area_m2(geom)
                           * ((333.15) ** 4 - T_BG_K ** 4))
 
+        # Demand side: the shared schedule-average (per-block analytic
+        # realized draw for LLM blocks at the 25 °C no-throttle baseline) —
+        # the exact number the live design check uses, so verdicts here can
+        # never contradict the standing alarm.
+        demand_avg_w = self._schedule_demand_avg_w(profile_id)
+
         tokens = frames = 0.0
         kwh = 0.0
         for _, dur, util, job_key in sched:
             card_w = gpu["tdp_w"] * (IDLE_FRAC + (1 - IDLE_FRAC) * util)
-            det = _ai.job_detail(cfg.gpu, job_key, util, card_w, n)
+            det = _ai.job_detail(cfg.gpu, job_key, util, card_w, n,
+                                 t_struct_c=25.0)
             if det is not None:
                 if det.throughput_unit == "tok/s":
                     tokens += det.throughput_total * dur
                 elif det.throughput_unit == "frames/s":
                     frames += det.throughput_total * dur
+                if det.engine == "analytic":
+                    card_w = det.power_w_per_gpu
             kwh += (card_w * n + platform_w) * dur / 3.6e6
 
         power_margin = supply_avg_w / max(1.0, demand_avg_w) - 1.0
@@ -702,8 +757,10 @@ class StateEngine:
         CURRENT fractional sim time (single cached-Satrec sgp4 call). The
         1 Hz physics tick only produces 1 Hz kinematics, so Kit's 5 Hz
         /state polls would see the same lat/lon for ~1 s and the eased
-        Earth-rotation driver would surge-and-stall once per second. Power
-        and thermal stay strictly tick-owned; this touches geometry only."""
+        Earth-rotation driver would surge-and-stall once per second.
+        Integration state (SOC, temperature, totals) stays strictly
+        tick-owned; this touches geometry plus the instantaneous power
+        readouts that are pure functions of it."""
         if not self._running or self._last_tick_wall is None:
             return
         frac = min(1.0, max(0.0, time.monotonic() - self._last_tick_wall))
@@ -716,6 +773,19 @@ class StateEngine:
         if pos == (0.0, 0.0, 0.0):
             return
         self._set_tracked_kinematics(pos, t)
+        # Keep the power triplet (sunlit, solar_input_w, battery_charge_w)
+        # self-consistent on eclipse-boundary reads: the fresh sunlit flag
+        # would otherwise contradict last tick's solar input for up to 1 s
+        # (sunlit=False with panels still "producing"). Same formulas as the
+        # tick, reusing the tick-owned load.
+        s_mat = _SOLAR_MAT_TABLE.get(self._config.solar_material, _SOLAR_MAT_TABLE["Si"])
+        incidence = (1.0 if self._sat.is_dawn_dusk
+                     else (_POINTING_EFF if self._sat.sunlit else 0.0))
+        solar_w = (s_mat["efficiency"] * _solar_area_m2(self._twin_geometry)
+                   * _SOLAR_CONSTANT_W_M2 * incidence)
+        self._sat.solar_input_w = solar_w
+        self._sat.battery_charge_w = solar_w - (self._sat.payload_power_w
+                                                + self._sat.platform_power_w)
 
     # ---- snapshot ----
     def snapshot(self) -> StatePacket:
@@ -841,21 +911,31 @@ class StateEngine:
             if workload > 0.20:
                 workload, job_key = 0.20, _IDLE_JOB  # power save: survival duty
         self._sat.workload = workload
-        # Real-design GPU power: idle floor at ~15% TDP, scales linearly with
-        # util up to TDP. Datacenter GPUs (H100/H200/B200/MI300X) bench
+        # EPS power budget per card: idle floor at ~15% TDP, scales linearly
+        # with util up to TDP. Datacenter GPUs (H100/H200/B200/MI300X) bench
         # within ~10% of this curve.
         IDLE_FRAC = 0.15
         gpu_count = self._gpu_count
-        gpu_w_per_card = gpu["tdp_w"] * (IDLE_FRAC + (1.0 - IDLE_FRAC) * workload)
+        gpu_cap_w_per_card = gpu["tdp_w"] * (IDLE_FRAC + (1.0 - IDLE_FRAC) * workload)
+        # Per-GPU operating point for the active block. LLM jobs run the
+        # ANALYTICAL engine (llm_perf via ai_workloads): the satellite
+        # structure temperature is the GPU cold plate, the thermal limit
+        # (T_throttle − T_struct)/R_th caps the DVFS budget, and the card's
+        # REALIZED draw comes back out — so a hot structure visibly
+        # throttles clocks, tokens/s AND electrical demand. Vision/idle
+        # jobs keep the budget as the draw (MFU path).
+        detail = _ai.job_detail(cfg.gpu, job_key, workload, gpu_cap_w_per_card,
+                                gpu_count, t_struct_c=self._sat.temperature_c)
+        self._sat.workload_detail = detail
+        gpu_w_per_card = (detail.power_w_per_gpu
+                          if detail is not None and detail.engine == "analytic"
+                          else gpu_cap_w_per_card)
         payload_w = gpu_w_per_card * gpu_count
         platform_w = self._platform_power_w
         self._sat.gpu_utilization = workload
         self._sat.payload_power_w = payload_w
         self._sat.platform_power_w = platform_w
         self._sat.gpu_count = gpu_count
-        # Per-GPU compute/throughput/heat detail for the panels.
-        detail = _ai.job_detail(cfg.gpu, job_key, workload, gpu_w_per_card, gpu_count)
-        self._sat.workload_detail = detail
         # Cumulative output — sim-time (1:1) integration of the typed-job
         # throughput plus payload energy, reset on profile/design switches.
         totals = self._sat.workload_totals
@@ -901,18 +981,12 @@ class StateEngine:
         self._gs.rx_mbps = self._sat.downlink_mbps
 
         # --- Design check (solar supply vs avg demand; thermal headroom) ------
-        # Average workload across the ACTIVE profile's schedule — duration-
-        # weighted mean of each block's target util. This is the same number
-        # the visible workload trace will tend to (over a cycle), so the user
-        # sees the demand the schedule actually produces, not a hand-typed
-        # 0.40 — and switching designs moves the demand side too.
-        _sched = _profile(self._workload_profile)["schedule"]
-        sched_total_dt = sum(d for _, d, _, _ in _sched)
-        avg_workload = (sum(d * u for _, d, u, _ in _sched) / sched_total_dt
-                        if sched_total_dt > 0 else 0.30)
-        avg_card_w = gpu["tdp_w"] * (IDLE_FRAC + (1.0 - IDLE_FRAC) * avg_workload)
-        avg_payload_w = avg_card_w * gpu_count
-        solar_demand_avg_w = avg_payload_w + platform_w
+        # Average demand across the ACTIVE profile's schedule, per-block from
+        # the SAME operating points the simulation flies (analytic realized
+        # draw for LLM blocks) — this is the demand the power trace actually
+        # tends to over a cycle, and it matches workload_adaptation exactly,
+        # so the standing alarm can never contradict the popup.
+        solar_demand_avg_w = self._schedule_demand_avg_w(self._workload_profile)
         peak_solar_w = s_mat["efficiency"] * panel_area_m2 * _SOLAR_CONSTANT_W_M2
         # Orbit-average supply under the SAME sun-tracking model the per-tick
         # solar_input_w uses: tracking losses × the sunlit fraction (the
@@ -953,6 +1027,13 @@ class StateEngine:
             alarms.append("radiator_undersized")
         if solar_supply_avg_w < solar_demand_avg_w:
             alarms.append("solar_undersized")
+        # Analytical-engine thermal flags: the GPU die is being held at its
+        # throttle target (performance loss) / cannot be held at all.
+        if detail is not None and detail.engine == "analytic":
+            if detail.thermal_runaway:
+                alarms.append("gpu_thermal_runaway")
+            elif detail.thermal_throttled:
+                alarms.append("gpu_thermal_throttle")
         self._sat.alarms = alarms
         self._sat.gpu_type = cfg.gpu  # echo for the legacy 14-param card
 

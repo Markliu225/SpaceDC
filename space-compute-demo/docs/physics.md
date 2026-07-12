@@ -101,15 +101,26 @@ util = schedule(t mod cycle)
 if (not sunlit) and (SOC < 0.40):  util = min(util, 0.20)
 ```
 
-Per-card power has an idle floor and scales linearly to TDP:
+Per-card power has an idle floor and scales linearly to TDP — this is the **EPS budget (power cap)** handed to each card:
 
 ```
-P_card    = TDP · (IDLE_FRAC + (1 − IDLE_FRAC) · util)
-P_payload = P_card · cards
+P_cap     = TDP · (IDLE_FRAC + (1 − IDLE_FRAC) · util)
+P_payload = P_card · cards          (P_card = realized draw, see 4a)
 P_load    = P_payload + P_platform
 ```
 
-`TDP` and compute come from the GPU model: **H100 0.98 PF / 700 W · H200 1.50 / 700 · B200 2.50 / 1000 · MI300X 1.30 / 750**.
+`TDP` and compute come from the GPU model: **H100 0.98 PF / 700 W · H200 1.50 / 700 · B200 2.50 / 1000 · MI300X 1.30 / 750**. For vision/idle jobs the realized draw *is* the cap; LLM jobs resolve it analytically:
+
+### 4a. Analytical LLM engine (`llm_perf.py`) — power cap ∧ thermal limit → DVFS → tokens/s
+
+The MFU table above is only the fallback path for vision/idle jobs. **Every LLM block resolves through an analytical performance/power/thermal model**, calibrated and validated against a V100 power-cap measurement study (`tools/validate_llm_perf.py`, 46 checks: phase-boundary/plateau anchors reproduce exactly, ceiling law blind-predicts three workload plateaus) with the integration proven closed-loop in `tools/validate_llm_engine.py` (24 checks):
+
+- **DVFS power aggregate.** A power budget maps to SM frequency via `P(x) = P_static + χ·x^θ`, `x = f_sm/f_max` (V100 fit: 50 + 155.5·x^2.15). The memory-controller clock is **fixed** — that single fact creates the two phases below.
+- **Prefill / training (compute-bound):** `tok/s = T_fmax·x(P)^p`, a single power-law; k = 6 FLOPs/param/token training, k = 2 inference. Compute-bound phases pull their **full budget**.
+- **Decode (memory-bound):** each step re-reads all weights + B rows of KV cache → a frequency-immune memory floor `T_mem = (W + B·ctx·kv)/BW_eff`, and `tok/s(P) = B/(T_mem + C_comp·(x^−p − 1))`. Three phases: pseudo-linear → marginal-utility collapse → **bandwidth plateau** `B/T_mem` where extra watts buy nothing. Decode therefore has a **natural draw** below its cap (`P_static + χ·(0.70 + 0.30·duty)`) and the engine bills the payload for the *realized* draw, not the cap.
+- **Thermal throttling (the space twist).** The die couples to the satellite structure (the cold plate): `T_die = T_struct + P_gpu·R_th` (H100 ≈ 0.06 K/W, throttle target 85 °C). The driver holds the target by shrinking the budget to `(T_throttle − T_struct)/R_th` — a degraded radiator becomes a *computable* tokens/s loss: structure heats → budget shrinks → clocks + draw fall → heat input falls → **the loop settles in deep throttle** (die pinned at target, alarm `gpu_thermal_throttle`). If the limit drops below the idle floor the die can't be held at all: `gpu_thermal_runaway`, clocks parked.
+- **Tensor-parallel group + HBM feasibility.** The fitted cards serve as one ideal TP group: weights, KV and per-step compute shard across `gpu_count` cards, so per-card duty/draw/die-temp match the single-card solve and the aggregate keeps its algebra (`throughput_total = N ×` the full-model single-card solve — the 1/N cancels out of `B/(T_mem + T_comp)` exactly). Communication overhead is *not* modeled, so aggregates are ideal-TP upper bounds. Feasibility *is* enforced: the weight shard must fit per-card HBM (90 % usable), and the decode batch shrinks until the KV shard fits too.
+- Per-tick exposure in `workload_detail`: `engine=analytic`, `exec_phase`, `batch`/`context`, `power_cap_w`, realized `power_w_per_gpu`, `freq_frac` (SM clock), `gpu_die_temp_c`, `thermal_throttled`/`thermal_runaway`, `t_mem_ms`/`t_comp_ms`. The dedicated **LLM serving (70B)** workload profile flies a decode-dominant schedule to make all of it observable.
 
 ---
 
@@ -180,13 +191,15 @@ The supply check uses the **same tracking model** as the per-tick `P_solar`, so 
 | `eclipse_deficit` | eclipse **and** SOC < 0.35 **and** P_net < 0 |
 | `radiator_undersized` | Q_max_emit < 0.9 · Q_peak_demand |
 | `solar_undersized` | P_supply_avg < P_demand_avg |
+| `gpu_thermal_throttle` | analytic LLM point: thermal limit cuts the realized draw (die held at target) |
+| `gpu_thermal_runaway` | analytic LLM point: die can't be held at target even at the idle floor |
 
 ---
 
 ## 10. What's real vs. simplified
 
-- **Real:** η·A·flux·cos solar generation, idle-floor GPU power curve, Wh battery integration, Stefan–Boltzmann radiation with a lumped thermal mass, and the geometry-driven areas — all respond correctly to config/geometry changes.
-- **Simplified for legibility:** fixed inertial sun direction (no seasonal/precession), a scripted workload trace instead of a real scheduler, single-node lumped thermal mass (no gradients), a 60× time acceleration on battery/thermal, and a sinusoidal ground-pass model. Numbers are representative, not flight-grade.
+- **Real:** η·A·flux·cos solar generation, idle-floor GPU power curve, Wh battery integration, Stefan–Boltzmann radiation with a lumped thermal mass, the geometry-driven areas, and the analytical LLM operating point (DVFS power aggregate, memory-floor decode law, ceiling law, thermal-limit throttling — anchored to published V100 power-cap measurements) — all respond correctly to config/geometry changes.
+- **Simplified for legibility:** fixed inertial sun direction (no seasonal/precession), a scripted workload trace instead of a real scheduler, single-node lumped thermal mass (no gradients; the GPU die is quasi-static on top of it via R_th), a 60× time acceleration on battery/thermal, and a sinusoidal ground-pass model. Modern-GPU (H100/B200/MI300X) DVFS exponents and serving-stack fractions are documented assumptions sanity-checked against public serving benchmarks, not fits. Numbers are representative, not flight-grade.
 
 ---
 
@@ -195,6 +208,8 @@ The supply check uses the **same tracking model** as the per-tick `P_solar`, so 
 | Concern | Location |
 |---------|----------|
 | All physics | `backend/state_engine.py` → `StateEngine` update + `_solar_area_m2` / `_radiator_area_m2` / `_gpu_workload_util` |
+| LLM perf/power/thermal theory | `backend/llm_perf.py` (GPU_PERF / LLM_PERF catalogs, `solve_operating_point`) — validated by `tools/validate_llm_perf.py` + `tools/validate_llm_engine.py` |
+| Typed jobs → operating point | `backend/ai_workloads.py` → `job_detail` (analytic path for LLM jobs) |
 | Hardware tables | `_GPU_TABLE`, `_SOLAR_MAT_TABLE`, `_RAD_MAT_TABLE` (state_engine.py) |
 | State fields | `backend/models.py` → `SatelliteState`, `TwinGeometry` |
 | Config / geometry API | `backend/app.py` → `/satellite_config`, `/twin_geometry` |
