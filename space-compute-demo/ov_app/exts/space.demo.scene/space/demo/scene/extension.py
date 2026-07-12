@@ -71,12 +71,12 @@ SAT_VARIANT_TARGETS = [
 # satellite.sun_factor so the body genuinely darkens in eclipse instead of
 # staying washed-out by static fills. Each entry: (path, min, max) intensity.
 SUN_LIGHT_PATH = "/World/Environment/Key"
-# Base azimuth (rotateXYZ z) — 270° aims the Key sun at the solar wings' +X cell
-# faces. The azimuth oscillates ±SUN_AZ_SWEEP_DEG about this so the array stays
-# sun-facing rather than the sun crawling a full 360° (which back-lit it half
-# the orbit). See usd/satellite.usda for the matching authored value.
-SUN_BASE_RY_DEG = 270.0
-SUN_AZ_SWEEP_DEG = 45.0
+# Twin-stage orbital context (usd/twin_satellite.usda /World/Celestial):
+# the Earth sphere rotates with the live sub-satellite point and the visible
+# sun disk + Key light sweep the zenith→sun angle — see update_twin_orbit.
+TWIN_EARTH_PATH  = "/World/Celestial/Earth"
+TWIN_SUN_PATH    = "/World/Celestial/Sun"
+TWIN_SUN_DIST_CM = 50000.0   # mirrors gen_twin_satellite.SUN_DIST_CM
 SUN_DRIVEN_LIGHTS = [
     # Key sun — strong daylight (max 4000) with a high eclipse floor (400) so
     # the sunlit side is bright and the dark side never collapses. The bright
@@ -931,14 +931,13 @@ def swap_stage(path: str, preset: str | None = None) -> bool:
 
 def apply_sun(sun_factor: float, sim_now_s: float | None = None,
               is_dawn_dusk: bool = False) -> bool:
-    """Drive the satellite-stage Sun (DistantLight) from the backend's
-    normalised solar incidence so the lighting tracks the orbit:
-      * intensity ramps lo..hi with sun_factor (0 eclipse → 1 solar noon).
-      * the azimuth sweeps slowly so the highlight travels across the body.
-    On the dawn-dusk (terminator) orbit the Sun is pinned full + normal to the
-    +X panel faces (elevation -90, az 270 → emits straight -X), so it always
-    directly hits the solar panels with no eclipse and no sweep.
+    """Drive the satellite-stage Sun (DistantLight) INTENSITY + colour from
+    the backend's normalised solar incidence (0 eclipse → 1 solar noon).
+    The light's DIRECTION is no longer written here — the per-frame orbital
+    driver (`update_twin_orbit`) owns it, sweeping the true zenith→sun angle
+    from the backend's `sun_cos` so day/night passes match the physics.
     Returns True iff the light attributes were written."""
+    del sim_now_s  # direction is owned by the per-frame orbital driver now
     if not _HAS_KIT:
         return False
     stage = omni.usd.get_context().get_stage()
@@ -961,19 +960,71 @@ def apply_sun(sun_factor: float, sim_now_s: float | None = None,
         color_attr = sun.GetAttribute("inputs:color")
         if color_attr.IsValid():
             color_attr.Set(Gf.Vec3f(1.0, 0.93 + 0.05 * f, 0.88 + 0.10 * f))
-        rot_attr = sun.GetAttribute("xformOp:rotateXYZ")
-        if rot_attr.IsValid():
-            if is_dawn_dusk:
-                # Pin the Sun normal to the +X panel faces — always direct.
-                rot_attr.Set(Gf.Vec3f(-90.0, 0.0, SUN_BASE_RY_DEG))
-            elif sim_now_s is not None:
-                # Oscillate the azimuth about the solar-facing base so the
-                # highlight travels gently (~one cycle per 2 min sim).
-                az = SUN_BASE_RY_DEG + SUN_AZ_SWEEP_DEG * math.sin(sim_now_s * 0.05)
-                cur = rot_attr.Get()
-                if cur is not None:
-                    rot_attr.Set(Gf.Vec3f(float(cur[0]), float(cur[1]), float(az)))
     return wrote
+
+
+def update_twin_orbit(stage, tgt: dict, sm: dict, dt: float) -> None:
+    """Per-frame orbital-motion driver for the satellite close-up stage.
+
+    The camera stays satellite-centred, so orbital motion is conveyed by the
+    CONTEXT sweeping past:
+      * the Earth sphere under the satellite rotates so the live sub-satellite
+        point (lat, lon from /state) faces the satellite — the ground track
+        visibly slides by;
+      * the Sun disk + Key light sweep with the zenith→sun angle
+        (θ = acos(sun_cos)); in eclipse the sun dips below the −Z horizon and
+        the Earth visually blocks it, in lockstep with the physics dimming.
+
+    `tgt` holds the latest 5 Hz poll targets {lat, lon, sun_cos}; `sm` is the
+    persistent smoothing state (exponentially eased toward the targets so the
+    5 Hz steps glide at frame rate). Missing prims are skipped, so stages
+    generated before the animatable-Celestial layout are simply inert.
+
+    Math (verified against USD's own op composition in tools tests):
+      Earth:  rotateY = lat − 90, rotateZ = −lon  (op order translate,Y,Z)
+              maps P(lat,lon) to local +Z = toward the satellite.
+      Light:  rotateXYZ = (0, θ°, 0) points the DistantLight's −Z emission
+              along −d where d = (sinθ, 0, cosθ) is the sun direction.
+    """
+    if not sm:
+        sm.update({"lat": float(tgt.get("lat", 0.0)),
+                   "lon": float(tgt.get("lon", 0.0)),
+                   "sun_cos": float(tgt.get("sun_cos", 1.0))})
+    # Exponential easing toward the 5 Hz targets (τ ≈ 0.35 s).
+    alpha = 1.0 - math.exp(-max(0.0, dt) / 0.35)
+    sm["lat"] += (float(tgt.get("lat", sm["lat"])) - sm["lat"]) * alpha
+    # Longitude wraps — ease along the shortest arc.
+    dlon = (float(tgt.get("lon", sm["lon"])) - sm["lon"] + 180.0) % 360.0 - 180.0
+    sm["lon"] = ((sm["lon"] + dlon * alpha + 180.0) % 360.0) - 180.0
+    sm["sun_cos"] += (float(tgt.get("sun_cos", sm["sun_cos"])) - sm["sun_cos"]) * alpha
+
+    # --- Earth: aim the sub-satellite point at the satellite ---------------
+    earth = stage.GetPrimAtPath(TWIN_EARTH_PATH)
+    if earth.IsValid():
+        ry = earth.GetAttribute("xformOp:rotateY")
+        rz = earth.GetAttribute("xformOp:rotateZ")
+        if ry.IsValid() and rz.IsValid():
+            ry.Set(float(sm["lat"] - 90.0))
+            rz.Set(float(-sm["lon"]))
+            if not sm.get("_logged"):
+                sm["_logged"] = True
+                _log(f"twin orbit driver active (lat={sm['lat']:.1f}, "
+                     f"lon={sm['lon']:.1f}, sun_cos={sm['sun_cos']:.2f})")
+
+    # --- Sun disk + Key light: sweep the zenith→sun angle ------------------
+    c = max(-1.0, min(1.0, sm["sun_cos"]))
+    theta = math.acos(c)
+    d = (math.sin(theta), 0.0, c)                 # unit sun direction (stage frame)
+    sun_disk = stage.GetPrimAtPath(TWIN_SUN_PATH)
+    if sun_disk.IsValid():
+        tr = sun_disk.GetAttribute("xformOp:translate")
+        if tr.IsValid():
+            tr.Set(Gf.Vec3d(d[0] * TWIN_SUN_DIST_CM, 0.0, d[2] * TWIN_SUN_DIST_CM))
+    key = stage.GetPrimAtPath(SUN_LIGHT_PATH)
+    if key.IsValid():
+        rot = key.GetAttribute("xformOp:rotateXYZ")
+        if rot.IsValid():
+            rot.Set(Gf.Vec3f(0.0, math.degrees(theta), 0.0))
 
 
 def _dump_satellite_materials() -> str:
@@ -1095,6 +1146,11 @@ if _HAS_KIT:
             # changes OR the satellite stage is (re)opened.
             self._sat_config: Optional[dict] = None
             self._geom_version: int = -1   # twin_geometry.version last reloaded
+            # Orbital-context driver state for the satellite close-up stage:
+            # latest 5 Hz targets {lat, lon, sun_cos} + per-frame smoothing.
+            self._twin_orbit_tgt: Optional[dict] = None
+            self._twin_orbit_sm: dict = {}
+            self._twin_orbit_wall: Optional[float] = None
             # 天数天算 mission snapshot (from /state.mission) — drives the
             # overview-stage choreography (AOI / data packet / ISL-GSL beams)
             # and the cinematic MissionCam.
@@ -1306,11 +1362,16 @@ if _HAS_KIT:
                 sat = state.get("satellite", {})
                 sun_factor = float(sat.get("sun_factor", 1.0))
                 is_dawn_dusk = bool(sat.get("is_dawn_dusk", False))
-                sim_now = (
-                    self._anchor_sim_s + (time.monotonic() - self._anchor_wall_s)
-                    if self._anchor_sim_s is not None else 0.0
-                )
-                apply_sun(sun_factor, sim_now, is_dawn_dusk)
+                apply_sun(sun_factor, None, is_dawn_dusk)
+                # Targets for the per-frame orbital-context driver
+                # (update_twin_orbit eases toward these at frame rate).
+                self._twin_orbit_tgt = {
+                    "lat": float(sat.get("lat", 0.0)),
+                    "lon": float(sat.get("lon", 0.0)),
+                    "sun_cos": float(sat.get(
+                        "sun_cos",
+                        sun_factor if sat.get("sunlit", True) else -0.3)),
+                }
 
             # Cache the mission snapshot + the wall time it arrived, so the
             # per-frame driver can interpolate phase_progress between polls.
@@ -1335,6 +1396,23 @@ if _HAS_KIT:
             # follow-cam). No Earth, no fleet.
             if self._current_stage == self._stages.get("mission"):
                 self._update_mission_stage(stage)
+                return
+
+            # Satellite close-up — drive the orbital context (Earth rotation
+            # under the sub-satellite point, sun disk + key light sweep) at
+            # frame rate, eased toward the latest 5 Hz /state targets.
+            if self._current_stage == self._stages.get("satellite"):
+                now = time.monotonic()
+                dt = min(0.25, max(0.0, now - (self._twin_orbit_wall or now)))
+                self._twin_orbit_wall = now
+                if self._twin_orbit_tgt is not None:
+                    try:
+                        update_twin_orbit(stage, self._twin_orbit_tgt,
+                                          self._twin_orbit_sm, dt)
+                    except Exception as exc:  # noqa: BLE001 — never spam the 60 fps loop
+                        if not getattr(self, "_twin_orbit_err_logged", False):
+                            self._twin_orbit_err_logged = True
+                            _log(f"twin orbit driver error (logged once): {exc}")
                 return
 
             if self._current_stage != self._stages.get("overview"):

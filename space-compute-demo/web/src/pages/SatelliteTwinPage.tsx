@@ -74,7 +74,7 @@ export function SatelliteTwinPage() {
           the HUD overlays (MiniOrbitHud bottom-left, TwinModulePopup top-right
           when a module is clicked) can anchor inside it. */}
       <div className="col-span-9 min-h-0 overflow-hidden relative">
-        <EarthViewport />
+        <EarthViewport fallback="twin" />
         <MiniOrbitHud />
         <TwinModulePopup />
       </div>

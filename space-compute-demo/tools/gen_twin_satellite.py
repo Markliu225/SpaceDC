@@ -885,10 +885,39 @@ def uv_sphere(name: str, center: tuple[float, float, float], radius: float,
 def celestial_group() -> str:
     """Earth (plain day texture) + the HDR-emissive Sun. Siblings of the ×180
     Satellite, in absolute cm, so they hold realistic angular scale + position
-    and sweep as the camera orbits."""
+    and sweep as the camera orbits.
+
+    Both are ANIMATABLE Xforms (meshes authored around the local origin, the
+    placement in xformOps) so the Kit scene extension can drive the orbital
+    motion per frame: the Earth's rotateY/rotateZ pair aims the current
+    sub-satellite point (lat, lon) at the satellite — rotateY(lat−90)·
+    rotateZ(−lon) maps P(lat,lon) to local +Z, which faces the satellite from
+    EARTH_CENTER — and the Sun's translate sweeps the visible disk along the
+    zenith→sun angle. Static defaults below match the historical fixed pose,
+    so the stage renders identically until the extension starts driving it."""
+    earth_mesh = uv_sphere("Sphere", (0.0, 0.0, 0.0), EARTH_RADIUS_CM, "EarthMat", 48, 96)
+    earth = (
+        f'def Xform "Earth"\n'
+        f'{{\n'
+        f'    double3 xformOp:translate = ({EARTH_CENTER[0]:.1f}, {EARTH_CENTER[1]:.1f}, {EARTH_CENTER[2]:.1f})\n'
+        f'    float xformOp:rotateY = -90\n'
+        f'    float xformOp:rotateZ = 0\n'
+        f'    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:rotateZ"]\n'
+        f'\n'
+        f'{indent(earth_mesh, "    ")}\n'
+        f'}}'
+    )
     sun_c = tuple(SUN_DIR[i] * SUN_DIST_CM for i in range(3))
-    earth = uv_sphere("Earth", EARTH_CENTER, EARTH_RADIUS_CM, "EarthMat", 48, 96)
-    sun = uv_sphere("Sun", sun_c, SUN_RADIUS_CM, "SunMat", 20, 32)
+    sun_mesh = uv_sphere("Sphere", (0.0, 0.0, 0.0), SUN_RADIUS_CM, "SunMat", 20, 32)
+    sun = (
+        f'def Xform "Sun"\n'
+        f'{{\n'
+        f'    double3 xformOp:translate = ({sun_c[0]:.1f}, {sun_c[1]:.1f}, {sun_c[2]:.1f})\n'
+        f'    uniform token[] xformOpOrder = ["xformOp:translate"]\n'
+        f'\n'
+        f'{indent(sun_mesh, "    ")}\n'
+        f'}}'
+    )
     body = "\n".join([earth, sun])
     return f'def Xform "Celestial"\n{{\n{indent(body, "    ")}\n}}'
 

@@ -69,9 +69,13 @@ function rotZ(v: [number, number, number], a: number): [number, number, number] 
  * sweeps west at Earth's sidereal rate; otherwise the constellation
  * would appear locked above the same longitude band forever.
  */
-export function useFleetPositions(): FleetSatPosition[] {
-  const detail   = useTelemetryStore((s) => s.constellationDetail)
-  const simTimeS = useTelemetryStore((s) => s.sim_time_s)
+export function useFleetPositions(simOverride?: number): FleetSatPosition[] {
+  const detail    = useTelemetryStore((s) => s.constellationDetail)
+  const storeSimS = useTelemetryStore((s) => s.sim_time_s)
+  // Callers animating at frame rate (MiniOrbitHud, TwinOrbitFallback) pass a
+  // smoothly-extrapolated clock (useSmoothSimTime); everyone else rides the
+  // 1 Hz store clock.
+  const simTimeS = simOverride ?? storeSimS
 
   return useMemo(() => {
     if (!detail || detail.ring_eci_km.length === 0) return []

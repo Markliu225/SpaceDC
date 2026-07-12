@@ -89,7 +89,11 @@ export function StreamMount() {
     let raf = 0;
     const update = () => {
       const slot = document.getElementById('scene-embed-slot');
-      if (slot) {
+      // Overlay the shared <video> only while the stream is actually LIVE.
+      // Its background is opaque black, so parking it over the slot during
+      // 'connecting'/'failed' completely hides the Three.js fallback scene
+      // underneath (the viewport read as a dead black rectangle).
+      if (slot && state.status === 'ready') {
         const r = slot.getBoundingClientRect();
         el.style.left = `${r.left}px`;
         el.style.top = `${r.top}px`;

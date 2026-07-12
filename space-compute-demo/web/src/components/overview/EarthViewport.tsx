@@ -5,9 +5,12 @@ import {
 import StreamConfig from '../../../stream.config.json'
 import { Dot } from '../primitives'
 
-// Lazy-load the Three.js scene so it doesn't bloat the initial JS bundle.
+// Lazy-load the Three.js scenes so they don't bloat the initial JS bundle.
 const FallbackEarth = lazy(() =>
   import('./earth/FallbackEarth').then((m) => ({ default: m.FallbackEarth })),
+)
+const TwinOrbitFallback = lazy(() =>
+  import('../twin/TwinOrbitFallback').then((m) => ({ default: m.TwinOrbitFallback })),
 )
 
 /**
@@ -29,7 +32,10 @@ const FallbackEarth = lazy(() =>
  */
 type ViewportMode = 'streaming' | 'connecting' | 'fallback'
 
-export function EarthViewport() {
+/** Which local scene to render while the Omniverse stream is unavailable:
+ *  'overview' — the decorative fleet Earth; 'twin' — the real-orbit view of
+ *  the tracked satellite (used by the Satellite Twin page). */
+export function EarthViewport({ fallback = 'overview' }: { fallback?: 'overview' | 'twin' }) {
   const [, tick] = useState(0)
   useEffect(() => subscribeStreamStatus(() => tick((t) => t + 1)), [])
   const status = getStreamStatus()
@@ -52,7 +58,7 @@ export function EarthViewport() {
       {mode !== 'streaming' && (
         <div className="absolute inset-0">
           <Suspense fallback={<PlaceholderEarth mode={mode} msg={msg} />}>
-            <FallbackEarth />
+            {fallback === 'twin' ? <TwinOrbitFallback /> : <FallbackEarth />}
           </Suspense>
           <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 text-center">
             {mode === 'connecting' ? (

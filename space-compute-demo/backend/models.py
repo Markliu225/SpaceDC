@@ -46,8 +46,15 @@ class SatelliteState(BaseModel):
     sunlit: bool = True
     # Normalised solar incidence, 0..1 = max(0, cos(angle between sat→sun
     # and the sub-solar direction)). 0 in eclipse, 1 at solar noon. Drives
-    # the satellite-stage Sun light in Kit so the lighting tracks the orbit.
+    # the satellite-stage Sun light INTENSITY in Kit.
     sun_factor: float = 1.0
+    # Raw cosine of the zenith→sun angle (−1..1, unclamped — negative in
+    # eclipse). Under the yaw-steering attitude the sun always sits in the
+    # satellite's X-Z plane, so this single number fixes the full sun
+    # DIRECTION in the twin stage: d = (sqrt(1−c²), 0, c). Kit sweeps the
+    # Key light + the visible sun disk with it; in eclipse the sun dips
+    # below the −Z (nadir) horizon and the Earth visually blocks it.
+    sun_cos: float = 1.0
     # True on the dawn-dusk Sun-synchronous (terminator) orbit: never eclipsed,
     # panels track the Sun, so the twin keeps the Sun normal to the panels.
     is_dawn_dusk: bool = False

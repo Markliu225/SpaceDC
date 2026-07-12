@@ -668,6 +668,10 @@ class StateEngine:
         # Normalised incidence for the Kit Sun driver — 0 in eclipse, 1 at
         # solar noon. Same cos_a the solar-input model uses.
         self._sat.sun_factor = max(0.0, cos_a)
+        # Raw zenith→sun cosine for the Kit sun-direction driver (see
+        # models.SatelliteState.sun_cos). Dawn-dusk rides the terminator, so
+        # its sun sits broadside on the horizon (cos ≈ 0).
+        self._sat.sun_cos = cos_a
         # Dawn-dusk SSO rides the terminator → never eclipsed, and the panels
         # track the Sun, so it stays at full direct incidence at all times.
         is_dawn_dusk = (self._constellation_id == "dawn_dusk_sso")
@@ -675,6 +679,7 @@ class StateEngine:
         if is_dawn_dusk:
             self._sat.sunlit = True
             self._sat.sun_factor = 1.0
+            self._sat.sun_cos = 0.0
 
         # --- Reconfigurable hardware lookups ----------------------------------
         cfg     = self._config
