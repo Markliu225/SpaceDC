@@ -26,6 +26,7 @@ from models import (
     SatelliteState,
     StatePacket,
     TaskState,
+    WorkloadTotals,
 )
 import ai_workloads as _ai
 from services import orbit_catalog
@@ -280,6 +281,9 @@ class StateEngine:
         self._workload_profile: str = _DEFAULT_WORKLOAD_PROFILE
         self._platform_power_w: float = 600.0
         self._gpu_count: int = _GPU_CARDS_PER_SAT
+        # Wall time of the last completed physics tick — anchors the on-read
+        # fractional-time display-kinematics refresh (smooth 5 Hz polls).
+        self._last_tick_wall: Optional[float] = None
         # 天数天算 mission — phase machine on a wall-clock timeline. The clock
         # (_mission_start_wall) only starts once the scene is loaded; until
         # then the mission holds on 'acquire'. _mission_request_wall marks when
@@ -396,6 +400,89 @@ class StateEngine:
     def workload_profile(self) -> str:
         return self._workload_profile
 
+    def set_workload_profile(self, profile_id: str, *, mark_custom: bool = True) -> str:
+        """Switch the GPU job schedule the satellite is flying. Raises
+        ValueError on unknown ids. Resets the output accumulators so the
+        'produced since switch' story starts clean; a manual switch degrades
+        the active design to 'custom' (the profile is part of a design)."""
+        if profile_id not in _WORKLOAD_PROFILES:
+            raise ValueError(f"unknown workload profile {profile_id!r}")
+        if profile_id != self._workload_profile:
+            self._workload_profile = profile_id
+            if mark_custom:
+                self._design_id = "custom"
+        self._reset_workload_totals()
+        return self._workload_profile
+
+    def _reset_workload_totals(self) -> None:
+        self._sat.workload_totals = WorkloadTotals()
+
+    def workload_adaptation(self, profile_id: str) -> dict:
+        """How the CURRENT design would cope with `profile_id`: average power
+        demand vs solar supply, thermal peak vs radiator emission ceiling,
+        and the expected outputs of one schedule cycle (tokens / frames /
+        payload energy) on the fitted GPUs. Same formulas as the live design
+        check, so the numbers agree with what the panels show after a switch."""
+        prof = _profile(profile_id)
+        sched = prof["schedule"]
+        cfg = self._config
+        gpu = _GPU_TABLE.get(cfg.gpu, _GPU_TABLE["H100"])
+        s_mat = _SOLAR_MAT_TABLE.get(cfg.solar_material, _SOLAR_MAT_TABLE["Si"])
+        r_mat = _RAD_MAT_TABLE.get(cfg.radiator_material, _RAD_MAT_TABLE["Aluminum"])
+        geom = self._twin_geometry
+        n = self._gpu_count
+        platform_w = self._platform_power_w
+        IDLE_FRAC = 0.15
+
+        total_dt = sum(d for _, d, _, _ in sched) or 1.0
+        avg_util = sum(d * u for _, d, u, _ in sched) / total_dt
+        demand_avg_w = gpu["tdp_w"] * (IDLE_FRAC + (1 - IDLE_FRAC) * avg_util) * n + platform_w
+        peak_solar_w = s_mat["efficiency"] * _solar_area_m2(geom) * _SOLAR_CONSTANT_W_M2
+        supply_avg_w = peak_solar_w * _POINTING_EFF * _SUNLIT_FRACTION
+
+        thermal_peak_w = (gpu["tdp_w"] * n + platform_w) * 0.95
+        SIGMA, T_BG_K = 5.67e-8, 250.0
+        thermal_emit_w = (r_mat["emissivity"] * SIGMA * _radiator_area_m2(geom)
+                          * ((333.15) ** 4 - T_BG_K ** 4))
+
+        tokens = frames = 0.0
+        kwh = 0.0
+        for _, dur, util, job_key in sched:
+            card_w = gpu["tdp_w"] * (IDLE_FRAC + (1 - IDLE_FRAC) * util)
+            det = _ai.job_detail(cfg.gpu, job_key, util, card_w, n)
+            if det is not None:
+                if det.throughput_unit == "tok/s":
+                    tokens += det.throughput_total * dur
+                elif det.throughput_unit == "frames/s":
+                    frames += det.throughput_total * dur
+            kwh += (card_w * n + platform_w) * dur / 3.6e6
+
+        power_margin = supply_avg_w / max(1.0, demand_avg_w) - 1.0
+        thermal_margin = thermal_emit_w / max(1.0, thermal_peak_w) - 1.0
+        fit = ("ok" if power_margin >= 0.10 and thermal_margin >= 0.0
+               else "tight" if power_margin >= 0.0 and thermal_margin >= -0.10
+               else "exceeds")
+        return {
+            "id": profile_id,
+            "label": prof["label"],
+            "cycle_s": prof["cycle_s"],
+            "avg_util": round(avg_util, 2),
+            "demand_avg_w": round(demand_avg_w),
+            "supply_avg_w": round(supply_avg_w),
+            "power_margin_pct": round(power_margin * 100),
+            "thermal_peak_w": round(thermal_peak_w),
+            "thermal_emit_w": round(thermal_emit_w),
+            "thermal_margin_pct": round(thermal_margin * 100),
+            "fit": fit,
+            "outputs_per_cycle": {
+                "tokens": round(tokens),
+                "frames": round(frames),
+                "payload_kwh": round(kwh, 2),
+            },
+            "jobs": sorted({_ai.JOB_TYPES[j]["label"] for _, _, _, j in sched
+                            if j in _ai.JOB_TYPES}),
+        }
+
     def apply_design(self, preset: Any) -> TwinGeometry:
         """Switch the whole satellite design in one shot: hardware loadout,
         deployable geometry (the handler then regenerates the USD and bumps
@@ -408,6 +495,7 @@ class StateEngine:
                                   else _DEFAULT_WORKLOAD_PROFILE)
         self._platform_power_w = float(preset.platform_power_w)
         self._gpu_count = max(1, int(preset.gpu_count))
+        self._reset_workload_totals()
         # Battery: swap capacity, keep the current charge fraction so the
         # switch doesn't teleport the SOC story.
         self._sat.battery_capacity_wh = float(preset.battery_capacity_wh)
@@ -572,11 +660,70 @@ class StateEngine:
         )
         return self._task
 
+    def _set_tracked_kinematics(self, pos_km: tuple[float, float, float],
+                                t: float) -> float:
+        """Write the tracked satellite's POSITION-derived display fields
+        (sat_xyz/lat/lon/alt, sunlit, sun_factor, sun_cos, dawn-dusk flags)
+        from an ECI position. Shared by the 1 Hz physics tick and the
+        on-read display refresh. Returns the raw zenith→sun cosine."""
+        x_km, y_km, z_km = pos_km
+        self._sat.sat_xyz_km = (x_km, y_km, z_km)
+        lat, lon, alt = orbit_catalog.eci_to_lat_lon_alt(x_km, y_km, z_km, t)
+        self._sat.lat = lat
+        self._sat.lon = lon
+        self._sat.altitude_km = alt
+
+        # Sunlit: in scene the sun direction is fixed in inertial frame at
+        # azimuth -45° / elevation +23.5°. The satellite is in sunlight when
+        # its position dotted with the sun direction is positive.
+        sun_dx, sun_dy, sun_dz = 0.648, -0.648, 0.398
+        r_norm = max(1e-6, math.sqrt(x_km * x_km + y_km * y_km + z_km * z_km))
+        cos_a = (x_km * sun_dx + y_km * sun_dy + z_km * sun_dz) / r_norm
+        self._sat.sunlit = cos_a > -0.05  # tiny dawn/dusk margin
+        # Normalised incidence for the Kit Sun driver — 0 in eclipse, 1 at
+        # solar noon. Same cos_a the solar-input model uses.
+        self._sat.sun_factor = max(0.0, cos_a)
+        # Raw zenith→sun cosine for the Kit sun-direction driver (see
+        # models.SatelliteState.sun_cos). Dawn-dusk rides the terminator, so
+        # its sun sits broadside on the horizon (cos ≈ 0).
+        self._sat.sun_cos = cos_a
+        # Dawn-dusk SSO rides the terminator → never eclipsed, and the panels
+        # track the Sun, so it stays at full direct incidence at all times.
+        is_dawn_dusk = (self._constellation_id == "dawn_dusk_sso")
+        self._sat.is_dawn_dusk = is_dawn_dusk
+        if is_dawn_dusk:
+            self._sat.sunlit = True
+            self._sat.sun_factor = 1.0
+            self._sat.sun_cos = 0.0
+        return cos_a
+
+    def _refresh_display_kinematics(self) -> None:
+        """Refresh the tracked satellite's position-derived fields at the
+        CURRENT fractional sim time (single cached-Satrec sgp4 call). The
+        1 Hz physics tick only produces 1 Hz kinematics, so Kit's 5 Hz
+        /state polls would see the same lat/lon for ~1 s and the eased
+        Earth-rotation driver would surge-and-stall once per second. Power
+        and thermal stay strictly tick-owned; this touches geometry only."""
+        if not self._running or self._last_tick_wall is None:
+            return
+        frac = min(1.0, max(0.0, time.monotonic() - self._last_tick_wall))
+        t = self._sim_time_s + frac
+        preset = _consts.get_preset(self._constellation_id) or _consts.get_preset("single_iss")
+        try:
+            pos = _consts.propagate_tracked(preset, t)
+        except Exception:  # noqa: BLE001 — display-only; keep last values
+            return
+        if pos == (0.0, 0.0, 0.0):
+            return
+        self._set_tracked_kinematics(pos, t)
+
     # ---- snapshot ----
     def snapshot(self) -> StatePacket:
-        # Evaluate the mission on read so /state polls (5 Hz from Kit) and WS
-        # broadcasts always see fresh wall-clock progress, not 1 Hz-quantized.
+        # Evaluate the mission + the tracked satellite's display kinematics
+        # on read, so /state polls (5 Hz from Kit) and WS broadcasts see
+        # continuously fresh wall-clock progress, not 1 Hz-quantized steps.
         self._update_mission()
+        self._refresh_display_kinematics()
         return StatePacket(
             sim_time_s=self._sim_time_s,
             satellite=self._sat.model_copy(),
@@ -609,6 +756,8 @@ class StateEngine:
             except Exception:
                 log.exception("physics tick failed (sim_t=%.0f) — skipping tick",
                               self._sim_time_s)
+            # Anchor for on-read fractional-time kinematics refreshes.
+            self._last_tick_wall = time.monotonic()
             try:
                 await _maybe_await(self._on_state(self.snapshot()))
             except Exception:
@@ -652,34 +801,8 @@ class StateEngine:
 
         # Tracked satellite: plane 0, sat 0.
         x_km, y_km, z_km = fleet_pos_km[0] if fleet_pos_km else (0.0, 0.0, 0.0)
-        self._sat.sat_xyz_km = (x_km, y_km, z_km)
-        lat, lon, alt = orbit_catalog.eci_to_lat_lon_alt(x_km, y_km, z_km, t)
-        self._sat.lat = lat
-        self._sat.lon = lon
-        self._sat.altitude_km = alt
-
-        # Sunlit: in scene the sun direction is fixed in inertial frame at
-        # azimuth -45° / elevation +23.5°. The satellite is in sunlight when
-        # its position dotted with the sun direction is positive.
-        sun_dx, sun_dy, sun_dz = 0.648, -0.648, 0.398
-        r_norm = max(1e-6, math.sqrt(x_km * x_km + y_km * y_km + z_km * z_km))
-        cos_a = (x_km * sun_dx + y_km * sun_dy + z_km * sun_dz) / r_norm
-        self._sat.sunlit = cos_a > -0.05  # tiny dawn/dusk margin
-        # Normalised incidence for the Kit Sun driver — 0 in eclipse, 1 at
-        # solar noon. Same cos_a the solar-input model uses.
-        self._sat.sun_factor = max(0.0, cos_a)
-        # Raw zenith→sun cosine for the Kit sun-direction driver (see
-        # models.SatelliteState.sun_cos). Dawn-dusk rides the terminator, so
-        # its sun sits broadside on the horizon (cos ≈ 0).
-        self._sat.sun_cos = cos_a
-        # Dawn-dusk SSO rides the terminator → never eclipsed, and the panels
-        # track the Sun, so it stays at full direct incidence at all times.
-        is_dawn_dusk = (self._constellation_id == "dawn_dusk_sso")
-        self._sat.is_dawn_dusk = is_dawn_dusk
-        if is_dawn_dusk:
-            self._sat.sunlit = True
-            self._sat.sun_factor = 1.0
-            self._sat.sun_cos = 0.0
+        cos_a = self._set_tracked_kinematics((x_km, y_km, z_km), t)
+        is_dawn_dusk = self._sat.is_dawn_dusk
 
         # --- Reconfigurable hardware lookups ----------------------------------
         cfg     = self._config
@@ -731,8 +854,18 @@ class StateEngine:
         self._sat.platform_power_w = platform_w
         self._sat.gpu_count = gpu_count
         # Per-GPU compute/throughput/heat detail for the panels.
-        self._sat.workload_detail = _ai.job_detail(
-            cfg.gpu, job_key, workload, gpu_w_per_card, gpu_count)
+        detail = _ai.job_detail(cfg.gpu, job_key, workload, gpu_w_per_card, gpu_count)
+        self._sat.workload_detail = detail
+        # Cumulative output — sim-time (1:1) integration of the typed-job
+        # throughput plus payload energy, reset on profile/design switches.
+        totals = self._sat.workload_totals
+        if detail is not None:
+            if detail.throughput_unit == "tok/s":
+                totals.tokens += detail.throughput_total * dt
+            elif detail.throughput_unit == "frames/s":
+                totals.frames += detail.throughput_total * dt
+        totals.payload_kwh += (payload_w + platform_w) * dt / 3.6e6
+        totals.duration_s += dt
 
         # --- Battery (real Wh integration, accelerated 60x for visibility) ----
         # Net power into the battery. Surplus charges it; deficit discharges.

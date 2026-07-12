@@ -283,6 +283,19 @@ def get_preset(preset_id: str) -> Optional[ConstellationPreset]:
 SUN_DIR_ECI = (0.648, -0.648, 0.398)
 
 
+def propagate_tracked(preset: ConstellationPreset, sim_t_s: float) -> tuple[float, float, float]:
+    """ECI km position of the TRACKED satellite (plane 0, slot 0) only — a
+    single cached-Satrec sgp4 call, cheap enough to refresh the display
+    kinematics on every /state read (Kit polls at 5 Hz) instead of once per
+    1 Hz physics tick."""
+    sat = preset.build_fleet()[0]
+    scaled = sim_t_s * TIME_SCALE
+    e, r, _v = sat.sgp4(DEMO_JD0, DEMO_FR0 + scaled / 86400.0)
+    if e:
+        return (0.0, 0.0, 0.0)
+    return (float(r[0]), float(r[1]), float(r[2]))
+
+
 def propagate_fleet(preset: ConstellationPreset, sim_t_s: float) -> list[tuple[float, float, float]]:
     """Return ECI km positions for every sat in the preset at sim_t."""
     fleet = preset.build_fleet()

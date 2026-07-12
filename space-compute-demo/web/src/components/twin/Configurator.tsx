@@ -1,7 +1,8 @@
-import { Cpu, Maximize2, Snowflake, Sun } from 'lucide-react'
+import { Activity, Cpu, Maximize2, Snowflake, Sun } from 'lucide-react'
 import { Card } from '../primitives'
 import { hasFixedWings } from '../../data/satConfigOptions'
 import { useTwinGeometry, GEOM_RANGE } from '../../hooks/useTwinGeometry'
+import { WorkloadPanel } from './WorkloadPanel'
 import {
   GPU_OPTIONS,
   RADIATOR_MATERIAL_OPTIONS,
@@ -101,6 +102,10 @@ export function Configurator() {
       </Section>
 
       <GeometryControls />
+
+      <Section title="Workload" icon={<Activity size={12} strokeWidth={1.8} className="text-accent" />}>
+        <WorkloadPanel />
+      </Section>
 
       <DesignSummary />
     </Card>

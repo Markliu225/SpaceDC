@@ -25,6 +25,33 @@ export interface GpuJobDetail {
   throughput_unit: string;
 }
 
+/** Cumulative payload output since the active workload profile (or design)
+ *  was applied — mirrors backend models.WorkloadTotals. */
+export interface WorkloadTotals {
+  tokens: number;
+  frames: number;
+  payload_kwh: number;
+  duration_s: number;
+}
+
+/** One workload profile annotated with how the CURRENT design copes with it
+ *  (GET /workload_profiles — mirrors state_engine.workload_adaptation). */
+export interface WorkloadProfileInfo {
+  id: string;
+  label: string;
+  cycle_s: number;
+  avg_util: number;
+  demand_avg_w: number;
+  supply_avg_w: number;
+  power_margin_pct: number;
+  thermal_peak_w: number;
+  thermal_emit_w: number;
+  thermal_margin_pct: number;
+  fit: 'ok' | 'tight' | 'exceeds';
+  outputs_per_cycle: { tokens: number; frames: number; payload_kwh: number };
+  jobs: string[];
+}
+
 export interface SatelliteState {
   id: string;
   orbit_type: OrbitType;
@@ -53,6 +80,8 @@ export interface SatelliteState {
   gpu_count?: number;
   /** Typed-job detail for the active schedule block (ai_workloads.py). */
   workload_detail?: GpuJobDetail;
+  /** Cumulative output since the workload profile / design was applied. */
+  workload_totals?: WorkloadTotals;
   /** Standing alarm codes (e.g. 'low_battery', 'overtemp', 'undertemp',
    *  'eclipse_deficit', 'radiator_undersized', 'solar_undersized'). */
   alarms?: string[];

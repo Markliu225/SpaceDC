@@ -419,6 +419,36 @@ async def http_design_preview(design_id: str):
                         headers={"Cache-Control": "public, max-age=3600"})
 
 
+# --- Workload profiles (workload selector) ---------------------------------
+@app.get("/workload_profiles")
+async def http_workload_profiles():
+    """Every schedule the GPUs can fly, each annotated with how the CURRENT
+    design would cope: average demand vs solar supply, thermal peak vs the
+    radiator ceiling, a fit verdict, and the expected outputs of one cycle
+    (tokens / frames / payload kWh on the fitted GPUs)."""
+    import state_engine as _se
+    return {
+        "active": engine.workload_profile,
+        "profiles": [engine.workload_adaptation(pid)
+                     for pid in _se._WORKLOAD_PROFILES],
+    }
+
+
+@app.post("/workload_profile")
+async def http_set_workload_profile(body: dict[str, Any]):
+    """Switch the GPU job schedule. The physics demand side, the design
+    checks and the output counters all follow on the next tick; a manual
+    switch degrades the active design to 'custom'."""
+    profile = str(body.get("profile", ""))
+    try:
+        applied = engine.set_workload_profile(profile)
+    except ValueError as e:
+        raise HTTPException(404, str(e)) from e
+    await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
+    return {"ok": True, "workload_profile": applied,
+            "adaptation": engine.workload_adaptation(applied)}
+
+
 @app.post("/mission/start")
 async def http_start_mission():
     """Kick the 天数天算 mission + broadcast so Web/Kit react immediately."""

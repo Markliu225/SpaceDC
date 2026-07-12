@@ -43,6 +43,9 @@ export function ConfigDropdown<T extends string>({
   }, [open])
 
   const selected = options.find((o) => o.id === value) ?? options[0]
+  // Options can be async (e.g. the workload profiles fetch) — render nothing
+  // rather than crash the whole configurator rail on an empty list.
+  if (!selected) return null
 
   return (
     <div ref={ref} className="relative">

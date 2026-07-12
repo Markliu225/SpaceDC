@@ -22,7 +22,10 @@ import omni.usd  # type: ignore
 
 log = logging.getLogger("space.demo.selection")
 
-BACKEND_BASE = os.environ.get("SPACE_DEMO_BACKEND_HTTP", "http://localhost:8001").rstrip("/")
+# 127.0.0.1, NOT localhost: Windows resolves localhost through an IPv6
+# attempt first, costing ~0.2 s per request — at a 5 Hz poll that both
+# throttles the loop and makes the eased orbital motion visibly lumpy.
+BACKEND_BASE = os.environ.get("SPACE_DEMO_BACKEND_HTTP", "http://127.0.0.1:8001").rstrip("/")
 SELECTION_URL = f"{BACKEND_BASE}/selection"
 
 

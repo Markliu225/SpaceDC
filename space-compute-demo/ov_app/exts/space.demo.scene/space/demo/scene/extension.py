@@ -50,7 +50,10 @@ def _log(msg: str) -> None:
         carb.log_info(f"[space.demo.scene] {msg}")
 
 
-BACKEND_BASE = os.environ.get("SPACE_DEMO_BACKEND_HTTP", "http://localhost:8001").rstrip("/")
+# 127.0.0.1, NOT localhost: Windows resolves localhost through an IPv6
+# attempt first, costing ~0.2 s per request — at a 5 Hz poll that both
+# throttles the loop and makes the eased orbital motion visibly lumpy.
+BACKEND_BASE = os.environ.get("SPACE_DEMO_BACKEND_HTTP", "http://127.0.0.1:8001").rstrip("/")
 BACKEND_STATE_URL          = f"{BACKEND_BASE}/state"
 BACKEND_CONSTELLATION_URL  = f"{BACKEND_BASE}/constellations/{{id}}"
 BACKEND_SAT_CONFIG_URL     = f"{BACKEND_BASE}/satellite_config"

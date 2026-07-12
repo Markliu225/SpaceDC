@@ -33,6 +33,17 @@ class GpuJobDetail(BaseModel):
     throughput_unit: str = "-"
 
 
+class WorkloadTotals(BaseModel):
+    """Cumulative payload output since the active workload profile (or
+    design) was applied — sim-time integration of the typed-job throughput.
+    The 'what did I get for my watts' story: tokens generated, frames
+    classified, and payload energy consumed."""
+    tokens: float = 0.0
+    frames: float = 0.0
+    payload_kwh: float = 0.0
+    duration_s: float = 0.0
+
+
 class SatelliteState(BaseModel):
     id: str = "sat-001"
     orbit_type: OrbitType = "LEO"
@@ -79,6 +90,8 @@ class SatelliteState(BaseModel):
     gpu_count: int = 8
     # Typed-job detail for the active schedule block.
     workload_detail: Optional[GpuJobDetail] = None
+    # Cumulative output since the workload profile / design was applied.
+    workload_totals: WorkloadTotals = Field(default_factory=WorkloadTotals)
     # Standing alarms — short string codes the web maps to localized labels.
     # Empty list while nominal.
     alarms: list[str] = []
