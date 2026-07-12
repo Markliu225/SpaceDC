@@ -69,58 +69,69 @@ function rotZ(v: [number, number, number], a: number): [number, number, number] 
  * sweeps west at Earth's sidereal rate; otherwise the constellation
  * would appear locked above the same longitude band forever.
  */
-export function useFleetPositions(simOverride?: number): FleetSatPosition[] {
-  const detail    = useTelemetryStore((s) => s.constellationDetail)
-  const storeSimS = useTelemetryStore((s) => s.sim_time_s)
-  // Callers animating at frame rate (MiniOrbitHud, TwinOrbitFallback) pass a
-  // smoothly-extrapolated clock (useSmoothSimTime); everyone else rides the
-  // 1 Hz store clock.
-  const simTimeS = simOverride ?? storeSimS
+function computeSatPosition(
+  detail: ConstellationDetail, simTimeS: number, idx: number,
+): FleetSatPosition {
+  const { ring_eci_km, planes, sats_per_plane, phasing, period_s, time_scale } = detail
+  const T = planes * sats_per_plane
+  const simNow = simTimeS * time_scale
+  // Earth's spin from sim epoch — same time_scale so the ground track
+  // animation rate matches the orbit rate.
+  const gmst = (simNow / SIDEREAL_DAY_S) * 2 * Math.PI
+
+  const k = Math.floor(idx / sats_per_plane)
+  const j = idx % sats_per_plane
+  const planeAngle = (k * 2 * Math.PI) / planes
+  const slotOffset = j * (period_s / sats_per_plane)
+    + k * phasing * (period_s / T)
+  const phase = ((simNow + slotOffset) / period_s) % 1
+  const ringPt = sampleRing(ring_eci_km, phase)
+  const eci = rotZ(ringPt, planeAngle)
+
+  // ECI → ECEF for the sub-sat point.
+  const ecef = rotZ(eci, -gmst)
+  const r = Math.hypot(ecef[0], ecef[1], ecef[2]) || 1
+  const lat = (Math.asin(ecef[2] / r) * 180) / Math.PI
+  const lon = (Math.atan2(ecef[1], ecef[0]) * 180) / Math.PI
+
+  // Sunlit test stays in ECI (sun direction is inertial).
+  const sunDot = (eci[0] * SUN_DIR_ECI[0]
+                + eci[1] * SUN_DIR_ECI[1]
+                + eci[2] * SUN_DIR_ECI[2]) / r
+  const sunlit = sunDot >= -0.05
+
+  return {
+    idx, planeIdx: k, slotIdx: j,
+    eci, lat, lon,
+    altitudeKm: r - EARTH_RADIUS_KM,
+    sunlit,
+  }
+}
+
+export function useFleetPositions(): FleetSatPosition[] {
+  const detail   = useTelemetryStore((s) => s.constellationDetail)
+  const simTimeS = useTelemetryStore((s) => s.sim_time_s)
 
   return useMemo(() => {
     if (!detail || detail.ring_eci_km.length === 0) return []
-    const { ring_eci_km, planes, sats_per_plane, phasing, period_s, time_scale } = detail
-    const T = planes * sats_per_plane
-    const simNow = simTimeS * time_scale
-
-    // Earth's spin from sim epoch — same time_scale so the ground track
-    // animation rate matches the orbit rate.
-    const gmst = (simNow / SIDEREAL_DAY_S) * 2 * Math.PI
-
-    const out: FleetSatPosition[] = []
-    for (let k = 0; k < planes; k++) {
-      const planeAngle = (k * 2 * Math.PI) / planes
-      for (let j = 0; j < sats_per_plane; j++) {
-        const slotOffset = j * (period_s / sats_per_plane)
-          + k * phasing * (period_s / T)
-        const phase = ((simNow + slotOffset) / period_s) % 1
-        const ringPt = sampleRing(ring_eci_km, phase)
-        const eci = rotZ(ringPt, planeAngle)
-
-        // ECI → ECEF for the sub-sat point.
-        const ecef = rotZ(eci, -gmst)
-        const r = Math.hypot(ecef[0], ecef[1], ecef[2]) || 1
-        const lat = (Math.asin(ecef[2] / r) * 180) / Math.PI
-        const lon = (Math.atan2(ecef[1], ecef[0]) * 180) / Math.PI
-
-        // Sunlit test stays in ECI (sun direction is inertial).
-        const sunDot = (eci[0] * SUN_DIR_ECI[0]
-                      + eci[1] * SUN_DIR_ECI[1]
-                      + eci[2] * SUN_DIR_ECI[2]) / r
-        const sunlit = sunDot >= -0.05
-
-        out.push({
-          idx: k * sats_per_plane + j,
-          planeIdx: k,
-          slotIdx: j,
-          eci,
-          lat,
-          lon,
-          altitudeKm: r - EARTH_RADIUS_KM,
-          sunlit,
-        })
-      }
-    }
-    return out
+    const total = detail.planes * detail.sats_per_plane
+    return Array.from({ length: total }, (_, i) => computeSatPosition(detail, simTimeS, i))
   }, [detail, simTimeS])
+}
+
+/**
+ * useSatPosition — ONE satellite's live position on an arbitrary clock.
+ * The frame-rate orbit views (MiniOrbitHud reticle, TwinOrbitFallback) use
+ * this with the smoothly-extrapolated clock: O(1) per frame, unlike
+ * useFleetPositions which rebuilds the whole fleet (1500+ sats on the big
+ * Walker presets) and must stay on the 1 Hz store clock.
+ */
+export function useSatPosition(idx: number, simTimeS: number): FleetSatPosition | null {
+  const detail = useTelemetryStore((s) => s.constellationDetail)
+  return useMemo(() => {
+    if (!detail || detail.ring_eci_km.length === 0) return null
+    const total = detail.planes * detail.sats_per_plane
+    const clamped = Math.max(0, Math.min(total - 1, idx))
+    return computeSatPosition(detail, simTimeS, clamped)
+  }, [detail, simTimeS, idx])
 }

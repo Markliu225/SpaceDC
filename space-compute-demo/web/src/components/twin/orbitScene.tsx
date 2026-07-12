@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber'
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import {
   AdditiveBlending, BufferAttribute, BufferGeometry,
   CatmullRomCurve3, DoubleSide, Group, Mesh, MeshBasicMaterial,
@@ -125,6 +125,8 @@ export function ConstellationRings({
   detail, selectedPlane,
 }: { detail: ConstellationDetail; selectedPlane: number }) {
   const rings = useMemo(() => {
+    // (disposal handled by the effect below — <primitive> geometries are
+    // NOT auto-disposed by react-three-fiber)
     const inv = 1 / EARTH_RADIUS_KM
     return Array.from({ length: detail.planes }, (_, k) => {
       const ang = (k * 2 * Math.PI) / detail.planes
@@ -141,6 +143,7 @@ export function ConstellationRings({
       return { k, geom, isSel }
     })
   }, [detail, selectedPlane])
+  useEffect(() => () => { rings.forEach((r) => r.geom.dispose()) }, [rings])
   return (
     <>
       {rings.map(({ k, geom, isSel }) => (

@@ -1,7 +1,7 @@
 import { Canvas } from '@react-three/fiber'
 import { useMemo } from 'react'
 import { Vector3 } from 'three'
-import { useFleetPositions } from '../../hooks/useFleetPositions'
+import { useSatPosition } from '../../hooks/useFleetPositions'
 import { useSmoothSimTime } from '../../hooks/useSmoothSimTime'
 import { useDemoStore } from '../../store/demoStore'
 import { useTelemetryStore } from '../../store/useTelemetryStore'
@@ -38,9 +38,10 @@ function Brackets() {
 
 export function MiniOrbitHud() {
   // Frame-rate extrapolated sim clock — the reticle glides along its orbit
-  // instead of jumping once per 1 Hz store tick.
+  // instead of jumping once per 1 Hz store tick. Position is computed for
+  // the ONE selected sat (O(1) per frame — the full-fleet hook would rebuild
+  // 1500+ sats per frame on the big Walker presets).
   const simTime   = useSmoothSimTime()
-  const fleet     = useFleetPositions(simTime)
   const selected  = useTelemetryStore((s) => s.selectedSatIdx)
   const detail    = useTelemetryStore((s) => s.constellationDetail)
   const timeScale = detail?.time_scale ?? 60
@@ -49,7 +50,7 @@ export function MiniOrbitHud() {
   // values so the HUD can never contradict the telemetry panels (the local
   // propagation only positions the 3D dot).
   const backendSat = useDemoStore((s) => s.lastState?.satellite)
-  const local = fleet[selected]
+  const local = useSatPosition(selected, simTime)
   const sat = (selected === 0 && backendSat && local)
     ? { ...local,
         sunlit: backendSat.sunlit,

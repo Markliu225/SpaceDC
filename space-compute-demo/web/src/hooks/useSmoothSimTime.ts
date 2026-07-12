@@ -30,7 +30,17 @@ export function useSmoothSimTime(): number {
     let raf = 0
     const tick = () => {
       const a = anchorRef.current
-      if (a) setSmooth(a.sim + (performance.now() - a.wall) / 1000)
+      if (a) {
+        // Extrapolate only while the sim is RUNNING, and never more than a
+        // couple of store ticks past the anchor — so Pause freezes the orbit
+        // views instead of letting them drift ahead and snap back on Resume,
+        // and a hung backend can't run the clock away either.
+        const running = useTelemetryStore.getState().running
+        const elapsed = running
+          ? Math.min(2.5, (performance.now() - a.wall) / 1000)
+          : 0
+        setSmooth(a.sim + elapsed)
+      }
       raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)

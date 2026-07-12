@@ -32,7 +32,7 @@ try:
     import omni.ext  # type: ignore
     import omni.kit.app  # type: ignore
     import omni.usd  # type: ignore
-    from pxr import Gf, Sdf, UsdGeom, Vt  # type: ignore
+    from pxr import Gf, Sdf, Usd, UsdGeom, Vt  # type: ignore
     _HAS_KIT = True
 except ImportError:
     _HAS_KIT = False
@@ -986,45 +986,62 @@ def update_twin_orbit(stage, tgt: dict, sm: dict, dt: float) -> None:
       Light:  rotateXYZ = (0, θ°, 0) points the DistantLight's −Z emission
               along −d where d = (sinθ, 0, cosθ) is the sun direction.
     """
-    if not sm:
-        sm.update({"lat": float(tgt.get("lat", 0.0)),
-                   "lon": float(tgt.get("lon", 0.0)),
-                   "sun_cos": float(tgt.get("sun_cos", 1.0))})
+    tgt_lat = float(tgt.get("lat", 0.0))
+    tgt_lon = float(tgt.get("lon", 0.0))
+    tgt_cos = float(tgt.get("sun_cos", 1.0))
+    dlat_raw = abs(tgt_lat - sm.get("lat", tgt_lat))
+    dlon_raw = abs((tgt_lon - sm.get("lon", tgt_lon) + 180.0) % 360.0 - 180.0)
+    if not sm or dlat_raw > 20.0 or dlon_raw > 40.0:
+        # First sample OR a discontinuous jump (backend restart, design
+        # switch, sim reset) — snap instead of whip-panning the Earth
+        # through physically meaningless intermediate poses.
+        sm.update({"lat": tgt_lat, "lon": tgt_lon, "sun_cos": tgt_cos})
     # Exponential easing toward the 5 Hz targets (τ ≈ 0.35 s).
     alpha = 1.0 - math.exp(-max(0.0, dt) / 0.35)
-    sm["lat"] += (float(tgt.get("lat", sm["lat"])) - sm["lat"]) * alpha
+    sm["lat"] += (tgt_lat - sm["lat"]) * alpha
     # Longitude wraps — ease along the shortest arc.
-    dlon = (float(tgt.get("lon", sm["lon"])) - sm["lon"] + 180.0) % 360.0 - 180.0
+    dlon = (tgt_lon - sm["lon"] + 180.0) % 360.0 - 180.0
     sm["lon"] = ((sm["lon"] + dlon * alpha + 180.0) % 360.0) - 180.0
-    sm["sun_cos"] += (float(tgt.get("sun_cos", sm["sun_cos"])) - sm["sun_cos"]) * alpha
+    sm["sun_cos"] += (tgt_cos - sm["sun_cos"]) * alpha
 
-    # --- Earth: aim the sub-satellite point at the satellite ---------------
+    # Only stages generated with the animatable-Celestial layout are driven —
+    # the Earth Xform ops double as the layout marker, so pre-layout stages
+    # keep their baked static pose AND their authored Key-light aim.
     earth = stage.GetPrimAtPath(TWIN_EARTH_PATH)
-    if earth.IsValid():
-        ry = earth.GetAttribute("xformOp:rotateY")
-        rz = earth.GetAttribute("xformOp:rotateZ")
-        if ry.IsValid() and rz.IsValid():
-            ry.Set(float(sm["lat"] - 90.0))
-            rz.Set(float(-sm["lon"]))
-            if not sm.get("_logged"):
-                sm["_logged"] = True
-                _log(f"twin orbit driver active (lat={sm['lat']:.1f}, "
-                     f"lon={sm['lon']:.1f}, sun_cos={sm['sun_cos']:.2f})")
+    if not earth.IsValid():
+        return
+    ry = earth.GetAttribute("xformOp:rotateY")
+    rz = earth.GetAttribute("xformOp:rotateZ")
+    if not (ry.IsValid() and rz.IsValid()):
+        return
 
-    # --- Sun disk + Key light: sweep the zenith→sun angle ------------------
-    c = max(-1.0, min(1.0, sm["sun_cos"]))
-    theta = math.acos(c)
-    d = (math.sin(theta), 0.0, c)                 # unit sun direction (stage frame)
-    sun_disk = stage.GetPrimAtPath(TWIN_SUN_PATH)
-    if sun_disk.IsValid():
-        tr = sun_disk.GetAttribute("xformOp:translate")
-        if tr.IsValid():
-            tr.Set(Gf.Vec3d(d[0] * TWIN_SUN_DIST_CM, 0.0, d[2] * TWIN_SUN_DIST_CM))
-    key = stage.GetPrimAtPath(SUN_LIGHT_PATH)
-    if key.IsValid():
-        rot = key.GetAttribute("xformOp:rotateXYZ")
-        if rot.IsValid():
-            rot.Set(Gf.Vec3f(0.0, math.degrees(theta), 0.0))
+    # All writes go to the SESSION layer: they are per-run animation, never
+    # part of the document — the stage stays clean for saving, Ctrl+S can't
+    # bake a frame-frozen orbital pose into the version-controlled usda, and
+    # a twin-layer Reload() can't collide with them.
+    with Usd.EditContext(stage, stage.GetSessionLayer()):
+        # --- Earth: aim the sub-satellite point at the satellite ------------
+        ry.Set(float(sm["lat"] - 90.0))
+        rz.Set(float(-sm["lon"]))
+        if not sm.get("_logged"):
+            sm["_logged"] = True
+            _log(f"twin orbit driver active (lat={sm['lat']:.1f}, "
+                 f"lon={sm['lon']:.1f}, sun_cos={sm['sun_cos']:.2f})")
+
+        # --- Sun disk + Key light: sweep the zenith→sun angle ---------------
+        c = max(-1.0, min(1.0, sm["sun_cos"]))
+        theta = math.acos(c)
+        d = (math.sin(theta), 0.0, c)             # unit sun direction (stage frame)
+        sun_disk = stage.GetPrimAtPath(TWIN_SUN_PATH)
+        if sun_disk.IsValid():
+            tr = sun_disk.GetAttribute("xformOp:translate")
+            if tr.IsValid():
+                tr.Set(Gf.Vec3d(d[0] * TWIN_SUN_DIST_CM, 0.0, d[2] * TWIN_SUN_DIST_CM))
+        key = stage.GetPrimAtPath(SUN_LIGHT_PATH)
+        if key.IsValid():
+            rot = key.GetAttribute("xformOp:rotateXYZ")
+            if rot.IsValid():
+                rot.Set(Gf.Vec3f(0.0, math.degrees(theta), 0.0))
 
 
 def _dump_satellite_materials() -> str:
@@ -1402,6 +1419,13 @@ if _HAS_KIT:
             # under the sub-satellite point, sun disk + key light sweep) at
             # frame rate, eased toward the latest 5 Hz /state targets.
             if self._current_stage == self._stages.get("satellite"):
+                # Belief (self._current_stage) can go stale if the user opens
+                # another stage from Kit's Content browser — verify the stage
+                # that is ACTUALLY open is the satellite stage before writing.
+                root_id = stage.GetRootLayer().identifier.replace("\\", "/")
+                want = str(self._current_stage).replace("\\", "/")
+                if not root_id.endswith(want.split("/")[-1]):
+                    return
                 now = time.monotonic()
                 dt = min(0.25, max(0.0, now - (self._twin_orbit_wall or now)))
                 self._twin_orbit_wall = now

@@ -2,7 +2,7 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { Suspense, useMemo, useRef } from 'react'
 import { Vector3 } from 'three'
 import { Stars } from '../overview/earth/Stars'
-import { useFleetPositions } from '../../hooks/useFleetPositions'
+import { useSatPosition } from '../../hooks/useFleetPositions'
 import { useSmoothSimTime } from '../../hooks/useSmoothSimTime'
 import { useTelemetryStore } from '../../store/useTelemetryStore'
 import {
@@ -20,15 +20,14 @@ import {
  * constellation's true orbit ring(s), and the tracked satellite gliding
  * along its SGP4-propagated position on the smoothly-extrapolated sim clock
  * — so the "satellite moving around the Earth" story survives Kit being
- * down. Drag to orbit the view; scroll to zoom.
+ * down. A chase camera keeps the satellite in frame the whole orbit.
  */
 export function TwinOrbitFallback() {
   const simTime   = useSmoothSimTime()
-  const fleet     = useFleetPositions(simTime)
   const selected  = useTelemetryStore((s) => s.selectedSatIdx)
   const detail    = useTelemetryStore((s) => s.constellationDetail)
   const timeScale = detail?.time_scale ?? 60
-  const sat       = fleet[selected] ?? fleet[0]
+  const sat       = useSatPosition(selected, simTime)
 
   const sunDir = useMemo(
     () => new Vector3(...eciToDisplay(SUN_DIR_ECI)).normalize(),
