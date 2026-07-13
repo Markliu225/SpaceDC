@@ -32,47 +32,46 @@ def Xform "World"
             float3 xformOp:rotateXYZ = (-40, 0, 270)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
-        # Earth albedo — reflected earthshine from below.
+        # Earth albedo — faint blue earthshine FROM the Earth side (the globe
+        # sits at −Z in this stage), so shadow faces read dimly blue the way
+        # LEO hardware actually does. Runtime intensity is sun-driven
+        # (space.demo.scene SUN_DRIVEN_LIGHTS).
         def DistantLight "EarthBounce"
         {
             float inputs:angle = 45.0
-            float inputs:intensity = 1400
+            float inputs:intensity = 700
             color3f inputs:color = (0.34, 0.52, 0.82)
-            float3 xformOp:rotateXYZ = (70, 0, 150)
+            float3 xformOp:rotateXYZ = (170, 0, 0)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
-        # Sharp rim from the opposite side — gives the solar panels a glassy
-        # specular highlight against deep space.
+        # Subtle rim from the opposite side — a specular edge so the dark
+        # silhouette separates from space, NOT a second key.
         def DistantLight "Rim"
         {
             float inputs:angle = 1.5
-            float inputs:intensity = 1300
+            float inputs:intensity = 600
             color3f inputs:color = (0.55, 0.7, 0.95)
             float3 xformOp:rotateXYZ = (15, 0, -120)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
-        # Deep space — the DomeLight IS the rendered background. It now carries a
-        # starfield + Milky Way latlong texture so the satellite floats in a real
-        # cosmos instead of flat black. The texture is mostly black (low average
-        # → little IBL, so it won't wash the scene); the Key sun + side fills
-        # still do the actual lighting. Intensity is moderate so the band glows
-        # softly and the stars read as points — tune in the live viewport.
+        # Deep space — the DomeLight IS the rendered background: a true-black
+        # starfield (noise floor zeroed in the texture, so no grey wash at
+        # any intensity) with crisp star points. Near-zero average → no IBL
+        # fill; the sun does the lighting, space stays black.
         def DomeLight "Space"
         {
             color3f inputs:color = (1.0, 1.0, 1.0)
-            float inputs:intensity = 650.0
+            float inputs:intensity = 750.0
             asset inputs:texture:file = @./textures/starfield.png@
             token inputs:texture:format = "latlong"
         }
-        # Side fills (NOT sun-driven → always on) that light the ±Y-facing
-        # radiators and the shadow side WITHOUT touching the black background,
-        # since DistantLights never illuminate the dome. FillPort emits +Y to
-        # light the camera-facing (−Y) faces; FillStarboard emits −Y for the far
-        # faces, dimmer for shape.
+        # Side fills (NOT sun-driven → always on): survival floor only, so
+        # the eclipse silhouette stays barely readable. Space look = ONE
+        # blinding key + hard shadows; these must never fight the sun.
         def DistantLight "FillPort"
         {
             float inputs:angle = 6.0
-            float inputs:intensity = 1900
+            float inputs:intensity = 550
             color3f inputs:color = (0.55, 0.62, 0.80)
             float3 xformOp:rotateXYZ = (90, 0, 0)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
@@ -80,48 +79,10 @@ def Xform "World"
         def DistantLight "FillStarboard"
         {
             float inputs:angle = 6.0
-            float inputs:intensity = 1000
+            float inputs:intensity = 320
             color3f inputs:color = (0.50, 0.58, 0.78)
             float3 xformOp:rotateXYZ = (-90, 0, 0)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
-        }
-
-        # --- Bay interior lights ---
-        # Aimed at the DGX rack INSIDE the bay so you can see it through the
-        # open front panel.  Invisible geometry; treatAsPoint keeps highlights sharp.
-        # Bay cavity is ~40x30x36 cm centered on origin; DGX rack near world origin.
-        def SphereLight "BayLightFront"
-        {
-            float inputs:radius = 0.3
-            float inputs:intensity = 5000.0
-            color3f inputs:color = (1.0, 0.97, 0.92)
-            bool inputs:treatAsPoint = 1
-            bool primvars:doNotCastShadows = 1
-            token visibility = "invisible"
-            double3 xformOp:translate = (0, -12, 8)
-            uniform token[] xformOpOrder = ["xformOp:translate"]
-        }
-        def SphereLight "BayLightTop"
-        {
-            float inputs:radius = 0.3
-            float inputs:intensity = 3500.0
-            color3f inputs:color = (0.92, 0.96, 1.0)
-            bool inputs:treatAsPoint = 1
-            bool primvars:doNotCastShadows = 1
-            token visibility = "invisible"
-            double3 xformOp:translate = (0, 0, 14)
-            uniform token[] xformOpOrder = ["xformOp:translate"]
-        }
-        def SphereLight "BayLightSide"
-        {
-            float inputs:radius = 0.3
-            float inputs:intensity = 2500.0
-            color3f inputs:color = (0.85, 0.9, 1.0)
-            bool inputs:treatAsPoint = 1
-            bool primvars:doNotCastShadows = 1
-            token visibility = "invisible"
-            double3 xformOp:translate = (-12, 3, 0)
-            uniform token[] xformOpOrder = ["xformOp:translate"]
         }
     }
 

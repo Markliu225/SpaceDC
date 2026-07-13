@@ -280,9 +280,12 @@ CAM_FOCAL = 22.0
 EARTH_RADIUS_CM = 22_000.0                     # ~49° angular radius from the cam:
 EARTH_CENTER    = (0.0, 0.0, -28_000.0)        # a big curved planet across the lower frame
 EARTH_TEX       = "./textures/earth_day.jpg"
-EARTH_EMIT      = (0.30, 0.30, 0.30)           # dim self-emissive of the day map so the whole globe shows the texture
+# Night-side ghost only: the day side is LIT by the swept Key sun, so the
+# terminator emerges for real. 0.30 made the whole globe uniformly luminous —
+# a second glowing ball next to the sun disk that flattened the space look.
+EARTH_EMIT      = (0.045, 0.05, 0.065)
 SUN_TEX         = "./textures/sun_surface.png"
-SUN_EMIT        = (7.0, 5.2, 2.2)              # HDR multiplier on the sun texture → glows
+SUN_EMIT        = (12.0, 8.6, 3.4)             # HDR multiplier — with RTX bloom the ONE sun reads blinding
 SUN_DIST_CM     = 50_000.0
 SUN_RADIUS_CM   = 231.0                        # 50000·tan(0.265°) → ~0.53° disk
 SUN_DIR         = (0.643, 0.0, 0.766)          # default Key sun source (+X / +Z)

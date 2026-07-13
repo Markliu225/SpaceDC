@@ -87,15 +87,15 @@ TWIN_WING_PATHS  = ("/World/Satellite/SolarArray/WingPosY",
                     "/World/Satellite/SolarArray/WingNegY")
 TWIN_WING_ROOT_U = 0.71      # mirrors gen_twin_satellite.REDWIRE_WING_Y0
 SUN_DRIVEN_LIGHTS = [
-    # Key sun — strong daylight (max 4000) with a high eclipse floor (400) so
-    # the sunlit side is bright and the dark side never collapses. The bright
-    # always-on DomeLight (see satellite.usda) carries the overall fill.
-    ("/World/Environment/Key",         400.0, 4000.0),
-    # Sharp sun-side rim — tracks the sun; lifted in lockstep with Key.
-    ("/World/Environment/Rim",         300.0, 1300.0),
-    # Earthshine bounce — always present (planet fills the dark side). Strong
-    # floor (1000) so eclipse stays clearly readable.
-    ("/World/Environment/EarthBounce", 1000.0, 1600.0),
+    # ONE blinding key with hard contrast — the space look. Low eclipse
+    # floor: the dark side is genuinely dark; the static fills
+    # (satellite.usda, 550/320) keep the silhouette barely readable.
+    ("/World/Environment/Key",         250.0, 5200.0),
+    # Subtle sun-side specular rim — an edge, not a second key.
+    ("/World/Environment/Rim",         120.0, 800.0),
+    # Faint blue earthshine from the planet below (−Z) — the only real
+    # secondary source in LEO.
+    ("/World/Environment/EarthBounce", 350.0, 950.0),
 ]
 
 USD_ROOT_ENV = "SPACE_DEMO_USD_ROOT"

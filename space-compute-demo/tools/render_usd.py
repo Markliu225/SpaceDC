@@ -25,9 +25,9 @@ from pxr import Usd, UsdGeom, UsdLux, UsdShade, Gf, Sdf
 # Keep in sync with ov_app/.../extension.py SUN_DRIVEN_LIGHTS (lo, hi). The
 # --sun f flag previews the runtime intensity lo+f*(hi-lo) for these lights.
 _DRIVEN_RANGES = {
-    "Key":         (400.0, 4000.0),
-    "Rim":         (300.0, 1300.0),
-    "EarthBounce": (1000.0, 1600.0),
+    "Key":         (250.0, 5200.0),
+    "Rim":         (120.0, 800.0),
+    "EarthBounce": (350.0, 950.0),
 }
 _LIT_EXPOSURE = 1.0 / 1600.0   # tonemap scale for the lit preview
 
