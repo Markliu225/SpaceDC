@@ -87,15 +87,15 @@ TWIN_WING_PATHS  = ("/World/Satellite/SolarArray/WingPosY",
                     "/World/Satellite/SolarArray/WingNegY")
 TWIN_WING_ROOT_U = 0.71      # mirrors gen_twin_satellite.REDWIRE_WING_Y0
 SUN_DRIVEN_LIGHTS = [
-    # ONE blinding key with hard contrast — the space look. Low eclipse
-    # floor: the dark side is genuinely dark; the static fills
-    # (satellite.usda, 550/320) keep the silhouette barely readable.
-    ("/World/Environment/Key",         250.0, 5200.0),
+    # ONE dominant key with real contrast — the space look — but floors
+    # high enough that the model's detail never disappears (the demo must
+    # stay readable through eclipse, physics dims the mood via sun_factor).
+    ("/World/Environment/Key",         500.0, 5200.0),
     # Subtle sun-side specular rim — an edge, not a second key.
-    ("/World/Environment/Rim",         120.0, 800.0),
-    # Faint blue earthshine from the planet below (−Z) — the only real
-    # secondary source in LEO.
-    ("/World/Environment/EarthBounce", 350.0, 950.0),
+    ("/World/Environment/Rim",         250.0, 800.0),
+    # Blue earthshine from the planet below (−Z) — the real secondary
+    # source in LEO; carries the shadow side together with the fills.
+    ("/World/Environment/EarthBounce", 700.0, 1100.0),
 ]
 
 USD_ROOT_ENV = "SPACE_DEMO_USD_ROOT"

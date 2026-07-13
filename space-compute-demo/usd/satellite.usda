@@ -65,13 +65,13 @@ def Xform "World"
             asset inputs:texture:file = @./textures/starfield.png@
             token inputs:texture:format = "latlong"
         }
-        # Side fills (NOT sun-driven → always on): survival floor only, so
-        # the eclipse silhouette stays barely readable. Space look = ONE
-        # blinding key + hard shadows; these must never fight the sun.
+        # Side fills (NOT sun-driven → always on): bright enough that the
+        # model's DETAIL stays readable on the shadow side, still well under
+        # the key so the light stays directional (sun-dominant, not studio).
         def DistantLight "FillPort"
         {
             float inputs:angle = 6.0
-            float inputs:intensity = 550
+            float inputs:intensity = 1000
             color3f inputs:color = (0.55, 0.62, 0.80)
             float3 xformOp:rotateXYZ = (90, 0, 0)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
@@ -79,7 +79,7 @@ def Xform "World"
         def DistantLight "FillStarboard"
         {
             float inputs:angle = 6.0
-            float inputs:intensity = 320
+            float inputs:intensity = 550
             color3f inputs:color = (0.50, 0.58, 0.78)
             float3 xformOp:rotateXYZ = (-90, 0, 0)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
