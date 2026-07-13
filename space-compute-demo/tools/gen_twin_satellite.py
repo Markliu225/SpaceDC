@@ -280,14 +280,11 @@ CAM_FOCAL = 22.0
 EARTH_RADIUS_CM = 22_000.0                     # ~49° angular radius from the cam:
 EARTH_CENTER    = (0.0, 0.0, -28_000.0)        # a big curved planet across the lower frame
 EARTH_TEX       = "./textures/earth_day.jpg"
-# Earth material stack (the ER0001 8K set): day diffuse; CITY-LIGHT
-# emissive (the night side shows real city lights instead of a uniform
-# ghost — on the lit side they wash out against the day map, matching how
-# emissive composes in Kit); the ocean-specular mask inverted into
-# roughness (sea glints under the swept Key sun, land stays matte); and a
-# separate slightly-larger cloud sphere that rotates with the globe.
-EARTH_NIGHT_TEX  = "./textures/earth_night.jpg"
-EARTH_NIGHT_EMIT = (1.5, 1.4, 1.15)    # city-light emissive scale
+# Earth material stack (the ER0001 8K set): day diffuse (no emissive — the
+# night side goes genuinely dark, per user preference); the ocean-specular
+# mask inverted into roughness (sea glints under the swept Key sun, land
+# stays matte); and a separate slightly-larger cloud sphere that rotates
+# with the globe.
 EARTH_SPEC_TEX   = "./textures/earth_spec.jpg"
 CLOUD_TEX        = "./textures/earth_clouds.jpg"
 CLOUD_SCALE      = 1.008               # cloud shell sits ~2.2 km up at scale
@@ -404,11 +401,10 @@ def sun_material() -> str:
 
 
 def earth_material() -> str:
-    """The ER0001 Earth: 8K day diffuse; city-light emissive from the night
-    map (real lights on the dark side, washed out on the lit side); the
-    ocean-specular mask inverted into roughness via UsdUVTexture scale/bias
-    (ocean spec=1 → roughness 0.2 sun-glint, land spec=0 → 0.95 matte)."""
-    e = EARTH_NIGHT_EMIT
+    """The ER0001 Earth: 8K day diffuse, NO emissive (the night side goes
+    genuinely dark); the ocean-specular mask inverted into roughness via
+    UsdUVTexture scale/bias (ocean spec=1 → roughness 0.2 sun-glint, land
+    spec=0 → 0.95 matte)."""
     return f"""
     def Material "EarthMat"
     {{
@@ -417,7 +413,6 @@ def earth_material() -> str:
         {{
             uniform token info:id = "UsdPreviewSurface"
             color3f inputs:diffuseColor.connect = </World/Looks/EarthMat/Day.outputs:rgb>
-            color3f inputs:emissiveColor.connect = </World/Looks/EarthMat/Night.outputs:rgb>
             float inputs:roughness.connect = </World/Looks/EarthMat/Rough.outputs:r>
             float inputs:metallic = 0.0
             int inputs:useSpecularWorkflow = 0
@@ -428,14 +423,6 @@ def earth_material() -> str:
             uniform token info:id = "UsdUVTexture"
             asset inputs:file = @{EARTH_TEX}@
             float2 inputs:st.connect = </World/Looks/EarthMat/St.outputs:result>
-            float3 outputs:rgb
-        }}
-        def Shader "Night"
-        {{
-            uniform token info:id = "UsdUVTexture"
-            asset inputs:file = @{EARTH_NIGHT_TEX}@
-            float2 inputs:st.connect = </World/Looks/EarthMat/St.outputs:result>
-            float4 inputs:scale = ({e[0]:.2f}, {e[1]:.2f}, {e[2]:.2f}, 1.0)
             float3 outputs:rgb
         }}
         def Shader "Rough"

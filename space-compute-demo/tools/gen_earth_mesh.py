@@ -56,7 +56,8 @@ def build_sphere(radius: float, lat_n: int, lon_n: int):
 
 
 def _build_material(stage: Usd.Stage) -> UsdShade.Material:
-    """OmniPBR MDL material with NASA Blue Marble day texture + night-side emissive.
+    """OmniPBR MDL material with the ER0001 day texture — no night emissive
+    (the dark side goes genuinely dark, per user preference).
 
     Omniverse RTX renders via MDL; UsdPreviewSurface texture inputs aren't reliably
     picked up by RTX, so we use the stock OmniPBR.mdl shipped with Omniverse.
@@ -74,13 +75,34 @@ def _build_material(stage: Usd.Stage) -> UsdShade.Material:
     shader.CreateInput("metallic_constant", Sdf.ValueTypeNames.Float).Set(0.0)
     shader.CreateInput("reflection_roughness_constant", Sdf.ValueTypeNames.Float).Set(0.85)
 
-    # Night-side lights as emissive
-    shader.CreateInput("enable_emission", Sdf.ValueTypeNames.Bool).Set(True)
-    shader.CreateInput("emissive_color_texture", Sdf.ValueTypeNames.Asset).Set("./textures/earth_night.jpg")
-    shader.CreateInput("emissive_color", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(1.0, 0.85, 0.55))
-    shader.CreateInput("emissive_intensity", Sdf.ValueTypeNames.Float).Set(3.0)
-
     # Connect MDL surface output to material (Omniverse RTX queries via 'mdl' render context)
+    out = shader.CreateOutput("out", Sdf.ValueTypeNames.Token)
+    mat.CreateSurfaceOutput("mdl").ConnectToSource(out)
+    mat.CreateDisplacementOutput("mdl").ConnectToSource(out)
+    mat.CreateVolumeOutput("mdl").ConnectToSource(out)
+
+    return mat
+
+
+CLOUD_SCALE = 1.008   # mirrors gen_twin_satellite.CLOUD_SCALE
+
+
+def _build_cloud_material(stage: Usd.Stage) -> UsdShade.Material:
+    """Cloud shell — white OmniPBR with the cloud map driving opacity, so
+    the layer floats over the globe exactly like the twin close-up."""
+    mat_path = "/World/Earth/Looks/CloudMaterial"
+    mat = UsdShade.Material.Define(stage, mat_path)
+    shader = UsdShade.Shader.Define(stage, mat_path + "/Shader")
+    shader.SetSourceAsset("OmniPBR.mdl", "mdl")
+    shader.SetSourceAssetSubIdentifier("OmniPBR", "mdl")
+
+    shader.CreateInput("diffuse_tint", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(1.0, 1.0, 1.0))
+    shader.CreateInput("metallic_constant", Sdf.ValueTypeNames.Float).Set(0.0)
+    shader.CreateInput("reflection_roughness_constant", Sdf.ValueTypeNames.Float).Set(1.0)
+    shader.CreateInput("enable_opacity", Sdf.ValueTypeNames.Bool).Set(True)
+    shader.CreateInput("opacity_texture", Sdf.ValueTypeNames.Asset).Set("./textures/earth_clouds.jpg")
+    shader.CreateInput("opacity_constant", Sdf.ValueTypeNames.Float).Set(0.85)
+
     out = shader.CreateOutput("out", Sdf.ValueTypeNames.Token)
     mat.CreateSurfaceOutput("mdl").ConnectToSource(out)
     mat.CreateDisplacementOutput("mdl").ConnectToSource(out)
@@ -120,8 +142,26 @@ def main() -> None:
     material = _build_material(stage)
     UsdShade.MaterialBindingAPI.Apply(mesh_prim.GetPrim()).Bind(material)
 
+    # Cloud shell — a slightly larger sphere as a CHILD of the Earth mesh
+    # (inherits any Earth rotation), cloud map as opacity, same look as the
+    # twin close-up.
+    cpts, cuvs, cfvc, cfvi = build_sphere(RADIUS * CLOUD_SCALE, 64, 128)
+    cloud_prim = UsdGeom.Mesh.Define(stage, "/World/Earth/Clouds")
+    cloud_prim.CreatePointsAttr(Vt.Vec3fArray(cpts))
+    cloud_prim.CreateFaceVertexCountsAttr(Vt.IntArray(cfvc))
+    cloud_prim.CreateFaceVertexIndicesAttr(Vt.IntArray(cfvi))
+    r_c = RADIUS * CLOUD_SCALE
+    cloud_prim.CreateExtentAttr([(-r_c, -r_c, -r_c), (r_c, r_c, r_c)])
+    cloud_prim.CreateSubdivisionSchemeAttr(UsdGeom.Tokens.none)
+    cst = UsdGeom.PrimvarsAPI(cloud_prim).CreatePrimvar(
+        "st", Sdf.ValueTypeNames.TexCoord2fArray,
+        interpolation=UsdGeom.Tokens.vertex)
+    cst.Set(Vt.Vec2fArray(cuvs))
+    cloud_mat = _build_cloud_material(stage)
+    UsdShade.MaterialBindingAPI.Apply(cloud_prim.GetPrim()).Bind(cloud_mat)
+
     stage.Save()
-    print(f"wrote {OUT}  verts={len(points)}  tris={len(fvc)}")
+    print(f"wrote {OUT}  verts={len(points)}+{len(cpts)}  tris={len(fvc)}+{len(cfvc)}")
 
 
 if __name__ == "__main__":

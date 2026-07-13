@@ -488,18 +488,25 @@ class StateEngine:
     def _reset_workload_totals(self) -> None:
         self._sat.workload_totals = WorkloadTotals()
 
-    def set_attitude_spin(self, action: str) -> dict:
+    _SPIN_AXES = {"x": 0, "y": 1, "z": 2}
+
+    def set_attitude_spin(self, action: str, axis: str = "z") -> dict:
         """Reaction-wheel demo: start/stop/toggle a slow 360° body rotation
-        about the centre-of-mass Z axis. Rate is fixed at a legible
-        1 rpm (6°/s); Kit integrates the angle per frame. Display-only —
-        the sun-tracking power model is unaffected."""
-        rate = self._sat.attitude_spin_dps
+        about any of the centre-of-mass X/Y/Z axes (axes combine into a
+        tumble). Rate is a legible 1 rpm (6°/s) per axis; Kit integrates
+        the angles per frame. Display-only — the sun-tracking power model
+        is unaffected."""
+        idx = self._SPIN_AXES.get(str(axis).lower())
+        if idx is None:
+            raise ValueError(f"unknown attitude_spin axis {axis!r}")
+        rates = list(self._sat.attitude_spin_dps)
         if action == "toggle":
-            action = "stop" if rate > 0.0 else "start"
+            action = "stop" if rates[idx] > 0.0 else "start"
         if action not in ("start", "stop"):
             raise ValueError(f"unknown attitude_spin action {action!r}")
-        self._sat.attitude_spin_dps = 6.0 if action == "start" else 0.0
-        return {"action": action, "spin_dps": self._sat.attitude_spin_dps}
+        rates[idx] = 6.0 if action == "start" else 0.0
+        self._sat.attitude_spin_dps = tuple(rates)
+        return {"action": action, "axis": axis, "spin_dps": rates}
 
     def set_solar_deploy(self, action: str) -> dict:
         """Command the roll-out solar array. 'deploy' → extend to 1.0,

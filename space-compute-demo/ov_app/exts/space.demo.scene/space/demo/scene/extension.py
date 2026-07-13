@@ -97,9 +97,9 @@ SUN_DRIVEN_LIGHTS = [
     # five-light rig is what makes the PBR materials read; the space feel
     # lives in the SKY (single sun, point stars, dark Earth night side),
     # never in starving the satellite of light.
-    ("/World/Environment/Key",         800.0, 6000.0),
-    ("/World/Environment/Rim",         450.0, 1800.0),
-    ("/World/Environment/EarthBounce", 1300.0, 2100.0),
+    ("/World/Environment/Key",         1400.0, 9500.0),
+    ("/World/Environment/Rim",         650.0, 2800.0),
+    ("/World/Environment/EarthBounce", 2100.0, 3300.0),
 ]
 
 USD_ROOT_ENV = "SPACE_DEMO_USD_ROOT"
@@ -1060,20 +1060,29 @@ def update_twin_orbit(stage, tgt: dict, sm: dict, dt: float) -> None:
             if rot.IsValid():
                 rot.Set(Gf.Vec3f(0.0, math.degrees(theta), 0.0))
 
-        # --- Reaction-wheel spin: integrate the body angle per frame --------
+        # --- Reaction-wheel spin: integrate the body angles per frame -------
         # The hulls are authored recentred on the origin, so rotating the
-        # /World/Satellite root IS a centre-of-mass rotation. The rate
-        # arrives with the 5 Hz poll; the angle accumulates with frame dt.
-        spin_dps = float(tgt.get("spin_dps", 0.0))
-        if spin_dps > 0.0 or sm.get("spin_angle", 0.0) != 0.0:
-            sm["spin_angle"] = (sm.get("spin_angle", 0.0)
-                                + spin_dps * max(0.0, dt)) % 360.0
+        # /World/Satellite root IS a centre-of-mass rotation. Any mix of
+        # the X/Y/Z rates may run (a slow tumble); each axis integrates
+        # with frame dt. The rates arrive with the 5 Hz poll.
+        spin = tgt.get("spin_dps") or (0.0, 0.0, 0.0)
+        if isinstance(spin, (int, float)):          # pre-3-axis backends
+            spin = (0.0, 0.0, float(spin))
+        keys = ("spin_x", "spin_y", "spin_z")
+        if any(float(s) > 0.0 for s in spin) or any(sm.get(k) for k in keys):
             sat_root = stage.GetPrimAtPath(TWIN_SAT_PATH)
             if sat_root.IsValid():
-                rz_attr = sat_root.GetAttribute("xformOp:rotateZ")
-                if not rz_attr.IsValid():
-                    rz_attr = UsdGeom.Xformable(sat_root).AddRotateZOp().GetAttr()
-                rz_attr.Set(float(sm["spin_angle"]))
+                for i, (key, attr_name, adder) in enumerate((
+                        ("spin_x", "xformOp:rotateX", "AddRotateXOp"),
+                        ("spin_y", "xformOp:rotateY", "AddRotateYOp"),
+                        ("spin_z", "xformOp:rotateZ", "AddRotateZOp"))):
+                    sm[key] = (sm.get(key, 0.0)
+                               + float(spin[i]) * max(0.0, dt)) % 360.0
+                    attr = sat_root.GetAttribute(attr_name)
+                    if not attr.IsValid():
+                        attr = getattr(UsdGeom.Xformable(sat_root),
+                                       adder)().GetAttr()
+                    attr.Set(float(sm[key]))
 
         # --- Roll-out wings (redwire): stretch from the root anchors --------
         # The flexible-blanket mock: scaleY = f about the deck-edge pivot
@@ -1449,7 +1458,9 @@ if _HAS_KIT:
                     "deploy": float(sat.get("solar_deploy_frac", 1.0)),
                     "deploy_wings": (state.get("twin_geometry", {})
                                      .get("architecture") == "redwire"),
-                    "spin_dps": float(sat.get("attitude_spin_dps", 0.0)),
+                    # list [x,y,z] (deg/s); the driver also tolerates the
+                    # old scalar-Z form.
+                    "spin_dps": sat.get("attitude_spin_dps") or (0.0, 0.0, 0.0),
                 }
 
             # Cache the mission snapshot + the wall time it arrived, so the

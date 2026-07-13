@@ -468,12 +468,14 @@ async def http_solar_deploy(body: Optional[dict[str, Any]] = None):
 @app.post("/attitude_spin")
 async def http_attitude_spin(body: Optional[dict[str, Any]] = None):
     """Reaction-wheel demo: toggle a slow 360° rotation of the whole body
-    about its centre-of-mass Z axis. action: 'start' | 'stop' | 'toggle'
-    (default). The Kit close-up integrates satellite.attitude_spin_dps per
+    about any centre-of-mass axis. action: 'start' | 'stop' | 'toggle'
+    (default); axis: 'x' | 'y' | 'z' (default) — axes combine into a
+    tumble. The Kit close-up integrates satellite.attitude_spin_dps per
     frame; physics is untouched (sun-tracking arrays keep their model)."""
     action = str((body or {}).get("action", "toggle"))
+    axis = str((body or {}).get("axis", "z"))
     try:
-        r = engine.set_attitude_spin(action)
+        r = engine.set_attitude_spin(action, axis)
     except ValueError as e:
         raise HTTPException(400, str(e)) from e
     await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))

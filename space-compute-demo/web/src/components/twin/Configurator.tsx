@@ -205,43 +205,53 @@ function SolarDeployControl() {
   )
 }
 
-/** Reaction-wheel demo: spin the whole body 360° about its centre-of-mass
- * Z axis at a legible 1 rpm. POST /attitude_spin toggles the rate; the Kit
- * close-up integrates the angle per frame. Display-only (the sun-tracking
- * power model is unaffected). */
+/** Reaction-wheel demo: spin the whole body 360° about any centre-of-mass
+ * axis at a legible 1 rpm — the X/Y/Z toggles combine into a slow tumble.
+ * POST /attitude_spin per axis; the Kit close-up integrates the angles per
+ * frame. Display-only (the sun-tracking power model is unaffected). */
 function AttitudeSpinControl() {
-  const dps = useDemoStore(
+  const raw = useDemoStore(
     (s) => s.lastState?.satellite?.attitude_spin_dps,
-  ) ?? 0
-  const spinning = dps > 0
-  const toggle = async () => {
+  )
+  const rates: number[] = Array.isArray(raw) ? raw : [0, 0, typeof raw === 'number' ? raw : 0]
+  const anySpin = rates.some((r) => r > 0)
+  const toggle = async (axis: 'x' | 'y' | 'z') => {
     try {
       await fetch(`${BACKEND_HTTP}/attitude_spin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'toggle' }),
+        body: JSON.stringify({ action: 'toggle', axis }),
       })
     } catch {
       /* backend offline — control is inert in the local fallback */
     }
   }
+  const axes: Array<'x' | 'y' | 'z'> = ['x', 'y', 'z']
   return (
     <div
       data-testid="attitude-spin"
       className="flex items-center justify-between rounded border border-border-weak bg-bg-inset/40 px-2 py-1"
     >
       <span className="text-[11px] text-text-md">Reaction wheels</span>
-      <div className="flex items-center gap-2">
-        <span className={`font-mono tabular-nums text-[11px] ${spinning ? 'text-accent' : 'text-text-hi'}`}>
-          {spinning ? `${dps.toFixed(0)}°/s` : 'idle'}
+      <div className="flex items-center gap-1.5">
+        <span className={`font-mono tabular-nums text-[11px] ${anySpin ? 'text-accent' : 'text-text-lo'}`}>
+          {anySpin ? '1 rpm' : 'idle'}
         </span>
-        <button
-          type="button"
-          onClick={toggle}
-          className="rounded border border-border-weak px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-text-md hover:bg-bg-cardHi hover:text-text-hi"
-        >
-          {spinning ? 'Stop' : 'Spin'}
-        </button>
+        {axes.map((ax, i) => (
+          <button
+            key={ax}
+            type="button"
+            onClick={() => toggle(ax)}
+            aria-pressed={rates[i] > 0}
+            className={`w-6 rounded border px-0 py-0.5 text-[10px] uppercase tracking-[0.08em] ${
+              rates[i] > 0
+                ? 'border-accent/70 bg-accent/15 text-accent'
+                : 'border-border-weak text-text-md hover:bg-bg-cardHi hover:text-text-hi'
+            }`}
+          >
+            {ax.toUpperCase()}
+          </button>
+        ))}
       </div>
     </div>
   )

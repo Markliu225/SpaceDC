@@ -122,7 +122,6 @@ def Xform "World"
             {
                 uniform token info:id = "UsdPreviewSurface"
                 color3f inputs:diffuseColor.connect = </World/Looks/EarthMat/Day.outputs:rgb>
-                color3f inputs:emissiveColor.connect = </World/Looks/EarthMat/Night.outputs:rgb>
                 float inputs:roughness.connect = </World/Looks/EarthMat/Rough.outputs:r>
                 float inputs:metallic = 0.0
                 int inputs:useSpecularWorkflow = 0
@@ -133,14 +132,6 @@ def Xform "World"
                 uniform token info:id = "UsdUVTexture"
                 asset inputs:file = @./textures/earth_day.jpg@
                 float2 inputs:st.connect = </World/Looks/EarthMat/St.outputs:result>
-                float3 outputs:rgb
-            }
-            def Shader "Night"
-            {
-                uniform token info:id = "UsdUVTexture"
-                asset inputs:file = @./textures/earth_night.jpg@
-                float2 inputs:st.connect = </World/Looks/EarthMat/St.outputs:result>
-                float4 inputs:scale = (1.50, 1.40, 1.15, 1.0)
                 float3 outputs:rgb
             }
             def Shader "Rough"
