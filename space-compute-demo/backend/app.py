@@ -9,7 +9,7 @@ import sys
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import hashlib
 
@@ -447,6 +447,22 @@ async def http_set_workload_profile(body: dict[str, Any]):
     await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
     return {"ok": True, "workload_profile": applied,
             "adaptation": engine.workload_adaptation(applied)}
+
+
+@app.post("/solar_deploy")
+async def http_solar_deploy(body: Optional[dict[str, Any]] = None):
+    """Animate the roll-out solar array — a mock of a flexible blanket
+    array unrolling off the bay edges. action: 'deploy' | 'retract' |
+    'toggle' (default). The engine slews satellite.solar_deploy_frac 0↔1
+    over ~12 s; solar production scales with it and the Kit close-up
+    stretches the wings from their root anchors in lockstep."""
+    action = str((body or {}).get("action", "toggle"))
+    try:
+        r = engine.set_solar_deploy(action)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
+    return {"ok": True, **r}
 
 
 @app.post("/mission/start")

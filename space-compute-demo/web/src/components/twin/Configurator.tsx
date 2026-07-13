@@ -1,6 +1,7 @@
 import { Activity, Cpu, Maximize2, Snowflake, Sun } from 'lucide-react'
 import { Card } from '../primitives'
 import { hasFixedWings } from '../../data/satConfigOptions'
+import { useDemoStore } from '../../store/demoStore'
 import { useTwinGeometry, GEOM_RANGE } from '../../hooks/useTwinGeometry'
 import { WorkloadPanel } from './WorkloadPanel'
 import {
@@ -152,7 +153,54 @@ function GeometryControls() {
         decDisabled={ratio <= R.radiator_ratio.min + 1e-6}
         incDisabled={ratio >= R.radiator_ratio.max - 1e-6}
       />
+      {geom.architecture === 'redwire' && <SolarDeployControl />}
     </Section>
+  )
+}
+
+const BACKEND_HTTP =
+  (import.meta.env.VITE_BACKEND_HTTP as string | undefined) ?? 'http://localhost:8001'
+
+/** Roll-out array control (redwire only): the flexible blanket wings reel
+ * out of / into the bay edges. POST /solar_deploy animates the fraction on
+ * the backend over ~12 s; solar production and the Kit close-up's wing
+ * stretch follow it live, so retracting genuinely starves the satellite. */
+function SolarDeployControl() {
+  const frac = useDemoStore(
+    (s) => s.lastState?.satellite?.solar_deploy_frac,
+  ) ?? 1
+  const deployed = frac >= 0.5
+  const moving = frac > 0.02 && frac < 0.98
+  const toggle = async () => {
+    try {
+      await fetch(`${BACKEND_HTTP}/solar_deploy`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggle' }),
+      })
+    } catch {
+      /* backend offline — control is inert in the local fallback */
+    }
+  }
+  return (
+    <div
+      data-testid="solar-deploy"
+      className="flex items-center justify-between rounded border border-border-weak bg-bg-inset/40 px-2 py-1"
+    >
+      <span className="text-[11px] text-text-md">Roll-out array</span>
+      <div className="flex items-center gap-2">
+        <span className={`font-mono tabular-nums text-[11px] ${moving ? 'text-accent' : 'text-text-hi'}`}>
+          {Math.round(frac * 100)}%
+        </span>
+        <button
+          type="button"
+          onClick={toggle}
+          className="rounded border border-border-weak px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-text-md hover:bg-bg-cardHi hover:text-text-hi"
+        >
+          {deployed ? 'Retract' : 'Deploy'}
+        </button>
+      </div>
+    </div>
   )
 }
 

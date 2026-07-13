@@ -117,6 +117,12 @@ class SatelliteState(BaseModel):
     solar_supply_avg_w: float = 0.0
     thermal_peak_demand_w: float = 0.0
     thermal_max_emit_w: float = 0.0
+    # Roll-out solar-array deployment fraction 0..1 (mock of a flexible
+    # blanket array unrolling off the redwire bay edges): POST /solar_deploy
+    # animates it, solar production scales with it, and the Kit driver
+    # stretches the wing geometry from the root so the blanket visibly
+    # extends. 1.0 = fully deployed (every non-redwire design just stays 1).
+    solar_deploy_frac: float = 1.0
     # Deployable-geometry-driven areas (Feature 4) — solar = clusters × 2 sides,
     # radiator = dedicated ±Z panels (2 panels × 2 faces). Drive the power /
     # thermal balance so add/remove + resize change the live numbers.

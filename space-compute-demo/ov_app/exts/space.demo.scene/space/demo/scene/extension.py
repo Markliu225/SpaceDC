@@ -80,6 +80,12 @@ SUN_LIGHT_PATH = "/World/Environment/Key"
 TWIN_EARTH_PATH  = "/World/Celestial/Earth"
 TWIN_SUN_PATH    = "/World/Celestial/Sun"
 TWIN_SUN_DIST_CM = 50000.0   # mirrors gen_twin_satellite.SUN_DIST_CM
+# Roll-out solar-array driver (redwire architecture only): the wings
+# stretch from their deck-edge root with satellite.solar_deploy_frac —
+# scaleY = f about the root pivot, i.e. translateY = ±ROOT·(1−f).
+TWIN_WING_PATHS  = ("/World/Satellite/SolarArray/WingPosY",
+                    "/World/Satellite/SolarArray/WingNegY")
+TWIN_WING_ROOT_U = 0.71      # mirrors gen_twin_satellite.REDWIRE_WING_Y0
 SUN_DRIVEN_LIGHTS = [
     # Key sun — strong daylight (max 4000) with a high eclipse floor (400) so
     # the sunlit side is bright and the dark side never collapses. The bright
@@ -992,13 +998,16 @@ def update_twin_orbit(stage, tgt: dict, sm: dict, dt: float) -> None:
     tgt_lat = float(tgt.get("lat", 0.0))
     tgt_lon = float(tgt.get("lon", 0.0))
     tgt_cos = float(tgt.get("sun_cos", 1.0))
+    tgt_dep = float(tgt.get("deploy", 1.0))
     dlat_raw = abs(tgt_lat - sm.get("lat", tgt_lat))
     dlon_raw = abs((tgt_lon - sm.get("lon", tgt_lon) + 180.0) % 360.0 - 180.0)
     if not sm or dlat_raw > 20.0 or dlon_raw > 40.0:
         # First sample OR a discontinuous jump (backend restart, design
         # switch, sim reset) — snap instead of whip-panning the Earth
         # through physically meaningless intermediate poses.
-        sm.update({"lat": tgt_lat, "lon": tgt_lon, "sun_cos": tgt_cos})
+        sm.update({"lat": tgt_lat, "lon": tgt_lon, "sun_cos": tgt_cos,
+                   "deploy": tgt_dep})
+    sm.setdefault("deploy", tgt_dep)
     # Exponential easing toward the 5 Hz targets (τ ≈ 0.35 s).
     alpha = 1.0 - math.exp(-max(0.0, dt) / 0.35)
     sm["lat"] += (tgt_lat - sm["lat"]) * alpha
@@ -1006,6 +1015,7 @@ def update_twin_orbit(stage, tgt: dict, sm: dict, dt: float) -> None:
     dlon = (tgt_lon - sm["lon"] + 180.0) % 360.0 - 180.0
     sm["lon"] = ((sm["lon"] + dlon * alpha + 180.0) % 360.0) - 180.0
     sm["sun_cos"] += (tgt_cos - sm["sun_cos"]) * alpha
+    sm["deploy"] += (tgt_dep - sm["deploy"]) * alpha
 
     # Only stages generated with the animatable-Celestial layout are driven —
     # the Earth Xform ops double as the layout marker, so pre-layout stages
@@ -1045,6 +1055,28 @@ def update_twin_orbit(stage, tgt: dict, sm: dict, dt: float) -> None:
             rot = key.GetAttribute("xformOp:rotateXYZ")
             if rot.IsValid():
                 rot.Set(Gf.Vec3f(0.0, math.degrees(theta), 0.0))
+
+        # --- Roll-out wings (redwire): stretch from the root anchors --------
+        # The flexible-blanket mock: scaleY = f about the deck-edge pivot
+        # (translateY = ±ROOT·(1−f), points transform scale-then-translate),
+        # so at f→0 the blanket is reeled into the bay edge and at f=1 it is
+        # exactly the authored geometry. Ops are created lazily in the
+        # SESSION layer — the saved stage never carries an animation pose.
+        if tgt.get("deploy_wings"):
+            f = max(0.001, min(1.0, float(sm["deploy"])))
+            for path in TWIN_WING_PATHS:
+                wing = stage.GetPrimAtPath(path)
+                if not wing.IsValid():
+                    continue
+                sign = 1.0 if path.endswith("PosY") else -1.0
+                tr_attr = wing.GetAttribute("xformOp:translate")
+                sc_attr = wing.GetAttribute("xformOp:scale")
+                if not (tr_attr.IsValid() and sc_attr.IsValid()):
+                    xf = UsdGeom.Xformable(wing)
+                    tr_attr = xf.AddTranslateOp().GetAttr()
+                    sc_attr = xf.AddScaleOp().GetAttr()
+                tr_attr.Set(Gf.Vec3d(0.0, sign * TWIN_WING_ROOT_U * (1.0 - f), 0.0))
+                sc_attr.Set(Gf.Vec3f(1.0, f, 1.0))
 
 
 def _dump_satellite_materials() -> str:
@@ -1385,12 +1417,19 @@ if _HAS_KIT:
                 apply_sun(sun_factor, None, is_dawn_dusk)
                 # Targets for the per-frame orbital-context driver
                 # (update_twin_orbit eases toward these at frame rate).
+                # Wing deployment is driven only on the redwire hull — the
+                # other architectures' wings hang on yokes/booms whose
+                # root pivot doesn't match, and their designs never move
+                # solar_deploy_frac off 1.0 anyway.
                 self._twin_orbit_tgt = {
                     "lat": float(sat.get("lat", 0.0)),
                     "lon": float(sat.get("lon", 0.0)),
                     "sun_cos": float(sat.get(
                         "sun_cos",
                         sun_factor if sat.get("sunlit", True) else -0.3)),
+                    "deploy": float(sat.get("solar_deploy_frac", 1.0)),
+                    "deploy_wings": (state.get("twin_geometry", {})
+                                     .get("architecture") == "redwire"),
                 }
 
             # Cache the mission snapshot + the wall time it arrived, so the

@@ -286,6 +286,10 @@ _WORKLOAD_PROFILES: dict[str, dict] = {
 _DEFAULT_WORKLOAD_PROFILE = "inference"
 _IDLE_JOB = "housekeeping"
 
+# Full-travel time (wall s) of the roll-out solar array deploy/retract —
+# slow enough to read as a flexible blanket unrolling, fast enough to demo.
+_SOLAR_DEPLOY_S = 12.0
+
 
 def _profile(profile_id: str) -> dict:
     return _WORKLOAD_PROFILES.get(profile_id, _WORKLOAD_PROFILES[_DEFAULT_WORKLOAD_PROFILE])
@@ -357,6 +361,9 @@ class StateEngine:
         # Memoized schedule-average demand for the live design check —
         # (inputs key, W). See _schedule_demand_avg_w.
         self._demand_cache: Optional[tuple[tuple, float]] = None
+        # Roll-out solar-array command target (the live fraction sits on
+        # SatelliteState.solar_deploy_frac and slews toward this each tick).
+        self._solar_deploy_target: float = 1.0
 
     # ---- lifecycle ----
     async def start(self) -> None:
@@ -481,6 +488,20 @@ class StateEngine:
     def _reset_workload_totals(self) -> None:
         self._sat.workload_totals = WorkloadTotals()
 
+    def set_solar_deploy(self, action: str) -> dict:
+        """Command the roll-out solar array. 'deploy' → extend to 1.0,
+        'retract' → reel in to 0.0, 'toggle' → whichever end is farther.
+        The tick slews the live fraction there over _SOLAR_DEPLOY_S; solar
+        production and the Kit wing-stretch driver both follow it."""
+        if action == "toggle":
+            action = "retract" if self._solar_deploy_target >= 0.5 else "deploy"
+        if action not in ("deploy", "retract"):
+            raise ValueError(f"unknown solar_deploy action {action!r}")
+        self._solar_deploy_target = 1.0 if action == "deploy" else 0.0
+        return {"action": action,
+                "target": self._solar_deploy_target,
+                "frac": round(self._sat.solar_deploy_frac, 3)}
+
     def _schedule_demand_avg_w(self, profile_id: str) -> float:
         """Duration-weighted average electrical demand of `profile_id`'s
         schedule on the CURRENT loadout, using the same per-block operating
@@ -600,6 +621,13 @@ class StateEngine:
         # Battery: swap capacity, keep the current charge fraction so the
         # switch doesn't teleport the SOC story.
         self._sat.battery_capacity_wh = float(preset.battery_capacity_wh)
+        # Deployment state never carries over across designs. The redwire
+        # roll-out array arrives STOWED (the just-separated look — press
+        # Deploy and watch the blanket reel out); rigid-wing designs arrive
+        # fully deployed as before.
+        stowed = getattr(preset, "architecture", "truss") == "redwire"
+        self._solar_deploy_target = 0.0 if stowed else 1.0
+        self._sat.solar_deploy_frac = 0.0 if stowed else 1.0
         self._design_id = preset.id
         return geom
 
@@ -823,12 +851,14 @@ class StateEngine:
         # self-consistent on eclipse-boundary reads: the fresh sunlit flag
         # would otherwise contradict last tick's solar input for up to 1 s
         # (sunlit=False with panels still "producing"). Same formulas as the
-        # tick, reusing the tick-owned load.
+        # tick — including the deployment fraction — reusing the tick-owned
+        # load.
         s_mat = _SOLAR_MAT_TABLE.get(self._config.solar_material, _SOLAR_MAT_TABLE["Si"])
         incidence = (1.0 if self._sat.is_dawn_dusk
                      else (_POINTING_EFF if self._sat.sunlit else 0.0))
         solar_w = (s_mat["efficiency"] * _solar_area_m2(self._twin_geometry)
-                   * _SOLAR_CONSTANT_W_M2 * incidence)
+                   * _SOLAR_CONSTANT_W_M2 * incidence
+                   * self._sat.solar_deploy_frac)
         self._sat.solar_input_w = solar_w
         self._sat.battery_charge_w = solar_w - (self._sat.payload_power_w
                                                 + self._sat.platform_power_w)
@@ -943,8 +973,20 @@ class StateEngine:
         # array could ever close the power budget, so the battery pinned at 0
         # and the physics looked dead.) Dawn-dusk SSO: permanent full sun.
         incidence = 1.0 if is_dawn_dusk else (_POINTING_EFF if self._sat.sunlit else 0.0)
+        # Roll-out array deployment: slew the live fraction toward the
+        # commanded target (POST /solar_deploy) over _SOLAR_DEPLOY_S, and
+        # scale production with it — a retracted blanket genuinely starves
+        # the satellite (the battery/eclipse story reacts for real).
+        frac = self._sat.solar_deploy_frac
+        step = dt / _SOLAR_DEPLOY_S
+        if frac < self._solar_deploy_target:
+            frac = min(self._solar_deploy_target, frac + step)
+        elif frac > self._solar_deploy_target:
+            frac = max(self._solar_deploy_target, frac - step)
+        self._sat.solar_deploy_frac = frac
         self._sat.solar_input_w = (
-            s_mat["efficiency"] * panel_area_m2 * _SOLAR_CONSTANT_W_M2 * incidence
+            s_mat["efficiency"] * panel_area_m2 * _SOLAR_CONSTANT_W_M2
+            * incidence * frac
         )
 
         # --- Workload-driven GPU utilization ----------------------------------

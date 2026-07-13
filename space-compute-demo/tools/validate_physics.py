@@ -24,8 +24,11 @@ def get(path):
         return json.load(r)
 
 
-def post(path):
-    req = urllib.request.Request(BASE + path, method="POST")
+def post(path, body=None):
+    req = urllib.request.Request(
+        BASE + path, method="POST",
+        data=json.dumps(body).encode() if body is not None else None,
+        headers={"Content-Type": "application/json"} if body is not None else {})
     with urllib.request.urlopen(req, timeout=60) as r:
         return json.load(r)
 
@@ -33,7 +36,11 @@ def post(path):
 def validate(preset_id):
     r = post(f"/designs/{preset_id}/apply")
     assert r["ok"] and r["regenerated"], f"apply failed: {r}"
-    time.sleep(4)  # let the switch settle a couple of ticks
+    # The redwire roll-out array applies STOWED — command the deploy (the
+    # post-separation sequence) so the orbit validation sees full power.
+    # No-op for designs that apply already deployed.
+    post("/solar_deploy", {"action": "deploy"})
+    time.sleep(16)  # let the switch settle + the array reach full deploy
 
     rows = []
     n = int(ORBIT_WALL_S / SAMPLE_DT)

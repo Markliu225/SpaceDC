@@ -102,6 +102,9 @@ export interface SatelliteState {
   workload?: number;
   /** Accelerator cards fitted (per design preset). */
   gpu_count?: number;
+  /** Roll-out solar-array deployment fraction 0..1 (POST /solar_deploy
+   *  animates it; production and the Kit wing stretch follow). */
+  solar_deploy_frac?: number;
   /** Typed-job detail for the active schedule block (ai_workloads.py). */
   workload_detail?: GpuJobDetail;
   /** Cumulative output since the workload profile / design was applied. */
