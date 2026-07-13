@@ -24,74 +24,46 @@ def Xform "World"
         {
             def Material "EarthMaterial"
             {
-                token outputs:surface.connect = </World/Earth/Looks/EarthMaterial/Shader.outputs:surface>
+                token outputs:mdl:displacement.connect = </World/Earth/Looks/EarthMaterial/Shader.outputs:out>
+                token outputs:mdl:surface.connect = </World/Earth/Looks/EarthMaterial/Shader.outputs:out>
+                token outputs:mdl:volume.connect = </World/Earth/Looks/EarthMaterial/Shader.outputs:out>
 
                 def Shader "Shader"
                 {
-                    uniform token info:id = "UsdPreviewSurface"
-                    color3f inputs:diffuseColor.connect = </World/Earth/Looks/EarthMaterial/Day.outputs:rgb>
-                    float inputs:metallic = 0
-                    float inputs:roughness.connect = </World/Earth/Looks/EarthMaterial/Rough.outputs:r>
-                    int inputs:useSpecularWorkflow = 0
-                    token outputs:surface
-                }
-
-                def Shader "Day"
-                {
-                    uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @./textures/earth_day.jpg@
-                    float2 inputs:st.connect = </World/Earth/Looks/EarthMaterial/St.outputs:result>
-                    float3 outputs:rgb
-                }
-
-                def Shader "St"
-                {
-                    uniform token info:id = "UsdPrimvarReader_float2"
-                    token inputs:varname = "st"
-                    float2 outputs:result
-                }
-
-                def Shader "Rough"
-                {
-                    uniform token info:id = "UsdUVTexture"
-                    float4 inputs:bias = (0.95, 0.95, 0.95, 0)
-                    asset inputs:file = @./textures/earth_spec.jpg@
-                    float4 inputs:scale = (-0.75, -0.75, -0.75, 1)
-                    float2 inputs:st.connect = </World/Earth/Looks/EarthMaterial/St.outputs:result>
-                    float outputs:r
+                    uniform token info:implementationSource = "sourceAsset"
+                    uniform asset info:mdl:sourceAsset = @OmniPBR.mdl@
+                    uniform token info:mdl:sourceAsset:subIdentifier = "OmniPBR"
+                    asset inputs:diffuse_texture = @./textures/earth_day.jpg@
+                    color3f inputs:diffuse_tint = (1, 1, 1)
+                    color3f inputs:emissive_color = (1, 1, 1)
+                    asset inputs:emissive_color_texture = @./textures/earth_day.jpg@
+                    float inputs:emissive_intensity = 1
+                    bool inputs:enable_emission = 1
+                    float inputs:metallic_constant = 0
+                    float inputs:reflection_roughness_constant = 0.85
+                    token outputs:out
                 }
             }
 
             def Material "CloudMaterial"
             {
-                token outputs:surface.connect = </World/Earth/Looks/CloudMaterial/Shader.outputs:surface>
+                token outputs:mdl:displacement.connect = </World/Earth/Looks/CloudMaterial/Shader.outputs:out>
+                token outputs:mdl:surface.connect = </World/Earth/Looks/CloudMaterial/Shader.outputs:out>
+                token outputs:mdl:volume.connect = </World/Earth/Looks/CloudMaterial/Shader.outputs:out>
 
                 def Shader "Shader"
                 {
-                    uniform token info:id = "UsdPreviewSurface"
-                    color3f inputs:diffuseColor = (1, 1, 1)
-                    float inputs:metallic = 0
-                    float inputs:opacity.connect = </World/Earth/Looks/CloudMaterial/Tex.outputs:r>
-                    float inputs:opacityThreshold = 0
-                    float inputs:roughness = 1
-                    int inputs:useSpecularWorkflow = 0
-                    token outputs:surface
-                }
-
-                def Shader "Tex"
-                {
-                    uniform token info:id = "UsdUVTexture"
-                    asset inputs:file = @./textures/earth_clouds.jpg@
-                    float4 inputs:scale = (0.55, 0.55, 0.55, 1)
-                    float2 inputs:st.connect = </World/Earth/Looks/CloudMaterial/St.outputs:result>
-                    float outputs:r
-                }
-
-                def Shader "St"
-                {
-                    uniform token info:id = "UsdPrimvarReader_float2"
-                    token inputs:varname = "st"
-                    float2 outputs:result
+                    uniform token info:implementationSource = "sourceAsset"
+                    uniform asset info:mdl:sourceAsset = @OmniPBR.mdl@
+                    uniform token info:mdl:sourceAsset:subIdentifier = "OmniPBR"
+                    color3f inputs:diffuse_tint = (1, 1, 1)
+                    bool inputs:enable_opacity = 1
+                    bool inputs:enable_opacity_texture = 1
+                    float inputs:metallic_constant = 0
+                    float inputs:opacity_constant = 1
+                    asset inputs:opacity_texture = @./textures/earth_clouds.jpg@
+                    float inputs:reflection_roughness_constant = 1
+                    token outputs:out
                 }
             }
         }

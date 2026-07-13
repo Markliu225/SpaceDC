@@ -55,78 +55,67 @@ def build_sphere(radius: float, lat_n: int, lon_n: int):
     return points, uvs, face_vertex_counts, face_vertex_indices
 
 
-# Mirror gen_twin_satellite's cloud constants — the overview must read
-# exactly like the twin close-up.
+# Mirror gen_twin_satellite's cloud shell size; the 0.55 airiness is BAKED
+# into earth_clouds.jpg (single source of truth for both stages).
 CLOUD_SCALE = 1.008
-CLOUD_OPACITY = 0.55
-
-
-def _tex_shader(stage, mat_path: str, name: str, file: str,
-                scale=None, bias=None) -> UsdShade.Shader:
-    """A UsdUVTexture reader wired to the shared St primvar reader —
-    the SAME graph shape the twin stage's EarthMat/CloudMat use."""
-    tex = UsdShade.Shader.Define(stage, f"{mat_path}/{name}")
-    tex.CreateIdAttr("UsdUVTexture")
-    tex.CreateInput("file", Sdf.ValueTypeNames.Asset).Set(file)
-    if scale is not None:
-        tex.CreateInput("scale", Sdf.ValueTypeNames.Float4).Set(Gf.Vec4f(*scale))
-    if bias is not None:
-        tex.CreateInput("bias", Sdf.ValueTypeNames.Float4).Set(Gf.Vec4f(*bias))
-    st = UsdShade.Shader.Define(stage, f"{mat_path}/St")
-    st.CreateIdAttr("UsdPrimvarReader_float2")
-    st.CreateInput("varname", Sdf.ValueTypeNames.Token).Set("st")
-    tex.CreateInput("st", Sdf.ValueTypeNames.Float2).ConnectToSource(
-        st.CreateOutput("result", Sdf.ValueTypeNames.Float2))
-    return tex
 
 
 def _build_material(stage: Usd.Stage) -> UsdShade.Material:
-    """The SAME UsdPreviewSurface stack as the twin close-up's EarthMat
-    (which is proven to render correctly in this project's RTX viewport):
-    8K day diffuse, no emissive (dark side goes dark), ocean-specular mask
-    inverted into roughness for sun glints on water."""
+    """OmniPBR MDL — the material stack that is PROVEN in this stage (the
+    UsdPreviewSurface rewrite rendered black-grey here): 8K day diffuse
+    plus a DIM self-emissive of the same day map so the night side stays
+    readable without city lights."""
     mat_path = "/World/Earth/Looks/EarthMaterial"
     mat = UsdShade.Material.Define(stage, mat_path)
     shader = UsdShade.Shader.Define(stage, mat_path + "/Shader")
-    shader.CreateIdAttr("UsdPreviewSurface")
-    shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
-    shader.CreateInput("useSpecularWorkflow", Sdf.ValueTypeNames.Int).Set(0)
+    shader.SetSourceAsset("OmniPBR.mdl", "mdl")
+    shader.SetSourceAssetSubIdentifier("OmniPBR", "mdl")
 
-    day = _tex_shader(stage, mat_path, "Day", "./textures/earth_day.jpg")
-    shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).ConnectToSource(
-        day.CreateOutput("rgb", Sdf.ValueTypeNames.Float3))
-    rough = _tex_shader(stage, mat_path, "Rough", "./textures/earth_spec.jpg",
-                        scale=(-0.75, -0.75, -0.75, 1.0),
-                        bias=(0.95, 0.95, 0.95, 0.0))
-    shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).ConnectToSource(
-        rough.CreateOutput("r", Sdf.ValueTypeNames.Float))
+    # Day texture (albedo)
+    shader.CreateInput("diffuse_texture", Sdf.ValueTypeNames.Asset).Set("./textures/earth_day.jpg")
+    shader.CreateInput("diffuse_tint", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(1.0, 1.0, 1.0))
+    shader.CreateInput("metallic_constant", Sdf.ValueTypeNames.Float).Set(0.0)
+    shader.CreateInput("reflection_roughness_constant", Sdf.ValueTypeNames.Float).Set(0.85)
 
-    mat.CreateSurfaceOutput().ConnectToSource(
-        shader.CreateOutput("surface", Sdf.ValueTypeNames.Token))
+    # Dim self-emissive of the day map — night-side readability (the same
+    # role EARTH_EMIT plays in the twin stage), NOT the city-lights map.
+    shader.CreateInput("enable_emission", Sdf.ValueTypeNames.Bool).Set(True)
+    shader.CreateInput("emissive_color_texture", Sdf.ValueTypeNames.Asset).Set("./textures/earth_day.jpg")
+    shader.CreateInput("emissive_color", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(1.0, 1.0, 1.0))
+    shader.CreateInput("emissive_intensity", Sdf.ValueTypeNames.Float).Set(1.0)
+
+    out = shader.CreateOutput("out", Sdf.ValueTypeNames.Token)
+    mat.CreateSurfaceOutput("mdl").ConnectToSource(out)
+    mat.CreateDisplacementOutput("mdl").ConnectToSource(out)
+    mat.CreateVolumeOutput("mdl").ConnectToSource(out)
+
     return mat
 
 
 def _build_cloud_material(stage: Usd.Stage) -> UsdShade.Material:
-    """Cloud shell — the twin's CloudMat verbatim: white diffuse with the
-    cloud map (scaled to CLOUD_OPACITY) driving UsdPreviewSurface opacity."""
+    """Cloud shell — OmniPBR with the opacity TEXTURE actually enabled
+    (enable_opacity alone ignores opacity_texture and rendered the shell
+    as an opaque white ball — the earlier 'white Earth'). The airiness is
+    baked into the texture, so no multiplier semantics are involved."""
     mat_path = "/World/Earth/Looks/CloudMaterial"
     mat = UsdShade.Material.Define(stage, mat_path)
     shader = UsdShade.Shader.Define(stage, mat_path + "/Shader")
-    shader.CreateIdAttr("UsdPreviewSurface")
-    shader.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(
-        Gf.Vec3f(1.0, 1.0, 1.0))
-    shader.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.0)
-    shader.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(1.0)
-    shader.CreateInput("opacityThreshold", Sdf.ValueTypeNames.Float).Set(0.0)
-    shader.CreateInput("useSpecularWorkflow", Sdf.ValueTypeNames.Int).Set(0)
+    shader.SetSourceAsset("OmniPBR.mdl", "mdl")
+    shader.SetSourceAssetSubIdentifier("OmniPBR", "mdl")
 
-    tex = _tex_shader(stage, mat_path, "Tex", "./textures/earth_clouds.jpg",
-                      scale=(CLOUD_OPACITY, CLOUD_OPACITY, CLOUD_OPACITY, 1.0))
-    shader.CreateInput("opacity", Sdf.ValueTypeNames.Float).ConnectToSource(
-        tex.CreateOutput("r", Sdf.ValueTypeNames.Float))
+    shader.CreateInput("diffuse_tint", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(1.0, 1.0, 1.0))
+    shader.CreateInput("metallic_constant", Sdf.ValueTypeNames.Float).Set(0.0)
+    shader.CreateInput("reflection_roughness_constant", Sdf.ValueTypeNames.Float).Set(1.0)
+    shader.CreateInput("enable_opacity", Sdf.ValueTypeNames.Bool).Set(True)
+    shader.CreateInput("enable_opacity_texture", Sdf.ValueTypeNames.Bool).Set(True)
+    shader.CreateInput("opacity_texture", Sdf.ValueTypeNames.Asset).Set("./textures/earth_clouds.jpg")
+    shader.CreateInput("opacity_constant", Sdf.ValueTypeNames.Float).Set(1.0)
 
-    mat.CreateSurfaceOutput().ConnectToSource(
-        shader.CreateOutput("surface", Sdf.ValueTypeNames.Token))
+    out = shader.CreateOutput("out", Sdf.ValueTypeNames.Token)
+    mat.CreateSurfaceOutput("mdl").ConnectToSource(out)
+    mat.CreateDisplacementOutput("mdl").ConnectToSource(out)
+    mat.CreateVolumeOutput("mdl").ConnectToSource(out)
+
     return mat
 
 

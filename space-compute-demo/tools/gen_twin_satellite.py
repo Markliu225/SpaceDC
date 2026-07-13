@@ -280,15 +280,20 @@ CAM_FOCAL = 22.0
 EARTH_RADIUS_CM = 22_000.0                     # ~49° angular radius from the cam:
 EARTH_CENTER    = (0.0, 0.0, -28_000.0)        # a big curved planet across the lower frame
 EARTH_TEX       = "./textures/earth_day.jpg"
-# Earth material stack (the ER0001 8K set): day diffuse (no emissive — the
-# night side goes genuinely dark, per user preference); the ocean-specular
-# mask inverted into roughness (sea glints under the swept Key sun, land
-# stays matte); and a separate slightly-larger cloud sphere that rotates
-# with the globe.
+# Earth material stack (the ER0001 8K set): day diffuse + a DIM uniform
+# self-emissive of the SAME day map — no city-light texture (user
+# preference), but the night side must stay readable (fully dark rendered
+# as an unreadable black-grey ball); the lit side still dominates so the
+# terminator reads. Ocean-specular mask inverted into roughness (sea
+# glints under the swept Key sun); a separate slightly-larger cloud
+# sphere rotates with the globe.
+EARTH_EMIT       = (0.25, 0.25, 0.27)
 EARTH_SPEC_TEX   = "./textures/earth_spec.jpg"
 CLOUD_TEX        = "./textures/earth_clouds.jpg"
 CLOUD_SCALE      = 1.008               # cloud shell sits ~2.2 km up at scale
-CLOUD_OPACITY    = 0.55                # airy — the ground must read through
+# The 0.55 airiness is BAKED into earth_clouds.jpg (one source of truth for
+# both stages); keep this at 1.0 unless re-baking.
+CLOUD_OPACITY    = 1.0
 SUN_TEX         = "./textures/sun_surface.png"
 SUN_EMIT        = (12.0, 8.6, 3.4)             # HDR multiplier — with RTX bloom the ONE sun reads blinding
 SUN_DIST_CM     = 50_000.0
@@ -401,10 +406,11 @@ def sun_material() -> str:
 
 
 def earth_material() -> str:
-    """The ER0001 Earth: 8K day diffuse, NO emissive (the night side goes
-    genuinely dark); the ocean-specular mask inverted into roughness via
-    UsdUVTexture scale/bias (ocean spec=1 → roughness 0.2 sun-glint, land
-    spec=0 → 0.95 matte)."""
+    """The ER0001 Earth: 8K day diffuse + dim day-map self-emissive (night
+    side readable, no city lights); the ocean-specular mask inverted into
+    roughness via UsdUVTexture scale/bias (ocean spec=1 → roughness 0.2
+    sun-glint, land spec=0 → 0.95 matte)."""
+    e = EARTH_EMIT
     return f"""
     def Material "EarthMat"
     {{
@@ -413,6 +419,7 @@ def earth_material() -> str:
         {{
             uniform token info:id = "UsdPreviewSurface"
             color3f inputs:diffuseColor.connect = </World/Looks/EarthMat/Day.outputs:rgb>
+            color3f inputs:emissiveColor.connect = </World/Looks/EarthMat/Emit.outputs:rgb>
             float inputs:roughness.connect = </World/Looks/EarthMat/Rough.outputs:r>
             float inputs:metallic = 0.0
             int inputs:useSpecularWorkflow = 0
@@ -423,6 +430,14 @@ def earth_material() -> str:
             uniform token info:id = "UsdUVTexture"
             asset inputs:file = @{EARTH_TEX}@
             float2 inputs:st.connect = </World/Looks/EarthMat/St.outputs:result>
+            float3 outputs:rgb
+        }}
+        def Shader "Emit"
+        {{
+            uniform token info:id = "UsdUVTexture"
+            asset inputs:file = @{EARTH_TEX}@
+            float2 inputs:st.connect = </World/Looks/EarthMat/St.outputs:result>
+            float4 inputs:scale = ({e[0]:.2f}, {e[1]:.2f}, {e[2]:.2f}, 1.0)
             float3 outputs:rgb
         }}
         def Shader "Rough"
