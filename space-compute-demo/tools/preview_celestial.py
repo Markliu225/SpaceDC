@@ -78,6 +78,7 @@ def main():
 
     # textures + constants
     day = load(G.EARTH_TEX)
+    night = load(G.EARTH_NIGHT_TEX) if hasattr(G, "EARTH_NIGHT_TEX") else None
     cloud = load(G.CLOUD_TEX) if hasattr(G, "CLOUD_TEX") else None
     stars = load("./textures/starfield.png"); suntex = load(G.SUN_TEX)
     C = np.array(G.EARTH_CENTER); Re = G.EARTH_RADIUS_CM
@@ -96,7 +97,13 @@ def main():
     eu, ev = equirect_uv(eN)
     ndl = np.clip(np.sum(eN * sun_dir, axis=2), 0, 1)[..., None]
     dayrgb = sample(day, eu, ev)
-    earth = dayrgb * (AMB + ndl) + dayrgb * np.array(G.EARTH_EMIT)
+    earth = dayrgb * (AMB + ndl)
+    if night is not None:
+        # City-light emissive (matches the Kit material: adds everywhere,
+        # visually only survives on the dark side).
+        earth = earth + sample(night, eu, ev) * np.array(G.EARTH_NIGHT_EMIT)
+    else:
+        earth = earth + dayrgb * np.array(getattr(G, "EARTH_EMIT", (0.0,) * 3))
     img = np.where(eh[..., None], earth, img)
 
     # --- Clouds (optional): white * (amb + N·sun), opacity = cloud-map red ---

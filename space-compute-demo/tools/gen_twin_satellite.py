@@ -280,10 +280,18 @@ CAM_FOCAL = 22.0
 EARTH_RADIUS_CM = 22_000.0                     # ~49° angular radius from the cam:
 EARTH_CENTER    = (0.0, 0.0, -28_000.0)        # a big curved planet across the lower frame
 EARTH_TEX       = "./textures/earth_day.jpg"
-# Night-side ghost only: the day side is LIT by the swept Key sun, so the
-# terminator emerges for real. 0.30 made the whole globe uniformly luminous —
-# a second glowing ball next to the sun disk that flattened the space look.
-EARTH_EMIT      = (0.045, 0.05, 0.065)
+# Earth material stack (the ER0001 8K set): day diffuse; CITY-LIGHT
+# emissive (the night side shows real city lights instead of a uniform
+# ghost — on the lit side they wash out against the day map, matching how
+# emissive composes in Kit); the ocean-specular mask inverted into
+# roughness (sea glints under the swept Key sun, land stays matte); and a
+# separate slightly-larger cloud sphere that rotates with the globe.
+EARTH_NIGHT_TEX  = "./textures/earth_night.jpg"
+EARTH_NIGHT_EMIT = (1.5, 1.4, 1.15)    # city-light emissive scale
+EARTH_SPEC_TEX   = "./textures/earth_spec.jpg"
+CLOUD_TEX        = "./textures/earth_clouds.jpg"
+CLOUD_SCALE      = 1.008               # cloud shell sits ~2.2 km up at scale
+CLOUD_OPACITY    = 0.85
 SUN_TEX         = "./textures/sun_surface.png"
 SUN_EMIT        = (12.0, 8.6, 3.4)             # HDR multiplier — with RTX bloom the ONE sun reads blinding
 SUN_DIST_CM     = 50_000.0
@@ -396,10 +404,11 @@ def sun_material() -> str:
 
 
 def earth_material() -> str:
-    """Plain day Earth — earth_day.jpg on diffuse, plus a dimmed self-emissive of
-    the SAME map so the whole globe shows the texture (brighter where the sun
-    hits) instead of going black on the shadow side."""
-    e = EARTH_EMIT
+    """The ER0001 Earth: 8K day diffuse; city-light emissive from the night
+    map (real lights on the dark side, washed out on the lit side); the
+    ocean-specular mask inverted into roughness via UsdUVTexture scale/bias
+    (ocean spec=1 → roughness 0.2 sun-glint, land spec=0 → 0.95 matte)."""
+    e = EARTH_NIGHT_EMIT
     return f"""
     def Material "EarthMat"
     {{
@@ -408,9 +417,9 @@ def earth_material() -> str:
         {{
             uniform token info:id = "UsdPreviewSurface"
             color3f inputs:diffuseColor.connect = </World/Looks/EarthMat/Day.outputs:rgb>
-            color3f inputs:emissiveColor.connect = </World/Looks/EarthMat/Emit.outputs:rgb>
+            color3f inputs:emissiveColor.connect = </World/Looks/EarthMat/Night.outputs:rgb>
+            float inputs:roughness.connect = </World/Looks/EarthMat/Rough.outputs:r>
             float inputs:metallic = 0.0
-            float inputs:roughness = 0.9
             int inputs:useSpecularWorkflow = 0
             token outputs:surface
         }}
@@ -421,13 +430,58 @@ def earth_material() -> str:
             float2 inputs:st.connect = </World/Looks/EarthMat/St.outputs:result>
             float3 outputs:rgb
         }}
-        def Shader "Emit"
+        def Shader "Night"
         {{
             uniform token info:id = "UsdUVTexture"
-            asset inputs:file = @{EARTH_TEX}@
+            asset inputs:file = @{EARTH_NIGHT_TEX}@
             float2 inputs:st.connect = </World/Looks/EarthMat/St.outputs:result>
             float4 inputs:scale = ({e[0]:.2f}, {e[1]:.2f}, {e[2]:.2f}, 1.0)
             float3 outputs:rgb
+        }}
+        def Shader "Rough"
+        {{
+            uniform token info:id = "UsdUVTexture"
+            asset inputs:file = @{EARTH_SPEC_TEX}@
+            float2 inputs:st.connect = </World/Looks/EarthMat/St.outputs:result>
+            float4 inputs:scale = (-0.75, -0.75, -0.75, 1.0)
+            float4 inputs:bias = (0.95, 0.95, 0.95, 0.0)
+            float outputs:r
+        }}
+        def Shader "St"
+        {{
+            uniform token info:id = "UsdPrimvarReader_float2"
+            token inputs:varname = "st"
+            float2 outputs:result
+        }}
+    }}"""
+
+
+def cloud_material() -> str:
+    """The cloud shell — white diffuse with the cloud map driving opacity
+    (alpha blend), so the layer floats over the globe and the terminator
+    shades it with the same Key light."""
+    return f"""
+    def Material "CloudMat"
+    {{
+        token outputs:surface.connect = </World/Looks/CloudMat/Shader.outputs:surface>
+        def Shader "Shader"
+        {{
+            uniform token info:id = "UsdPreviewSurface"
+            color3f inputs:diffuseColor = (1.0, 1.0, 1.0)
+            float inputs:opacity.connect = </World/Looks/CloudMat/Tex.outputs:r>
+            float inputs:opacityThreshold = 0.0
+            float inputs:metallic = 0.0
+            float inputs:roughness = 1.0
+            int inputs:useSpecularWorkflow = 0
+            token outputs:surface
+        }}
+        def Shader "Tex"
+        {{
+            uniform token info:id = "UsdUVTexture"
+            asset inputs:file = @{CLOUD_TEX}@
+            float2 inputs:st.connect = </World/Looks/CloudMat/St.outputs:result>
+            float4 inputs:scale = ({CLOUD_OPACITY:.2f}, {CLOUD_OPACITY:.2f}, {CLOUD_OPACITY:.2f}, 1.0)
+            float outputs:r
         }}
         def Shader "St"
         {{
@@ -488,6 +542,7 @@ def looks_scope() -> str:
     if PREVIEW_LITE:
         blocks += [material_block(k, v) for k, v in LITE_MATERIALS.items()]
     blocks.append(earth_material())
+    blocks.append(cloud_material())
     blocks.append(sun_material())
     return f"""def Scope "Looks"
 {{{''.join(blocks)}
@@ -985,6 +1040,8 @@ def celestial_group() -> str:
     zenith→sun angle. Static defaults below match the historical fixed pose,
     so the stage renders identically until the extension starts driving it."""
     earth_mesh = uv_sphere("Sphere", (0.0, 0.0, 0.0), EARTH_RADIUS_CM, "EarthMat", 48, 96)
+    cloud_mesh = uv_sphere("Clouds", (0.0, 0.0, 0.0),
+                           EARTH_RADIUS_CM * CLOUD_SCALE, "CloudMat", 48, 96)
     earth = (
         f'def Xform "Earth"\n'
         f'{{\n'
@@ -994,6 +1051,8 @@ def celestial_group() -> str:
         f'    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:rotateZ"]\n'
         f'\n'
         f'{indent(earth_mesh, "    ")}\n'
+        f'\n'
+        f'{indent(cloud_mesh, "    ")}\n'
         f'}}'
     )
     sun_c = tuple(SUN_DIR[i] * SUN_DIST_CM for i in range(3))
