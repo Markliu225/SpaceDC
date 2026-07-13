@@ -111,7 +111,8 @@ def main():
         ch, ct, cP, cN = intersect(O, D, C, Re * G.CLOUD_SCALE)
         cu, cv = equirect_uv(cN)
         cndl = np.clip(np.sum(cN * sun_dir, axis=2), 0, 1)[..., None]
-        ca = sample(cloud, cu, cv)[..., 0:1] * ch[..., None]
+        ca = (sample(cloud, cu, cv)[..., 0:1] * ch[..., None]
+              * float(getattr(G, "CLOUD_OPACITY", 1.0)))
         img = img * (1 - ca) + (np.array([1.0, 1.0, 1.0]) * (AMB + cndl)) * ca
 
     # --- Sun (emissive disk) ---
