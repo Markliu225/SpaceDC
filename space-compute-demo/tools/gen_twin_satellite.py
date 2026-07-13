@@ -247,20 +247,25 @@ DISH_RAD_Z      = 1.65
 REDWIRE_REF     = "./assets/redwire_payload.usdz"
 REDWIRE_NATIVE  = 1.0          # largest native dim (Y — becomes X after rot)
 REDWIRE_NATIVE_CENTER = (0.0, 0.0, -0.2207)
-REDWIRE_TARGET_U = 1.5         # deck ≈ 2.7 m across (compact bay, ~1/3 the
-                               # volume of the first 2.2-u cut per user ref)
+# Deck sized to ONE solar-tile width (user ref): a flat tile spans 0.711 u
+# across, so a 0.75-u deck (~1.35 m) reads as a bus exactly as wide as its
+# blanket — the flat-sat look. Everything below DERIVES from this scale
+# (native fractions from the vertex survey in scratchpad/find_tabs).
+REDWIRE_TARGET_U = 0.75
 # The deck's native ±X edges (→ ±Y sides after rot90) each carry TWO
-# protruding attachment lugs (survey scratchpad/find_tabs: native
-# y ∈ [−0.36,−0.29] and [0.31,0.37], z ∈ [−0.20,−0.13], main plate edge at
-# |x| ≈ 0.42, lug tips at 0.469). The solar wings bolt STRAIGHT onto those
-# lugs: flat panels whose cell face is PARALLEL to the deck plane (+Z up —
-# the asset's native orientation, no rotation at all), first cluster at the
-# deck edge, growth chaining outward cluster by cluster.
-REDWIRE_WING_Y0 = 0.71         # first panel inner edge ≈ deck edge (0.704)
-REDWIRE_WING_Z  = 0.081        # lug mid-plane (native −0.167 recentred ×1.5)
-REDWIRE_LUG_X   = (-0.50, 0.49)  # lug centres after rot90
-# Radiator boom mount: deck half-Z = 0.124·1.5 ≈ 0.185, boom roots just inside.
-REDWIRE_RAD_Z   = 0.17
+# protruding attachment lugs (native y ∈ [−0.36,−0.29] / [0.31,0.37],
+# recentred z-mid 0.054; deck half-Y-after-rot 0.469, half-Z 0.124). The
+# solar wing bolts STRAIGHT onto those lugs: flat tiles, cell face
+# parallel to the deck (+Z, the asset's native pose), single column as
+# wide as the deck, chaining outward tile after tile.
+REDWIRE_WING_Y0 = round(0.472 * REDWIRE_TARGET_U, 3)   # deck edge
+REDWIRE_WING_Z  = round(0.054 * REDWIRE_TARGET_U, 3)   # lug mid-plane
+REDWIRE_LUG_X   = (round(-0.335 * REDWIRE_TARGET_U, 3),
+                   round(0.327 * REDWIRE_TARGET_U, 3))
+# Radiator boom mount just inside the deck half-Z. Redwire flies ONE
+# radiator panel (+Z only) — state_engine's area formula follows (a single
+# panel radiates from 2 faces, not 4).
+REDWIRE_RAD_Z   = round(0.115 * REDWIRE_TARGET_U, 3)
 
 # Closeup camera — a true 3/4 (from +X / -Y / above) so the solar wings (face
 # +X) AND the perpendicular radiators (face ±Y, top/bottom) are both readable.
@@ -891,25 +896,28 @@ def blanket_wing(side: float) -> str:
 
 
 def redwire_wing(side: float) -> str:
-    """Redwire flat wing: panel face PARALLEL to the deck plane (cells +Z),
-    bolted STRAIGHT onto the deck's two edge lugs — no boom, no yoke. Two
-    small hinge plates bridge the lug tips (x ≈ ±0.5, the deck edge at
-    y ≈ 0.70) to the first cluster's inner edge; each extra cluster chains
-    outward along Y by its D span, so growing the wing visibly adds panels
-    one after another off the bay edge."""
+    """Redwire flat wing: a SINGLE COLUMN of flat tiles exactly as wide as
+    the deck, cell face parallel to the deck plane (cells +Z), bolted
+    STRAIGHT onto the deck's two edge lugs — no boom, no yoke. Two small
+    hinge plates bridge the lugs to the first tile; each wing SEGMENT is
+    four tiles stacked outward along Y (same 4-tile area as a truss
+    cluster, so the physics area formula is identical), and growing the
+    wing chains segments outward tile after tile — the long ribbon look."""
     s = side
-    H = SOLAR_NATIVE[0] * PANEL_SCALE[0]      # cluster span across X (1.42)
-    D = SOLAR_NATIVE[1] * PANEL_SCALE[1]      # cluster span outward Y (0.816)
+    sub = (PANEL_SCALE[0] * SUB_FRAC, PANEL_SCALE[1] * SUB_FRAC, PANEL_SCALE[2])
+    tile_d = SOLAR_NATIVE[1] * sub[1]         # per-tile span outward Y (0.408)
     Z = REDWIRE_WING_Z
     parts = [
         box_mesh(f"Hinge{'A' if lx < 0 else 'B'}",
-                 lx, (REDWIRE_WING_Y0 + 0.005) * s, Z,
-                 0.12, 0.15, 0.026, "SolarFrame")
+                 lx, (REDWIRE_WING_Y0 + 0.004) * s, Z,
+                 0.07, 0.09, 0.018, "SolarFrame")
         for lx in REDWIRE_LUG_X
     ]
     for i in range(N_PANELS):
-        cy = (REDWIRE_WING_Y0 + D / 2.0 + i * (D + PANEL_GAP)) * s
-        parts.extend(solar_cluster(f"Cluster{i}", 0.0, cy, Z, flat=True))
+        for k in range(4):                    # 4 tiles per segment (area parity)
+            cy = (REDWIRE_WING_Y0 + (i * 4 + k + 0.5) * tile_d) * s
+            parts.append(solar_panel(f"Cluster{i}_{k}", 0.0, cy, Z, sub,
+                                     flat=True))
     name = "WingPosY" if side > 0 else "WingNegY"
     body = "\n".join(parts)
     return f'def Xform "{name}"\n{{\n{indent(body, "    ")}\n}}'
@@ -971,10 +979,14 @@ def _radiator_mount_z() -> float:
 
 def radiator_group() -> str:
     """A boom off each ±Z hull end with one long radiator beyond it — the
-    radiator's short edge meets the boom tip, the long axis runs out along Z."""
+    radiator's short edge meets the boom tip, the long axis runs out along Z.
+    Redwire flies a SINGLE +Z radiator (state_engine halves its area
+    formula to match: one panel = two radiating faces)."""
     parts = []
     mount = _radiator_mount_z()
-    for tag, dirn in (("Top", 1.0), ("Bot", -1.0)):
+    sides = ((("Top", 1.0),) if ARCHITECTURE == "redwire"
+             else (("Top", 1.0), ("Bot", -1.0)))
+    for tag, dirn in sides:
         end_z = mount * dirn
         boom_far = end_z + dirn * RAD_BOOM_LEN
         parts.append(box_mesh(f"RadBoom{tag}", RAD_X, 0.0, (end_z + boom_far) / 2.0,
@@ -1223,8 +1235,9 @@ def _frame_radius_cm() -> float:
         hull_u = LUMID_TARGET_U if ARCHITECTURE == "lumid" else DISH_TARGET_U
         solar_tip = (hull_u / 2.0) * BACKBONE_SCALE
     elif ARCHITECTURE == "redwire":
-        # Flat wings chain outward by their D span, straight off the deck edge.
-        solar_tip = (REDWIRE_WING_Y0 + N_PANELS * deploy) * BACKBONE_SCALE
+        # Single-column ribbon: 4 tiles per segment, each tile_d outward.
+        tile_d = SOLAR_NATIVE[1] * PANEL_SCALE[1] * SUB_FRAC
+        solar_tip = (REDWIRE_WING_Y0 + N_PANELS * 4 * tile_d) * BACKBONE_SCALE
     else:
         solar_tip = (BOOM_Y1 + N_PANELS * deploy) * BACKBONE_SCALE
     rad_tip = (_radiator_mount_z() + RAD_BOOM_LEN + RAD_LONG) * BACKBONE_SCALE

@@ -148,10 +148,12 @@ def _solar_area_m2(geom) -> float:
 
 
 def _radiator_area_m2(geom) -> float:
-    """Total radiating area: 2 panels × 2 faces × face area."""
+    """Total radiating area. Most architectures fly 2 panels × 2 faces;
+    the redwire bay carries a SINGLE +Z panel (2 faces)."""
     long_m = geom.radiator_long * _BACKBONE_SCALE
     short_m = (geom.radiator_long / max(0.1, geom.radiator_ratio)) * _BACKBONE_SCALE
-    return 4.0 * long_m * short_m
+    panels = 1.0 if getattr(geom, "architecture", "truss") == "redwire" else 2.0
+    return panels * 2.0 * long_m * short_m
 
 
 # Deterministic compute-job schedules — (start_s, duration_s, util, job_key).

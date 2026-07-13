@@ -80,18 +80,18 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
         name="Redwire Serving Node",
         tagline="8x H200 · flat payload bay · frontier 405B serving",
         description=(
-            "A dedicated LLM-serving node on a compact Redwire-style payload "
-            "bay: the bay's own row of discrete GPU modules runs Llama-405B "
-            "as one tensor-parallel group, flat GaAs wings bolt onto the "
-            "bay-edge lugs coplanar with the deck, and OSR radiators boom "
-            "off the deck faces."
+            "A dedicated LLM-serving node on a one-panel-wide Redwire "
+            "payload bay: the bay's own row of discrete GPU modules runs "
+            "Llama-405B as one tensor-parallel group, a long flat GaAs "
+            "ribbon extends off each bay-edge lug coplanar with the deck, "
+            "and a single OSR radiator booms off the +Z face."
         ),
         config=SatelliteConfig(
             gpu="H200", solar_material="GaAs", solar_size="M",
             radiator_material="OSR", radiator_size="Standard",
         ),
         architecture="redwire",
-        solar_clusters_per_side=4, radiator_long=1.35, radiator_ratio=1.6,
+        solar_clusters_per_side=4, radiator_long=1.75, radiator_ratio=1.3,
         workload_profile="frontier", gpu_count=8,
         battery_capacity_wh=9000.0, platform_power_w=700.0,
     ),
