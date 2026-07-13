@@ -87,15 +87,15 @@ TWIN_WING_PATHS  = ("/World/Satellite/SolarArray/WingPosY",
                     "/World/Satellite/SolarArray/WingNegY")
 TWIN_WING_ROOT_U = 0.71      # mirrors gen_twin_satellite.REDWIRE_WING_Y0
 SUN_DRIVEN_LIGHTS = [
-    # ONE dominant key with real contrast — the space look — but floors
-    # high enough that the model's detail never disappears (the demo must
-    # stay readable through eclipse, physics dims the mood via sun_factor).
-    ("/World/Environment/Key",         500.0, 5200.0),
-    # Subtle sun-side specular rim — an edge, not a second key.
-    ("/World/Environment/Rim",         250.0, 800.0),
-    # Blue earthshine from the planet below (−Z) — the real secondary
-    # source in LEO; carries the shadow side together with the fills.
-    ("/World/Environment/EarthBounce", 700.0, 1100.0),
+    # The ORIGINAL tuned ranges — this five-light rig is what makes the
+    # PBR materials read (specular pings on the glossy panels come from
+    # these lights, not the near-black dome). The "one hard sun" realism
+    # pass dimmed them twice and the model went dead both times; keep the
+    # space feel in the SKY (single sun, point stars, dark Earth night
+    # side), not by starving the satellite of light.
+    ("/World/Environment/Key",         400.0, 4000.0),
+    ("/World/Environment/Rim",         300.0, 1300.0),
+    ("/World/Environment/EarthBounce", 1000.0, 1600.0),
 ]
 
 USD_ROOT_ENV = "SPACE_DEMO_USD_ROOT"

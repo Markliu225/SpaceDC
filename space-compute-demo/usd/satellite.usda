@@ -32,46 +32,49 @@ def Xform "World"
             float3 xformOp:rotateXYZ = (-40, 0, 270)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
-        # Earth albedo — faint blue earthshine FROM the Earth side (the globe
-        # sits at −Z in this stage), so shadow faces read dimly blue the way
-        # LEO hardware actually does. Runtime intensity is sun-driven
+        # Earth albedo — reflected earthshine. The FULL original intensities
+        # of this five-light rig are what make the PBR materials read
+        # (specular pings on the glossy radiators/panels come from these
+        # distant lights, not the near-black dome) — do not dim them for
+        # "realism", the model goes dead. Runtime intensity is sun-driven
         # (space.demo.scene SUN_DRIVEN_LIGHTS).
         def DistantLight "EarthBounce"
         {
             float inputs:angle = 45.0
-            float inputs:intensity = 700
+            float inputs:intensity = 1400
             color3f inputs:color = (0.34, 0.52, 0.82)
-            float3 xformOp:rotateXYZ = (170, 0, 0)
+            float3 xformOp:rotateXYZ = (70, 0, 150)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
-        # Subtle rim from the opposite side — a specular edge so the dark
-        # silhouette separates from space, NOT a second key.
+        # Sharp rim from the opposite side — gives the solar panels a glassy
+        # specular highlight against deep space.
         def DistantLight "Rim"
         {
             float inputs:angle = 1.5
-            float inputs:intensity = 600
+            float inputs:intensity = 1300
             color3f inputs:color = (0.55, 0.7, 0.95)
             float3 xformOp:rotateXYZ = (15, 0, -120)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
-        # Deep space — the DomeLight IS the rendered background: a true-black
-        # starfield (noise floor zeroed in the texture, so no grey wash at
-        # any intensity) with crisp star points. Near-zero average → no IBL
-        # fill; the sun does the lighting, space stays black.
+        # Deep space — the DomeLight IS the rendered background: near-black
+        # point-star field (stars are 1-2 px on 4096, far smaller than the
+        # sun disk). The texture carries a tiny uniform floor (~5/255) so
+        # glossy metals still have an environment to reflect without the
+        # sky reading grey.
         def DomeLight "Space"
         {
             color3f inputs:color = (1.0, 1.0, 1.0)
-            float inputs:intensity = 750.0
+            float inputs:intensity = 650.0
             asset inputs:texture:file = @./textures/starfield.png@
             token inputs:texture:format = "latlong"
         }
-        # Side fills (NOT sun-driven → always on): bright enough that the
-        # model's DETAIL stays readable on the shadow side, still well under
-        # the key so the light stays directional (sun-dominant, not studio).
+        # Side fills (NOT sun-driven → always on) that light the ±Y-facing
+        # radiators and the shadow side WITHOUT touching the black background,
+        # since DistantLights never illuminate the dome.
         def DistantLight "FillPort"
         {
             float inputs:angle = 6.0
-            float inputs:intensity = 1000
+            float inputs:intensity = 1900
             color3f inputs:color = (0.55, 0.62, 0.80)
             float3 xformOp:rotateXYZ = (90, 0, 0)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
@@ -79,7 +82,7 @@ def Xform "World"
         def DistantLight "FillStarboard"
         {
             float inputs:angle = 6.0
-            float inputs:intensity = 550
+            float inputs:intensity = 1000
             color3f inputs:color = (0.50, 0.58, 0.78)
             float3 xformOp:rotateXYZ = (-90, 0, 0)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
