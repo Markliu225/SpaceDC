@@ -23,6 +23,13 @@ name = "Space Compute Demo Streaming"
 # 720p streaming = lower GPU + encoder load, smoother playback on dev laptops.
 renderer.resolution.height = 720
 renderer.resolution.width = 1280
+# KEEP RENDERING WHEN THE LOCAL WINDOW IS MINIMIZED/BACKGROUNDED — without
+# this, minimizing the Kit window suspends the render loop, the WebRTC
+# encoder starves, and the web page stream turns into a slideshow ("Kit
+# window smooth, webpage unbearably choppy"). Headless launch (--no-window,
+# start_all default) sidesteps the problem entirely; this covers the
+# windowed debug mode.
+renderer.skipWhileMinimized = false
 window.height = 720
 window.width = 1280
 quitOnCtrlC = false

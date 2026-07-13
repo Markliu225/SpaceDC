@@ -1,9 +1,13 @@
 @echo off
 REM ============================================================
-REM   SpaceDC - space-compute-demo / one-click launcher
-REM   Double-click to start backend, web, and Kit streaming.
-REM   Each service opens in its own window. Close that window
-REM   to stop the corresponding service.
+REM   SpaceDC launcher — WINDOWED Kit variant.
+REM   Same as start_all.bat but Kit opens its local viewport
+REM   window (useful for debugging in the Omniverse UI).
+REM   NOTE: keep that window RESTORED (not minimized) while using
+REM   the webpage — a minimized Kit window throttles rendering
+REM   and the web stream turns choppy. The .kit config sets
+REM   renderer.skipWhileMinimized=false as a safety net, but the
+REM   headless start_all.bat is the smoothest web experience.
 REM ============================================================
 taskkill /F /IM hub.exe >nul 2>&1
 setlocal
@@ -25,12 +29,8 @@ start "SpaceDC Backend :8001" cmd /k "cd /d "%~dp0backend" && .venv\Scripts\pyth
 echo  [4/6] Starting WEB dev server on http://localhost:5173 ...
 start "SpaceDC Web :5173" cmd /k "cd /d "%~dp0web" && npm run dev -- --port 5173 --strictPort"
 
-echo  [5/6] Starting Omniverse KIT streaming on 127.0.0.1:49100 (headless) ...
-REM Headless (--no-window): the webpage stream is the ONLY consumer. A local
-REM Kit window throttles its render loop when minimized/backgrounded, which
-REM starves the WebRTC encoder and makes the web viewport unbearably choppy.
-REM Want the local Kit viewport? Use start_all_windowed.bat instead.
-start "SpaceDC Kit :49100" powershell -NoExit -ExecutionPolicy Bypass -File "%~dp0ov_app\launch_kit.ps1" -Headless
+echo  [5/6] Starting Omniverse KIT streaming on 127.0.0.1:49100 (windowed) ...
+start "SpaceDC Kit :49100" powershell -NoExit -ExecutionPolicy Bypass -File "%~dp0ov_app\launch_kit.ps1"
 
 echo  [6/6] Waiting 20 seconds for Kit to finish initializing, then opening browser...
 timeout /t 20 /nobreak >nul
@@ -42,7 +42,7 @@ echo.
 echo  All services launched. Three windows are now running:
 echo    - SpaceDC Backend :8001
 echo    - SpaceDC Web :5173
-echo    - SpaceDC Kit :49100
+echo    - SpaceDC Kit :49100 (windowed - do not minimize)
 echo.
 echo  To stop everything, close those three windows
 echo  (or double-click stop_all.bat).
