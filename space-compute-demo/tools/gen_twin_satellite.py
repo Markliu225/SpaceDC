@@ -989,17 +989,20 @@ def uv_sphere(name: str, center: tuple[float, float, float], radius: float,
               material: str, stacks: int = 36, slices: int = 72,
               double_sided: bool = False) -> str:
     """An equirectangular-UV sphere Mesh (lon→u, lat→v) so a lon/lat texture
-    maps cleanly and every renderer draws it as real geometry."""
+    maps cleanly and every renderer draws it as real geometry. Authors
+    EXACT smooth vertex normals (the sphere normal is just the unit radial)
+    — without them RTX flat-shades each quad and a zoomed-in globe shows
+    every latitude band as a visible facet ring."""
     cx, cy, cz = center
-    pts, sts = [], []
+    pts, sts, nrms = [], [], []
     for j in range(stacks + 1):
         phi = -math.pi / 2 + math.pi * j / stacks
         cphi, sphi = math.cos(phi), math.sin(phi)
         for i in range(slices + 1):
             th = 2 * math.pi * i / slices
-            pts.append((cx + radius * cphi * math.cos(th),
-                        cy + radius * cphi * math.sin(th),
-                        cz + radius * sphi))
+            nx, ny, nz = cphi * math.cos(th), cphi * math.sin(th), sphi
+            pts.append((cx + radius * nx, cy + radius * ny, cz + radius * nz))
+            nrms.append((nx, ny, nz))
             sts.append((i / slices, j / stacks))
     row = slices + 1
     idx, counts = [], []
@@ -1009,6 +1012,7 @@ def uv_sphere(name: str, center: tuple[float, float, float], radius: float,
             idx += [a, a + 1, a + row + 1, a + row]
             counts.append(4)
     pstr = ", ".join(f"({p[0]:.2f}, {p[1]:.2f}, {p[2]:.2f})" for p in pts)
+    nstr = ", ".join(f"({n[0]:.4f}, {n[1]:.4f}, {n[2]:.4f})" for n in nrms)
     ststr = ", ".join(f"({s[0]:.4f}, {s[1]:.4f})" for s in sts)
     return (
         f'def Mesh "{name}" (\n'
@@ -1020,6 +1024,7 @@ def uv_sphere(name: str, center: tuple[float, float, float], radius: float,
         f'    int[] faceVertexCounts = [{", ".join(map(str, counts))}]\n'
         f'    int[] faceVertexIndices = [{", ".join(map(str, idx))}]\n'
         f'    point3f[] points = [{pstr}]\n'
+        f'    normal3f[] normals = [{nstr}] (interpolation = "vertex")\n'
         f'    texCoord2f[] primvars:st = [{ststr}] (interpolation = "vertex")\n'
         f'    uniform token subdivisionScheme = "none"\n'
         f'    uniform bool doubleSided = {1 if double_sided else 0}\n'
@@ -1041,9 +1046,9 @@ def celestial_group() -> str:
     EARTH_CENTER — and the Sun's translate sweeps the visible disk along the
     zenith→sun angle. Static defaults below match the historical fixed pose,
     so the stage renders identically until the extension starts driving it."""
-    earth_mesh = uv_sphere("Sphere", (0.0, 0.0, 0.0), EARTH_RADIUS_CM, "EarthMat", 48, 96)
+    earth_mesh = uv_sphere("Sphere", (0.0, 0.0, 0.0), EARTH_RADIUS_CM, "EarthMat", 72, 144)
     cloud_mesh = uv_sphere("Clouds", (0.0, 0.0, 0.0),
-                           EARTH_RADIUS_CM * CLOUD_SCALE, "CloudMat", 48, 96)
+                           EARTH_RADIUS_CM * CLOUD_SCALE, "CloudMat", 72, 144)
     earth = (
         f'def Xform "Earth"\n'
         f'{{\n'

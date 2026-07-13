@@ -22,6 +22,7 @@ LON_SEGMENTS = 192  # horizontal slices
 def build_sphere(radius: float, lat_n: int, lon_n: int):
     points: list[Gf.Vec3f] = []
     uvs: list[Gf.Vec2f] = []
+    normals: list[Gf.Vec3f] = []
 
     # duplicate the seam column so UVs map correctly without wrap
     for i in range(lat_n + 1):
@@ -33,10 +34,14 @@ def build_sphere(radius: float, lat_n: int, lon_n: int):
             u = j / lon_n
             phi = u * 2.0 * math.pi   # 0..2pi
             # Z-up: x = r * sin(theta) * cos(phi), y = r * sin(theta) * sin(phi), z = r * cos(theta)
-            x = radius * sin_t * math.cos(phi)
-            y = radius * sin_t * math.sin(phi)
-            z = radius * cos_t
-            points.append(Gf.Vec3f(x, y, z))
+            nx = sin_t * math.cos(phi)
+            ny = sin_t * math.sin(phi)
+            nz = cos_t
+            points.append(Gf.Vec3f(radius * nx, radius * ny, radius * nz))
+            # Exact smooth vertex normal (unit radial) — without authored
+            # normals RTX flat-shades the quads and a zoomed globe shows
+            # every latitude band as a facet ring.
+            normals.append(Gf.Vec3f(nx, ny, nz))
             # Equirectangular UVs matching NASA Blue Marble layout:
             #   u  -> longitude left to right
             #   v  -> 0 at south pole (bottom) to 1 at north pole (top)
@@ -52,7 +57,7 @@ def build_sphere(radius: float, lat_n: int, lon_n: int):
             d = c + 1
             face_vertex_counts.append(4)
             face_vertex_indices.extend([a, c, d, b])
-    return points, uvs, face_vertex_counts, face_vertex_indices
+    return points, uvs, normals, face_vertex_counts, face_vertex_indices
 
 
 # Mirror gen_twin_satellite's cloud shell size; the 0.55 airiness is BAKED
@@ -120,7 +125,7 @@ def _build_cloud_material(stage: Usd.Stage) -> UsdShade.Material:
 
 
 def main() -> None:
-    points, uvs, fvc, fvi = build_sphere(RADIUS, LAT_SEGMENTS, LON_SEGMENTS)
+    points, uvs, normals, fvc, fvi = build_sphere(RADIUS, LAT_SEGMENTS, LON_SEGMENTS)
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     stage = Usd.Stage.CreateNew(str(OUT))
@@ -136,6 +141,8 @@ def main() -> None:
     mesh_prim.CreateFaceVertexIndicesAttr(Vt.IntArray(fvi))
     mesh_prim.CreateExtentAttr([(-RADIUS, -RADIUS, -RADIUS), (RADIUS, RADIUS, RADIUS)])
     mesh_prim.CreateSubdivisionSchemeAttr(UsdGeom.Tokens.none)
+    mesh_prim.CreateNormalsAttr(Vt.Vec3fArray(normals))
+    mesh_prim.SetNormalsInterpolation(UsdGeom.Tokens.vertex)
 
     pvars = UsdGeom.PrimvarsAPI(mesh_prim)
     st = pvars.CreatePrimvar(
@@ -153,7 +160,7 @@ def main() -> None:
     # Cloud shell — a slightly larger sphere as a CHILD of the Earth mesh
     # (inherits any Earth rotation), cloud map as opacity, same look as the
     # twin close-up.
-    cpts, cuvs, cfvc, cfvi = build_sphere(RADIUS * CLOUD_SCALE, 64, 128)
+    cpts, cuvs, cnrms, cfvc, cfvi = build_sphere(RADIUS * CLOUD_SCALE, 64, 128)
     cloud_prim = UsdGeom.Mesh.Define(stage, "/World/Earth/Clouds")
     cloud_prim.CreatePointsAttr(Vt.Vec3fArray(cpts))
     cloud_prim.CreateFaceVertexCountsAttr(Vt.IntArray(cfvc))
@@ -161,6 +168,8 @@ def main() -> None:
     r_c = RADIUS * CLOUD_SCALE
     cloud_prim.CreateExtentAttr([(-r_c, -r_c, -r_c), (r_c, r_c, r_c)])
     cloud_prim.CreateSubdivisionSchemeAttr(UsdGeom.Tokens.none)
+    cloud_prim.CreateNormalsAttr(Vt.Vec3fArray(cnrms))
+    cloud_prim.SetNormalsInterpolation(UsdGeom.Tokens.vertex)
     cst = UsdGeom.PrimvarsAPI(cloud_prim).CreatePrimvar(
         "st", Sdf.ValueTypeNames.TexCoord2fArray,
         interpolation=UsdGeom.Tokens.vertex)
