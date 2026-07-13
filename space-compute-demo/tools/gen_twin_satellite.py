@@ -249,18 +249,18 @@ REDWIRE_NATIVE  = 1.0          # largest native dim (Y — becomes X after rot)
 REDWIRE_NATIVE_CENTER = (0.0, 0.0, -0.2207)
 REDWIRE_TARGET_U = 1.5         # deck ≈ 2.7 m across (compact bay, ~1/3 the
                                # volume of the first 2.2-u cut per user ref)
-# Wing-yoke root along ±Y: deck half-Y after rot90 = 0.469·1.5 ≈ 0.70 —
-# seat the yoke bracket just inside the edge face.
-REDWIRE_WING_Y0 = 0.66
+# The deck's native ±X edges (→ ±Y sides after rot90) each carry TWO
+# protruding attachment lugs (survey scratchpad/find_tabs: native
+# y ∈ [−0.36,−0.29] and [0.31,0.37], z ∈ [−0.20,−0.13], main plate edge at
+# |x| ≈ 0.42, lug tips at 0.469). The solar wings bolt STRAIGHT onto those
+# lugs: flat panels whose cell face is PARALLEL to the deck plane (+Z up —
+# the asset's native orientation, no rotation at all), first cluster at the
+# deck edge, growth chaining outward cluster by cluster.
+REDWIRE_WING_Y0 = 0.71         # first panel inner edge ≈ deck edge (0.704)
+REDWIRE_WING_Z  = 0.081        # lug mid-plane (native −0.167 recentred ×1.5)
+REDWIRE_LUG_X   = (-0.50, 0.49)  # lug centres after rot90
 # Radiator boom mount: deck half-Z = 0.124·1.5 ≈ 0.185, boom roots just inside.
 REDWIRE_RAD_Z   = 0.17
-# Discrete GPU modules seated in the open bay: two rows of four, proud of
-# the deck rim so they read as independent compute units (named
-# Server_RW_<n> — the click popup resolves them to Blade 01..08).
-REDWIRE_SRV_COLS_X = (-0.54, -0.18, 0.18, 0.54)
-REDWIRE_SRV_ROWS_Y = (-0.30, 0.30)
-REDWIRE_SRV_W, REDWIRE_SRV_D, REDWIRE_SRV_H = 0.26, 0.46, 0.42
-REDWIRE_SRV_Z = 0.02           # centre: bottom near tray floor, top proud of rim
 
 # Closeup camera — a true 3/4 (from +X / -Y / above) so the solar wings (face
 # +X) AND the perpendicular radiators (face ±Y, top/bottom) are both readable.
@@ -700,32 +700,31 @@ def deployable_prototypes(include_solar: bool = True) -> str:
 
 def solar_panel(name: str, cx: float, cy: float, cz: float,
                 scale: tuple[float, float, float],
-                horizontal: bool = False) -> str:
+                flat: bool = False) -> str:
     """One solar tile. Full-asset mode: an instanceable internal reference to
     the shared /World/Satellite/_Protos/SolarTile prototype (rotate/scale/
     material live there) carrying only this tile's translate. Lite mode: a
     12-tri box with the same world footprint for the software previews.
 
-    `horizontal` lays the tile down: an extra rotateX=90 AFTER the stand-up
-    rotateY (ops apply right-to-left) turns the long axis from world Z
-    (upright wall) to world Y (low flat band along the deploy direction);
-    the cell normal stays +X either way."""
+    Upright (default): rotateY stands the panel up — long axis → world Z,
+    cell normal → +X (the truss/blanket wing walls). `flat`: NO rotation at
+    all — the asset's native pose already lies cell-face +Z with the long
+    axis along X, which is exactly the redwire deck-parallel orientation."""
     sx, sy, sz = scale
     if PREVIEW_LITE:
-        # Same world-space footprint as the rotated+scaled asset, as a
-        # 12-tri box instead of a 1.9 M-tri scan. Upright: native X → world
-        # Z (height), native Y → world Y (deploy). Horizontal: native X →
-        # world Y, native Y → world Z. Thickness is world X in both.
-        if horizontal:
+        # Same world-space footprint as the (possibly rotated) scaled asset
+        # as a 12-tri box instead of a 1.9 M-tri scan. Upright: native X →
+        # world Z (height), native Y → world Y (deploy), thickness → X.
+        # Flat: native axes ARE world axes (long X, wide Y, thin Z).
+        if flat:
             return box_mesh(name, cx, cy, cz,
-                            SOLAR_NATIVE[2] * sz, SOLAR_NATIVE[0] * sx,
-                            SOLAR_NATIVE[1] * sy, "SolarCellLite")
+                            SOLAR_NATIVE[0] * sx, SOLAR_NATIVE[1] * sy,
+                            SOLAR_NATIVE[2] * sz, "SolarCellLite")
         return box_mesh(name, cx, cy, cz,
                         SOLAR_NATIVE[2] * sz, SOLAR_NATIVE[1] * sy,
                         SOLAR_NATIVE[0] * sx, "SolarCellLite")
-    rot_x = '    float xformOp:rotateX = 90\n' if horizontal else ''
-    order = ('["xformOp:translate", "xformOp:rotateX", "xformOp:rotateY", "xformOp:scale"]'
-             if horizontal
+    rot = '' if flat else f'    float xformOp:rotateY = {PANEL_RY}\n'
+    order = ('["xformOp:translate", "xformOp:scale"]' if flat
              else '["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]')
     return (
         f'def Xform "{name}" (\n'
@@ -734,8 +733,7 @@ def solar_panel(name: str, cx: float, cy: float, cz: float,
         f')\n'
         f'{{\n'
         f'    double3 xformOp:translate = ({cx:.4f}, {cy:.4f}, {cz:.4f})\n'
-        f'{rot_x}'
-        f'    float xformOp:rotateY = {PANEL_RY}\n'
+        f'{rot}'
         f'    double3 xformOp:scale = ({sx:.4f}, {sy:.4f}, {sz:.4f})\n'
         f'    uniform token[] xformOpOrder = {order}\n'
         f'}}'
@@ -743,41 +741,41 @@ def solar_panel(name: str, cx: float, cy: float, cz: float,
 
 
 def solar_cluster(prefix: str, cx: float, cy: float, cz: float,
-                  horizontal: bool = False) -> list[str]:
+                  flat: bool = False) -> list[str]:
     """A 2×2 grid of four small panels filling one full-panel footprint.
-    Upright: the big panel spans H (along Z) × D (along Y). Horizontal
-    (tiles laid down): H runs along Y and D along Z, so the quadrant
-    offsets swap axes — total cell area is identical either way (the
-    physics area formula doesn't care about orientation)."""
+    Upright: the big panel spans H (along Z) × D (along Y). Flat (redwire,
+    deck-parallel): H runs along X (across the bay) and D along Y (the
+    deploy direction), tiles in the X-Y plane — total cell area is
+    identical either way (the physics area formula doesn't care about
+    orientation)."""
     H = SOLAR_NATIVE[0] * PANEL_SCALE[0]      # full-panel long axis
     D = SOLAR_NATIVE[1] * PANEL_SCALE[1]      # full-panel deploy axis
     sub = (PANEL_SCALE[0] * SUB_FRAC, PANEL_SCALE[1] * SUB_FRAC, PANEL_SCALE[2])
     tiles = []
+    if flat:
+        for r, xs in enumerate((-1.0, 1.0)):      # two columns (X, across)
+            for c, ys in enumerate((-1.0, 1.0)):  # two rows (Y, outward)
+                tiles.append(solar_panel(f"{prefix}_{r}{c}",
+                                         cx + xs * H / 4.0, cy + ys * D / 4.0,
+                                         cz, sub, flat=True))
+        return tiles
     for r, zs in enumerate((1.0, -1.0)):          # two rows (Z)
         for c, ys in enumerate((-1.0, 1.0)):      # two columns (Y)
-            dy, dz = ((ys * H / 4.0, zs * D / 4.0) if horizontal
-                      else (ys * D / 4.0, zs * H / 4.0))
             tiles.append(solar_panel(f"{prefix}_{r}{c}",
-                                     cx, cy + dy, cz + dz, sub, horizontal))
+                                     cx, cy + ys * D / 4.0, cz + zs * H / 4.0,
+                                     sub))
     return tiles
 
 
-def solar_wing(side: float, y_root: float = 0.0,
-               horizontal: bool = False) -> str:
+def solar_wing(side: float) -> str:
     """One deployed solar wing: a thin support boom from the central bracket
     out along `side`·Y, carrying N_PANELS chained panel clusters. Each cluster
-    is a 2×2 grid of four small panels with the cell face toward +X (sun
-    side) on both wings — standing upright by default, laid flat with
-    `horizontal` (long axis along the deploy direction, so the cluster
-    pitch along Y grows from D to H). `y_root` shifts the whole wing
-    outward along its side — hull architectures whose body is wider than
-    the truss (redwire deck) seat the yoke at their edge face instead of
-    the truss bracket."""
+    is a 2×2 grid of four small panels, standing upright with the cell face
+    toward +X (sun side) on both wings."""
     s = side
-    deploy = (SOLAR_NATIVE[0] * PANEL_SCALE[0] if horizontal
-              else SOLAR_NATIVE[1] * PANEL_SCALE[1])   # per-cluster Y span
+    deploy = SOLAR_NATIVE[1] * PANEL_SCALE[1]          # per-cluster span along Y
     X, Z = SOLAR_X, SOLAR_Z
-    r = y_root
+    r = 0.0
     # Tapered deployment yoke: root bracket → hinge clevis + bright pin →
     # 3-segment stepped taper → tip fork gripping the first panel. Reads as an
     # engineered cantilever instead of a crude rod.
@@ -794,8 +792,7 @@ def solar_wing(side: float, y_root: float = 0.0,
     ]
     for i in range(N_PANELS):
         cy = (r + BOOM_Y1 + deploy / 2.0 + i * (deploy + PANEL_GAP)) * s
-        parts.extend(solar_cluster(f"Cluster{i}", SOLAR_X, cy, SOLAR_Z,
-                                   horizontal))
+        parts.extend(solar_cluster(f"Cluster{i}", SOLAR_X, cy, SOLAR_Z))
     name = "WingPosY" if side > 0 else "WingNegY"
     body = "\n".join(parts)
     return f'def Xform "{name}"\n{{\n{indent(body, "    ")}\n}}'
@@ -833,12 +830,36 @@ def blanket_wing(side: float) -> str:
     return f'def Xform "{name}"\n{{\n{indent(body, "    ")}\n}}'
 
 
+def redwire_wing(side: float) -> str:
+    """Redwire flat wing: panel face PARALLEL to the deck plane (cells +Z),
+    bolted STRAIGHT onto the deck's two edge lugs — no boom, no yoke. Two
+    small hinge plates bridge the lug tips (x ≈ ±0.5, the deck edge at
+    y ≈ 0.70) to the first cluster's inner edge; each extra cluster chains
+    outward along Y by its D span, so growing the wing visibly adds panels
+    one after another off the bay edge."""
+    s = side
+    H = SOLAR_NATIVE[0] * PANEL_SCALE[0]      # cluster span across X (1.42)
+    D = SOLAR_NATIVE[1] * PANEL_SCALE[1]      # cluster span outward Y (0.816)
+    Z = REDWIRE_WING_Z
+    parts = [
+        box_mesh(f"Hinge{'A' if lx < 0 else 'B'}",
+                 lx, (REDWIRE_WING_Y0 + 0.005) * s, Z,
+                 0.12, 0.15, 0.026, "SolarFrame")
+        for lx in REDWIRE_LUG_X
+    ]
+    for i in range(N_PANELS):
+        cy = (REDWIRE_WING_Y0 + D / 2.0 + i * (D + PANEL_GAP)) * s
+        parts.extend(solar_cluster(f"Cluster{i}", 0.0, cy, Z, flat=True))
+    name = "WingPosY" if side > 0 else "WingNegY"
+    body = "\n".join(parts)
+    return f'def Xform "{name}"\n{{\n{indent(body, "    ")}\n}}'
+
+
 def solar_group() -> str:
     if ARCHITECTURE == "blanket":
         wing = blanket_wing
     elif ARCHITECTURE == "redwire":
-        def wing(side: float) -> str:
-            return solar_wing(side, y_root=REDWIRE_WING_Y0, horizontal=True)
+        wing = redwire_wing
     else:
         wing = solar_wing
     body = wing(1.0) + "\n" + wing(-1.0)
@@ -873,33 +894,6 @@ def radiator_panel(name: str, cx: float, cy: float, cz: float) -> str:
         f'    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:rotateZ", "xformOp:scale"]\n'
         f'}}'
     )
-
-
-def redwire_servers_group() -> str:
-    """Eight discrete GPU modules seated in the open payload bay — two rows
-    of four, standing through the tray opening so their heat-spreader tops
-    sit proud of the deck rim (identifiable compute units, not anonymous
-    cargo). Paths are /World/Satellite/Servers/Server_RW_<n>, which the
-    click popup's server matcher resolves to Blade 01..08 → GPU panel.
-    Plain box meshes (cheap) — identical in lite previews and Kit."""
-    parts = []
-    for n in range(8):
-        row, col = divmod(n, 4)
-        cx = REDWIRE_SRV_COLS_X[col]
-        cy = REDWIRE_SRV_ROWS_Y[row]
-        inner = "\n".join([
-            box_mesh("Chassis", cx, cy, REDWIRE_SRV_Z,
-                     REDWIRE_SRV_W, REDWIRE_SRV_D, REDWIRE_SRV_H,
-                     "ServerChassis"),
-            box_mesh("Heatsink", cx, cy,
-                     REDWIRE_SRV_Z + REDWIRE_SRV_H / 2.0 + 0.011,
-                     REDWIRE_SRV_W * 0.85, REDWIRE_SRV_D * 0.85, 0.022,
-                     "ServerHeatsink"),
-        ])
-        parts.append(f'def Xform "Server_RW_{n}"\n{{\n'
-                     f'{indent(inner, "    ")}\n}}')
-    body = "\n".join(parts)
-    return f'def Xform "Servers"\n{{\n{indent(body, "    ")}\n}}'
 
 
 def _radiator_mount_z() -> float:
@@ -1112,14 +1106,14 @@ def _architecture_parts() -> list[str]:
             radiator_group(),
         ]
     if ARCHITECTURE == "redwire":
-        # Compact flat payload bay; rotateZ=90 turns the avionics-module row
-        # to the +X (sun/camera) face, discrete GPU modules stand in the
-        # open tray, wings (laid horizontal) deploy off the clean ±Y edges,
-        # radiators off the ±Z deck faces.
+        # Compact flat payload bay; rotateZ=90 turns the bay's row of
+        # DISCRETE GPU MODULES (the asset's own front-edge units — the
+        # popup maps them to the GPU panel) to the +X sun/camera face,
+        # flat deck-parallel wings bolt onto the ±Y edge lugs, radiators
+        # boom off the ±Z deck faces.
         return [
             _hull_prim(REDWIRE_REF, REDWIRE_NATIVE, REDWIRE_TARGET_U,
                        REDWIRE_NATIVE_CENTER, rotate_z=90.0),
-            redwire_servers_group(),
             solar_group(),
             radiator_group(),
         ]
@@ -1160,9 +1154,8 @@ def _frame_radius_cm() -> float:
         hull_u = LUMID_TARGET_U if ARCHITECTURE == "lumid" else DISH_TARGET_U
         solar_tip = (hull_u / 2.0) * BACKBONE_SCALE
     elif ARCHITECTURE == "redwire":
-        # Horizontal tiles: the per-cluster Y pitch is the LONG axis H.
-        h_pitch = SOLAR_NATIVE[0] * PANEL_SCALE[0]
-        solar_tip = (REDWIRE_WING_Y0 + BOOM_Y1 + N_PANELS * h_pitch) * BACKBONE_SCALE
+        # Flat wings chain outward by their D span, straight off the deck edge.
+        solar_tip = (REDWIRE_WING_Y0 + N_PANELS * deploy) * BACKBONE_SCALE
     else:
         solar_tip = (BOOM_Y1 + N_PANELS * deploy) * BACKBONE_SCALE
     rad_tip = (_radiator_mount_z() + RAD_BOOM_LEN + RAD_LONG) * BACKBONE_SCALE

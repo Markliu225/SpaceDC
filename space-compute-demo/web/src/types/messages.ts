@@ -217,7 +217,8 @@ export interface SatelliteConfig {
 }
 
 /** Hull configuration — each is a genuinely different satellite shape. */
-export type Architecture = 'truss' | 'twin_truss' | 'blanket' | 'lumid' | 'dish';
+export type Architecture =
+  | 'truss' | 'twin_truss' | 'blanket' | 'lumid' | 'dish' | 'redwire';
 
 /** Deployable geometry knobs (Feature 3) — hull architecture + solar segment
  * count + radiator size/ratio. Drives the regenerated USD model and the

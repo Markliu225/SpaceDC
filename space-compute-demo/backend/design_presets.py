@@ -81,10 +81,10 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
         tagline="8x H200 · flat payload bay · frontier 405B serving",
         description=(
             "A dedicated LLM-serving node on a compact Redwire-style payload "
-            "bay: eight discrete H200 modules stand in the open tray running "
-            "Llama-405B as one tensor-parallel group, long horizontal GaAs "
-            "wings deploy off the bay edges and OSR radiators off the deck "
-            "faces."
+            "bay: the bay's own row of discrete GPU modules runs Llama-405B "
+            "as one tensor-parallel group, flat GaAs wings bolt onto the "
+            "bay-edge lugs coplanar with the deck, and OSR radiators boom "
+            "off the deck faces."
         ),
         config=SatelliteConfig(
             gpu="H200", solar_material="GaAs", solar_size="M",

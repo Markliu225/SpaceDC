@@ -42,7 +42,7 @@
 3. **可展开结构编辑** —— *Deployables* 控件用于增减太阳能板簇（仅限两侧）、调整散热板的大小与比例；每次改动都会重新生成 USD 模型并在 Kit 中重载。
 4. **实时物理** —— 太阳光照 · 面板面积 × 效率 · GPU 负载 · 设备功耗 · 散热板面积 × 发射率，统一汇入实时功率 / 热平衡，显示在状态卡片与组件面板中。改动几何，数字立即更新。完整模型见 **[docs/physics.zh-CN.md](docs/physics.zh-CN.md)**。
 5. **单星设计库** —— Twin 页顶部的 *Designs* 入口打开设计库窗口（`backend/design_presets.py`）：每个完整设计带软件渲染的缩略图（`GET /designs/{id}/preview.png`，带缓存）与派生参数卡。点击应用（`POST /designs/{id}/apply`）即一键切换硬件配置、可展开几何（USD 重新生成 + Kit 层重载）、GPU workload 档案与平台常数；之后手动改任何参数会把当前设计降级为 `custom`。
-6. **六种整星构型** —— 每个设计是真正不同的卫星形态（`twin_params.json` 的 `architecture`）：经典单桁架、24 刀片双桁架塔、ISS 式长条毯式翼、自带十字翼的 LUMID 小卫星、带抛物面天线的风车翼通信星，以及 Redwire 式扁平载荷舱（GPU 藏在舱内、电子设备列朝阳面，生成式 GaAs 太阳翼挂舱体两缘、支杆散热板出舱面）。物理面积随构型切换。
+6. **六种整星构型** —— 每个设计是真正不同的卫星形态（`twin_params.json` 的 `architecture`）：经典单桁架、24 刀片双桁架塔、ISS 式长条毯式翼、自带十字翼的 LUMID 小卫星、带抛物面天线的风车翼通信星，以及 Redwire 式扁平载荷舱（舱体自带的一排独立 GPU 组件朝阳面，逐个可点击弹出 GPU 面板；平板 GaAs 太阳翼与舱面平行、直接栓在舱缘凸耳上，加板时向外逐块延伸；支杆散热板出舱面）。物理面积随构型切换。
 7. **类型化 AI workload** —— 每个作业块都是具体任务（`backend/ai_workloads.py`）：Llama-3.3-70B 预训练/推理、Llama-3.1-8B 微调、ViT-L/16 对地检测——按所装 GPU 的数据手册稠密算力解析为每卡 MFU、有效 TFLOPS、tokens/s / frames/s 与产热，实时暴露于 `satellite.workload_detail` 与 GPU 模块弹窗。
 8. **Twin 页实时轨道运动** —— Kit 特写中，地球随实时星下点转动、太阳圆盘与主光沿真实天顶-太阳夹角（`satellite.sun_cos`）扫掠：地面轨迹、昼夜交替、进出地影都在视口中真实上演；流离线时视口回退为真实轨道追踪视图（`TwinOrbitFallback`），被跟踪卫星沿 SGP4 传播的轨道环滑行，左下 HUD 的卫星标记也在帧率级外插时钟上平滑运动。后端在每次 `/state` 读取时刷新被跟踪卫星的运动学（单次缓存 Satrec sgp4 调用），Kit 的 5Hz 轮询看到的是连续运动而非 1Hz 台阶。
 9. **Workload 选择器** —— Configurator 的 *Workload* 区实时切换 GPU 作业表（`POST /workload_profile`）；每个选项标注当前设计的适配度（`GET /workload_profiles`：平均需求 vs 太阳供给、散热上限、fit 判定、每周期预期 tokens/frames/kWh），面板实时显示在跑任务的模型、MFU、有效 TFLOPS、速率、电功耗、每卡产热、辐射功率与切换以来的累计产出。
