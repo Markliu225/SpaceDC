@@ -123,6 +123,11 @@ class SatelliteState(BaseModel):
     # stretches the wing geometry from the root so the blanket visibly
     # extends. 1.0 = fully deployed (every non-redwire design just stays 1).
     solar_deploy_frac: float = 1.0
+    # Reaction-wheel attitude spin rate (deg/s about the body Z axis through
+    # the centre of mass). POST /attitude_spin toggles it; the Kit close-up
+    # integrates the angle per frame so the whole model visibly rotates.
+    # Display-only — the power/thermal physics keeps its sun-tracking model.
+    attitude_spin_dps: float = 0.0
     # Deployable-geometry-driven areas (Feature 4) — solar = clusters × 2 sides,
     # radiator = dedicated ±Z panels (2 panels × 2 faces). Drive the power /
     # thermal balance so add/remove + resize change the live numbers.

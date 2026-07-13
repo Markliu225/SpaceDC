@@ -465,6 +465,21 @@ async def http_solar_deploy(body: Optional[dict[str, Any]] = None):
     return {"ok": True, **r}
 
 
+@app.post("/attitude_spin")
+async def http_attitude_spin(body: Optional[dict[str, Any]] = None):
+    """Reaction-wheel demo: toggle a slow 360° rotation of the whole body
+    about its centre-of-mass Z axis. action: 'start' | 'stop' | 'toggle'
+    (default). The Kit close-up integrates satellite.attitude_spin_dps per
+    frame; physics is untouched (sun-tracking arrays keep their model)."""
+    action = str((body or {}).get("action", "toggle"))
+    try:
+        r = engine.set_attitude_spin(action)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
+    return {"ok": True, **r}
+
+
 @app.post("/mission/start")
 async def http_start_mission():
     """Kick the 天数天算 mission + broadcast so Web/Kit react immediately."""

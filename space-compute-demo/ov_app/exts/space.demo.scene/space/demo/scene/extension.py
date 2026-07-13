@@ -86,16 +86,20 @@ TWIN_SUN_DIST_CM = 50000.0   # mirrors gen_twin_satellite.SUN_DIST_CM
 TWIN_WING_PATHS  = ("/World/Satellite/SolarArray/WingPosY",
                     "/World/Satellite/SolarArray/WingNegY")
 TWIN_WING_ROOT_U = 0.71      # mirrors gen_twin_satellite.REDWIRE_WING_Y0
+# Reaction-wheel demo: the whole body spins about its centre-of-mass Z
+# axis (every hull is authored recentred on the origin) at
+# satellite.attitude_spin_dps — the angle integrates per FRAME here, so
+# the rotation is butter-smooth regardless of the 5 Hz poll.
+TWIN_SAT_PATH    = "/World/Satellite"
 SUN_DRIVEN_LIGHTS = [
-    # The ORIGINAL tuned ranges — this five-light rig is what makes the
-    # PBR materials read (specular pings on the glossy panels come from
-    # these lights, not the near-black dome). The "one hard sun" realism
-    # pass dimmed them twice and the model went dead both times; keep the
-    # space feel in the SKY (single sun, point stars, dark Earth night
-    # side), not by starving the satellite of light.
-    ("/World/Environment/Key",         400.0, 4000.0),
-    ("/World/Environment/Rim",         300.0, 1300.0),
-    ("/World/Environment/EarthBounce", 1000.0, 1600.0),
+    # Boosted ~1.5x over the original tuned ranges (user: the satellite
+    # needs MORE light — the materials/speculars are the show). This
+    # five-light rig is what makes the PBR materials read; the space feel
+    # lives in the SKY (single sun, point stars, dark Earth night side),
+    # never in starving the satellite of light.
+    ("/World/Environment/Key",         800.0, 6000.0),
+    ("/World/Environment/Rim",         450.0, 1800.0),
+    ("/World/Environment/EarthBounce", 1300.0, 2100.0),
 ]
 
 USD_ROOT_ENV = "SPACE_DEMO_USD_ROOT"
@@ -1056,6 +1060,21 @@ def update_twin_orbit(stage, tgt: dict, sm: dict, dt: float) -> None:
             if rot.IsValid():
                 rot.Set(Gf.Vec3f(0.0, math.degrees(theta), 0.0))
 
+        # --- Reaction-wheel spin: integrate the body angle per frame --------
+        # The hulls are authored recentred on the origin, so rotating the
+        # /World/Satellite root IS a centre-of-mass rotation. The rate
+        # arrives with the 5 Hz poll; the angle accumulates with frame dt.
+        spin_dps = float(tgt.get("spin_dps", 0.0))
+        if spin_dps > 0.0 or sm.get("spin_angle", 0.0) != 0.0:
+            sm["spin_angle"] = (sm.get("spin_angle", 0.0)
+                                + spin_dps * max(0.0, dt)) % 360.0
+            sat_root = stage.GetPrimAtPath(TWIN_SAT_PATH)
+            if sat_root.IsValid():
+                rz_attr = sat_root.GetAttribute("xformOp:rotateZ")
+                if not rz_attr.IsValid():
+                    rz_attr = UsdGeom.Xformable(sat_root).AddRotateZOp().GetAttr()
+                rz_attr.Set(float(sm["spin_angle"]))
+
         # --- Roll-out wings (redwire): stretch from the root anchors --------
         # The flexible-blanket mock: scaleY = f about the deck-edge pivot
         # (translateY = ±ROOT·(1−f), points transform scale-then-translate),
@@ -1430,6 +1449,7 @@ if _HAS_KIT:
                     "deploy": float(sat.get("solar_deploy_frac", 1.0)),
                     "deploy_wings": (state.get("twin_geometry", {})
                                      .get("architecture") == "redwire"),
+                    "spin_dps": float(sat.get("attitude_spin_dps", 0.0)),
                 }
 
             # Cache the mission snapshot + the wall time it arrived, so the

@@ -64,7 +64,7 @@ def Xform "World"
         def DomeLight "Space"
         {
             color3f inputs:color = (1.0, 1.0, 1.0)
-            float inputs:intensity = 650.0
+            float inputs:intensity = 800.0
             asset inputs:texture:file = @./textures/starfield.png@
             token inputs:texture:format = "latlong"
         }
@@ -74,7 +74,7 @@ def Xform "World"
         def DistantLight "FillPort"
         {
             float inputs:angle = 6.0
-            float inputs:intensity = 1900
+            float inputs:intensity = 2700
             color3f inputs:color = (0.55, 0.62, 0.80)
             float3 xformOp:rotateXYZ = (90, 0, 0)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
@@ -82,7 +82,7 @@ def Xform "World"
         def DistantLight "FillStarboard"
         {
             float inputs:angle = 6.0
-            float inputs:intensity = 1000
+            float inputs:intensity = 1500
             color3f inputs:color = (0.50, 0.58, 0.78)
             float3 xformOp:rotateXYZ = (-90, 0, 0)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]

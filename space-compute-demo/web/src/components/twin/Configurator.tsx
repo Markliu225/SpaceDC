@@ -154,6 +154,7 @@ function GeometryControls() {
         incDisabled={ratio >= R.radiator_ratio.max - 1e-6}
       />
       {geom.architecture === 'redwire' && <SolarDeployControl />}
+      <AttitudeSpinControl />
     </Section>
   )
 }
@@ -198,6 +199,48 @@ function SolarDeployControl() {
           className="rounded border border-border-weak px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-text-md hover:bg-bg-cardHi hover:text-text-hi"
         >
           {deployed ? 'Retract' : 'Deploy'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/** Reaction-wheel demo: spin the whole body 360° about its centre-of-mass
+ * Z axis at a legible 1 rpm. POST /attitude_spin toggles the rate; the Kit
+ * close-up integrates the angle per frame. Display-only (the sun-tracking
+ * power model is unaffected). */
+function AttitudeSpinControl() {
+  const dps = useDemoStore(
+    (s) => s.lastState?.satellite?.attitude_spin_dps,
+  ) ?? 0
+  const spinning = dps > 0
+  const toggle = async () => {
+    try {
+      await fetch(`${BACKEND_HTTP}/attitude_spin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggle' }),
+      })
+    } catch {
+      /* backend offline — control is inert in the local fallback */
+    }
+  }
+  return (
+    <div
+      data-testid="attitude-spin"
+      className="flex items-center justify-between rounded border border-border-weak bg-bg-inset/40 px-2 py-1"
+    >
+      <span className="text-[11px] text-text-md">Reaction wheels</span>
+      <div className="flex items-center gap-2">
+        <span className={`font-mono tabular-nums text-[11px] ${spinning ? 'text-accent' : 'text-text-hi'}`}>
+          {spinning ? `${dps.toFixed(0)}°/s` : 'idle'}
+        </span>
+        <button
+          type="button"
+          onClick={toggle}
+          className="rounded border border-border-weak px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-text-md hover:bg-bg-cardHi hover:text-text-hi"
+        >
+          {spinning ? 'Stop' : 'Spin'}
         </button>
       </div>
     </div>
