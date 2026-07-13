@@ -68,10 +68,17 @@ GPU_SPECS: dict[str, dict[str, float]] = {
 }
 
 # --- Model catalog -----------------------------------------------------------
+# LLM serving is the orbital DC's primary business: the catalog spans the
+# deployed dense-model range (params must match llm_perf.LLM_PERF — the
+# analytic engine resolves throughput; these labels feed the panels).
 AI_MODELS: dict[str, dict] = {
-    "llama70b": {"label": "Llama-3.3-70B", "params": 70e9},
-    "llama8b":  {"label": "Llama-3.1-8B",  "params": 8e9},
-    "vit_eo":   {"label": "ViT-L/16 EO detector", "tflops_per_frame": 0.30},
+    "llama70b":   {"label": "Llama-3.3-70B",       "params": 70e9},
+    "llama8b":    {"label": "Llama-3.1-8B",        "params": 8e9},
+    "llama405b":  {"label": "Llama-3.1-405B",      "params": 405e9},
+    "qwen72b":    {"label": "Qwen2.5-72B",         "params": 72.7e9},
+    "qwen32b":    {"label": "Qwen2.5-Coder-32B",   "params": 32.8e9},
+    "mistral24b": {"label": "Mistral-Small-24B",   "params": 24e9},
+    "vit_eo":     {"label": "ViT-L/16 EO detector", "tflops_per_frame": 0.30},
 }
 
 # --- Typed jobs --------------------------------------------------------------
@@ -121,6 +128,37 @@ JOB_TYPES: dict[str, dict] = {
         "label": "LLM eval pass", "kind": "llm_infer",
         "model": "llama70b", "precision": "FP8", "mfu": 0.12, "nominal_util": 0.50,
         "phase": "decode", "batch": 24, "context": 4096,
+    },
+    # --- LLM serving variety (the primary business) --------------------------
+    "llm_chat_70b": {
+        "label": "Chat serving · 70B", "kind": "llm_infer",
+        "model": "llama70b", "precision": "FP8", "mfu": 0.14, "nominal_util": 0.70,
+        "phase": "decode", "batch": 24, "context": 4096,
+    },
+    "llm_chat_8b": {
+        "label": "Edge chat · 8B", "kind": "llm_infer",
+        "model": "llama8b", "precision": "FP8", "mfu": 0.10, "nominal_util": 0.55,
+        "phase": "decode", "batch": 64, "context": 2048,
+    },
+    "llm_code_32b": {
+        "label": "Code assist · Coder-32B", "kind": "llm_infer",
+        "model": "qwen32b", "precision": "FP8", "mfu": 0.10, "nominal_util": 0.60,
+        "phase": "decode", "batch": 16, "context": 8192,
+    },
+    "llm_rag_72b": {
+        "label": "RAG long-context · 72B", "kind": "llm_infer",
+        "model": "qwen72b", "precision": "FP8", "mfu": 0.08, "nominal_util": 0.65,
+        "phase": "decode", "batch": 8, "context": 16384,
+    },
+    "llm_summarize_24b": {
+        "label": "Doc summarization · 24B", "kind": "llm_infer",
+        "model": "mistral24b", "precision": "FP8", "mfu": 0.12, "nominal_util": 0.70,
+        "phase": "decode", "batch": 32, "context": 8192,
+    },
+    "llm_frontier_405b": {
+        "label": "Frontier serving · 405B", "kind": "llm_infer",
+        "model": "llama405b", "precision": "FP8", "mfu": 0.10, "nominal_util": 0.85,
+        "phase": "decode", "batch": 12, "context": 4096,
     },
     "checkpoint_io": {
         "label": "Checkpoint write", "kind": "idle",

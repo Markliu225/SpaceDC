@@ -42,11 +42,12 @@
 3. **可展开结构编辑** —— *Deployables* 控件用于增减太阳能板簇（仅限两侧）、调整散热板的大小与比例；每次改动都会重新生成 USD 模型并在 Kit 中重载。
 4. **实时物理** —— 太阳光照 · 面板面积 × 效率 · GPU 负载 · 设备功耗 · 散热板面积 × 发射率，统一汇入实时功率 / 热平衡，显示在状态卡片与组件面板中。改动几何，数字立即更新。完整模型见 **[docs/physics.zh-CN.md](docs/physics.zh-CN.md)**。
 5. **单星设计库** —— Twin 页顶部的 *Designs* 入口打开设计库窗口（`backend/design_presets.py`）：每个完整设计带软件渲染的缩略图（`GET /designs/{id}/preview.png`，带缓存）与派生参数卡。点击应用（`POST /designs/{id}/apply`）即一键切换硬件配置、可展开几何（USD 重新生成 + Kit 层重载）、GPU workload 档案与平台常数；之后手动改任何参数会把当前设计降级为 `custom`。
-6. **五种整星构型** —— 每个设计是真正不同的卫星形态（`twin_params.json` 的 `architecture`）：经典单桁架、24 刀片双桁架塔、ISS 式长条毯式翼、自带十字翼的 LUMID 小卫星、带抛物面天线的风车翼通信星。物理面积随构型切换。
+6. **六种整星构型** —— 每个设计是真正不同的卫星形态（`twin_params.json` 的 `architecture`）：经典单桁架、24 刀片双桁架塔、ISS 式长条毯式翼、自带十字翼的 LUMID 小卫星、带抛物面天线的风车翼通信星，以及 Redwire 式扁平载荷舱（GPU 藏在舱内、电子设备列朝阳面，生成式 GaAs 太阳翼挂舱体两缘、支杆散热板出舱面）。物理面积随构型切换。
 7. **类型化 AI workload** —— 每个作业块都是具体任务（`backend/ai_workloads.py`）：Llama-3.3-70B 预训练/推理、Llama-3.1-8B 微调、ViT-L/16 对地检测——按所装 GPU 的数据手册稠密算力解析为每卡 MFU、有效 TFLOPS、tokens/s / frames/s 与产热，实时暴露于 `satellite.workload_detail` 与 GPU 模块弹窗。
 8. **Twin 页实时轨道运动** —— Kit 特写中，地球随实时星下点转动、太阳圆盘与主光沿真实天顶-太阳夹角（`satellite.sun_cos`）扫掠：地面轨迹、昼夜交替、进出地影都在视口中真实上演；流离线时视口回退为真实轨道追踪视图（`TwinOrbitFallback`），被跟踪卫星沿 SGP4 传播的轨道环滑行，左下 HUD 的卫星标记也在帧率级外插时钟上平滑运动。后端在每次 `/state` 读取时刷新被跟踪卫星的运动学（单次缓存 Satrec sgp4 调用），Kit 的 5Hz 轮询看到的是连续运动而非 1Hz 台阶。
 9. **Workload 选择器** —— Configurator 的 *Workload* 区实时切换 GPU 作业表（`POST /workload_profile`）；每个选项标注当前设计的适配度（`GET /workload_profiles`：平均需求 vs 太阳供给、散热上限、fit 判定、每周期预期 tokens/frames/kWh），面板实时显示在跑任务的模型、MFU、有效 TFLOPS、速率、电功耗、每卡产热、辐射功率与切换以来的累计产出。
-10. **LLM 推理解析引擎** —— LLM 作业不再用 MFU 估计：`backend/llm_perf.py` 从第一性原理解出真实工作点（DVFS 功耗聚合 `P = P_static + χ·x^θ`、计算受限的 prefill/训练幂律、含带宽平台的 decode 访存下限定律、自然功耗），并**与卫星热状态耦合**：结构就是 GPU 的冷板，`T_die = T_struct + P·R_th`，驱动通过收缩功率预算把结温压在节流目标上——散热板不足或涂层退化会直接表现为可计算的 tokens/s 损失（`gpu_thermal_throttle` / `gpu_thermal_runaway` 告警，结温 / SM 频率 / 执行相位实时显示在面板中）。模型按公开的 V100 功率上限实测研究校准，由 `tools/validate_llm_perf.py`（46 项）+ `tools/validate_llm_engine.py`（24 项闭环场景）验证；专设 *LLM serving (70B)* 档案飞 decode 主导的作业表来展示这一切。详见 **[docs/physics.md §4a](docs/physics.md)**。
+10. **LLM serving 是主营业务** —— workload 体系围绕多模型推理服务展开（Llama-3.1-8B/70B/405B、Qwen2.5-Coder-32B、Qwen2.5-72B、Mistral-Small-24B），每种作业都是 decode 定律上不同的工作点（批量、上下文、模型规模）：多层级聊天服务（`chat_serving`）、405B 前沿模型服务（`frontier`）、代码补全 + 长上下文 RAG（`code_rag`）、70B 批量服务（`inference`，默认档案）——EO 视觉与训练降为辅线。*Redwire Serving Node* 设计在 8×H200 张量并行组上飞 Llama-405B。
+11. **LLM 推理解析引擎** —— LLM 作业不再用 MFU 估计：`backend/llm_perf.py` 从第一性原理解出真实工作点（DVFS 功耗聚合 `P = P_static + χ·x^θ`、计算受限的 prefill/训练幂律、含带宽平台的 decode 访存下限定律、自然功耗），并**与卫星热状态耦合**：结构就是 GPU 的冷板，`T_die = T_struct + P·R_th`，驱动通过收缩功率预算把结温压在节流目标上——散热板不足或涂层退化会直接表现为可计算的 tokens/s 损失（`gpu_thermal_throttle` / `gpu_thermal_runaway` 告警，结温 / SM 频率 / 执行相位实时显示在面板中）。模型按公开的 V100 功率上限实测研究校准，由 `tools/validate_llm_perf.py`（52 项）+ `tools/validate_llm_engine.py`（32 项闭环场景）验证；专设 *LLM serving (70B)* 档案飞 decode 主导的作业表来展示这一切。详见 **[docs/physics.md §4a](docs/physics.md)**。
 
 ## 快速开始
 
@@ -77,5 +78,5 @@ npm run dev            # http://localhost:5173
 
 ## 说明
 
-- 大体积 `.usdz` 资产（骨干、太阳能板、散热板，每个约 75 MB）已加入 gitignore；请在本地保留于 `usd/assets/` 与 `assets_raw/`。
+- 大体积 `.usdz`/`.usdc` 资产（骨干、太阳能板、散热板，以及 LUMID / dish / redwire 载荷舱壳体，每个 55-80 MB）已加入 gitignore；请在本地保留于 `usd/assets/` 与 `assets_raw/`。
 - 后端在几何变更时重新生成 `usd/twin_satellite.usda` 并递增版本号；Kit 场景扩展会实时重载该图层。

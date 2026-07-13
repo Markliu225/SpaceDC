@@ -162,9 +162,15 @@ LLM_PERF: dict[str, LlmPerfSpec] = {
     "phi3mini":  LlmPerfSpec("Phi-3-mini (MHA)",   3.8e9, 32, 32, 96),   # 384 KB/tok fp16
     "qwen15b":   LlmPerfSpec("Qwen2.5-1.5B (GQA)", 1.5e9, 28,  2, 128),
     "qwen3b":    LlmPerfSpec("Qwen2.5-3B (GQA)",   3.1e9, 36,  2, 128),
-    # Simulator models
-    "llama70b":  LlmPerfSpec("Llama-3.3-70B (GQA)", 70e9, 80,  8, 128),  # 160 KB/tok fp8
-    "llama8b":   LlmPerfSpec("Llama-3.1-8B (GQA)",   8e9, 32,  8, 128),
+    # Simulator serving models — the orbital DC's business is LLM inference,
+    # so the catalog spans the deployed dense-model range (all GQA; layer /
+    # kv-head / head-dim figures from the public model cards).
+    "llama70b":  LlmPerfSpec("Llama-3.3-70B (GQA)",  70e9, 80,  8, 128),  # 160 KB/tok fp8
+    "llama8b":   LlmPerfSpec("Llama-3.1-8B (GQA)",    8e9, 32,  8, 128),
+    "llama405b": LlmPerfSpec("Llama-3.1-405B (GQA)", 405e9, 126, 8, 128),  # 252 KB/tok fp8
+    "qwen72b":   LlmPerfSpec("Qwen2.5-72B (GQA)",   72.7e9, 80,  8, 128),
+    "qwen32b":   LlmPerfSpec("Qwen2.5-32B (GQA)",   32.8e9, 64,  8, 128),
+    "mistral24b": LlmPerfSpec("Mistral-Small-24B (GQA)", 24e9, 40, 8, 128),
 }
 
 

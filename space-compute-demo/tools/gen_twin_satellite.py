@@ -212,7 +212,10 @@ PREVIEW_LITE = False
 #                radiators; no external wings, GPUs ride inside the bus
 #   dish       — the parabolic-dish comms hull with windmill wings + our
 #                radiators; GPUs inside the bus
-ARCHITECTURES = ("truss", "twin_truss", "blanket", "lumid", "dish")
+#   redwire    — the Redwire-style flat payload bay (GPUs inside the deck,
+#                avionics module row on the +X face) + OUR generated solar
+#                wings off the ±Y edges and ±Z boom radiators
+ARCHITECTURES = ("truss", "twin_truss", "blanket", "lumid", "dish", "redwire")
 ARCHITECTURE  = "truss"
 
 LUMID_REF   = "./assets/LUMID_colored.usdc"
@@ -234,6 +237,22 @@ DISH_TARGET_U   = 3.4          # ≈ 6.1 m across the windmill wings
 # inside the (recentered) hull envelope: LUMID half-height 1.55, dish 1.70.
 LUMID_RAD_Z     = 1.50
 DISH_RAD_Z      = 1.65
+
+# Redwire payload bay: Z-up metres, bbox 0.938 × 1.000 × 0.247, pivot ~bbox
+# centre in X/Y but 0.221 above it in Z (survey: scratchpad/inspect_redwire).
+# tripo_part_9 is the flat deck; the other 7 parts are an avionics/module row
+# along the native −Y edge. rotateZ=90 turns that row to face +X (the sun /
+# camera side, next to the solar-cell plane) and leaves both ±Y edge faces
+# clean for the wing yokes.
+REDWIRE_REF     = "./assets/redwire_payload.usdz"
+REDWIRE_NATIVE  = 1.0          # largest native dim (Y — becomes X after rot)
+REDWIRE_NATIVE_CENTER = (0.0, 0.0, -0.2207)
+REDWIRE_TARGET_U = 2.2         # deck ≈ 4.0 m across on stage
+# Wing-yoke root along ±Y: deck half-Y after rot90 = 0.469·2.2 ≈ 1.03 —
+# seat the yoke bracket just inside the edge face.
+REDWIRE_WING_Y0 = 0.98
+# Radiator boom mount: deck half-Z = 0.124·2.2 ≈ 0.27, boom roots just inside.
+REDWIRE_RAD_Z   = 0.24
 
 # Closeup camera — a true 3/4 (from +X / -Y / above) so the solar wings (face
 # +X) AND the perpendicular radiators (face ±Y, top/bottom) are both readable.
@@ -714,30 +733,34 @@ def solar_cluster(prefix: str, cx: float, cy: float, cz: float) -> list[str]:
     return tiles
 
 
-def solar_wing(side: float) -> str:
+def solar_wing(side: float, y_root: float = 0.0) -> str:
     """One deployed solar wing: a thin support boom from the central bracket
     out along `side`·Y, carrying N_PANELS chained panel clusters. Each cluster
     is a 2×2 grid of four small panels, standing upright with the cell face
-    toward +X (sun side) on both wings."""
+    toward +X (sun side) on both wings. `y_root` shifts the whole wing
+    outward along its side — hull architectures whose body is wider than the
+    truss (redwire deck: half-Y ≈ 1.03) seat the yoke at their edge face
+    instead of the truss bracket."""
     s = side
     deploy = SOLAR_NATIVE[1] * PANEL_SCALE[1]          # per-cluster span along Y
     X, Z = SOLAR_X, SOLAR_Z
+    r = y_root
     # Tapered deployment yoke: root bracket → hinge clevis + bright pin →
     # 3-segment stepped taper → tip fork gripping the first panel. Reads as an
     # engineered cantilever instead of a crude rod.
     parts = [
-        box_mesh("YokeBracket",  X, 0.085 * s, Z, 0.026, 0.060, 0.052, "SolarFrame"),
-        box_mesh("HingeClevisA", X, 0.130 * s, -0.004, 0.020, 0.034, 0.014, "SolarFrame"),
-        box_mesh("HingeClevisB", X, 0.130 * s, -0.044, 0.020, 0.034, 0.014, "SolarFrame"),
-        box_mesh("HingePin",     X, 0.130 * s, Z, 0.010, 0.012, 0.058, "HingePinMetal"),
-        box_mesh("ArmSeg1",      X, 0.190 * s, Z, 0.018, 0.086, 0.034, "SolarFrame"),
-        box_mesh("ArmSeg2",      X, 0.270 * s, Z, 0.014, 0.074, 0.026, "SolarFrame"),
-        box_mesh("ArmSeg3",      X, 0.347 * s, Z, 0.010, 0.080, 0.018, "SolarFrame"),
-        box_mesh("TipForkA",     X, 0.405 * s, -0.012, 0.012, 0.040, 0.010, "SolarFrame"),
-        box_mesh("TipForkB",     X, 0.405 * s, -0.036, 0.012, 0.040, 0.010, "SolarFrame"),
+        box_mesh("YokeBracket",  X, (r + 0.085) * s, Z, 0.026, 0.060, 0.052, "SolarFrame"),
+        box_mesh("HingeClevisA", X, (r + 0.130) * s, -0.004, 0.020, 0.034, 0.014, "SolarFrame"),
+        box_mesh("HingeClevisB", X, (r + 0.130) * s, -0.044, 0.020, 0.034, 0.014, "SolarFrame"),
+        box_mesh("HingePin",     X, (r + 0.130) * s, Z, 0.010, 0.012, 0.058, "HingePinMetal"),
+        box_mesh("ArmSeg1",      X, (r + 0.190) * s, Z, 0.018, 0.086, 0.034, "SolarFrame"),
+        box_mesh("ArmSeg2",      X, (r + 0.270) * s, Z, 0.014, 0.074, 0.026, "SolarFrame"),
+        box_mesh("ArmSeg3",      X, (r + 0.347) * s, Z, 0.010, 0.080, 0.018, "SolarFrame"),
+        box_mesh("TipForkA",     X, (r + 0.405) * s, -0.012, 0.012, 0.040, 0.010, "SolarFrame"),
+        box_mesh("TipForkB",     X, (r + 0.405) * s, -0.036, 0.012, 0.040, 0.010, "SolarFrame"),
     ]
     for i in range(N_PANELS):
-        cy = (BOOM_Y1 + deploy / 2.0 + i * (deploy + PANEL_GAP)) * s
+        cy = (r + BOOM_Y1 + deploy / 2.0 + i * (deploy + PANEL_GAP)) * s
         parts.extend(solar_cluster(f"Cluster{i}", SOLAR_X, cy, SOLAR_Z))
     name = "WingPosY" if side > 0 else "WingNegY"
     body = "\n".join(parts)
@@ -777,7 +800,13 @@ def blanket_wing(side: float) -> str:
 
 
 def solar_group() -> str:
-    wing = blanket_wing if ARCHITECTURE == "blanket" else solar_wing
+    if ARCHITECTURE == "blanket":
+        wing = blanket_wing
+    elif ARCHITECTURE == "redwire":
+        def wing(side: float) -> str:
+            return solar_wing(side, y_root=REDWIRE_WING_Y0)
+    else:
+        wing = solar_wing
     body = wing(1.0) + "\n" + wing(-1.0)
     return f'def Xform "SolarArray"\n{{\n{indent(body, "    ")}\n}}'
 
@@ -820,6 +849,8 @@ def _radiator_mount_z() -> float:
         return LUMID_RAD_Z
     if ARCHITECTURE == "dish":
         return DISH_RAD_Z
+    if ARCHITECTURE == "redwire":
+        return REDWIRE_RAD_Z
     return SPINE_END_Z
 
 
@@ -974,6 +1005,8 @@ def _hull_prim(ref: str, native_size: float, target_u: float,
     cx, cy, cz = (s * c for c in native_center)
     if rotate_z == 180.0:
         cx, cy = -cx, -cy
+    elif rotate_z == 90.0:
+        cx, cy = -cy, cx
     tx, ty, tz = -cx, -cy, -cz
     rot = f'    float xformOp:rotateZ = {rotate_z}\n' if rotate_z else ''
     order = ('["xformOp:translate", "xformOp:rotateZ", "xformOp:scale"]' if rotate_z
@@ -1017,6 +1050,16 @@ def _architecture_parts() -> list[str]:
                        DISH_NATIVE_CENTER, rotate_z=180.0),
             radiator_group(),
         ]
+    if ARCHITECTURE == "redwire":
+        # Flat payload bay (GPUs inside the deck); rotateZ=90 turns the
+        # avionics-module row to the +X (sun/camera) face, wings deploy off
+        # the clean ±Y edges, radiators off the ±Z deck faces.
+        return [
+            _hull_prim(REDWIRE_REF, REDWIRE_NATIVE, REDWIRE_TARGET_U,
+                       REDWIRE_NATIVE_CENTER, rotate_z=90.0),
+            solar_group(),
+            radiator_group(),
+        ]
     # truss + blanket share the single-spine hull.
     return [
         _backbone_prim(),
@@ -1053,6 +1096,8 @@ def _frame_radius_cm() -> float:
     elif ARCHITECTURE in ("lumid", "dish"):
         hull_u = LUMID_TARGET_U if ARCHITECTURE == "lumid" else DISH_TARGET_U
         solar_tip = (hull_u / 2.0) * BACKBONE_SCALE
+    elif ARCHITECTURE == "redwire":
+        solar_tip = (REDWIRE_WING_Y0 + BOOM_Y1 + N_PANELS * deploy) * BACKBONE_SCALE
     else:
         solar_tip = (BOOM_Y1 + N_PANELS * deploy) * BACKBONE_SCALE
     rad_tip = (_radiator_mount_z() + RAD_BOOM_LEN + RAD_LONG) * BACKBONE_SCALE

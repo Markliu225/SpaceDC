@@ -16,8 +16,9 @@ test('workload panel switches schedules and shows live output', async ({ page })
   await expect(page.getByText('Design fit')).toBeVisible({ timeout: 10_000 });
   await expect(page.getByText('Running', { exact: true })).toBeVisible();
 
-  // Open the schedule dropdown and pick Burst response.
-  await page.getByText('Mixed inference', { exact: true }).first().click();
+  // Open the schedule dropdown (baseline flies the multi-tier chat serving
+  // schedule) and pick Burst response.
+  await page.getByText('Chat serving (multi-tier)', { exact: true }).first().click();
   await page.getByText('Burst response', { exact: true }).click();
 
   // Backend truth: profile switched, design degraded to custom, demand-side

@@ -19,8 +19,9 @@ test.describe('design gallery', () => {
     const dialog = page.getByRole('dialog', { name: /satellite design library/i });
     await expect(dialog).toBeVisible();
 
-    // All five preset cards render with name + stats.
-    for (const name of ['Balanced LEO-DC', 'Compute Max', 'Eco Light', 'Thermal Guard', 'Wide Wing']) {
+    // All six preset cards render with name + stats.
+    for (const name of ['Balanced LEO-DC', 'Redwire Serving Node', 'Compute Max',
+                        'Eco Light', 'Thermal Guard', 'Wide Wing']) {
       await expect(dialog.getByText(name, { exact: true })).toBeVisible();
     }
 

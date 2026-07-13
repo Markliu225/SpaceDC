@@ -13,7 +13,8 @@ import time
 import urllib.request
 
 BASE = "http://localhost:8001"
-PRESETS = ["baseline", "compute_max", "eco_light", "thermal_guard", "wide_wing"]
+PRESETS = ["baseline", "redwire", "compute_max", "eco_light", "thermal_guard",
+           "wide_wing"]
 ORBIT_WALL_S = 100
 SAMPLE_DT = 2.0
 

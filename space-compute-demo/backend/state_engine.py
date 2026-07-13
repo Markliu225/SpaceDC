@@ -163,7 +163,12 @@ def _radiator_area_m2(geom) -> float:
 # concrete model) so the state can report MFU, effective TFLOPS, tokens/s or
 # frames/s and per-card heat. Design presets pick a profile by id.
 _WORKLOAD_PROFILES: dict[str, dict] = {
-    # The maritime-detection mix: EO vision batches with LLM side-jobs.
+    # LLM serving is the PRIMARY business of the orbital DC: most profiles
+    # fly inference schedules over a variety of models (the analytic
+    # llm_perf engine resolves each block's true power/throughput/thermal
+    # operating point); vision/EO and training remain as secondary stories.
+    #
+    # The mixed EO + LLM utility schedule (vision + inference side-jobs).
     "balanced": {
         "label": "Mixed inference",
         "cycle_s": 400.0,
@@ -171,14 +176,55 @@ _WORKLOAD_PROFILES: dict[str, dict] = {
             (  0.0,  18.0, 0.10, "housekeeping"),     # cold boot
             ( 18.0,  42.0, 0.65, "vision_batch"),     # imagery batch inference
             ( 60.0,  18.0, 0.92, "vision_burst"),     # target acquired
-            ( 78.0,  36.0, 0.75, "vision_batch"),     # continued tracking
+            ( 78.0,  36.0, 0.70, "llm_chat_70b"),     # chat serving window
             (114.0,  24.0, 0.20, "llm_interactive"),  # ops queries while downlinking
-            (138.0,  60.0, 0.55, "llm_finetune"),     # onboard adapter fine-tune
+            (138.0,  60.0, 0.60, "llm_code_32b"),     # code-assist window
             (198.0,  48.0, 0.85, "llm_batch"),        # report/summary backlog
             (246.0,  30.0, 0.30, "llm_interactive"),  # cooldown gap
             (276.0,  72.0, 0.70, "vision_batch"),     # sustained survey
             (348.0,  18.0, 0.95, "vision_burst"),     # emergency re-classify
-            (366.0,  34.0, 0.40, "llm_interactive"),  # decaying back to idle
+            (366.0,  34.0, 0.55, "llm_chat_8b"),      # edge chat, decaying duty
+        ],
+    },
+    # Multi-tier chat serving: big-model quality tier + small-model edge
+    # tier, with interactive lulls — every block is a DIFFERENT operating
+    # point on the decode law (batch, context, model size).
+    "chat_serving": {
+        "label": "Chat serving (multi-tier)",
+        "cycle_s": 360.0,
+        "schedule": [
+            (  0.0,  90.0, 0.70, "llm_chat_70b"),     # quality tier
+            ( 90.0,  50.0, 0.55, "llm_chat_8b"),      # edge tier surge
+            (140.0,  80.0, 0.75, "llm_chat_70b"),     # quality tier peak
+            (220.0,  40.0, 0.30, "llm_interactive"),  # night-side lull
+            (260.0,  70.0, 0.70, "llm_chat_70b"),     # quality tier
+            (330.0,  30.0, 0.55, "llm_chat_8b"),      # edge tier
+        ],
+    },
+    # Frontier-model serving: 405B dense, near-flat-out, with eval and
+    # interactive dips — the heaviest sustained inference the DC can fly.
+    "frontier": {
+        "label": "Frontier serving (405B)",
+        "cycle_s": 360.0,
+        "schedule": [
+            (  0.0, 100.0, 0.85, "llm_frontier_405b"),
+            (100.0,  20.0, 0.50, "llm_eval"),          # quality regression pass
+            (120.0, 110.0, 0.88, "llm_frontier_405b"),
+            (230.0,  30.0, 0.30, "llm_interactive"),   # request trough
+            (260.0, 100.0, 0.85, "llm_frontier_405b"),
+        ],
+    },
+    # Developer-workload mix: code completion, long-context RAG and doc
+    # summarization on three mid-size models.
+    "code_rag": {
+        "label": "Code & RAG serving",
+        "cycle_s": 360.0,
+        "schedule": [
+            (  0.0,  90.0, 0.60, "llm_code_32b"),      # code completion
+            ( 90.0,  70.0, 0.65, "llm_rag_72b"),       # RAG long-context
+            (160.0,  60.0, 0.70, "llm_summarize_24b"), # summarization batch
+            (220.0,  80.0, 0.60, "llm_code_32b"),      # code completion
+            (300.0,  60.0, 0.65, "llm_rag_72b"),       # RAG long-context
         ],
     },
     # Near-flat-out 70B pretraining with checkpoint/eval dips.
@@ -237,7 +283,7 @@ _WORKLOAD_PROFILES: dict[str, dict] = {
         ],
     },
 }
-_DEFAULT_WORKLOAD_PROFILE = "balanced"
+_DEFAULT_WORKLOAD_PROFILE = "inference"
 _IDLE_JOB = "housekeeping"
 
 

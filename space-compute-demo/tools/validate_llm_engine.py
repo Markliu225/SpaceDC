@@ -202,6 +202,44 @@ check_true(f"solar_demand_avg_w matches adaptation demand "
            f"({eng._sat.solar_demand_avg_w:.0f} vs {ad_e['demand_avg_w']}) ",
            abs(eng._sat.solar_demand_avg_w - ad_e["demand_avg_w"]) < 1.0)
 
+print("== Scenario F: multi-model LLM serving profiles fly analytic per block ==")
+# Every LLM block of each serving profile must resolve through the analytic
+# engine, with a genuinely different model mix per profile (the serving
+# catalog: 8B/24B/32B/70B/72B/405B). H200x8 hosts all of them (405B needs
+# the 8-card TP group's 1 TB HBM pool).
+_PROFILE_MODELS = {
+    "chat_serving": {"Llama-3.3-70B", "Llama-3.1-8B"},
+    "code_rag": {"Qwen2.5-Coder-32B", "Qwen2.5-72B", "Mistral-Small-24B"},
+    "frontier": {"Llama-3.1-405B"},
+}
+for prof, want_models in _PROFILE_MODELS.items():
+    engf = make_engine()
+    engf.set_config({"gpu": "H200"}, mark_custom=False)
+    engf.set_workload_profile(prof, mark_custom=False)
+    seen = set()
+    llm_ticks = 0
+    ok_analytic = True
+    for _ in range(370):                      # one full cycle + margin
+        engf._sim_time_s += 1.0
+        engf._update_placeholder_physics(1.0)
+        d = engf._sat.workload_detail
+        if d is not None and d.job.startswith("llm_"):
+            llm_ticks += 1
+            seen.add(d.model)
+            if d.engine != "analytic":
+                ok_analytic = False
+    check_true(f"{prof}: every LLM block analytic ({llm_ticks} ticks)",
+               ok_analytic and llm_ticks > 200)
+    check_true(f"{prof}: model mix {sorted(seen)} covers {sorted(want_models)}",
+               want_models <= seen)
+
+# HBM infeasibility falls back gracefully: 405B weights (405 GB) cannot fit
+# a 2-card H100 group (144 GB usable) — MFU fallback, no crash.
+d_infeasible = ai.job_detail("H100", "llm_frontier_405b", 0.85, 610.0, 2,
+                             t_struct_c=25.0)
+check_true("405B on 2xH100: graceful MFU fallback (engine="
+           f"{d_infeasible.engine})", d_infeasible.engine == "mfu")
+
 print("== Scenario C: workload adaptation uses the analytic forecasts ==")
 ad = eng.workload_adaptation("inference")
 check_true(f"inference profile forecast tokens/cycle > 0 ({ad['outputs_per_cycle']['tokens']:,})",

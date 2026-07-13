@@ -72,8 +72,27 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
         ),
         architecture="truss",
         solar_clusters_per_side=5, radiator_long=1.9, radiator_ratio=2.5,
-        workload_profile="balanced", gpu_count=8,
+        workload_profile="chat_serving", gpu_count=8,
         battery_capacity_wh=7000.0, platform_power_w=600.0,
+    ),
+    DesignPreset(
+        id="redwire",
+        name="Redwire Serving Node",
+        tagline="8x H200 · flat payload bay · frontier 405B serving",
+        description=(
+            "A dedicated LLM-serving node on a Redwire-style flat payload "
+            "bay: eight H200s inside the deck run Llama-405B as one "
+            "tensor-parallel group, GaAs wings deploy off the bay edges and "
+            "OSR radiators off the deck faces."
+        ),
+        config=SatelliteConfig(
+            gpu="H200", solar_material="GaAs", solar_size="M",
+            radiator_material="OSR", radiator_size="Standard",
+        ),
+        architecture="redwire",
+        solar_clusters_per_side=4, radiator_long=1.6, radiator_ratio=1.8,
+        workload_profile="frontier", gpu_count=8,
+        battery_capacity_wh=9000.0, platform_power_w=700.0,
     ),
     DesignPreset(
         id="compute_max",
@@ -144,7 +163,7 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
         ),
         architecture="blanket",
         solar_clusters_per_side=8, radiator_long=1.85, radiator_ratio=2.5,
-        workload_profile="balanced", gpu_count=8,
+        workload_profile="code_rag", gpu_count=8,
         battery_capacity_wh=7500.0, platform_power_w=650.0,
     ),
 ]}

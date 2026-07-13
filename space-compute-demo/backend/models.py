@@ -223,7 +223,8 @@ class SatelliteConfig(BaseModel):
     radiator_size: RadiatorSize = "Standard"
 
 
-Architecture = Literal["truss", "twin_truss", "blanket", "lumid", "dish"]
+Architecture = Literal["truss", "twin_truss", "blanket", "lumid", "dish",
+                       "redwire"]
 
 
 class TwinGeometry(BaseModel):

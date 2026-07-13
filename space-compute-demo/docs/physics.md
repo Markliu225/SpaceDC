@@ -83,14 +83,24 @@ P_solar = η · A_solar · S · incidence
 
 GPU utilisation follows a deterministic job schedule (`_WORKLOAD_PROFILES` — a fixed queue of **typed** jobs on a repeating cycle), **not** a sinusoid — so a config change is the only moving variable the user sees. Each schedule block names a concrete job from `ai_workloads.py`:
 
-| job | model | precision | nominal MFU | throughput law |
-|---|---|---|---|---|
-| LLM pretraining | Llama-3.3-70B | BF16 | 0.45 | tok/s = MFU·peak / (6·params) |
-| LLM adapter fine-tune | Llama-3.1-8B | BF16 | 0.45 | tok/s = MFU·peak / (6·params) |
-| LLM batched inference | Llama-3.3-70B | FP8 | 0.18 | tok/s = MFU·peak / (2·params) |
-| LLM interactive serving | Llama-3.3-70B | FP8 | 0.05 | (bandwidth-bound) |
-| EO imagery batch / burst | ViT-L/16 detector | FP8 | 0.35 / 0.45 | frames/s = MFU·peak / 0.30 TF |
-| housekeeping / checkpoint | — | — | 0 | — |
+LLM **serving is the primary business** — inference jobs span a catalog of dense models, each a distinct operating point on the analytic decode law (§4a):
+
+| job | model | phase / shape |
+|---|---|---|
+| LLM batched inference | Llama-3.3-70B FP8 | decode B=48 ctx 2k |
+| LLM interactive serving | Llama-3.3-70B FP8 | decode B=8 ctx 1k |
+| LLM eval pass | Llama-3.3-70B FP8 | decode B=24 ctx 4k |
+| Chat serving · 70B | Llama-3.3-70B FP8 | decode B=24 ctx 4k |
+| Edge chat · 8B | Llama-3.1-8B FP8 | decode B=64 ctx 2k |
+| Code assist · Coder-32B | Qwen2.5-Coder-32B FP8 | decode B=16 ctx 8k |
+| RAG long-context · 72B | Qwen2.5-72B FP8 | decode B=8 ctx 16k |
+| Doc summarization · 24B | Mistral-Small-24B FP8 | decode B=32 ctx 8k |
+| Frontier serving · 405B | Llama-3.1-405B FP8 | decode B=12 ctx 4k |
+| LLM pretraining / fine-tune | Llama-70B / 8B BF16 | train (k=6, compute-bound) |
+| EO imagery batch / burst | ViT-L/16 detector FP8 | MFU 0.35 / 0.45 heuristic |
+| housekeeping / checkpoint | — | idle floor |
+
+Profiles compose these into serving mixes: `inference` (batched 70B — the default), `chat_serving` (70B quality tier + 8B edge tier), `frontier` (405B near-flat-out), `code_rag` (32B/72B/24B developer mix), plus the secondary `balanced` / `burst` (EO) and `training` stories.
 
 Peak dense TFLOPS per card (datasheet, no sparsity): H100/H200 989 BF16 · 1979 FP8; B200 2250 · 4500; MI300X 1307 · 2615. MFU scales with the block's duty relative to the job's nominal duty (≤1.2×). The per-card **heat output equals the card's electrical power** — the state exposes the whole thing per tick as `satellite.workload_detail` (job, model, MFU, effective TFLOPS, tok/s or frames/s, W and heat per GPU).
 
@@ -113,7 +123,7 @@ P_load    = P_payload + P_platform
 
 ### 4a. Analytical LLM engine (`llm_perf.py`) — power cap ∧ thermal limit → DVFS → tokens/s
 
-The MFU table above is only the fallback path for vision/idle jobs. **Every LLM block resolves through an analytical performance/power/thermal model**, calibrated and validated against a V100 power-cap measurement study (`tools/validate_llm_perf.py`, 46 checks: phase-boundary/plateau anchors reproduce exactly, ceiling law blind-predicts three workload plateaus) with the integration proven closed-loop in `tools/validate_llm_engine.py` (24 checks):
+The MFU table above is only the fallback path for vision/idle jobs. **Every LLM block resolves through an analytical performance/power/thermal model**, calibrated and validated against a V100 power-cap measurement study (`tools/validate_llm_perf.py`, 52 checks: phase-boundary/plateau anchors reproduce exactly, ceiling law blind-predicts three workload plateaus, serving-catalog sanity) with the integration proven closed-loop in `tools/validate_llm_engine.py` (32 checks):
 
 - **DVFS power aggregate.** A power budget maps to SM frequency via `P(x) = P_static + χ·x^θ`, `x = f_sm/f_max` (V100 fit: 50 + 155.5·x^2.15). The memory-controller clock is **fixed** — that single fact creates the two phases below.
 - **Prefill / training (compute-bound):** `tok/s = T_fmax·x(P)^p`, a single power-law; k = 6 FLOPs/param/token training, k = 2 inference. Compute-bound phases pull their **full budget**.

@@ -139,6 +139,22 @@ check_true(f"B200 decode > 1.8x H100 at same B (got {b200.tokens_s/h100.tokens_s
            b200.tokens_s / h100.tokens_s > 1.8)
 check_true(f"decode natural draw < prefill draw ({h100.draw_w:.0f} < {pf100.draw_w:.0f} W)",
            h100.draw_w < pf100.draw_w)
+# Serving-catalog sanity — the new inference models. Per-card plateaus at
+# their catalog serving shapes (aggregate = per-card × TP-group size).
+q32 = lp.solve_operating_point("H100", "qwen32b", "FP8", "decode", 700, 30, 16, 8192)
+check_true(f"H100 Coder-32B fp8 decode B=16 ctx8k in [400,900] tok/s "
+           f"(got {q32.tokens_s:.0f})", 400 <= q32.tokens_s <= 900)
+f405 = lp.solve_operating_point("H200", "llama405b", "FP8", "decode", 700, 30, 12, 4096)
+check_true(f"H200 405B fp8 decode B=12 in [40,120] tok/s/card "
+           f"(got {f405.tokens_s:.0f})", 40 <= f405.tokens_s <= 120)
+# Weights dominate the decode memory floor: at a FIXED shape, throughput
+# strictly decreases with model size across the serving catalog.
+chain = ["llama8b", "mistral24b", "qwen32b", "qwen72b", "llama405b"]
+tok_chain = [lp.solve_operating_point("H100", m, "FP8", "decode", 700, 30, 16, 4096)
+             .tokens_s for m in chain]
+check_true("decode tok/s strictly decreasing with model size "
+           f"({' > '.join(f'{t:.0f}' for t in tok_chain)})",
+           all(a > b for a, b in zip(tok_chain, tok_chain[1:])))
 
 print("== Round 6: thermal throttling unit checks ==")
 g = lp.GPU_PERF["H100"]
