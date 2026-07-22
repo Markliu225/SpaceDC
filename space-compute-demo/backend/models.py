@@ -185,6 +185,32 @@ class CompareMetrics(BaseModel):
     peak_temp_c: float = 0.0
 
 
+class CompareLiveVariant(BaseModel):
+    """One what-if variant's CURRENT sample (compare_sim.LiveCompareSession).
+    The web accumulates these 1 Hz samples into the telemetry strip's rolling
+    window, so variant curves grow in real time alongside the live trace."""
+    value: str | float | int
+    label: str
+    solar_input_w: float = 0.0
+    payload_power_w: float = 0.0
+    battery_soc: float = 0.0
+    temperature_c: float = 0.0
+    gpu_utilization: float = 0.0
+    tokens_per_s: float = 0.0
+
+
+class CompareLiveState(BaseModel):
+    """Live what-if comparison riding StatePacket.compare_live: 2–4 variant
+    engines seeded from one event-loop-consistent snapshot, stepped in
+    lockstep with the live 1 Hz physics tick."""
+    active: bool = True
+    dimension: str = ""
+    dimension_label: str = ""
+    start_sim_time_s: float = 0.0
+    elapsed_s: float = 0.0
+    variants: list[CompareLiveVariant] = Field(default_factory=list)
+
+
 MissionPhase = Literal[
     "idle", "acquire", "capture", "route", "compute", "downlink", "deliver",
 ]
@@ -269,6 +295,8 @@ class StatePacket(BaseModel):
     constellation: FleetSnapshot = Field(default_factory=FleetSnapshot)
     task: Optional[TaskState] = None
     compare: Optional[CompareMetrics] = None
+    # Live what-if comparison (compare_sim) — present while a comparison runs.
+    compare_live: Optional[CompareLiveState] = None
     camera_preset: str = "overview"
     running: bool = True
     satellite_config: SatelliteConfig = Field(default_factory=SatelliteConfig)

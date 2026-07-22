@@ -282,6 +282,70 @@ export interface DesignsResponse {
   designs: DesignPresetInfo[];
 }
 
+// ---------------------------------------------------------------------------
+// What-if comparison (backend compare_sim.py — Twin page Compare panel).
+// ---------------------------------------------------------------------------
+
+/** One choice inside a comparable dimension (e.g. "OSR" for radiator_material). */
+export interface CompareChoice {
+  id: string | number;
+  label: string;
+}
+
+/** A comparable knob — every Configurator control plus whole designs. */
+export interface CompareDimension {
+  id: string;
+  label: string;
+  group: string;
+  values: CompareChoice[];
+  /** The live loadout's current value for this dimension. */
+  current: string | number;
+  default_metric: string;
+}
+
+/** A plottable metric of the compare series. */
+export interface CompareMetric {
+  key: string;
+  label: string;
+  unit: string;
+  digits: number;
+  /** Display multiplier (e.g. 100 for SOC ⇒ %). */
+  factor?: number;
+}
+
+/** GET /compare/options response. */
+export interface CompareOptions {
+  dimensions: CompareDimension[];
+  metrics: CompareMetric[];
+  default_duration_s: number;
+}
+
+/** One live variant's CURRENT sample (backend LiveCompareSession). The web
+ *  accumulates these 1 Hz samples into the telemetry strip's rolling window,
+ *  so the variant curves grow and diverge in real time. */
+export interface CompareLiveVariant {
+  value: string | number;
+  label: string;
+  solar_input_w: number;
+  payload_power_w: number;
+  battery_soc: number;
+  temperature_c: number;
+  gpu_utilization: number;
+  tokens_per_s: number;
+}
+
+/** Live what-if comparison riding StatePacket.compare_live — 2–4 variant
+ *  engines seeded from the live state, stepped in lockstep with the 1 Hz
+ *  physics tick (POST /compare/start · /compare/stop). */
+export interface CompareLiveState {
+  active: boolean;
+  dimension: string;
+  dimension_label: string;
+  start_sim_time_s: number;
+  elapsed_s: number;
+  variants: CompareLiveVariant[];
+}
+
 /** 天数天算 mission phase. idle = not running; the rest advance in order. */
 export type MissionPhase =
   | 'idle' | 'acquire' | 'capture' | 'route' | 'compute' | 'downlink' | 'deliver';
@@ -319,6 +383,8 @@ export interface StatePacket {
   constellation: FleetSnapshot;
   task: TaskState | null;
   compare: CompareMetrics | null;
+  /** Live what-if comparison — present while a comparison is running. */
+  compare_live?: CompareLiveState | null;
   /** Optional in Phase 1 — backend hasn't started broadcasting it yet. */
   satellite_config?: SatelliteConfig;
   /** Deployable geometry (solar count, radiator size) — Feature 3. */

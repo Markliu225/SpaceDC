@@ -2,6 +2,13 @@ import { useId, useMemo } from 'react'
 import { Card, Num } from '../primitives'
 import { colors } from '../../design/tokens'
 import { useTwinTelemetry, type TwinScar } from '../../hooks/useTwinTelemetry'
+import { COMPARE_PALETTE } from './comparePalette'
+
+/** One what-if overlay line for a Mini — right-aligned growing ring. */
+interface OverlayLine {
+  color: string
+  data: number[]
+}
 
 interface SeriesDef {
   key: keyof ReturnType<typeof useTwinTelemetry>['series']
@@ -41,7 +48,7 @@ const HISTORY_S = 120
  *  - shared time axis labels at the bottom of the strip (-120s, -60s, now)
  */
 export function TimeSeriesStrip() {
-  const { current, series, scars } = useTwinTelemetry()
+  const { current, series, scars, compare } = useTwinTelemetry()
 
   return (
     <Card dense className="h-full flex flex-col min-h-0">
@@ -49,11 +56,30 @@ export function TimeSeriesStrip() {
         <span className="text-[11px] uppercase tracking-[0.10em] text-text-md">
           Live Telemetry · {HISTORY_S} s window
         </span>
-        <span className="text-[10px] tabular text-text-lo">
-          {scars.length > 0
-            ? `${scars.length} configuration change${scars.length > 1 ? 's' : ''} in window`
-            : 'no recent configuration changes'}
-        </span>
+        {compare ? (
+          // Live what-if legend — variant labels wear their curve colors'
+          // swatches; text stays in ink tokens.
+          <span className="flex items-center gap-3" data-testid="compare-legend">
+            <span className="text-[10px] uppercase tracking-[0.08em] text-accent">
+              What-if · {compare.dimension_label}
+            </span>
+            {compare.variants.map((v, i) => (
+              <span key={String(v.value)} className="flex items-center gap-1 text-[10px] text-text-md">
+                <span
+                  className="inline-block h-0 w-3.5 border-t-2 border-dashed"
+                  style={{ borderColor: COMPARE_PALETTE[i] }}
+                />
+                {v.label}
+              </span>
+            ))}
+          </span>
+        ) : (
+          <span className="text-[10px] tabular text-text-lo">
+            {scars.length > 0
+              ? `${scars.length} configuration change${scars.length > 1 ? 's' : ''} in window`
+              : 'no recent configuration changes'}
+          </span>
+        )}
       </div>
 
       <div className="mt-1 grid flex-1 min-h-0 grid-cols-5 gap-3">
@@ -64,6 +90,10 @@ export function TimeSeriesStrip() {
             data={series[def.key]}
             currentValue={(current[def.key as keyof typeof current] as number) * (def.factor ?? 1)}
             scars={scars}
+            overlays={compare?.variants.map((v, i) => ({
+              color: COMPARE_PALETTE[i],
+              data: v.series[def.key],
+            }))}
           />
         ))}
       </div>
@@ -86,23 +116,34 @@ interface MiniProps {
   data: number[]
   currentValue: number
   scars: TwinScar[]
+  /** Live what-if variant curves — right-aligned growing rings. */
+  overlays?: OverlayLine[]
 }
 
-function Mini({ def, data, currentValue, scars }: MiniProps) {
+function Mini({ def, data, currentValue, scars, overlays }: MiniProps) {
   const gid     = useId().replace(/:/g, '')
   const gradId  = `tw-grad-${gid}`
 
-  const { path, areaPath, yMin, yMax } = useMemo(() => {
+  const { path, areaPath, yMin, yMax, overlayPaths } = useMemo(() => {
     const n = data.length
-    if (n < 2) return { path: '', areaPath: '', yMin: 0, yMax: 1 }
+    if (n < 2) return { path: '', areaPath: '', yMin: 0, yMax: 1, overlayPaths: [] as { color: string; d: string }[] }
     const factor = def.factor ?? 1
     let lo = def.yMin !== undefined ? def.yMin * factor : Infinity
     let hi = def.yMax !== undefined ? def.yMax * factor : -Infinity
     if (def.yMin === undefined || def.yMax === undefined) {
+      // Autoscale over the live trace AND the what-if overlays, so a
+      // diverging variant never clips off the top/bottom of the panel.
       for (const v of data) {
         const u = v * factor
         if (def.yMin === undefined && u < lo) lo = u
         if (def.yMax === undefined && u > hi) hi = u
+      }
+      for (const ov of overlays ?? []) {
+        for (const v of ov.data) {
+          const u = v * factor
+          if (def.yMin === undefined && u < lo) lo = u
+          if (def.yMax === undefined && u > hi) hi = u
+        }
       }
       if (lo === Infinity)  lo = 0
       if (hi === -Infinity) hi = 1
@@ -121,8 +162,24 @@ function Mini({ def, data, currentValue, scars }: MiniProps) {
     }
     const pathStr = `M ${pts.join(' L ')}`
     const area = `${pathStr} L ${w.toFixed(2)},${h} L 0,${h} Z`
-    return { path: pathStr, areaPath: area, yMin: lo, yMax: hi }
-  }, [data, def])
+
+    // Overlay polylines share the y-scale and are RIGHT-aligned: a ring of
+    // V samples occupies the window's last V slots (it started mid-window).
+    const overlayPaths: { color: string; d: string }[] = []
+    for (const ov of overlays ?? []) {
+      const ring = ov.data.length > n ? ov.data.slice(ov.data.length - n) : ov.data
+      const V = ring.length
+      if (V < 2) continue
+      const parts: string[] = []
+      for (let i = 0; i < V; i++) {
+        const x = ((n - V + i) / (n - 1)) * w
+        const y = h - ((ring[i] * factor - lo) / (hi - lo)) * h
+        parts.push(`${x.toFixed(2)},${y.toFixed(2)}`)
+      }
+      overlayPaths.push({ color: ov.color, d: `M ${parts.join(' L ')}` })
+    }
+    return { path: pathStr, areaPath: area, yMin: lo, yMax: hi, overlayPaths }
+  }, [data, def, overlays])
 
   return (
     <div className="flex flex-col min-h-0">
@@ -194,6 +251,24 @@ function Mini({ def, data, currentValue, scars }: MiniProps) {
             vectorEffect="non-scaling-stroke"
             style={{ filter: `drop-shadow(0 0 5px ${def.color})` }}
           />
+
+          {/* Live what-if overlays — dashed, thinner than the live trace,
+              growing rightward from the moment the comparison started. */}
+          {overlayPaths.map((op, i) => (
+            <path
+              key={i}
+              data-testid="compare-overlay"
+              d={op.d}
+              fill="none"
+              stroke={op.color}
+              strokeWidth={1.4}
+              strokeDasharray="5 3"
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+              opacity={0.95}
+            />
+          ))}
 
           {/* Bright dot at the latest sample so the eye locks onto "now". */}
           {data.length >= 2 && (() => {

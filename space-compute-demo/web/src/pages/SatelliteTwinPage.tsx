@@ -4,6 +4,7 @@ import { useBackendBridge } from '../hooks/useBackendBridge'
 import { useMockTelemetryFeed } from '../hooks/useMockTelemetryFeed'
 import { EarthViewport } from '../components/overview/EarthViewport'
 import { SatelliteSelector } from '../components/overview/SatelliteSelector'
+import { ComparePanel } from '../components/twin/ComparePanel'
 import { Configurator } from '../components/twin/Configurator'
 import { DesignGallery } from '../components/twin/DesignGallery'
 import { MiniOrbitHud } from '../components/twin/MiniOrbitHud'
@@ -63,6 +64,7 @@ export function SatelliteTwinPage() {
           </span>
           <SatelliteSelector />
           <DesignGallery />
+          <ComparePanel />
         </div>
         <ViewModeTabs value={viewMode} onChange={setViewMode} />
         <div className="text-[10px] uppercase tracking-[0.10em] text-text-lo">

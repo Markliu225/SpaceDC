@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTelemetryStore } from '../store/useTelemetryStore'
 import { useDemoStore } from '../store/demoStore'
-import type { SatelliteConfig, SatelliteState } from '../types/messages'
+import type {
+  CompareLiveState, SatelliteConfig, SatelliteState,
+} from '../types/messages'
 import {
   GPU_CARDS_PER_SAT,
   GEOMETRY_DEFAULT,
@@ -31,6 +33,23 @@ export interface TwinScar {
   label: string
 }
 
+/** One what-if variant's growing curve set — same metric keys as the main
+ *  ring so the strip can overlay them 1:1. Arrays start empty when the
+ *  comparison starts and grow one sample per broadcast, right-aligned with
+ *  the main window (capped at HISTORY_LEN). */
+export interface CompareOverlayVariant {
+  value: string | number
+  label: string
+  series: TwinSeries
+}
+
+export interface CompareOverlay {
+  /** Identity of the running comparison — a new key restarts the rings. */
+  key: string
+  dimension_label: string
+  variants: CompareOverlayVariant[]
+}
+
 export interface TwinTelemetrySnapshot {
   /** Per-tick instantaneous read used by the SubsystemHealthRow + scalar tiles. */
   current: {
@@ -45,6 +64,8 @@ export interface TwinTelemetrySnapshot {
   series: TwinSeries
   /** Scar markers for config changes that happened within the visible window. */
   scars: TwinScar[]
+  /** Live what-if comparison overlays — null when no comparison is running. */
+  compare: CompareOverlay | null
 }
 
 /**
@@ -92,11 +113,11 @@ export function useTwinTelemetry(): TwinTelemetrySnapshot {
     // orbit pattern (there is nothing real to show in that mode anyway).
     if (sat) {
       const seedNow = backendSample(sat)
-      return { current: seedNow, series: flatSeries(seedNow), scars: [] }
+      return { current: seedNow, series: flatSeries(seedNow), scars: [], compare: null }
     }
     const seedNow = deriveSample(seedCfg, seedSimT)
     const series = backfillSeries(seedCfg, seedSimT, seedNow)
-    return { current: seedNow, series, scars: [] }
+    return { current: seedNow, series, scars: [], compare: null }
   })
 
   // --- Cfg-change scar tracking ---------------------------------------
@@ -133,7 +154,8 @@ export function useTwinTelemetry(): TwinTelemetrySnapshot {
       const sat = s.lastState?.satellite
       if (!sat) return
       lastWsAtRef.current = Date.now()
-      setSnap((cur) => advance(cur, backendSample(sat)))
+      const compareLive = s.lastState?.compare_live ?? null
+      setSnap((cur) => advance(cur, backendSample(sat), compareLive))
     })
   }, [])
 
@@ -219,10 +241,16 @@ function backfillSeries(
   return { solar_w, payload_w, battery_soc, temp_c, gpu_util }
 }
 
-/** Append one new sample to each buffer + age scars (shift their index). */
+/** Append one new sample to each buffer + age scars (shift their index).
+ *
+ *  `compareLive` semantics: `undefined` = no fresh backend info (offline
+ *  synth tick) → keep the overlay as-is; `null`/inactive = comparison over
+ *  → clear; active = append each variant's current sample to its growing
+ *  ring (a NEW comparison identity restarts the rings from empty). */
 function advance(
   prev: TwinTelemetrySnapshot,
   sample: TwinTelemetrySnapshot['current'],
+  compareLive?: CompareLiveState | null,
 ): TwinTelemetrySnapshot {
   const push = (arr: number[], v: number): number[] => {
     const out = arr.slice(1)
@@ -244,7 +272,41 @@ function advance(
     .map((s) => ({ ...s, index: s.index - 1 }))
     .filter((s) => s.index >= 0)
 
-  return { current: sample, series, scars }
+  let compare: CompareOverlay | null
+  if (compareLive === undefined) {
+    compare = prev.compare
+  } else if (!compareLive?.active || compareLive.variants.length === 0) {
+    compare = null
+  } else {
+    const key = `${compareLive.dimension}|${compareLive.start_sim_time_s}|`
+      + compareLive.variants.map((v) => String(v.value)).join(',')
+    const growInto = (ring: number[], v: number): number[] => {
+      const out = ring.length >= HISTORY_LEN ? ring.slice(1) : ring.slice()
+      out.push(v)
+      return out
+    }
+    const prevSame = prev.compare?.key === key ? prev.compare : null
+    compare = {
+      key,
+      dimension_label: compareLive.dimension_label,
+      variants: compareLive.variants.map((v, i) => {
+        const base = prevSame?.variants[i]?.series
+        return {
+          value: v.value,
+          label: v.label,
+          series: {
+            solar_w:     growInto(base?.solar_w ?? [],     v.solar_input_w),
+            payload_w:   growInto(base?.payload_w ?? [],   v.payload_power_w),
+            battery_soc: growInto(base?.battery_soc ?? [], v.battery_soc),
+            temp_c:      growInto(base?.temp_c ?? [],      v.temperature_c),
+            gpu_util:    growInto(base?.gpu_util ?? [],    v.gpu_utilization),
+          },
+        }
+      }),
+    }
+  }
+
+  return { current: sample, series, scars, compare }
 }
 
 const SOLAR_CONSTANT_W_M2 = 1361

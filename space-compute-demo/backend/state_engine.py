@@ -366,6 +366,10 @@ class StateEngine:
         # Roll-out solar-array command target (the live fraction sits on
         # SatelliteState.solar_deploy_frac and slews toward this each tick).
         self._solar_deploy_target: float = 1.0
+        # Live what-if comparison (compare_sim.LiveCompareSession, duck-typed
+        # to avoid a circular import). The tick steps it in lockstep; the
+        # snapshot carries its per-variant samples on StatePacket.compare_live.
+        self._compare_session: Optional[Any] = None
 
     # ---- lifecycle ----
     async def start(self) -> None:
@@ -790,6 +794,18 @@ class StateEngine:
             "targets_found": targets,
         })
 
+    # ---- live what-if comparison ----
+    def set_compare_session(self, session: Optional[Any]) -> None:
+        """Attach (or clear, with None) the live comparison. The session must
+        expose step(dt) and payload(); it is stepped on the tick right after
+        the live physics update, so variants stay in lockstep with the
+        satellite — pausing the sim pauses the comparison too."""
+        self._compare_session = session
+
+    @property
+    def compare_session(self) -> Optional[Any]:
+        return self._compare_session
+
     def set_constellation(self, preset_id: str) -> bool:
         """Switch the active constellation. Triggers fleet rebuild on next tick.
         Returns False if the preset id is unknown."""
@@ -905,6 +921,8 @@ class StateEngine:
             mission=self._mission.model_copy(),
             design_id=self._design_id,
             workload_profile=self._workload_profile,
+            compare_live=(self._compare_session.payload()
+                          if self._compare_session is not None else None),
         )
 
     # ---- inner loop ----
@@ -924,6 +942,15 @@ class StateEngine:
             except Exception:
                 log.exception("physics tick failed (sim_t=%.0f) — skipping tick",
                               self._sim_time_s)
+            # Live comparison: step every variant in lockstep with the tick.
+            # A failing session is dropped rather than allowed to kill the
+            # loop — the live satellite always outranks a what-if.
+            if self._compare_session is not None:
+                try:
+                    self._compare_session.step(dt)
+                except Exception:
+                    log.exception("compare session step failed — comparison stopped")
+                    self._compare_session = None
             # Anchor for on-read fractional-time kinematics refreshes.
             self._last_tick_wall = time.monotonic()
             try:
@@ -931,14 +958,14 @@ class StateEngine:
             except Exception:
                 log.exception("state broadcast failed")
 
-    def _update_placeholder_physics(self, dt: float) -> None:
-        t = self._sim_time_s
-
-        # --- Fleet: SGP4 propagate every sat of the active constellation.
-        # The "tracked" SatelliteState (the legacy single-sat fields) tracks
-        # the constellation's reference satellite (plane 0, sat 0) so the
-        # 14-param card on Web stays meaningful. The aggregate FleetSnapshot
-        # comes from the full fleet.
+    def _tick_fleet(self, t: float) -> tuple[float, float, float]:
+        """Per-tick fleet bookkeeping: SGP4-propagate every sat of the active
+        constellation, refresh the aggregate FleetSnapshot + the per-sat
+        lat/lon cache (mission cast picking), and return the TRACKED
+        satellite's ECI position (plane 0, sat 0 — the reference sat the
+        legacy 14-param card follows). Overridden by the offline compare
+        simulator (compare_sim._OfflineTwin) to propagate only the tracked
+        sat on a private Satrec — the downstream physics is untouched."""
         preset = _consts.get_preset(self._constellation_id) or _consts.get_preset("single_iss")
         fleet_pos_km = _consts.propagate_fleet(preset, t)
         kpis = _consts.synthesize_kpis(preset, fleet_pos_km)
@@ -966,10 +993,13 @@ class StateEngine:
             orbit_catalog.eci_to_lat_lon_alt(px, py, pz, t)[:2]
             for (px, py, pz) in fleet_pos_km
         ]
+        return fleet_pos_km[0] if fleet_pos_km else (0.0, 0.0, 0.0)
 
-        # Tracked satellite: plane 0, sat 0.
-        x_km, y_km, z_km = fleet_pos_km[0] if fleet_pos_km else (0.0, 0.0, 0.0)
-        cos_a = self._set_tracked_kinematics((x_km, y_km, z_km), t)
+    def _update_placeholder_physics(self, dt: float) -> None:
+        t = self._sim_time_s
+
+        # --- Fleet: propagate + KPIs; returns the tracked sat's ECI position.
+        cos_a = self._set_tracked_kinematics(self._tick_fleet(t), t)
         is_dawn_dusk = self._sat.is_dawn_dusk
 
         # --- Reconfigurable hardware lookups ----------------------------------

@@ -19,6 +19,7 @@ from fastapi.responses import FileResponse
 
 from fastapi import HTTPException
 
+import compare_sim
 import design_presets
 from models import Envelope, StatePacket
 from services import constellations, orbit_catalog
@@ -447,6 +448,48 @@ async def http_set_workload_profile(body: dict[str, Any]):
     await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
     return {"ok": True, "workload_profile": applied,
             "adaptation": engine.workload_adaptation(applied)}
+
+
+# --- What-if comparison (Twin page Compare panel) --------------------------
+@app.get("/compare/options")
+async def http_compare_options():
+    """Comparable dimensions (every Configurator knob + whole designs), each
+    with its choices and the live loadout's current value, plus the metric
+    catalog the chart can plot."""
+    return compare_sim.options(engine)
+
+
+@app.post("/compare/start")
+async def http_compare_start(body: dict[str, Any]):
+    """Start a LIVE what-if comparison: 2–4 variant loadouts seeded from the
+    engine's current state, then stepped in lockstep with every 1 Hz physics
+    tick. Each variant's current sample rides StatePacket.compare_live, so
+    the Twin page's telemetry strip overlays the curves as they evolve and
+    diverge in real time. Starting again replaces the running comparison;
+    the live satellite and the USD model are never touched."""
+    dimension = str(body.get("dimension", ""))
+    values = body.get("values")
+    # Snapshot + construction both run HERE, on the event loop — the 1 Hz
+    # tick runs on this same loop, so the synchronous reads can never
+    # interleave with a tick and every variant seeds from the identical
+    # instant (same orbit phase / SOC / structure temperature).
+    snap = compare_sim.live_snapshot(engine)
+    try:
+        session = compare_sim.LiveCompareSession(
+            snap, dimension, values if isinstance(values, list) else [])
+    except compare_sim.CompareError as e:
+        raise HTTPException(422, str(e)) from e
+    engine.set_compare_session(session)
+    await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
+    return {"ok": True, "compare_live": session.payload().model_dump()}
+
+
+@app.post("/compare/stop")
+async def http_compare_stop():
+    """Stop the live comparison and clear compare_live from the state."""
+    engine.set_compare_session(None)
+    await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
+    return {"ok": True}
 
 
 @app.post("/solar_deploy")
