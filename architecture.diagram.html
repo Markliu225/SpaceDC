@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background: #ffffff; padding: 24px; width: 1560px;
+  }
+  .frame {
+    border: 2px dashed #8fa3bf; border-radius: 14px;
+    padding: 18px 20px 20px; background: #fbfcfe;
+  }
+  .title {
+    text-align: center; font-size: 21px; font-weight: 700; color: #1d3557;
+    letter-spacing: 0.5px; margin-bottom: 14px;
+  }
+  .title small { font-size: 12px; font-weight: 400; color: #6b7c93; margin-left: 12px; }
+
+  .main-grid { display: flex; gap: 12px; }
+  .left-col { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+  /* ---------- layer bands ---------- */
+  .band { display: flex; border-radius: 10px; border: 1.5px solid; overflow: hidden; }
+  .band-label {
+    writing-mode: vertical-rl; transform: rotate(180deg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12.5px; font-weight: 700; letter-spacing: 3px;
+    width: 32px; flex: none; color: #fff; text-transform: uppercase;
+  }
+  .band-body { flex: 1; padding: 10px 12px 12px; min-width: 0; }
+  .band-caption { font-size: 11.5px; font-weight: 600; margin-bottom: 8px; }
+  .band-caption .dim { font-weight: 400; color: #6b7c93; margin-left: 8px; }
+
+  .app  { border-color: #7da7d9; background: #eef5fd; }
+  .app  .band-label { background: #4a7fc1; }
+  .app  .band-caption { color: #2c5a92; }
+  .svc  { border-color: #e2a86b; background: #fdf4e9; }
+  .svc  .band-label { background: #d98b3c; }
+  .svc  .band-caption { color: #9a6320; }
+  .calc { border-color: #86bd8e; background: #eef8ef; }
+  .calc .band-label { background: #4f9d5d; }
+  .calc .band-caption { color: #357140; }
+
+  /* ---------- boxes: single-style title text, no sub-caption ---------- */
+  .box {
+    background: #ffffff; border: 1.2px solid #b9c6d8; border-radius: 7px;
+    padding: 7px 6px; text-align: center;
+    font-size: 11.5px; font-weight: 600; color: #24344d; line-height: 1.35;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .app  .box { border-color: #a9c4e4; }
+  .svc  .box { border-color: #e5c193; }
+  .calc .box { border-color: #a8cfae; }
+
+  /* ---------- module groups (dashed) ---------- */
+  .groups { display: flex; gap: 10px; align-items: stretch; }
+  .group { border: 1.5px dashed; border-radius: 8px; padding: 8px 9px 9px; min-width: 0; }
+  .group-title { font-size: 12px; font-weight: 700; margin-bottom: 7px; text-align: center; }
+  .group-title .dim { font-weight: 400; color: #6b7c93; }
+  .app  .group { border-color: #7da7d9; background: #f6faff; }
+  .app  .group-title { color: #2c5a92; }
+  .svc  .group { border-color: #cf9c5a; background: #fffaf3; }
+  .svc  .group-title { color: #9a6320; }
+  .calc .group { border-color: #6faf79; background: #f6fcf7; }
+  .calc .group-title { color: #357140; }
+  .group .stack { display: flex; flex-direction: column; gap: 7px; }
+  .group .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .group .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
+  .group .grid4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 7px; }
+
+  /* nested mini-groups (Kit runtime vs extensions) */
+  .mini { border: 1px dashed #ddb98a; border-radius: 6px; padding: 6px 7px 7px; background: #fffdf9; }
+  .mini + .mini { margin-top: 8px; }
+  .mini-title { font-size: 10.5px; font-weight: 700; color: #a97434; margin-bottom: 6px; text-align: center; }
+
+  /* ---------- connector chips ---------- */
+  .connector { display: flex; padding: 5px 44px; gap: 12px; }
+  .conn-chip {
+    background: #ffffff; border: 1px solid #c3cede; border-radius: 20px;
+    font-size: 10.5px; color: #46566e; padding: 3px 12px;
+    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  }
+  .conn-chip .arr { color: #d98b3c; font-weight: 700; font-size: 12px; }
+  .conn-chip.blue .arr { color: #4a7fc1; }
+  .conn-chip.green .arr { color: #4f9d5d; }
+  .conn-left  { flex: 1.5; display: flex; justify-content: center; gap: 10px; }
+  .conn-right { flex: 1;   display: flex; justify-content: center; }
+
+  /* service → computation invocation row: 5 chips aligned to 5 columns */
+  .invoke-zone { padding: 4px 44px 5px; }
+  .invoke-caption {
+    text-align: center; font-size: 10.5px; color: #357140; font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .invoke-row { display: flex; gap: 10px; }
+  .invoke-cell { flex: 1; display: flex; justify-content: center; min-width: 0; }
+  .invoke-cell .conn-chip { white-space: normal; text-align: center; line-height: 1.3; font-size: 10px; padding: 3px 9px; }
+
+  /* svc internal link between backend and Kit */
+  .svc-link {
+    width: 106px; flex: none; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px;
+  }
+  .svc-link .conn-chip { white-space: normal; text-align: center; line-height: 1.35; font-size: 10px; padding: 3px 8px; }
+
+  /* ---------- right: 3D model assets ---------- */
+  .side-col { width: 158px; flex: none; display: flex; gap: 6px; }
+  .side-links {
+    width: 30px; flex: none; display: flex; flex-direction: column;
+    justify-content: center; gap: 26px; align-items: center;
+  }
+  .vlink {
+    writing-mode: vertical-rl; transform: rotate(180deg);
+    font-size: 10px; color: #46566e; background: #fff;
+    border: 1px solid #c3cede; border-radius: 12px; padding: 10px 2px;
+    letter-spacing: 0.5px; white-space: nowrap;
+  }
+  .vlink .arr { color: #b0679a; font-weight: 700; }
+  .asset {
+    flex: 1; border: 1.5px dashed #b0679a; border-radius: 10px;
+    background: #fdf1f9; padding: 12px 8px; display: flex;
+    flex-direction: column; align-items: center; gap: 10px;
+  }
+  .asset-title {
+    writing-mode: vertical-rl; transform: rotate(180deg);
+    font-size: 12px; font-weight: 700; color: #93356f; letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .asset-items { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+  .asset-item {
+    background: #fff; border: 1px solid #dfb0cf; border-radius: 6px;
+    font-size: 10px; font-weight: 600; color: #7a4064; text-align: center;
+    padding: 6px 3px; line-height: 1.35;
+  }
+
+  .calc-note {
+    margin-top: 8px; font-size: 10.5px; color: #357140; text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="frame" id="frame">
+  <div class="title">Orbital Compute Data-Center Digital Twin · System Architecture
+    <small>Web application · Real-time simulation services · Cloud rendering &amp; streaming</small>
+  </div>
+
+  <div class="main-grid">
+    <div class="left-col">
+
+      <!-- ═══════════ APPLICATION LAYER ═══════════ -->
+      <div class="band app">
+        <div class="band-label">Application</div>
+        <div class="band-body">
+          <div class="band-caption">Web Front-End · React 19 + Zustand<span class="dim">:5173 · presentation only — no physics computed here</span></div>
+          <div class="groups">
+            <div class="group" style="flex:1">
+              <div class="group-title">Constellation Configuration &amp;<br>Performance Evaluation</div>
+              <div class="stack">
+                <div class="box">Constellation Preset Selection</div>
+                <div class="box">Global Fleet Situation View</div>
+                <div class="box">Coverage &amp; Link KPIs</div>
+              </div>
+            </div>
+            <div class="group" style="flex:1.9">
+              <div class="group-title">Compute Satellite Digital Twin &amp;<br>Effectiveness Evaluation</div>
+              <div class="grid2">
+                <div class="box">Real-Time 3D Twin Viewport</div>
+                <div class="box">Telemetry &amp; Alarm Panels</div>
+                <div class="box">Satellite Configurator</div>
+                <div class="box">Deployable &amp; Attitude Operations</div>
+                <div class="box">Design Library</div>
+                <div class="box">What-if Comparison</div>
+              </div>
+            </div>
+            <div class="group" style="flex:1">
+              <div class="group-title">Compute Task<br>Feasibility Verification</div>
+              <div class="stack">
+                <div class="box">Workload Fitness Assessment</div>
+                <div class="box">LLM Serving Operating Point</div>
+                <div class="box">End-to-End Mission Rehearsal</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- connectors: application ⇄ service -->
+      <div class="connector">
+        <div class="conn-left">
+          <span class="conn-chip"><span class="arr">↓</span> Control commands · REST / WebSocket</span>
+          <span class="conn-chip"><span class="arr">↑</span> State broadcast · WebSocket 1 Hz</span>
+        </div>
+        <div class="conn-right">
+          <span class="conn-chip blue"><span class="arr">↑</span> Rendered viewport stream · WebRTC</span>
+        </div>
+      </div>
+
+      <!-- ═══════════ SERVICE LAYER ═══════════ -->
+      <div class="band svc">
+        <div class="band-label">Service</div>
+        <div class="band-body">
+          <div class="groups">
+            <!-- Simulation backend (backend/) -->
+            <div class="group" style="flex:1.45">
+              <div class="group-title">Simulation Backend · FastAPI / asyncio — backend/ <span class="dim">:8001 · single source of truth</span></div>
+              <div class="mini">
+                <div class="mini-title">API Gateway — app.py</div>
+                <div class="grid4">
+                  <div class="box">REST API · 25 Routes</div>
+                  <div class="box">WebSocket Broadcast · /ws/state</div>
+                  <div class="box">USD Regeneration Pipeline</div>
+                  <div class="box">Design Preset &amp; Preview Service</div>
+                </div>
+              </div>
+              <div class="mini">
+                <div class="mini-title">State Engine — state_engine.py</div>
+                <div class="grid3">
+                  <div class="box">1 Hz Physics Tick Loop</div>
+                  <div class="box">Fixed-Order Model Invocation</div>
+                  <div class="box">Snapshot &amp; On-Read Kinematics Refresh</div>
+                  <div class="box">Command Mutators — config · geometry · design · workload</div>
+                  <div class="box">Mission Phase Machine · Scene-Ready Gate</div>
+                  <div class="box">Design Margin Checks &amp; Alarms</div>
+                </div>
+              </div>
+              <div class="mini">
+                <div class="mini-title">Offline What-if Simulator — compare_sim.py</div>
+                <div class="grid3">
+                  <div class="box">Event-Loop-Consistent Live Snapshot</div>
+                  <div class="box">Offline Twin — StateEngine Subclass</div>
+                  <div class="box">2–4 Variants · Lockstep 1 Hz Stepping</div>
+                </div>
+              </div>
+            </div>
+            <!-- backend ⇄ Kit link -->
+            <div class="svc-link">
+              <span class="conn-chip"><span class="arr">→</span> State polling · GET /state 5 Hz</span>
+              <span class="conn-chip"><span class="arr">←</span> Pick events · POST /selection</span>
+            </div>
+            <!-- Omniverse Kit (ov_app/) -->
+            <div class="group" style="flex:1.25">
+              <div class="group-title">3D Rendering · NVIDIA Omniverse Kit — ov_app/ <span class="dim">:49100</span></div>
+              <div class="mini">
+                <div class="mini-title">Kit App Runtime — space.demo.viewer_streaming.kit</div>
+                <div class="grid3">
+                  <div class="box">RTX Real-Time Renderer</div>
+                  <div class="box">USD Stage &amp; Session Layer</div>
+                  <div class="box">WebRTC Livestream — omni.kit.livestream</div>
+                  <div class="box">30 fps Update Event Stream</div>
+                  <div class="box">Viewport &amp; Camera System</div>
+                  <div class="box">Extension Manager — omni.ext</div>
+                </div>
+              </div>
+              <div class="mini">
+                <div class="mini-title">Kit Extensions — ov_app/exts/space.demo.*</div>
+                <div class="grid3">
+                  <div class="box">scene — 5 Hz Poll · Stage Switch · Per-Frame Drive · Hot-Reload</div>
+                  <div class="box">core — Initial Stage Bootstrap</div>
+                  <div class="box">selection — Viewport Picking</div>
+                  <div class="box">messaging — Web ⇄ Kit Control Channel</div>
+                  <div class="box">setup — App Layout</div>
+                  <div class="box">camera · timeline · task_maritime — Stubs</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- service → computation invocation (aligned per module) -->
+      <div class="invoke-zone">
+        <div class="invoke-caption">Model invocation — every 1 Hz engine tick, in fixed order; the Offline What-if Simulator reuses the identical call path</div>
+        <div class="invoke-row">
+          <div class="invoke-cell"><span class="conn-chip green"><span class="arr">↓</span> Propagate orbits &amp; fleet <span class="arr">↑</span></span></div>
+          <div class="invoke-cell"><span class="conn-chip green"><span class="arr">↓</span> Update visibility &amp; links <span class="arr">↑</span></span></div>
+          <div class="invoke-cell"><span class="conn-chip green"><span class="arr">↓</span> Dispatch workload → GPU operating point <span class="arr">↑</span></span></div>
+          <div class="invoke-cell"><span class="conn-chip green"><span class="arr">↓</span> Integrate solar &amp; battery <span class="arr">↑</span></span></div>
+          <div class="invoke-cell"><span class="conn-chip green"><span class="arr">↓</span> Integrate heat balance <span class="arr">↑</span></span></div>
+        </div>
+      </div>
+
+      <!-- ═══════════ COMPUTATION LAYER ═══════════ -->
+      <div class="band calc">
+        <div class="band-label">Computation</div>
+        <div class="band-body">
+          <div class="groups">
+            <div class="group" style="flex:1">
+              <div class="group-title">Orbit</div>
+              <div class="stack">
+                <div class="box">SGP4 Analytical Propagator</div>
+                <div class="box">TLE Orbital-Element Catalog</div>
+                <div class="box">Walker Constellation Generator</div>
+                <div class="box">Ground-Track Conversion</div>
+                <div class="box">Sun Vector &amp; Eclipse Determination</div>
+              </div>
+            </div>
+            <div class="group" style="flex:1">
+              <div class="group-title">Communication</div>
+              <div class="stack">
+                <div class="box">Ground-Station Visibility Model</div>
+                <div class="box">Downlink Throughput Model</div>
+                <div class="box">ISL / GSL Link Synthesis</div>
+                <div class="box">Coverage Estimation</div>
+              </div>
+            </div>
+            <div class="group" style="flex:1">
+              <div class="group-title">Computing</div>
+              <div class="stack">
+                <div class="box">GPU Performance Catalog</div>
+                <div class="box">Typed Workload Schedules</div>
+                <div class="box">DVFS Power–Frequency Law</div>
+                <div class="box">Memory-Bound LLM Decode Law</div>
+                <div class="box">Tensor-Parallel &amp; HBM Feasibility</div>
+              </div>
+            </div>
+            <div class="group" style="flex:1">
+              <div class="group-title">Power</div>
+              <div class="stack">
+                <div class="box">Sun-Tracking Solar-Array Model</div>
+                <div class="box">PV Cell Efficiency Catalog</div>
+                <div class="box">EPS Power Budgeting</div>
+                <div class="box">Battery State-of-Charge Integrator</div>
+              </div>
+            </div>
+            <div class="group" style="flex:1">
+              <div class="group-title">Thermal</div>
+              <div class="stack">
+                <div class="box">Radiator Emission Model</div>
+                <div class="box">Lumped-Parameter Thermal Node</div>
+                <div class="box">GPU Die–Structure Coupling</div>
+                <div class="box">Throttling &amp; Runaway Logic</div>
+              </div>
+            </div>
+          </div>
+          <div class="calc-note">Multi-disciplinary coupling loop: Thermal constraint → GPU power budget → realized draw → heat feedback&nbsp;&nbsp;|&nbsp;&nbsp;Model validation: 9 full-orbit checks · 52 theory checks · 32 closed-loop checks</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══════════ RIGHT: 3D MODEL ASSETS ═══════════ -->
+    <div class="side-col">
+      <div class="side-links">
+        <span class="vlink">Stage load / hot-reload <span class="arr">→</span></span>
+        <span class="vlink"><span class="arr">←</span> Parametric regeneration</span>
+      </div>
+      <div class="asset">
+        <div class="asset-title">3D Model Assets</div>
+        <div class="asset-items">
+          <div class="asset-item">Parametric Satellite Generator<br>6 hull architectures</div>
+          <div class="asset-item">USD Stage Library<br>overview · satellite<br>interior · mission</div>
+          <div class="asset-item">Offline Software Renderer</div>
+          <div class="asset-item">Geometry Parameter Store</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

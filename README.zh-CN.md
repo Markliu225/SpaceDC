@@ -49,6 +49,8 @@
 10. **LLM serving 是主营业务** —— workload 体系围绕多模型推理服务展开（Llama-3.1-8B/70B/405B、Qwen2.5-Coder-32B、Qwen2.5-72B、Mistral-Small-24B），每种作业都是 decode 定律上不同的工作点（批量、上下文、模型规模）：多层级聊天服务（`chat_serving`）、405B 前沿模型服务（`frontier`）、代码补全 + 长上下文 RAG（`code_rag`）、70B 批量服务（`inference`，默认档案）——EO 视觉与训练降为辅线。*Redwire Serving Node* 设计在 8×H200 张量并行组上飞 Llama-405B。
 11. **LLM 推理解析引擎** —— LLM 作业不再用 MFU 估计：`backend/llm_perf.py` 从第一性原理解出真实工作点（DVFS 功耗聚合 `P = P_static + χ·x^θ`、计算受限的 prefill/训练幂律、含带宽平台的 decode 访存下限定律、自然功耗），并**与卫星热状态耦合**：结构就是 GPU 的冷板，`T_die = T_struct + P·R_th`，驱动通过收缩功率预算把结温压在节流目标上——散热板不足或涂层退化会直接表现为可计算的 tokens/s 损失（`gpu_thermal_throttle` / `gpu_thermal_runaway` 告警，结温 / SM 频率 / 执行相位实时显示在面板中）。模型按公开的 V100 功率上限实测研究校准，由 `tools/validate_llm_perf.py`（52 项）+ `tools/validate_llm_engine.py`（32 项闭环场景）验证；专设 *LLM serving (70B)* 档案飞 decode 主导的作业表来展示这一切。详见 **[docs/physics.md §4a](docs/physics.md)**。
 
+12. **实时 What-if 对比** —— Twin 页的 *Compare* 入口打开 A/B/C 对比台（`backend/compare_sim.py`）：任选一个配置维度（散热涂层、太阳能电池材料、GPU 型号、翼展、散热板尺寸、电池容量、workload 档案，或整星设计）与 2–4 个候选值，点 *Start*。每个变体从在线卫星**此刻**的状态播种（同轨道相位、同 SOC / 结构温度——事件循环上冻结的一致性快照），随后**与每个 1Hz 物理 tick 同步步进**；变体采样随 `StatePacket.compare_live` 广播、以虚线叠加在实时遥测折线图上逐秒生长——你会亲眼看着不同选择随时间推演逐渐分叉：裸铝散热板一路爬向 GPU 热节流、tokens/s 掉落，OSR / 石墨稳守低温。面板内有逐变体实时数值表（温度/SOC/载荷/tok/s），Stop 随时结束。纯 what-if：在线卫星与视口完全不受影响，暂停仿真对比也随之暂停。
+
 ## 快速开始
 
 ```bash
