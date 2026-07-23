@@ -470,6 +470,66 @@ def _place_hero_sat(stage, path: str, pos, visible: bool, spin_deg: float = 0.0)
     _set_visibility(prim, visible)
 
 
+# ---------------------------------------------------------------------------
+# Ground-station marker (Overview page "mark Singapore" option).
+# ---------------------------------------------------------------------------
+# Authored as a CHILD of the Earth prim so it inherits the wall-clock
+# rotateZ and stays glued to its geographic spot on the texture.
+#
+# Longitude offset: gen_earth_mesh maps texture u = phi/2π with phi = 0 at
+# local +X, and earth_day.jpg is a Greenwich-CENTERED equirectangular map
+# (left edge u=0 is lon −180). So local +X shows texture longitude −180,
+# and a geographic longitude L sits at phi = L + 180 (verified by sampling
+# the texture under known landmarks).
+#
+# NOTE the overview Earth's rotation is DECORATIVE (90 s/rev wall clock),
+# ~16× faster than the GMST frame the backend computes visibility in — the
+# marker sticks to the right spot on the TEXTURE, but 3D sat-overhead
+# geometry will not correlate with ground_target.visible_sats. The
+# authoritative visibility read is the 2D coverage map + the numbers.
+GROUND_MARKER_PATH = f"{EARTH_PATH}/GroundMarker"
+GROUND_MARKER_MAT  = f"{EARTH_PATH}/GroundMarkerMat"
+GROUND_MARKER_LON_OFFSET_DEG = 180.0
+GROUND_MARKER_RADIUS_UNITS = 1.6   # ~160 km blob — reads at globe scale
+
+
+def update_ground_marker(stage, gt: "Optional[dict]") -> None:
+    """Create/refresh the red ground-station marker on the overview Earth.
+    `gt` is StatePacket.ground_target (dict) or None. Idempotent; call on
+    poll cadence, not per frame."""
+    earth = stage.GetPrimAtPath(EARTH_PATH)
+    if not earth or not earth.IsValid():
+        return
+    prim = stage.GetPrimAtPath(GROUND_MARKER_PATH)
+    enabled = bool(gt and gt.get("enabled"))
+    if not enabled:
+        if prim and prim.IsValid():
+            _set_visibility(prim, False)
+        return
+    if not prim or not prim.IsValid():
+        sphere = UsdGeom.Sphere.Define(stage, Sdf.Path(GROUND_MARKER_PATH))
+        sphere.GetRadiusAttr().Set(GROUND_MARKER_RADIUS_UNITS)
+        _author_emissive_material(stage, Sdf.Path(GROUND_MARKER_MAT),
+                                  (1.0, 0.12, 0.12))
+        from pxr import UsdShade  # type: ignore
+        UsdShade.MaterialBindingAPI(sphere.GetPrim()).Bind(
+            UsdShade.Material(stage.GetPrimAtPath(GROUND_MARKER_MAT)))
+        sphere.AddTranslateOp()
+        prim = sphere.GetPrim()
+    # Position in the Earth's LOCAL frame (rotation carries it around).
+    pos = _latlon_to_units(
+        float(gt.get("lat", 1.3521)),
+        float(gt.get("lon", 103.8198)) + GROUND_MARKER_LON_OFFSET_DEG,
+        EARTH_RADIUS_UNITS * 1.004,
+    )
+    xform = UsdGeom.Xformable(prim)
+    for op in xform.GetOrderedXformOps():
+        if op.GetOpType() == UsdGeom.XformOp.TypeTranslate:
+            op.Set(Gf.Vec3d(*pos))
+            break
+    _set_visibility(prim, True)
+
+
 def author_mission_prims(stage) -> bool:
     """Create /World/MissionGroup (AOI · Packet · ISL/GSL beams) once. The
     group starts invisible; the per-frame driver shows it while a mission
@@ -1374,6 +1434,8 @@ if _HAS_KIT:
                                 self._period_s       = float(detail.get("period_s", 5574.0))
                                 self._time_scale     = float(detail.get("time_scale", 60.0))
                                 self._constellation_id = pending
+                                self._constellation_rev = getattr(
+                                    self, "_pending_constellation_rev", 0)
                                 self._constellation_dirty = True
                                 _log(f"constellation cached: {pending} "
                                      f"({self._planes}p × {self._sats_per_plane}s, "
@@ -1414,6 +1476,10 @@ if _HAS_KIT:
                 if target and target != self._current_stage:
                     if swap_stage(target, preset):
                         self._current_stage = target
+                        # Stage reopen = fresh session layer: any authored
+                        # ground marker is gone, so force a re-author on the
+                        # next poll if a target is (still) set.
+                        self._ground_marker_key = None
                         # When we land on the satellite stage, re-apply the
                         # cached hardware loadout. The stage swap closed the
                         # previous stage's variant selections so we have to
@@ -1468,12 +1534,41 @@ if _HAS_KIT:
             self._mission = state.get("mission")
             self._mission_rx_wall = time.monotonic()
 
-            # Constellation change detection.
+            # Ground-station marker (Overview) — refresh on poll cadence when
+            # its state actually changed; the marker is an Earth child so the
+            # per-frame rotation carries it for free. The key is consumed
+            # ONLY after a successful update on the overview stage: an update
+            # arriving while another stage is active must retry on return
+            # (and a stage swap wipes the session-layer marker anyway, so
+            # swap_stage also resets the key).
+            gt = state.get("ground_target")
+            gt_key = (bool(gt and gt.get("enabled")),
+                      (gt or {}).get("lat"), (gt or {}).get("lon"))
+            if (gt_key != getattr(self, "_ground_marker_key", None)
+                    and self._current_stage == self._stages.get("overview")):
+                stage_now = omni.usd.get_context().get_stage()
+                if stage_now is not None:
+                    try:
+                        with Usd.EditContext(stage_now, stage_now.GetSessionLayer()):
+                            update_ground_marker(stage_now, gt)
+                        self._ground_marker_key = gt_key
+                    except Exception as exc:  # noqa: BLE001
+                        _log(f"ground marker update failed: {exc}")
+
+            # Constellation change detection. The custom orbit design keeps a
+            # CONSTANT id across re-designs, so the gate also watches the
+            # design revision the snapshot carries — a same-id redesign must
+            # refetch the ring or the viewport keeps drawing the old orbit.
             constel = state.get("constellation") or {}
             cid = constel.get("constellation_id")
-            if cid and cid != self._constellation_id and cid != self._pending_constellation:
-                _log(f"constellation change requested: {self._constellation_id} -> {cid}")
+            rev = int(constel.get("design_rev", 0) or 0)
+            cached_rev = getattr(self, "_constellation_rev", 0)
+            if (cid and cid != self._pending_constellation
+                    and (cid != self._constellation_id or rev != cached_rev)):
+                _log(f"constellation change requested: "
+                     f"{self._constellation_id} r{cached_rev} -> {cid} r{rev}")
                 self._pending_constellation = cid
+                self._pending_constellation_rev = rev
 
         # ---- per-frame update --------------------------------------------
         def _on_update(self, _event) -> None:

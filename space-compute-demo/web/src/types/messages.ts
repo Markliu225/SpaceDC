@@ -376,6 +376,57 @@ export interface MissionState {
   ground_id: string;
 }
 
+// ---------------------------------------------------------------------------
+// Orbit designer + ground-station visibility (Overview page).
+// ---------------------------------------------------------------------------
+
+/** Classical orbital elements of a constellation's reference orbit. */
+export interface OrbitElements {
+  altitude_km: number;
+  semi_major_axis_km: number;
+  eccentricity: number;
+  inclination_deg: number;
+  raan_deg: number;
+  arg_perigee_deg: number;
+  mean_anomaly_deg: number;
+  period_s: number;
+  period_min: number;
+}
+
+/** GET/POST /orbit_design payload — active constellation's elements + Walker. */
+export interface OrbitDesignInfo {
+  active: string;
+  name: string;
+  elements: OrbitElements;
+  walker: { planes: number; sats_per_plane: number; phasing: number; total_sats: number };
+}
+
+/** Ground-station marker + live constellation visibility (StatePacket.ground_target). */
+export interface GroundTargetState {
+  enabled: boolean;
+  name: string;
+  lat: number;
+  lon: number;
+  min_elevation_deg: number;
+  visible_sats: number;
+  best_elevation_deg: number;
+  visible_indices: number[];
+}
+
+/** GET /ground_visibility response — pass analysis over N orbital periods. */
+export interface GroundVisibilityResponse {
+  target: { name: string; lat: number; lon: number; min_elevation_deg: number };
+  constellation: string;
+  total_sats: number;
+  period_s_real: number;
+  duration_s: number;
+  time_scale: number;
+  samples: { t_s: number; visible_sats: number; best_elevation_deg: number }[];
+  windows: { start_s: number; end_s: number; max_elevation_deg: number }[];
+  coverage_fraction: number;
+  next_pass_in_s: number | null;
+}
+
 export interface StatePacket {
   sim_time_s: number;
   satellite: SatelliteState;
@@ -385,6 +436,8 @@ export interface StatePacket {
   compare: CompareMetrics | null;
   /** Live what-if comparison — present while a comparison is running. */
   compare_live?: CompareLiveState | null;
+  /** Ground-station marker + live visibility — present once a target is set. */
+  ground_target?: GroundTargetState | null;
   /** Optional in Phase 1 — backend hasn't started broadcasting it yet. */
   satellite_config?: SatelliteConfig;
   /** Deployable geometry (solar count, radiator size) — Feature 3. */

@@ -450,6 +450,117 @@ async def http_set_workload_profile(body: dict[str, Any]):
             "adaptation": engine.workload_adaptation(applied)}
 
 
+# --- Orbit designer (Overview page) ----------------------------------------
+@app.get("/orbit_design")
+async def http_get_orbit_design():
+    """The ACTIVE constellation's classical orbital elements + Walker
+    parameters — the designer displays these for any preset, then edits
+    them into a custom design."""
+    preset = (constellations.get_preset(engine.constellation_id)
+              or constellations.get_preset("single_iss"))
+    return {
+        "active": preset.id,
+        "name": preset.name,
+        "elements": constellations.preset_elements(preset),
+        "walker": {"planes": preset.planes,
+                   "sats_per_plane": preset.sats_per_plane,
+                   "phasing": preset.phasing,
+                   "total_sats": preset.total_sats},
+    }
+
+
+@app.post("/orbit_design")
+async def http_post_orbit_design(body: dict[str, Any]):
+    """Design a constellation from the six classical orbital elements +
+    Walker parameters: synthesize the reference TLE, register the design as
+    the 'custom_design' preset and make it active — the whole pipeline
+    (engine tick, Kit rings, web fallback propagator, coverage map) follows
+    on the next poll/broadcast."""
+    try:
+        preset = constellations.make_custom_preset(
+            altitude_km=float(body.get("altitude_km", 550.0)),
+            eccentricity=float(body.get("eccentricity", 0.001)),
+            inclination_deg=float(body.get("inclination_deg", 53.0)),
+            raan_deg=float(body.get("raan_deg", 0.0)) % 360.0,
+            arg_perigee_deg=float(body.get("arg_perigee_deg", 0.0)) % 360.0,
+            mean_anomaly_deg=float(body.get("mean_anomaly_deg", 0.0)) % 360.0,
+            planes=int(body.get("planes", 3)),
+            sats_per_plane=int(body.get("sats_per_plane", 8)),
+            phasing=int(body.get("phasing", 1)),
+        )
+    except (TypeError, ValueError) as e:
+        raise HTTPException(422, f"invalid orbit design: {e}") from e
+    engine.set_constellation(constellations.CUSTOM_ID)
+    await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
+    return {
+        "ok": True,
+        "active": preset.id,
+        "name": preset.name,
+        "elements": constellations.preset_elements(preset),
+        "walker": {"planes": preset.planes,
+                   "sats_per_plane": preset.sats_per_plane,
+                   "phasing": preset.phasing,
+                   "total_sats": preset.total_sats},
+    }
+
+
+# --- Ground-station target + communication visibility ----------------------
+@app.post("/ground_target")
+async def http_ground_target(body: Optional[dict[str, Any]] = None):
+    """Mark (enabled=true) or clear (enabled=false) the ground station on
+    the Earth. Defaults to Singapore. While marked, every fleet tick
+    computes constellation visibility from it (elevation-angle model) and
+    the results ride StatePacket.ground_target."""
+    b = body or {}
+    enabled = bool(b.get("enabled", True))
+    try:
+        gt = engine.set_ground_target(
+            enabled,
+            name=str(b.get("name", "Singapore")),
+            lat=float(b.get("lat", 1.3521)),
+            lon=float(b.get("lon", 103.8198)),
+            min_elevation_deg=float(b.get("min_elevation_deg", 10.0)),
+        )
+    except (TypeError, ValueError) as e:
+        raise HTTPException(422, f"invalid ground target: {e}") from e
+    await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
+    return {"ok": True,
+            "ground_target": gt.model_dump() if gt is not None else None}
+
+
+@app.get("/ground_visibility")
+async def http_ground_visibility(orbits: float = 1.0):
+    """Pass analysis for the marked ground station over the ACTIVE
+    constellation: sample fleet↔ground elevation across `orbits` orbital
+    periods starting NOW, return the visibility series + merged pass
+    windows. Blocking fleet propagation runs in a worker thread."""
+    gt = engine.ground_target
+    if gt is None or not gt.enabled:
+        raise HTTPException(422, "no ground target marked — POST /ground_target first")
+    preset = (constellations.get_preset(engine.constellation_id)
+              or constellations.get_preset("single_iss"))
+    orbits = max(0.25, min(3.0, float(orbits)))
+    # One real period = period_s/TIME_SCALE sim-seconds at the demo scale.
+    duration_sim = preset.period_s / constellations.TIME_SCALE * orbits
+    step_sim = max(0.5, duration_sim / 140.0)
+    t0 = engine.snapshot().sim_time_s
+    result = await asyncio.to_thread(
+        constellations.ground_visibility_series,
+        preset, gt.lat, gt.lon, t0, duration_sim, step_sim,
+        gt.min_elevation_deg, orbit_catalog.eci_to_lat_lon_alt,
+    )
+    return {
+        "target": {"name": gt.name, "lat": gt.lat, "lon": gt.lon,
+                   "min_elevation_deg": gt.min_elevation_deg},
+        "constellation": preset.id,
+        "total_sats": preset.total_sats,
+        "period_s_real": round(preset.period_s, 1),
+        "duration_s": round(duration_sim, 1),
+        "time_scale": constellations.TIME_SCALE,
+        **result,
+    }
+
+
 # --- What-if comparison (Twin page Compare panel) --------------------------
 @app.get("/compare/options")
 async def http_compare_options():

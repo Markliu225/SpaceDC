@@ -176,6 +176,10 @@ class FleetSnapshot(BaseModel):
     isl_links: int = 0
     gsl_links: int = 0
     agg_throughput_mbps: float = 60.0
+    # Monotonic revision of the custom orbit design. Re-designing keeps the
+    # constellation id ("custom_design") but bumps this, so id-keyed caches
+    # (Kit ring rebuild, web ring detail) know to refetch. 0 for built-ins.
+    design_rev: int = 0
 
 
 class CompareMetrics(BaseModel):
@@ -197,6 +201,23 @@ class CompareLiveVariant(BaseModel):
     temperature_c: float = 0.0
     gpu_utilization: float = 0.0
     tokens_per_s: float = 0.0
+
+
+class GroundTargetState(BaseModel):
+    """Optional ground station marked on the Earth (Overview page) — when
+    enabled, every fleet tick also computes line-of-sight visibility from
+    this point to the whole constellation (elevation-angle model)."""
+    enabled: bool = False
+    name: str = "Singapore"
+    lat: float = 1.3521
+    lon: float = 103.8198
+    min_elevation_deg: float = 10.0
+    # Live per-tick results.
+    visible_sats: int = 0
+    best_elevation_deg: float = -90.0
+    # Indices (into the fleet) of currently-visible sats, capped at 64 so
+    # a mega-constellation can't bloat the packet.
+    visible_indices: list[int] = Field(default_factory=list)
 
 
 class CompareLiveState(BaseModel):
@@ -297,6 +318,8 @@ class StatePacket(BaseModel):
     compare: Optional[CompareMetrics] = None
     # Live what-if comparison (compare_sim) — present while a comparison runs.
     compare_live: Optional[CompareLiveState] = None
+    # Ground-station marker + live visibility — present once a target is set.
+    ground_target: Optional[GroundTargetState] = None
     camera_preset: str = "overview"
     running: bool = True
     satellite_config: SatelliteConfig = Field(default_factory=SatelliteConfig)

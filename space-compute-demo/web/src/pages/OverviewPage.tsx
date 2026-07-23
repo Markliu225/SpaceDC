@@ -4,7 +4,7 @@ import { useMockTelemetryFeed } from '../hooks/useMockTelemetryFeed'
 import { useBackendBridge } from '../hooks/useBackendBridge'
 import { EarthViewport } from '../components/overview/EarthViewport'
 import { NetworkOverview } from '../components/overview/NetworkOverview'
-import { RealCoverageMap } from '../components/overview/RealCoverageMap'
+import { OrbitDesignerPanel } from '../components/overview/OrbitDesignerPanel'
 import { SatelliteDetail } from '../components/overview/SatelliteDetail'
 import { EventLog } from '../components/overview/EventLog'
 import { CostPanel } from '../components/overview/CostPanel'
@@ -61,8 +61,10 @@ export function OverviewPage() {
       <div className="col-span-9 min-h-0 overflow-hidden">
         <EarthViewport />
       </div>
+      {/* Right column — Orbit Designer (six elements + Walker + Singapore
+          ground-station visibility) with the coverage map as its second tab. */}
       <div className="col-span-3 min-h-0 overflow-hidden">
-        <RealCoverageMap />
+        <OrbitDesignerPanel />
       </div>
 
       {/* overflow-visible + z-30: the satellite selector dropdown inside

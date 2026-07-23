@@ -18,6 +18,7 @@ log = logging.getLogger("space_compute_demo.engine")
 from models import (
     FleetSnapshot,
     GroundStationState,
+    GroundTargetState,
     MissionState,
     Mode,
     Parameters,
@@ -370,6 +371,9 @@ class StateEngine:
         # to avoid a circular import). The tick steps it in lockstep; the
         # snapshot carries its per-variant samples on StatePacket.compare_live.
         self._compare_session: Optional[Any] = None
+        # Ground-station marker (Overview) — None until first set; the fleet
+        # tick fills its live visibility fields while enabled.
+        self._ground_target: Optional[GroundTargetState] = None
 
     # ---- lifecycle ----
     async def start(self) -> None:
@@ -794,6 +798,31 @@ class StateEngine:
             "targets_found": targets,
         })
 
+    # ---- ground-station target (Overview marker) ----
+    def set_ground_target(self, enabled: bool, name: str = "Singapore",
+                          lat: float = 1.3521, lon: float = 103.8198,
+                          min_elevation_deg: float = 10.0) -> Optional[GroundTargetState]:
+        """Mark (or clear) the ground station. While enabled the fleet tick
+        computes constellation visibility from it every second."""
+        if not enabled:
+            self._ground_target = None
+            return None
+        self._ground_target = GroundTargetState(
+            enabled=True, name=str(name),
+            lat=max(-90.0, min(90.0, float(lat))),
+            # Longitude is periodic — wrap (a clamp would silently move a
+            # 0..360-convention input thousands of km).
+            lon=((float(lon) + 180.0) % 360.0) - 180.0,
+            min_elevation_deg=max(0.0, min(60.0, float(min_elevation_deg))),
+        )
+        # Fill the live visibility fields right away (works while paused).
+        self._refresh_fleet_now()
+        return self._ground_target
+
+    @property
+    def ground_target(self) -> Optional[GroundTargetState]:
+        return self._ground_target
+
     # ---- live what-if comparison ----
     def set_compare_session(self, session: Optional[Any]) -> None:
         """Attach (or clear, with None) the live comparison. The session must
@@ -807,12 +836,26 @@ class StateEngine:
         return self._compare_session
 
     def set_constellation(self, preset_id: str) -> bool:
-        """Switch the active constellation. Triggers fleet rebuild on next tick.
+        """Switch the active constellation. Refreshes the fleet snapshot
+        immediately (not just on the next tick) so the caller's broadcast —
+        and GET /state while PAUSED — already carry the new constellation.
         Returns False if the preset id is unknown."""
         if _consts.get_preset(preset_id) is None:
             return False
         self._constellation_id = preset_id
+        self._refresh_fleet_now()
         return True
+
+    def _refresh_fleet_now(self) -> None:
+        """Run the fleet part of the tick once at the current sim time —
+        used by mutators (constellation switch, ground target) so their
+        derived snapshot fields are fresh in the very next broadcast even
+        when the sim is paused. Integration state is untouched."""
+        try:
+            self._set_tracked_kinematics(self._tick_fleet(self._sim_time_s),
+                                         self._sim_time_s)
+        except Exception:
+            log.exception("fleet refresh on mutation failed")
 
     @property
     def constellation_id(self) -> str:
@@ -923,6 +966,8 @@ class StateEngine:
             workload_profile=self._workload_profile,
             compare_live=(self._compare_session.payload()
                           if self._compare_session is not None else None),
+            ground_target=(self._ground_target.model_copy()
+                           if self._ground_target is not None else None),
         )
 
     # ---- inner loop ----
@@ -986,13 +1031,36 @@ class StateEngine:
             isl_links=kpis["isl_links"],
             gsl_links=kpis["gsl_links"],
             agg_throughput_mbps=kpis["agg_throughput_mbps"],
+            design_rev=getattr(preset, "revision", 0),
         )
 
         # Cache per-sat lat/lon for mission cast picking (sensor = nearest AOI).
-        self._fleet_latlon = [
-            orbit_catalog.eci_to_lat_lon_alt(px, py, pz, t)[:2]
+        fleet_lla = [
+            orbit_catalog.eci_to_lat_lon_alt(px, py, pz, t)
             for (px, py, pz) in fleet_pos_km
         ]
+        self._fleet_latlon = [(la, lo) for (la, lo, _al) in fleet_lla]
+
+        # Ground-target visibility (Overview marker): reuse the sub-points
+        # this loop just computed — elevation-angle test per sat, results
+        # ride StatePacket.ground_target on the next snapshot.
+        gt = self._ground_target
+        if gt is not None and gt.enabled:
+            best = -90.0
+            visible: list[int] = []
+            for i, (la, lo, al) in enumerate(fleet_lla):
+                # Skip the (0,0,0) sgp4-error sentinel (alt = -Re) — a dead
+                # satellite must not score as a perfect overhead contact.
+                if al <= 0.0:
+                    continue
+                e = _consts.elevation_deg(la, lo, al, gt.lat, gt.lon)
+                if e > best:
+                    best = e
+                if e >= gt.min_elevation_deg:
+                    visible.append(i)
+            gt.visible_sats = len(visible)
+            gt.best_elevation_deg = round(best, 2)
+            gt.visible_indices = visible[:64]
         return fleet_pos_km[0] if fleet_pos_km else (0.0, 0.0, 0.0)
 
     def _update_placeholder_physics(self, dt: float) -> None:

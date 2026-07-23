@@ -4,6 +4,7 @@ import { Card, Dot } from '../primitives'
 import { colors } from '../../design/tokens'
 import { useFleetPositions } from '../../hooks/useFleetPositions'
 import { useTelemetryStore } from '../../store/useTelemetryStore'
+import { useDemoStore } from '../../store/demoStore'
 
 const STATUS_LEGEND = [
   { key: 'online',  label: 'Online',  color: colors.status.online  },
@@ -45,12 +46,13 @@ function visibilityRadiusDeg(altKm: number): number {
  * density read, not a geodesic footprint — accurate enough for a glanceable
  * coverage panel and far cheaper than full great-circle polygon tessellation.
  */
-export function RealCoverageMap() {
+export function RealCoverageMap({ embedded = false }: { embedded?: boolean } = {}) {
   const fleet      = useFleetPositions()
   const totalSats   = useTelemetryStore((s) => s.fleet?.total ?? fleet.length)
   const detail      = useTelemetryStore((s) => s.constellationDetail)
   const selectedIdx = useTelemetryStore((s) => s.selectedSatIdx)
   const setSelected = useTelemetryStore((s) => s.setSelectedSatIdx)
+  const groundTarget = useDemoStore((s) => s.lastState?.ground_target ?? null)
   const gid = useId().replace(/:/g, '')
 
   // Cache per-sat marker primitives — recomputed each tick because lat/lon move.
@@ -70,8 +72,14 @@ export function RealCoverageMap() {
     })
   }, [fleet])
 
+  const visibleSet = useMemo(
+    () => new Set(groundTarget?.enabled ? groundTarget.visible_indices : []),
+    [groundTarget],
+  )
+
+  const Wrap = embedded ? 'div' : Card
   return (
-    <Card className="h-full flex flex-col min-h-0">
+    <Wrap className="h-full flex flex-col min-h-0">
       <div className="mb-2 flex items-baseline justify-between">
         <span className="text-[11px] uppercase tracking-[0.10em] text-text-md">
           Constellation Status
@@ -127,6 +135,7 @@ export function RealCoverageMap() {
             const dotColor = m.sunlit ? colors.status.online : colors.status.eclipse
             const fillRef  = m.sunlit ? `url(#cov-online-${gid})` : `url(#cov-eclipse-${gid})`
             const selected = m.idx === selectedIdx
+            const inContact = visibleSet.has(m.idx)
             return (
               <Marker
                 key={m.idx}
@@ -135,6 +144,12 @@ export function RealCoverageMap() {
                 style={{ default: { cursor: 'pointer' } }}
               >
                 <circle r={m.rPx} fill={fillRef} />
+                {/* Red contact ring — this sat currently sees the marked
+                    ground station above the elevation mask. */}
+                {inContact && (
+                  <circle r={4.4} fill="none" stroke="#EF4444" strokeWidth={1.2}
+                          style={{ filter: 'drop-shadow(0 0 3px #EF4444)' }} />
+                )}
                 <circle
                   r={selected ? 3 : 1.8}
                   fill={dotColor}
@@ -145,6 +160,23 @@ export function RealCoverageMap() {
               </Marker>
             )
           })}
+
+          {/* Marked ground station (Singapore) — red site marker. */}
+          {groundTarget?.enabled && (
+            <Marker coordinates={[groundTarget.lon, groundTarget.lat]}>
+              <g data-testid="map-ground-target">
+                <circle r={7} fill="none" stroke="#EF4444" strokeWidth={1}
+                        opacity={0.55} />
+                <circle r={3} fill="#EF4444"
+                        style={{ filter: 'drop-shadow(0 0 5px #EF4444)' }} />
+                <text y={-9} textAnchor="middle"
+                      style={{ fontSize: 9, fill: '#F87171', fontWeight: 600,
+                               letterSpacing: 0.5 }}>
+                  {groundTarget.name.toUpperCase()}
+                </text>
+              </g>
+            </Marker>
+          )}
         </ComposableMap>
       </div>
 
@@ -157,7 +189,15 @@ export function RealCoverageMap() {
             <span className="text-text-md">{s.label}</span>
           </div>
         ))}
+        {groundTarget?.enabled && (
+          <div className="col-span-2 flex items-center gap-1.5 text-[11px]">
+            <Dot color="#EF4444" size={6} glow={4} />
+            <span className="text-text-md">
+              {groundTarget.name} · {groundTarget.visible_sats} in contact
+            </span>
+          </div>
+        )}
       </div>
-    </Card>
+    </Wrap>
   )
 }

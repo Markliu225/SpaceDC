@@ -83,6 +83,10 @@ class ConstellationPreset:
     gsl_total: int           # ground-station links (constellation-wide constant)
     coverage_pct: float      # demo-friendly hard-coded coverage
 
+    # Monotonic design revision — bumped by make_custom_preset so consumers
+    # keyed on the (constant) custom id still see a change. 0 for built-ins.
+    revision: int = 0
+
     # Cached fleet — populated lazily by `build_fleet`.
     _fleet: Optional[list[Satrec]] = field(default=None, init=False, repr=False)
     _ring_eci_km: Optional[list[tuple[float, float, float]]] = field(default=None, init=False, repr=False)
@@ -250,6 +254,203 @@ PRESETS: dict[str, ConstellationPreset] = {
         gsl_total=8, coverage_pct=100.0,
     ),
 }
+
+
+# ---------------------------------------------------------------------------
+# Custom constellation design — classical orbital elements → synthesized TLE.
+#
+# The designer UI edits the six Keplerian elements (a via altitude, e, i,
+# Ω, ω, M) plus Walker parameters; we format them straight into a TLE
+# line 2 (the demo convention skips checksums — sgp4 does not validate
+# them) so the ENTIRE existing pipeline (fleet build, ring sampling,
+# per-tick propagation, Kit rings, web fallback propagator) works on the
+# designed constellation unchanged.
+# ---------------------------------------------------------------------------
+CUSTOM_ID = "custom_design"
+EARTH_RADIUS_KM = 6378.137
+_MU_EARTH = 3.986004418e14  # m^3/s^2
+
+_CUSTOM_LINE1 = "1 99999U 26001A   24235.50000000  .00000100  00000-0  10000-3 0  9990"
+# Bumped on every make_custom_preset so same-id redesigns are detectable.
+_design_revision = 0
+
+
+def make_custom_preset(
+    altitude_km: float,
+    eccentricity: float,
+    inclination_deg: float,
+    raan_deg: float,
+    arg_perigee_deg: float,
+    mean_anomaly_deg: float,
+    planes: int,
+    sats_per_plane: int,
+    phasing: int,
+) -> ConstellationPreset:
+    """Build (and register) the designed constellation. Raises ValueError on
+    out-of-range elements. Registered under CUSTOM_ID so every consumer
+    (engine tick, /constellations/{id}, Kit, web propagator) resolves it
+    like any other preset; re-designing replaces the previous one."""
+    if not 200.0 <= altitude_km <= 40000.0:
+        raise ValueError("altitude_km must be within 200..40000")
+    if not 0.0 <= eccentricity <= 0.5:
+        raise ValueError("eccentricity must be within 0..0.5")
+    if not 0.0 <= inclination_deg <= 180.0:
+        raise ValueError("inclination_deg must be within 0..180")
+    for label, v in (("raan_deg", raan_deg), ("arg_perigee_deg", arg_perigee_deg),
+                     ("mean_anomaly_deg", mean_anomaly_deg)):
+        if not 0.0 <= v < 360.0:
+            raise ValueError(f"{label} must be within 0..360")
+    planes = int(planes)
+    sats_per_plane = int(sats_per_plane)
+    phasing = int(phasing)
+    if not 1 <= planes <= 36:
+        raise ValueError("planes must be within 1..36")
+    if not 1 <= sats_per_plane <= 60:
+        raise ValueError("sats_per_plane must be within 1..60")
+    if not 0 <= phasing < max(1, planes):
+        raise ValueError("phasing (Walker f) must be within 0..planes-1")
+    # Perigee must stay above the atmosphere or SGP4 flags decay.
+    a_km = EARTH_RADIUS_KM + altitude_km
+    if a_km * (1.0 - eccentricity) < EARTH_RADIUS_KM + 160.0:
+        raise ValueError("perigee below 160 km — reduce eccentricity or raise altitude")
+
+    # Kepler: semi-major axis → mean motion (rev/day).
+    a_m = a_km * 1000.0
+    n_rad_s = math.sqrt(_MU_EARTH / (a_m ** 3))
+    period_s = 2.0 * math.pi / n_rad_s
+    mm_rev_day = 86400.0 / period_s
+
+    ecc7 = f"{eccentricity:.7f}"[2:9]  # 7 digits, implied leading decimal
+    line2 = (
+        f"2 99999 {inclination_deg:8.4f} {raan_deg:8.4f} {ecc7} "
+        f"{arg_perigee_deg:8.4f} {mean_anomaly_deg:8.4f} {mm_rev_day:11.8f}123456"
+    )
+
+    global _design_revision
+    _design_revision += 1
+    total = planes * sats_per_plane
+    preset = ConstellationPreset(
+        id=CUSTOM_ID,
+        name="Custom Design",
+        description=(f"Designer orbit — {altitude_km:.0f} km, "
+                     f"i={inclination_deg:.1f}°, Walker {planes}×{sats_per_plane} "
+                     f"f={phasing}."),
+        base_tle_line1=_CUSTOM_LINE1,
+        base_tle_line2=line2,
+        planes=planes, sats_per_plane=sats_per_plane, phasing=phasing,
+        # Formulaic KPI template, scaled by fleet size (demo numbers).
+        online_rate=0.97, standby_rate=0.02,
+        throughput_per_sat_mbps=150.0, duty_factor=0.5,
+        isl_per_sat=2 if planes >= 2 else 0,
+        gsl_total=min(12, total),
+        coverage_pct=round(min(100.0, 100.0 * total / (total + 40.0)), 1),
+        revision=_design_revision,
+    )
+    PRESETS[CUSTOM_ID] = preset
+    return preset
+
+
+def preset_elements(preset: ConstellationPreset) -> dict:
+    """The six classical orbital elements (+ derived period/altitude) parsed
+    back out of the preset's reference TLE — the designer displays these
+    for ANY active constellation, not just the custom one."""
+    line2 = preset.base_tle_line2
+    ecc = float("0." + line2[26:33].strip())
+    return {
+        "altitude_km": round(preset.altitude_km, 1),
+        "semi_major_axis_km": round(preset.altitude_km + EARTH_RADIUS_KM, 1),
+        "eccentricity": round(ecc, 7),
+        "inclination_deg": round(_parse_field(line2, 8, 16), 4),
+        "raan_deg": round(_parse_field(line2, 17, 25), 4),
+        "arg_perigee_deg": round(_parse_field(line2, 34, 42), 4),
+        "mean_anomaly_deg": round(_parse_field(line2, 43, 51), 4),
+        "period_s": round(preset.period_s, 1),
+        "period_min": round(preset.period_s / 60.0, 2),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Ground-station visibility (elevation-angle model).
+#
+# For a ground point G and a satellite with sub-satellite point S at
+# altitude h: with ψ the central angle G→S and ρ = Re/(Re+h),
+#     elevation = atan2(cos ψ − ρ, sin ψ)
+# The satellite is visible when elevation ≥ the mask angle (default 10°).
+# Pure geometry on top of the same eci→lat/lon conversion the engine's
+# display path uses, so "visible" here matches what the map shows.
+# ---------------------------------------------------------------------------
+def elevation_deg(sat_lat: float, sat_lon: float, sat_alt_km: float,
+                  gs_lat: float, gs_lon: float) -> float:
+    p1 = math.radians(gs_lat)
+    p2 = math.radians(sat_lat)
+    dl = math.radians(sat_lon - gs_lon)
+    cos_psi = (math.sin(p1) * math.sin(p2)
+               + math.cos(p1) * math.cos(p2) * math.cos(dl))
+    cos_psi = max(-1.0, min(1.0, cos_psi))
+    psi = math.acos(cos_psi)
+    rho = EARTH_RADIUS_KM / (EARTH_RADIUS_KM + max(1.0, sat_alt_km))
+    return math.degrees(math.atan2(cos_psi - rho, math.sin(psi)))
+
+
+def ground_visibility_series(
+    preset: ConstellationPreset,
+    gs_lat: float, gs_lon: float,
+    t0_sim_s: float, duration_sim_s: float, step_sim_s: float,
+    min_elevation_deg: float,
+    eci_to_lla,
+) -> dict:
+    """Sample fleet↔ground visibility over [t0, t0+duration] sim-seconds.
+    `eci_to_lla` is orbit_catalog.eci_to_lat_lon_alt (injected to avoid an
+    import cycle). Returns per-sample series + merged any-sat-visible pass
+    windows. Blocking for big fleets — call via asyncio.to_thread."""
+    samples = []
+    n_steps = max(2, int(duration_sim_s / max(0.25, step_sim_s)))
+    for i in range(n_steps + 1):
+        t = t0_sim_s + i * duration_sim_s / n_steps
+        best = -90.0
+        visible = 0
+        for (x, y, z) in propagate_fleet(preset, t):
+            lat, lon, alt = eci_to_lla(x, y, z, t)
+            # Skip the (0,0,0) sgp4-error sentinel (alt = -Re).
+            if alt <= 0.0:
+                continue
+            e = elevation_deg(lat, lon, alt, gs_lat, gs_lon)
+            if e > best:
+                best = e
+            if e >= min_elevation_deg:
+                visible += 1
+        samples.append({
+            "t_s": round(t - t0_sim_s, 2),
+            "visible_sats": visible,
+            "best_elevation_deg": round(best, 2),
+        })
+
+    # Merge consecutive visible samples into pass windows.
+    windows = []
+    cur = None
+    for s in samples:
+        if s["visible_sats"] > 0:
+            if cur is None:
+                cur = {"start_s": s["t_s"], "end_s": s["t_s"],
+                       "max_elevation_deg": s["best_elevation_deg"]}
+            else:
+                cur["end_s"] = s["t_s"]
+                cur["max_elevation_deg"] = max(cur["max_elevation_deg"],
+                                               s["best_elevation_deg"])
+        elif cur is not None:
+            windows.append(cur)
+            cur = None
+    if cur is not None:
+        windows.append(cur)
+
+    visible_samples = sum(1 for s in samples if s["visible_sats"] > 0)
+    nxt = next((s["t_s"] for s in samples if s["visible_sats"] > 0), None)
+    return {
+        "samples": samples,
+        "windows": windows,
+        "coverage_fraction": round(visible_samples / len(samples), 3),
+        "next_pass_in_s": nxt,
+    }
 
 
 def list_presets() -> list[dict]:
