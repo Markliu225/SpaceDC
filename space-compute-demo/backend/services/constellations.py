@@ -579,6 +579,20 @@ def propagate_tracked(preset: ConstellationPreset, sim_t_s: float) -> tuple[floa
     return (float(r[0]), float(r[1]), float(r[2]))
 
 
+def propagate_tracked_rv(
+    preset: ConstellationPreset, sim_t_s: float,
+) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
+    """ECI position (km) AND velocity (km/s) of the tracked satellite —
+    velocity is needed for the attitude/solar geometry (ram + orbit-normal
+    panel pointing). Single cached-Satrec sgp4 call."""
+    sat = preset.build_fleet()[0]
+    scaled = sim_t_s * TIME_SCALE
+    e, r, v = sat.sgp4(DEMO_JD0, DEMO_FR0 + scaled / 86400.0)
+    if e:
+        return (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)
+    return (float(r[0]), float(r[1]), float(r[2])), (float(v[0]), float(v[1]), float(v[2]))
+
+
 def propagate_fleet(preset: ConstellationPreset, sim_t_s: float) -> list[tuple[float, float, float]]:
     """Return ECI km positions for every sat in the preset at sim_t."""
     fleet = preset.build_fleet()

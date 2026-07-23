@@ -26,7 +26,7 @@ import sys
 import time
 import urllib.request
 
-BASE = "http://127.0.0.1:8001"
+BASE = f"http://127.0.0.1:{sys.argv[1]}" if len(sys.argv) > 1 else "http://127.0.0.1:8001"
 
 SIGMA = 5.67e-8
 T_BG4 = 250.0 ** 4

@@ -1,4 +1,6 @@
 import type {
+  BatteryMaterial,
+  BatterySize,
   GpuType,
   RadiatorMaterial,
   RadiatorSize,
@@ -98,6 +100,37 @@ export const RADIATOR_SIZE_OPTIONS: RadiatorSizeOption[] = [
 
 export const RADIATOR_PANELS_PER_SAT = 2
 
+// Battery chemistry + pack size. Mirrors backend state_engine._BATT_*_TABLE:
+// effective capacity_wh = mass_kg × density_wh_kg; the chemistry's round-trip
+// efficiency taxes charging.
+export interface BatteryMaterialOption {
+  id: BatteryMaterial
+  label: string
+  density_wh_kg: number
+  efficiency: number
+  tint: string
+}
+
+export const BATTERY_MATERIAL_OPTIONS: BatteryMaterialOption[] = [
+  { id: 'LiIon',      label: 'Li-ion NMC',   density_wh_kg: 250, efficiency: 0.95, tint: '#2563EB' },
+  { id: 'LiFePO4',    label: 'LiFePO4',      density_wh_kg: 160, efficiency: 0.96, tint: '#059669' },
+  { id: 'LiS',        label: 'Lithium-Sulfur', density_wh_kg: 400, efficiency: 0.90, tint: '#7C3AED' },
+  { id: 'SolidState', label: 'Solid-State',  density_wh_kg: 350, efficiency: 0.97, tint: '#D97706' },
+]
+
+export interface BatterySizeOption {
+  id: BatterySize
+  label: string
+  mass_kg: number
+}
+
+export const BATTERY_SIZE_OPTIONS: BatterySizeOption[] = [
+  { id: 'S',  label: 'Small',       mass_kg: 10 },
+  { id: 'M',  label: 'Medium',      mass_kg: 20 },
+  { id: 'L',  label: 'Large',       mass_kg: 32 },
+  { id: 'XL', label: 'Extra Large', mass_kg: 60 },
+]
+
 // ---------------------------------------------------------------------------
 // Lookup helpers — every component uses these instead of array.find inline.
 // ---------------------------------------------------------------------------
@@ -120,6 +153,19 @@ export function radiatorMaterial(id: RadiatorMaterial): RadiatorMaterialOption {
 
 export function radiatorSize(id: RadiatorSize): RadiatorSizeOption {
   return RADIATOR_SIZE_OPTIONS.find((o) => o.id === id) ?? RADIATOR_SIZE_OPTIONS[1]
+}
+
+export function batteryMaterial(id: BatteryMaterial): BatteryMaterialOption {
+  return BATTERY_MATERIAL_OPTIONS.find((o) => o.id === id) ?? BATTERY_MATERIAL_OPTIONS[0]
+}
+
+export function batterySize(id: BatterySize): BatterySizeOption {
+  return BATTERY_SIZE_OPTIONS.find((o) => o.id === id) ?? BATTERY_SIZE_OPTIONS[2]
+}
+
+/** Effective pack capacity (Wh) = mass × energy density — mirrors backend. */
+export function batteryCapacityWh(material: BatteryMaterial, size: BatterySize): number {
+  return batterySize(size).mass_kg * batteryMaterial(material).density_wh_kg
 }
 
 // ---------------------------------------------------------------------------

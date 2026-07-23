@@ -9,10 +9,11 @@ play out, sample /state at 2 Hz, then check:
   - solar input follows sunlit (tracking model: >0 in sun, 0 in eclipse)
 """
 import json
+import sys
 import time
 import urllib.request
 
-BASE = "http://localhost:8001"
+BASE = f"http://localhost:{sys.argv[1]}" if len(sys.argv) > 1 else "http://localhost:8001"
 PRESETS = ["baseline", "redwire", "compute_max", "eco_light", "thermal_guard",
            "wide_wing"]
 ORBIT_WALL_S = 100

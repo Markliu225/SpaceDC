@@ -86,6 +86,9 @@ export interface SatelliteState {
   /** Normalised solar incidence 0..1 (0 = eclipse, 1 = solar noon). */
   sun_factor?: number;
   solar_input_w: number;
+  /** Attitude-dependent panel-normal·Sun incidence 0..1 (sun-pointing ≈ 1;
+   *  a body-fixed nadir/ram/inertial array projects geometrically). */
+  solar_incidence?: number;
   payload_power_w: number;
   platform_power_w: number;
   gpu_type: GpuType;
@@ -220,6 +223,8 @@ export type SolarMaterial   = 'Si' | 'GaAs' | 'Perovskite';
 export type SolarSize       = 'S' | 'M' | 'L' | 'XL';
 export type RadiatorMaterial = 'Aluminum' | 'WhitePaint' | 'OSR' | 'Graphite';
 export type RadiatorSize    = 'Compact' | 'Standard' | 'Wide';
+export type BatteryMaterial = 'LiIon' | 'LiFePO4' | 'LiS' | 'SolidState';
+export type BatterySize     = 'S' | 'M' | 'L' | 'XL';
 
 export interface SatelliteConfig {
   gpu: GpuType;
@@ -227,6 +232,8 @@ export interface SatelliteConfig {
   solar_size: SolarSize;
   radiator_material: RadiatorMaterial;
   radiator_size: RadiatorSize;
+  battery_material: BatteryMaterial;
+  battery_size: BatterySize;
 }
 
 /** Hull configuration — each is a genuinely different satellite shape. */

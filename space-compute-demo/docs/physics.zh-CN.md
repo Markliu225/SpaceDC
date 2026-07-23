@@ -23,7 +23,7 @@
 | `cards` | 8 | 每星 GPU 卡数（`_GPU_CARDS_PER_SAT`） |
 | `P_platform` | 600 W | 平台 / 总线维持功耗 |
 | `C_th` | 160 000 J/K | 集总热容（`THERMAL_MASS_J_PER_K`） |
-| `E_batt` | 1500 Wh | 电池容量（默认；`battery_capacity_wh`） |
+| `E_batt` | 推导 Wh | 电池容量 = 包质量 × 化学能量密度（默认 Li-ion L = 8000 Wh）；见 §5 |
 | `k_time` | 60 | 电池/热学时间加速（`PHYS_TIME_SCALE`） |
 
 ---
@@ -53,21 +53,26 @@ A_rad = 2 板 · 2 面 · (long · short) = 4 · long · short
 
 ## 3. 太阳功率（光照 → 发电）
 
-太阳在惯性系中固定，单位方向 `ŝ = (0.648, −0.648, 0.398)`。设卫星位置为 `r`：
+太阳在惯性系中固定，方向 `ŝ = unit(0.648, −0.648, 0.398)`（原始三元组在加载时归一化一次 —— `_SUN_UNIT`，故下面的点积是真实余弦）。设卫星位置为 `r`：
 
 ```
 cos θ = (r · ŝ) / |r|
 sunlit = cos θ > −0.05            （留出少量晨昏余量）
 ```
 
-太阳翼装有对日跟踪机构（SADA），与真实在轨电源系统一致：光照期内电池片保持近法向入射：
+**入射率取决于姿态。** 板面法向 `n̂` 由指令指向模式（`attitude_mode`）决定，入射率为其在太阳方向上的投影 `max(0, n̂ · ŝ)`，入影时置 0：
 
 ```
-incidence = 0.95  若 sunlit 否则 0     （指向/温度损耗）
-incidence = 1.0   晨昏太阳同步轨道       （永不入影，恒定对日）
+sun       incidence = 1                       （SADA 保持翼面恒定对日 —— 光照期永远满发）
+free      incidence = 0.95   （晨昏 SSO 为 1.0）   （默认对日跟踪翼；指向/温度损耗）
+nadir     n̂ = r̂            incidence = max(0, r̂·ŝ)   （体固定翼随当地垂线 —— 一圈内在 0…1 间摆动）
+velocity  n̂ = v̂            incidence = max(0, v̂·ŝ)   （翼沿速度方向 —— 每圈都有一段侧对太阳）
+inertial  n̂ = unit(r×v)    incidence = max(0, n̂·ŝ)   （轨道法向翼 —— 光照期近似恒定）
 ```
 
-（早期版本误用 `max(0, cos θ)`——即**位置矢量**与太阳的夹角——作为板面入射率，轨道均值仅约 0.22，任何合理翼面积都无法闭合功率预算，电池长期钉死在 0%。）
+于是对日指向保证白昼持续发电，而体固定姿态（nadir/velocity/inertial）只收集几何投影，即使处于强光下也可能跌到 0 —— 这正是"不同姿态收集不同太阳能"的物理答案。速度矢量与位置取自同一次 SGP4 状态（`propagate_tracked_rv`）。
+
+（早期版本仅用 `max(0, cos θ)`——即**位置矢量**与太阳的夹角——作为**唯一**入射率模型，相当于所有设计都按 nadir 计算，轨道均值仅约 0.22，任何合理翼面积都无法闭合功率预算，电池长期钉死在 0%。sun/free 跟踪模式修复了这一点；nadir/velocity/inertial 则作为诚实的体固定几何保留。）
 
 `sun_factor = max(0, cos θ)` 仍导出用于驱动 Kit 主光。发电功率 = 效率 × 面积 × 辐照 × 入射率：
 
@@ -115,12 +120,20 @@ P_load    = P_payload + P_platform
 
 ## 5. 电池（Wh 积分）
 
-太阳盈余给电池充电，亏缺则放电：
+电池容量**由所选化学体系与包尺寸推导**，不再是固定常数：`E_batt = mass(尺寸) · density(化学)`。
 
 ```
-P_net = P_solar − P_load                          (battery_charge_w)
-ΔSOC  = P_net · dt · k_time / (E_batt · 3600)
-SOC   = clamp(SOC + ΔSOC, 0, 1)
+尺寸    S 10 kg · M 20 kg · L 32 kg · XL 60 kg
+化学（Wh/kg，往返效率 η）：Li-ion NMC 250/0.95 · LiFePO4 160/0.96 · 锂硫 400/0.90 · 固态 350/0.97
+```
+
+故更高能量密度或更大包都提升 Wh（例如 Li-ion L = 32·250 = 8.0 kWh；锂硫 XL = 60·400 = 24 kWh）。太阳盈余给电池充电，亏缺则放电。往返损耗**只在充电一侧计一次** —— 盈余每瓦仅 `η` 进入储能，放电则 1:1 取用 —— 于是一个充→放循环 `energy_out/energy_in = η`（真实往返效率，而非 η²）：
+
+```
+P_net  = P_solar − P_load                          (battery_charge_w，原始电气净值)
+P_eff  = P_net · η   若 P_net ≥ 0  否则  P_net       (充电计损；放电 1:1)
+ΔSOC   = P_eff · dt · k_time / (E_batt · 3600)
+SOC    = clamp(SOC + ΔSOC, 0, 1)
 ```
 
 ---

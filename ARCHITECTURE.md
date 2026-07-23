@@ -121,8 +121,8 @@ tick 体裹 `try/except`——一次瞬时 sgp4 失败只跳一拍，不会拖�
 | 模型 | 文件 | 输入 → 输出 | 方法 |
 | --- | --- | --- | --- |
 | 轨道预报 | `services/orbit_catalog.py` `services/constellations.py` | TLE、sim 时间 → ECI 位置、lat/lon/alt、日照、Walker 舰队 | SGP4 真实传播 + 星下点转换 |
-| 太阳能 | `state_engine.py` | 面积、材料 η、日照、展开度 → `solar_input_w` | 对日跟踪：`η·A·1361·入射角·展开度` |
-| 功率/电池 | `state_engine.py` | 作业 util、TDP、太阳输入 → `payload_power_w`、SOC | EPS 每卡预算 + Wh 积分 |
+| 太阳能 | `state_engine.py` | 面积、材料 η、日照、**姿态**、展开度 → `solar_input_w`、`solar_incidence` | `η·A·1361·入射率·展开度`；入射率随姿态：对日=1、free SADA=0.95、nadir/velocity/inertial=`max(0, 板面法向·太阳)` 几何投影 |
+| 功率/电池 | `state_engine.py` | 作业 util、TDP、太阳输入、**电池化学/包尺寸** → `payload_power_w`、SOC | EPS 每卡预算 + Wh 积分；容量=包质量×化学能量密度，往返效率只计充电一侧 |
 | 热控 | `state_engine.py` | 耗散功率、面积、涂层 ε → 温度、辐射功率 | 集总热质 + 斯特藩-玻尔兹曼 |
 | AI 作业 | `ai_workloads.py` | 作业类型、GPU、功率上限、结构温度 → MFU/吞吐/实际功耗 | 数据手册算力表 + 类型化作业目录 |
 | LLM 推理 | `llm_perf.py` | 模型/批量/上下文、功率热约束 → 频率、tok/s、结温 | DVFS 聚合 + decode 访存下限 + 热节流耦合（V100 实测校准） |
@@ -174,9 +174,9 @@ tick 体裹 `try/except`——一次瞬时 sgp4 失败只跳一拍，不会拖�
 | 页面 | 路由 | 能力 |
 | --- | --- | --- |
 | **态势总览** Overview | `/` | 地球+星座三维态势、14 参数遥测卡、星座预设切换、**四页签设计工作台**：轨道/星座设计器（六要素 + Walker）、新加坡地面站配置（仰角掩模/通信波段/太阳分档）、Coverage(可见星+带宽折线)、Solar(光照分档收集直方图)、Bands(波段吞吐-仰角对比曲线)、事件流 |
-| **卫星孪生体** Satellite Twin | `/satellite` | 主界面：Omniverse 特写视口（真实轨道运动/地影/构件拾取弹窗）+ 配置器（Compute+Workload/材料/几何/展开/**姿态控制**）+ **设计库**（6 套整星、软件渲染缩略图）+ **实时 What-if 对比**（8 维度×2-4 变体，与物理 tick 同步步进、虚线叠加在遥测折线图上随时间生长分叉，面板含逐变体实时数值表）+ 120s 遥测带 |
+| **卫星孪生体** Satellite Twin | `/satellite` | 主界面：Omniverse 特写视口（真实轨道运动/地影/构件拾取弹窗）+ 配置器（Compute+Workload/材料/几何/展开/**电池化学·包尺寸**/**姿态控制**）+ **设计库**（6 套整星、软件渲染缩略图）+ **实时 What-if 对比**（8 配置维度含电池化学·包尺寸 ×2-4 变体，与物理 tick 同步步进、虚线叠加在遥测折线图上随时间生长分叉，面板含逐变体实时数值表）+ 120s 遥测带 |
 
-**姿态控制**：四种指向模式（对日 sun / 对地 nadir / 沿速度 velocity / 惯性 inertial）与 X/Y/Z 动量轮互斥——选模式清零动量轮、Kit 特写把机体缓动到目标姿态；碰动量轮则退回 `free` 自由翻滚（`POST /attitude_mode` · `/attitude_spin`，display-only）。
+**姿态控制**：四种指向模式（对日 sun / 对地 nadir / 沿速度 velocity / 惯性 inertial）与 X/Y/Z 动量轮互斥——选模式清零动量轮、Kit 特写把机体缓动到目标姿态；碰动量轮则退回 `free` 自由翻滚（`POST /attitude_mode` · `/attitude_spin`，display-only）。姿态**真实驱动太阳能收集**：板面法向随模式变化，入射率 = `max(0, 法向·太阳)`，对日恒满发、体固定姿态随几何在 0…1 间摆动（配置器"Solar collection"读数实时显示，见物理模型 §太阳能）。
 
 三维视口三态：WebRTC 流就绪时显示 Kit 渲染；连接中显示提示；离线时 Three.js 回退场景（真轨道追踪）兜底。视频元素全局单例（随路由卸载会杀掉 MediaStream、Kit 重连需 13s），仅流 `ready` 时覆盖到当前页占位槽。
 

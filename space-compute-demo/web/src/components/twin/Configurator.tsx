@@ -1,10 +1,12 @@
-import { Compass, Cpu, Maximize2, Snowflake, Sun } from 'lucide-react'
+import { BatteryCharging, Compass, Cpu, Maximize2, Snowflake, Sun } from 'lucide-react'
 import { Card } from '../primitives'
-import { hasFixedWings } from '../../data/satConfigOptions'
+import { batteryCapacityWh, hasFixedWings } from '../../data/satConfigOptions'
 import { useDemoStore } from '../../store/demoStore'
 import { useTwinGeometry, GEOM_RANGE } from '../../hooks/useTwinGeometry'
 import { WorkloadPanel } from './WorkloadPanel'
 import {
+  BATTERY_MATERIAL_OPTIONS,
+  BATTERY_SIZE_OPTIONS,
   GPU_OPTIONS,
   RADIATOR_MATERIAL_OPTIONS,
   RADIATOR_SIZE_OPTIONS,
@@ -103,6 +105,33 @@ export function Configurator() {
           }))}
           onChange={(v) => update({ radiator_size: v })}
         />
+      </Section>
+
+      <Section title="Battery" icon={<BatteryCharging size={12} strokeWidth={1.8} className="text-accent" />}>
+        <ConfigDropdown
+          label="Chemistry"
+          value={cfg.battery_material}
+          options={BATTERY_MATERIAL_OPTIONS.map((o) => ({
+            id:     o.id,
+            label:  o.label,
+            swatch: o.tint,
+            meta:   `${o.density_wh_kg} Wh/kg · η ${(o.efficiency * 100).toFixed(0)}%`,
+          }))}
+          onChange={(v) => update({ battery_material: v })}
+        />
+        <ConfigDropdown
+          label="Pack size"
+          value={cfg.battery_size}
+          options={BATTERY_SIZE_OPTIONS.map((o) => ({
+            id:    o.id,
+            label: o.label,
+            meta:  `${o.mass_kg} kg → ${(batteryCapacityWh(cfg.battery_material, o.id) / 1000).toFixed(1)} kWh`,
+          }))}
+          onChange={(v) => update({ battery_size: v })}
+        />
+        <div className="px-0.5 text-[10px] tabular text-text-lo">
+          Capacity {(batteryCapacityWh(cfg.battery_material, cfg.battery_size) / 1000).toFixed(1)} kWh
+        </div>
       </Section>
 
       <GeometryControls />
@@ -223,8 +252,11 @@ const ATTITUDE_MODES: Array<{ id: string; label: string; title: string }> = [
 function AttitudeControl() {
   const mode = useDemoStore((s) => s.lastState?.satellite?.attitude_mode) ?? 'free'
   const raw = useDemoStore((s) => s.lastState?.satellite?.attitude_spin_dps)
+  const incidence = useDemoStore((s) => s.lastState?.satellite?.solar_incidence)
+  const sunlit = useDemoStore((s) => s.lastState?.satellite?.sunlit)
   const rates: number[] = Array.isArray(raw) ? raw : [0, 0, typeof raw === 'number' ? raw : 0]
   const anySpin = rates.some((r) => r > 0)
+  const incPct = Math.round((incidence ?? 0) * 100)
 
   const setMode = async (next: string) => {
     // Clicking the active mode toggles back to free (wheels available again).
@@ -250,6 +282,16 @@ function AttitudeControl() {
 
   return (
     <div data-testid="attitude-control" className="flex flex-col gap-1.5">
+      {/* Attitude → solar-collection readout: the physical link the modes
+          drive. Sun-pointing holds ~100 %; a body-fixed nadir/ram/inertial
+          array projects geometrically and can fall to 0 even in daylight. */}
+      <div className="flex items-center justify-between px-0.5 text-[10px]">
+        <span className="uppercase tracking-[0.08em] text-text-lo">Solar collection</span>
+        <span className={'tabular font-semibold '
+          + (!sunlit ? 'text-text-lo' : incPct >= 80 ? 'text-ok' : incPct >= 30 ? 'text-warn' : 'text-err')}>
+          {!sunlit ? 'eclipse · 0%' : `${incPct}% incidence`}
+        </span>
+      </div>
       {/* Pointing-mode presets. */}
       <div className="grid grid-cols-4 gap-1">
         {ATTITUDE_MODES.map((m) => (

@@ -116,6 +116,57 @@ _RAD_SIZE_TABLE = {
 }
 _RAD_PANELS_PER_SAT = 2
 
+# Battery chemistry: gravimetric energy density (Wh/kg) + round-trip
+# efficiency. Effective pack capacity = mass (size tier) × density, so a
+# denser chemistry or a bigger pack both raise Wh; efficiency taxes charging.
+_BATT_MAT_TABLE = {
+    "LiIon":      {"density_wh_kg": 250.0, "efficiency": 0.95},
+    "LiFePO4":    {"density_wh_kg": 160.0, "efficiency": 0.96},
+    "LiS":        {"density_wh_kg": 400.0, "efficiency": 0.90},
+    "SolidState": {"density_wh_kg": 350.0, "efficiency": 0.97},
+}
+_BATT_SIZE_TABLE = {
+    "S":  {"mass_kg": 10.0},
+    "M":  {"mass_kg": 20.0},
+    "L":  {"mass_kg": 32.0},
+    "XL": {"mass_kg": 60.0},
+}
+
+
+def _batt_capacity_wh(cfg) -> float:
+    m = _BATT_MAT_TABLE.get(cfg.battery_material, _BATT_MAT_TABLE["LiIon"])
+    s = _BATT_SIZE_TABLE.get(cfg.battery_size, _BATT_SIZE_TABLE["L"])
+    return s["mass_kg"] * m["density_wh_kg"]
+
+
+def _batt_efficiency(cfg) -> float:
+    return _BATT_MAT_TABLE.get(cfg.battery_material, _BATT_MAT_TABLE["LiIon"])["efficiency"]
+
+
+# Fixed inertial Sun direction (matches _set_tracked_kinematics + Kit lights).
+# The raw triple is not unit-length (|·| ≈ 0.999); _SUN_UNIT normalizes it so
+# a dead-on panel reads incidence exactly 1.0.
+_SUN_DIR_ECI = (0.648, -0.648, 0.398)
+
+
+def _unit(v: tuple[float, float, float]) -> tuple[float, float, float]:
+    n = math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) or 1.0
+    return (v[0] / n, v[1] / n, v[2] / n)
+
+
+def _dot(a, b) -> float:
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+
+
+def _cross(a, b) -> tuple[float, float, float]:
+    return (a[1] * b[2] - a[2] * b[1],
+            a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0])
+
+
+_SUN_UNIT = _unit(_SUN_DIR_ECI)
+
+
 _SOLAR_CONSTANT_W_M2 = 1361.0
 # Sun-tracking array model: pointing/temperature losses while tracking, and
 # the sunlit fraction of a LEO orbit under the scene's fixed sun direction
@@ -377,6 +428,9 @@ class StateEngine:
         # Ground-station marker (Overview) — None until first set; the fleet
         # tick fills its live visibility fields while enabled.
         self._ground_target: Optional[GroundTargetState] = None
+        # Tracked satellite's ECI velocity (km/s) — refreshed with position;
+        # feeds the attitude/solar geometry (ram + orbit-normal pointing).
+        self._tracked_vel_km_s: tuple[float, float, float] = (0.0, 0.0, 0.0)
 
     # ---- lifecycle ----
     async def start(self) -> None:
@@ -403,12 +457,11 @@ class StateEngine:
 
     def reset(self) -> None:
         self._sim_time_s = 0.0
-        # Rebuild the telemetry state but keep design-owned hardware constants:
-        # battery capacity is stamped by apply_design and must survive a sim
-        # reset or the active design's power story runs on the wrong pack.
-        battery_capacity_wh = self._sat.battery_capacity_wh
+        # Rebuild the telemetry state. Battery capacity is DERIVED from the
+        # (reset-surviving) config, so re-seed it here for the immediate
+        # snapshot; the tick re-derives it each step anyway.
         self._sat = SatelliteState()
-        self._sat.battery_capacity_wh = battery_capacity_wh
+        self._sat.battery_capacity_wh = _batt_capacity_wh(self._config)
         self._gs = GroundStationState()
         self._task = None
 
@@ -439,6 +492,9 @@ class StateEngine:
         # Pydantic re-validates via model_validate to ensure literals are
         # actually one of the allowed enum strings (model_copy alone does not).
         self._config = SatelliteConfig.model_validate(self._config.model_dump())
+        # Battery capacity is derived from the (material, size) config — keep
+        # the reported value fresh for the immediate broadcast.
+        self._sat.battery_capacity_wh = _batt_capacity_wh(self._config)
         if mark_custom and cleaned:
             self._design_id = "custom"
         return self._config
@@ -670,9 +726,10 @@ class StateEngine:
         self._platform_power_w = float(preset.platform_power_w)
         self._gpu_count = max(1, int(preset.gpu_count))
         self._reset_workload_totals()
-        # Battery: swap capacity, keep the current charge fraction so the
-        # switch doesn't teleport the SOC story.
-        self._sat.battery_capacity_wh = float(preset.battery_capacity_wh)
+        # Battery capacity is derived from the preset's (material, size)
+        # config (set via set_config above); keep the current charge fraction
+        # so the switch doesn't teleport the SOC story.
+        self._sat.battery_capacity_wh = _batt_capacity_wh(self._config)
         # Deployment state never carries over across designs. The redwire
         # roll-out array arrives STOWED (the just-separated look — press
         # Deploy and watch the blanket reel out); rigid-wing designs arrive
@@ -943,6 +1000,42 @@ class StateEngine:
             self._sat.sun_cos = 0.0
         return cos_a
 
+    def _solar_incidence(self) -> float:
+        """Panel-normal · Sun incidence 0..1 for the CURRENT attitude — the
+        physical coupling between where the body points and how much sunlight
+        the (body-fixed) arrays actually collect:
+
+          eclipse            → 0
+          sun-pointing       → 1 (SADA-perfect; dawn-dusk never eclipsed)
+          free (default)     → SADA sun-tracking, _POINTING_EFF (or 1 on SSO)
+          nadir              → panels ride the local vertical r̂: max(0, r̂·ŝ)
+          velocity (ram)     → panels along-track v̂:            max(0, v̂·ŝ)
+          inertial           → panels on the orbit normal (r̂×v̂), quasi-fixed
+                               in inertial space: max(0, n̂·ŝ)
+
+        So a nadir/ram/inertial body-fixed array projects geometrically and
+        can fall to 0 in full daylight, while sun-pointing holds ~1 — exactly
+        the attitude→power story the design lets you fly."""
+        sat = self._sat
+        if not sat.sunlit:
+            return 0.0
+        mode = sat.attitude_mode
+        if mode == "sun":
+            return 1.0
+        if mode == "free":
+            return 1.0 if sat.is_dawn_dusk else _POINTING_EFF
+        r = _unit(sat.sat_xyz_km)
+        v = _unit(self._tracked_vel_km_s)
+        if mode == "nadir":
+            n = r
+        elif mode == "velocity":
+            n = v
+        elif mode == "inertial":
+            n = _unit(_cross(sat.sat_xyz_km, self._tracked_vel_km_s))
+        else:
+            n = r
+        return max(0.0, _dot(n, _SUN_UNIT))
+
     def _refresh_display_kinematics(self) -> None:
         """Refresh the tracked satellite's position-derived fields at the
         CURRENT fractional sim time (single cached-Satrec sgp4 call). The
@@ -958,7 +1051,7 @@ class StateEngine:
         t = self._sim_time_s + frac
         preset = _consts.get_preset(self._constellation_id) or _consts.get_preset("single_iss")
         try:
-            pos = _consts.propagate_tracked(preset, t)
+            pos, self._tracked_vel_km_s = _consts.propagate_tracked_rv(preset, t)
         except Exception:  # noqa: BLE001 — display-only; keep last values
             return
         if pos == (0.0, 0.0, 0.0):
@@ -968,11 +1061,11 @@ class StateEngine:
         # self-consistent on eclipse-boundary reads: the fresh sunlit flag
         # would otherwise contradict last tick's solar input for up to 1 s
         # (sunlit=False with panels still "producing"). Same formulas as the
-        # tick — including the deployment fraction — reusing the tick-owned
-        # load.
+        # tick — including the attitude incidence + deployment fraction —
+        # reusing the tick-owned load.
         s_mat = _SOLAR_MAT_TABLE.get(self._config.solar_material, _SOLAR_MAT_TABLE["Si"])
-        incidence = (1.0 if self._sat.is_dawn_dusk
-                     else (_POINTING_EFF if self._sat.sunlit else 0.0))
+        incidence = self._solar_incidence()
+        self._sat.solar_incidence = incidence
         solar_w = (s_mat["efficiency"] * _solar_area_m2(self._twin_geometry)
                    * _SOLAR_CONSTANT_W_M2 * incidence
                    * self._sat.solar_deploy_frac)
@@ -1049,6 +1142,8 @@ class StateEngine:
         sat on a private Satrec — the downstream physics is untouched."""
         preset = _consts.get_preset(self._constellation_id) or _consts.get_preset("single_iss")
         fleet_pos_km = _consts.propagate_fleet(preset, t)
+        # Tracked satellite's velocity (for the attitude/solar geometry).
+        _p, self._tracked_vel_km_s = _consts.propagate_tracked_rv(preset, t)
         kpis = _consts.synthesize_kpis(preset, fleet_pos_km)
         self._fleet_snapshot = FleetSnapshot(
             constellation_id=preset.id,
@@ -1125,14 +1220,14 @@ class StateEngine:
         radiator_area_m2 = _radiator_area_m2(geom)
 
         # --- Solar input (front of panel) -------------------------------------
-        # The wings ride a sun-tracking drive (SADA), like every real orbital
-        # power system: while sunlit the cells hold near-normal incidence and
-        # deliver _POINTING_EFF × peak; in eclipse they deliver nothing. (The
-        # old model reused the position-vector/sun cosine as "incidence",
-        # which averaged only ~0.22 over an orbit — no physically plausible
-        # array could ever close the power budget, so the battery pinned at 0
-        # and the physics looked dead.) Dawn-dusk SSO: permanent full sun.
-        incidence = 1.0 if is_dawn_dusk else (_POINTING_EFF if self._sat.sunlit else 0.0)
+        # Incidence is now ATTITUDE-DEPENDENT (see _solar_incidence): a
+        # sun-pointing body holds ~1 while sunlit; the default 'free' rides the
+        # sun-tracking drive (SADA, _POINTING_EFF); a nadir/ram/inertial
+        # body-fixed array projects panel_normal·ŝ and can fall to 0 even in
+        # daylight, so the chosen attitude visibly changes generated power.
+        # Dawn-dusk SSO: permanent full sun for sun/free.
+        incidence = self._solar_incidence()
+        self._sat.solar_incidence = incidence
         # Roll-out array deployment: slew the live fraction toward the
         # commanded target (POST /solar_deploy) over _SOLAR_DEPLOY_S, and
         # scale production with it — a retracted blanket genuinely starves
@@ -1196,13 +1291,24 @@ class StateEngine:
         totals.duration_s += dt
 
         # --- Battery (real Wh integration, accelerated 60x for visibility) ----
-        # Net power into the battery. Surplus charges it; deficit discharges.
+        # Capacity = pack mass (size tier) × chemistry energy density, and the
+        # chemistry's round-trip efficiency taxes charging — so both the
+        # battery material and size the user picks move the SOC story.
+        cap_wh = _batt_capacity_wh(cfg)
+        self._sat.battery_capacity_wh = cap_wh
+        batt_eff = _batt_efficiency(cfg)
+        # Net power into the battery. The round-trip loss is booked once, on
+        # the charging leg: only `eff` of a surplus watt reaches stored energy;
+        # discharge draws stored energy 1:1. So over a charge→discharge cycle
+        # energy_out/energy_in = eff (a true round-trip efficiency, not eff²).
+        # Reported charge_w is the raw electrical net.
         load_total_w = payload_w + platform_w
         net_w = self._sat.solar_input_w - load_total_w
         self._sat.battery_charge_w = net_w
+        eff_net_w = net_w * batt_eff if net_w >= 0.0 else net_w
         PHYS_TIME_SCALE = 60.0   # 1 wall sec runs 60 sim sec of battery dynamics
-        capacity_J = self._sat.battery_capacity_wh * 3600.0
-        d_soc = (net_w * dt * PHYS_TIME_SCALE) / capacity_J
+        capacity_J = cap_wh * 3600.0
+        d_soc = (eff_net_w * dt * PHYS_TIME_SCALE) / capacity_J
         self._sat.battery_soc = max(0.0, min(1.0, self._sat.battery_soc + d_soc))
 
         # --- Thermal (Stefan-Boltzmann, accelerated 60x) ----------------------

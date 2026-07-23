@@ -34,7 +34,8 @@ class DesignPreset(BaseModel):
     workload_profile: str
     # Accelerator cards fitted (drives payload power AND compute throughput).
     gpu_count: int = 8
-    battery_capacity_wh: float
+    # Battery capacity is DERIVED from config.battery_material × battery_size
+    # (see state_engine._batt_capacity_wh) — no separate Wh field.
     platform_power_w: float
 
     def geometry_patch(self) -> dict:
@@ -69,11 +70,11 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
         config=SatelliteConfig(
             gpu="H100", solar_material="Si", solar_size="M",
             radiator_material="WhitePaint", radiator_size="Standard",
-        ),
+            battery_material="LiIon", battery_size="L",),
         architecture="truss",
         solar_clusters_per_side=5, radiator_long=1.9, radiator_ratio=2.5,
         workload_profile="chat_serving", gpu_count=8,
-        battery_capacity_wh=7000.0, platform_power_w=600.0,
+        platform_power_w=600.0,
     ),
     DesignPreset(
         id="redwire",
@@ -89,11 +90,11 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
         config=SatelliteConfig(
             gpu="H200", solar_material="GaAs", solar_size="M",
             radiator_material="OSR", radiator_size="Standard",
-        ),
+            battery_material="LiS", battery_size="M",),
         architecture="redwire",
         solar_clusters_per_side=4, radiator_long=1.75, radiator_ratio=1.3,
         workload_profile="frontier", gpu_count=8,
-        battery_capacity_wh=9000.0, platform_power_w=700.0,
+        platform_power_w=700.0,
     ),
     DesignPreset(
         id="compute_max",
@@ -107,11 +108,11 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
         config=SatelliteConfig(
             gpu="B200", solar_material="Perovskite", solar_size="L",
             radiator_material="Graphite", radiator_size="Wide",
-        ),
+            battery_material="LiIon", battery_size="XL",),
         architecture="twin_truss",
         solar_clusters_per_side=8, radiator_long=2.6, radiator_ratio=2.0,
         workload_profile="training", gpu_count=12,
-        battery_capacity_wh=15000.0, platform_power_w=800.0,
+        platform_power_w=800.0,
     ),
     DesignPreset(
         id="eco_light",
@@ -125,11 +126,11 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
         config=SatelliteConfig(
             gpu="H100", solar_material="Perovskite", solar_size="S",
             radiator_material="WhitePaint", radiator_size="Compact",
-        ),
+            battery_material="LiFePO4", battery_size="M",),
         architecture="lumid",
         solar_clusters_per_side=2, radiator_long=1.75, radiator_ratio=3.0,
         workload_profile="low_duty", gpu_count=4,
-        battery_capacity_wh=2600.0, platform_power_w=450.0,
+        platform_power_w=450.0,
     ),
     DesignPreset(
         id="thermal_guard",
@@ -143,11 +144,11 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
         config=SatelliteConfig(
             gpu="H200", solar_material="GaAs", solar_size="M",
             radiator_material="OSR", radiator_size="Wide",
-        ),
+            battery_material="LiIon", battery_size="M",),
         architecture="dish",
         solar_clusters_per_side=3, radiator_long=3.0, radiator_ratio=1.5,
         workload_profile="burst", gpu_count=8,
-        battery_capacity_wh=5000.0, platform_power_w=600.0,
+        platform_power_w=600.0,
     ),
     DesignPreset(
         id="wide_wing",
@@ -161,11 +162,11 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
         config=SatelliteConfig(
             gpu="MI300X", solar_material="Perovskite", solar_size="XL",
             radiator_material="OSR", radiator_size="Standard",
-        ),
+            battery_material="SolidState", battery_size="M",),
         architecture="blanket",
         solar_clusters_per_side=8, radiator_long=1.85, radiator_ratio=2.5,
         workload_profile="code_rag", gpu_count=8,
-        battery_capacity_wh=7500.0, platform_power_w=650.0,
+        platform_power_w=650.0,
     ),
 ]}
 
@@ -181,8 +182,9 @@ def preset_summary(p: DesignPreset) -> dict:
     # Local import — state_engine imports models like we do; keeping the
     # import inside the function avoids any module-init order surprises.
     from state_engine import (
-        _GPU_TABLE, _SOLAR_MAT_TABLE, _RAD_MAT_TABLE,
-        _solar_area_m2, _radiator_area_m2, workload_profile_stats,
+        _GPU_TABLE, _SOLAR_MAT_TABLE, _RAD_MAT_TABLE, _BATT_MAT_TABLE,
+        _batt_capacity_wh, _solar_area_m2, _radiator_area_m2,
+        workload_profile_stats,
     )
 
     geom = TwinGeometry(**p.geometry_patch())
@@ -196,13 +198,19 @@ def preset_summary(p: DesignPreset) -> dict:
 
     peak_solar_w = s_mat["efficiency"] * solar_area * 1361.0
     compute_pflops = gpu["pflops"] * p.gpu_count
+    battery_capacity_wh = _batt_capacity_wh(p.config)
+    b_mat = _BATT_MAT_TABLE[p.config.battery_material]
     mass_kg = (300.0
                + solar_area * s_mat["density_kg_m2"]
-               + radiator_material_area * r_mat["density_kg_m2"])
+               + radiator_material_area * r_mat["density_kg_m2"]
+               + battery_capacity_wh / b_mat["density_wh_kg"])   # pack mass
     profile = workload_profile_stats(p.workload_profile)
 
     return {
         **p.model_dump(),
+        # Capacity is derived (no longer a preset field) — expose it so the
+        # gallery card + frontend DesignPresetInfo keep working.
+        "battery_capacity_wh": round(battery_capacity_wh),
         "stats": {
             "solar_area_m2": round(solar_area, 1),
             "radiator_area_m2": round(radiator_area, 1),

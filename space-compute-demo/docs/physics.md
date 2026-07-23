@@ -23,7 +23,7 @@ All symbols below are SI unless noted.
 | `cards` | 8 | GPU cards per satellite (`_GPU_CARDS_PER_SAT`) |
 | `P_platform` | 600 W | Bus / platform housekeeping load |
 | `C_th` | 160 000 J/K | Lumped thermal mass (`THERMAL_MASS_J_PER_K`) |
-| `E_batt` | 1500 Wh | Battery capacity (default; `battery_capacity_wh`) |
+| `E_batt` | derived Wh | Battery capacity = pack mass × chemistry density (default Li-ion L = 8000 Wh); see §5 |
 | `k_time` | 60 | Battery/thermal time-acceleration (`PHYS_TIME_SCALE`) |
 
 ---
@@ -53,21 +53,26 @@ So solar scales only with the side count (panels are added along the sides), and
 
 ## 3. Solar power (illumination → generation)
 
-The sun is fixed in the inertial frame at unit direction `ŝ = (0.648, −0.648, 0.398)`. With the satellite position `r`:
+The sun is fixed in the inertial frame at direction `ŝ = unit(0.648, −0.648, 0.398)` (the raw triple is normalized once at load — `_SUN_UNIT` — so the dot products below are true cosines). With the satellite position `r`:
 
 ```
 cos θ = (r · ŝ) / |r|
 sunlit = cos θ > −0.05            (small dawn/dusk margin)
 ```
 
-The wings ride a sun-tracking drive (SADA), like every real orbital power system: while sunlit the cells hold near-normal incidence, so
+**Incidence is attitude-dependent.** The panel normal `n̂` is set by the commanded pointing mode (`attitude_mode`), and incidence is its projection onto the sun — `max(0, n̂ · ŝ)` — gated to 0 in eclipse:
 
 ```
-incidence = 0.95  if sunlit else 0          (pointing/temperature losses)
-incidence = 1.0   on the dawn-dusk SSO      (never eclipsed, sun-normal)
+sun       incidence = 1                       (SADA holds the array sun-normal — always full power when lit)
+free      incidence = 0.95   (1.0 on dawn-dusk SSO)   (default sun-tracking array; pointing/temperature losses)
+nadir     n̂ = r̂            incidence = max(0, r̂·ŝ)   (body-fixed array rides local vertical — swings 0…1 over the orbit)
+velocity  n̂ = v̂            incidence = max(0, v̂·ŝ)   (array along-track — edge-on to the sun for part of every orbit)
+inertial  n̂ = unit(r×v)    incidence = max(0, n̂·ŝ)   (orbit-normal array — quasi-constant while sunlit)
 ```
 
-(Earlier builds reused `max(0, cos θ)` — the angle to the *position vector* — as panel incidence. That averaged only ≈0.22 over an orbit, so no plausible array could ever close the power budget and the battery pinned at 0.)
+So sun-pointing guarantees continuous daylight power, while a body-fixed attitude (nadir/velocity/inertial) collects only the geometric projection and can fall to 0 even in full sun — the physical answer to "different attitudes collect different solar". The velocity vector comes from the same SGP4 state as the position (`propagate_tracked_rv`).
+
+(Earlier builds reused `max(0, cos θ)` — the angle to the *position vector* — as the *only* incidence model, i.e. nadir for every design. That averaged only ≈0.22 over an orbit, so no plausible array could ever close the power budget and the battery pinned at 0. The sun/free tracking modes fix that; nadir/velocity/inertial remain available as honest body-fixed geometries.)
 
 `sun_factor = max(0, cos θ)` is still exported to drive the Kit key-light. Generated power is panel efficiency × area × flux × incidence:
 
@@ -136,12 +141,20 @@ The MFU table above is only the fallback path for vision/idle jobs. **Every LLM 
 
 ## 5. Battery (Wh integration)
 
-Surplus solar charges the battery; a deficit discharges it:
+The pack capacity is **derived from the chosen chemistry and pack size**, not a fixed constant: `E_batt = mass(size) · density(chemistry)`.
 
 ```
-P_net = P_solar − P_load                         (battery_charge_w)
-ΔSOC  = P_net · dt · k_time / (E_batt · 3600)
-SOC   = clamp(SOC + ΔSOC, 0, 1)
+size      S 10 kg · M 20 kg · L 32 kg · XL 60 kg
+chemistry (Wh/kg, round-trip η):  Li-ion NMC 250/0.95 · LiFePO4 160/0.96 · Li-S 400/0.90 · Solid-State 350/0.97
+```
+
+So a denser chemistry or a bigger pack both raise Wh (e.g. Li-ion L = 32·250 = 8.0 kWh; Li-S XL = 60·400 = 24 kWh). Surplus solar charges the battery; a deficit discharges it. The round-trip loss is booked **once, on the charging leg** — only `η` of a surplus watt reaches stored energy, and discharge draws stored energy 1:1 — so over a charge→discharge cycle `energy_out/energy_in = η` (a true round-trip efficiency, not η²):
+
+```
+P_net  = P_solar − P_load                        (battery_charge_w, raw electrical net)
+P_eff  = P_net · η   if P_net ≥ 0  else  P_net    (charge is taxed; discharge is 1:1)
+ΔSOC   = P_eff · dt · k_time / (E_batt · 3600)
+SOC    = clamp(SOC + ΔSOC, 0, 1)
 ```
 
 ---

@@ -22,7 +22,6 @@ Design rules:
 """
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
 from typing import Any
 
@@ -37,6 +36,8 @@ from models import (
 )
 from state_engine import (
     StateEngine,
+    _BATT_MAT_TABLE,
+    _BATT_SIZE_TABLE,
     _GPU_TABLE,
     _RAD_MAT_TABLE,
     _SOLAR_MAT_TABLE,
@@ -122,10 +123,15 @@ class _OfflineTwin(StateEngine):
 
     def _tick_fleet(self, t: float) -> tuple[float, float, float]:
         scaled = t * _consts.TIME_SCALE
-        e, r, _v = self._satrec.sgp4(_consts.DEMO_JD0,
-                                     _consts.DEMO_FR0 + scaled / 86400.0)
+        e, r, v = self._satrec.sgp4(_consts.DEMO_JD0,
+                                    _consts.DEMO_FR0 + scaled / 86400.0)
         if e:
+            self._tracked_vel_km_s = (0.0, 0.0, 0.0)
             return (0.0, 0.0, 0.0)
+        # Mirror the base engine: capture velocity too so an offline twin flown
+        # in a velocity/inertial attitude (if compare ever seeds one) projects
+        # its panels correctly instead of reading the (0,0,0) init default.
+        self._tracked_vel_km_s = (float(v[0]), float(v[1]), float(v[2]))
         return (float(r[0]), float(r[1]), float(r[2]))
 
     def settle_deployables(self) -> None:
@@ -150,18 +156,6 @@ def _apply_geometry(key: str, cast=float):
     def apply(eng: StateEngine, value: Any) -> None:
         eng.set_twin_geometry({key: cast(value)}, mark_custom=False)
     return apply
-
-
-def _apply_battery(eng: StateEngine, value: Any) -> None:
-    # The only knob with no downstream Pydantic/clamp validation — a zero
-    # capacity would ZeroDivisionError the very first tick (SOC integration
-    # divides by capacity), negative would invert charging, NaN would pin
-    # SOC at 1.0 through the min/max clamp.
-    v = float(value)
-    if not math.isfinite(v) or v <= 0:
-        raise CompareError(
-            f"battery_capacity_wh must be a positive finite number, got {value!r}")
-    eng._sat.battery_capacity_wh = v
 
 
 def _apply_workload(eng: StateEngine, value: Any) -> None:
@@ -231,15 +225,26 @@ DIMENSIONS: dict[str, dict[str, Any]] = {
         "apply": _apply_geometry("radiator_long", float),
         "default_metric": "temperature_c",
     },
-    "battery_capacity_wh": {
-        "label": "Battery capacity",
+    "battery_material": {
+        "label": "Battery chemistry",
         "group": "Power",
         "values": lambda: [
-            {"id": wh, "label": f"{wh / 1000:.1f} kWh"}
-            for wh in (1500, 3000, 4500, 9000)
+            {"id": k, "label": f"{k} · {v['density_wh_kg']:.0f} Wh/kg · η {v['efficiency']:.2f}"}
+            for k, v in _BATT_MAT_TABLE.items()
         ],
-        "current": lambda eng: eng._sat.battery_capacity_wh,
-        "apply": _apply_battery,
+        "current": lambda eng: eng.satellite_config.battery_material,
+        "apply": _apply_config("battery_material"),
+        "default_metric": "battery_soc",
+    },
+    "battery_size": {
+        "label": "Battery pack size",
+        "group": "Power",
+        "values": lambda: [
+            {"id": k, "label": f"{k} · {v['mass_kg']:.0f} kg"}
+            for k, v in _BATT_SIZE_TABLE.items()
+        ],
+        "current": lambda eng: eng.satellite_config.battery_size,
+        "apply": _apply_config("battery_size"),
         "default_metric": "battery_soc",
     },
     "workload_profile": {

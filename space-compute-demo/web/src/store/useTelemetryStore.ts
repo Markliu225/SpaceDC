@@ -15,6 +15,8 @@ export const SAT_CONFIG_BASELINE: SatelliteConfig = {
   solar_size: 'M',
   radiator_material: 'Aluminum',
   radiator_size: 'Standard',
+  battery_material: 'LiIon',
+  battery_size: 'L',
 }
 
 // Status taxonomy used by the donut + sat markers.

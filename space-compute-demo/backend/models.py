@@ -86,6 +86,11 @@ class SatelliteState(BaseModel):
     # panels track the Sun, so the twin keeps the Sun normal to the panels.
     is_dawn_dusk: bool = False
     solar_input_w: float = 0.0
+    # Effective panel-normal incidence 0..1 = max(0, panel_normal · sun) for
+    # the current attitude (1.0 = dead-on / sun-tracking, 0 = edge-on/eclipse).
+    # Sun-pointing holds ~1 while sunlit; a nadir/ram/inertial body-fixed array
+    # projects geometrically and can fall to 0 even in daylight.
+    solar_incidence: float = 0.0
     payload_power_w: float = 0.0
     platform_power_w: float = 0.0
     gpu_type: GpuType = "H100"
@@ -303,6 +308,8 @@ SolarMaterial = Literal["Si", "GaAs", "Perovskite"]
 SolarSize     = Literal["S", "M", "L", "XL"]
 RadiatorMaterial = Literal["Aluminum", "WhitePaint", "OSR", "Graphite"]
 RadiatorSize  = Literal["Compact", "Standard", "Wide"]
+BatteryMaterial = Literal["LiIon", "LiFePO4", "LiS", "SolidState"]
+BatterySize   = Literal["S", "M", "L", "XL"]
 
 
 class SatelliteConfig(BaseModel):
@@ -314,6 +321,10 @@ class SatelliteConfig(BaseModel):
     solar_size: SolarSize = "M"
     radiator_material: RadiatorMaterial = "Aluminum"
     radiator_size: RadiatorSize = "Standard"
+    # Battery chemistry (round-trip efficiency + energy density) and pack size
+    # (mass tier). Effective capacity = mass × density, so both matter.
+    battery_material: BatteryMaterial = "LiIon"
+    battery_size: BatterySize = "L"
 
 
 Architecture = Literal["truss", "twin_truss", "blanket", "lumid", "dish",
