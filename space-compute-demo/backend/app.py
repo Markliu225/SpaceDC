@@ -505,12 +505,24 @@ async def http_post_orbit_design(body: dict[str, Any]):
 
 
 # --- Ground-station target + communication visibility ----------------------
+@app.get("/comms_bands")
+async def http_comms_bands():
+    """The communication-band catalog: per-band throughput + elevation-mask
+    requirement (the Overview config selector + band-comparison curves)."""
+    return {
+        "default": constellations.DEFAULT_BAND,
+        "bands": [{"id": bid, **b} for bid, b in constellations.COMMS_BANDS.items()],
+    }
+
+
 @app.post("/ground_target")
 async def http_ground_target(body: Optional[dict[str, Any]] = None):
     """Mark (enabled=true) or clear (enabled=false) the ground station on
-    the Earth. Defaults to Singapore. While marked, every fleet tick
-    computes constellation visibility from it (elevation-angle model) and
-    the results ride StatePacket.ground_target."""
+    the Earth, with its comms config. Defaults to Singapore / X-band.
+    Accepts elevation_mask_deg, band (UHF|S|X|Ka), solar_bin (5|10). While
+    marked, every fleet tick computes visibility, the active band's
+    aggregate bandwidth, an elevation CDF and a solar histogram — all ride
+    StatePacket.ground_target."""
     b = body or {}
     enabled = bool(b.get("enabled", True))
     try:
@@ -519,7 +531,10 @@ async def http_ground_target(body: Optional[dict[str, Any]] = None):
             name=str(b.get("name", "Singapore")),
             lat=float(b.get("lat", 1.3521)),
             lon=float(b.get("lon", 103.8198)),
-            min_elevation_deg=float(b.get("min_elevation_deg", 10.0)),
+            elevation_mask_deg=float(b.get("elevation_mask_deg",
+                                           b.get("min_elevation_deg", 10.0))),
+            band=str(b.get("band", "X")),
+            solar_bin=int(b.get("solar_bin", 10)),
         )
     except (TypeError, ValueError) as e:
         raise HTTPException(422, f"invalid ground target: {e}") from e

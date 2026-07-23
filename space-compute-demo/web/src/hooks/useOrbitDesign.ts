@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDemoStore } from '../store/demoStore'
 import { useTelemetryStore } from '../store/useTelemetryStore'
 import type {
-  GroundTargetState, GroundVisibilityResponse, OrbitDesignInfo,
+  CommsBand, CommsBandsResponse, GroundTargetState,
+  GroundVisibilityResponse, OrbitDesignInfo,
 } from '../types/messages'
 
 const BACKEND_HTTP =
@@ -27,17 +28,26 @@ export const DESIGN_DEFAULTS: OrbitDesignDraft = {
   planes: 3, sats_per_plane: 8, phasing: 1,
 }
 
+/** Ground-station comms config (Overview config step). */
+export interface GroundConfig {
+  elevation_mask_deg: number
+  band: string
+  solar_bin: number
+}
+
+export const GROUND_CONFIG_DEFAULTS: GroundConfig = {
+  elevation_mask_deg: 10, band: 'X', solar_bin: 10,
+}
+
 /**
- * useOrbitDesign — data source + actions for the Overview orbit designer.
+ * useOrbitDesign — data source + actions for the Overview orbit designer and
+ * ground-station comms config.
  *
  * `info` is the ACTIVE constellation's six classical elements + Walker
- * parameters (GET /orbit_design, refetched whenever the active preset
- * changes — switching a preset in the selector updates the readout live).
- * `apply()` POSTs the draft: the backend synthesizes the reference TLE,
- * registers the design as the `custom_design` preset and activates it —
- * the 3D viewport / coverage map / fleet propagator all follow on the
- * next broadcast. Ground-target actions mark Singapore and fetch the
- * pass analysis; live visibility rides `lastState.ground_target`.
+ * parameters. `apply()` POSTs the design and refetches the ring so every
+ * view re-propagates. `bands` is the comms-band catalog. `setGroundTarget`
+ * marks Singapore with the current comms config; live analytics (visibility,
+ * bandwidth, elevation CDF, solar histogram) ride `lastState.ground_target`.
  */
 export function useOrbitDesign() {
   const activeId = useTelemetryStore((s) => s.activeConstellationId)
@@ -45,6 +55,7 @@ export function useOrbitDesign() {
     useDemoStore((s) => s.lastState?.ground_target ?? null)
 
   const [info, setInfo] = useState<OrbitDesignInfo | null>(null)
+  const [bands, setBands] = useState<CommsBand[]>([])
   const [visibility, setVisibility] = useState<GroundVisibilityResponse | null>(null)
   const [busy, setBusy] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
@@ -62,8 +73,17 @@ export function useOrbitDesign() {
     }
   }, [])
 
-  // The elements readout follows the ACTIVE constellation.
   useEffect(() => { void refreshInfo() }, [refreshInfo, activeId])
+
+  // Comms-band catalog (static — fetch once).
+  useEffect(() => {
+    let cancelled = false
+    fetch(`${BACKEND_HTTP}/comms_bands`)
+      .then((r) => r.ok ? r.json() as Promise<CommsBandsResponse> : null)
+      .then((d) => { if (!cancelled && d) setBands(d.bands) })
+      .catch(() => { /* offline — band selector shows a minimal fallback */ })
+    return () => { cancelled = true }
+  }, [])
 
   const apply = useCallback(async (draft: OrbitDesignDraft): Promise<boolean> => {
     setBusy(true)
@@ -84,15 +104,13 @@ export function useOrbitDesign() {
       useTelemetryStore.getState().setActiveConstellation(body.active)
       // Refetch the ring detail EXPLICITLY: every design registers under the
       // same 'custom_design' id, so the id-keyed bridge effect would not
-      // re-run on a REdesign and the fleet views would keep propagating the
-      // previous orbit.
+      // re-run on a REdesign and the fleet views would keep the old orbit.
       try {
         const dr = await fetch(`${BACKEND_HTTP}/constellations/${body.active}`)
         if (dr.ok) {
           useTelemetryStore.getState().setConstellationDetail(await dr.json())
         }
       } catch { /* bridge's id-keyed fetch remains the fallback */ }
-      // A new orbit invalidates any previous pass analysis.
       setVisibility(null)
       setOffline(false)
       return true
@@ -105,12 +123,16 @@ export function useOrbitDesign() {
     }
   }, [])
 
-  const setGroundTarget = useCallback(async (enabled: boolean): Promise<boolean> => {
+  /** Mark/clear the ground station with the comms config (or re-post config
+   *  while already marked to change band / elevation / solar bin live). */
+  const setGroundTarget = useCallback(async (
+    enabled: boolean, config?: GroundConfig,
+  ): Promise<boolean> => {
     try {
       const r = await fetch(`${BACKEND_HTTP}/ground_target`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled }),  // defaults = Singapore
+        body: JSON.stringify({ enabled, ...(config ?? {}) }),  // defaults = Singapore
       })
       if (!enabled) setVisibility(null)
       return r.ok
@@ -141,8 +163,64 @@ export function useOrbitDesign() {
   }, [])
 
   return {
-    info, groundTarget, visibility,
+    info, bands, groundTarget, visibility,
     busy, analyzing, offline, error,
     refreshInfo, apply, setGroundTarget, analyze,
   }
+}
+
+/** One coverage sample: visible-sat count + aggregate bandwidth at a tick. */
+export interface CoverageSample {
+  visible: number
+  mbps: number
+}
+
+const COVERAGE_LEN = 120
+
+/**
+ * useCoverageHistory — a rolling window of ground-station visibility +
+ * bandwidth, accumulated from the broadcast state (1 Hz). Feeds the Coverage
+ * tab's line charts. Resets when the ground target is cleared or the sim
+ * resets (sim_time_s goes backwards).
+ */
+export function useCoverageHistory(): CoverageSample[] {
+  const [series, setSeries] = useState<CoverageSample[]>([])
+  const lastSimRef = useRef<number>(-1)
+  // Identity of the fleet these samples describe — a constellation switch OR
+  // a same-id custom redesign (design_rev bumps) starts a fresh window so two
+  // different fleets' visibility are never conflated in the chart.
+  const fleetKeyRef = useRef<string>('')
+
+  useEffect(() => {
+    return useDemoStore.subscribe((s, prev) => {
+      if (s.lastState === prev.lastState) return
+      const st = s.lastState
+      const gt = st?.ground_target
+      const simT = st?.sim_time_s ?? 0
+      if (!gt?.enabled) {
+        lastSimRef.current = -1
+        fleetKeyRef.current = ''
+        setSeries((cur) => (cur.length ? [] : cur))
+        return
+      }
+      const c = st?.constellation
+      const fleetKey = `${c?.constellation_id ?? ''}:${c?.design_rev ?? 0}`
+      const fleetChanged = fleetKey !== fleetKeyRef.current
+      fleetKeyRef.current = fleetKey
+      // One sample per new sim-second; reset on a backwards jump (sim reset)
+      // or a fleet change (constellation switch / redesign).
+      if (!fleetChanged && simT === lastSimRef.current) return
+      const reset = fleetChanged || simT < lastSimRef.current
+      lastSimRef.current = simT
+      const sample: CoverageSample = { visible: gt.visible_sats, mbps: gt.aggregate_mbps }
+      setSeries((cur) => {
+        const base = reset ? [] : cur
+        const next = base.length >= COVERAGE_LEN ? base.slice(1) : base.slice()
+        next.push(sample)
+        return next
+      })
+    })
+  }, [])
+
+  return series
 }

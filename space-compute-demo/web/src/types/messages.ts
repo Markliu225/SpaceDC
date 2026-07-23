@@ -172,6 +172,9 @@ export interface FleetSnapshot {
   isl_links: number;
   gsl_links: number;
   agg_throughput_mbps: number;
+  /** Monotonic revision of the custom orbit design (bumps on each redesign
+   *  even though the constellation id stays "custom_design"). 0 for built-ins. */
+  design_rev?: number;
 }
 
 export interface ConstellationPresetSummary {
@@ -401,16 +404,54 @@ export interface OrbitDesignInfo {
   walker: { planes: number; sats_per_plane: number; phasing: number; total_sats: number };
 }
 
-/** Ground-station marker + live constellation visibility (StatePacket.ground_target). */
+/** One communication band: throughput vs elevation-mask requirement. */
+export interface CommsBand {
+  id: string;
+  label: string;
+  per_sat_mbps: number;
+  min_elevation_deg: number;
+}
+
+/** GET /comms_bands response. */
+export interface CommsBandsResponse {
+  default: string;
+  bands: CommsBand[];
+}
+
+/** One bar of the solar-intensity histogram. */
+export interface SolarHistBin {
+  lo: number;
+  hi: number;
+  sat_count: number;
+  collection_w: number;
+}
+
+/** Sats visible above a given elevation mask (band-comparison curves). */
+export interface ElevationCount {
+  mask_deg: number;
+  count: number;
+}
+
+/** Ground-station marker + comms config + live analytics (StatePacket.ground_target). */
 export interface GroundTargetState {
   enabled: boolean;
   name: string;
   lat: number;
   lon: number;
-  min_elevation_deg: number;
+  // config
+  elevation_mask_deg: number;
+  band: string;
+  band_label: string;
+  band_mbps_per_sat: number;
+  solar_bin: number;
+  min_elevation_deg: number;   // effective mask = max(user, band min)
+  // live analytics
   visible_sats: number;
   best_elevation_deg: number;
+  aggregate_mbps: number;
   visible_indices: number[];
+  elevation_cdf: ElevationCount[];
+  solar_hist: SolarHistBin[];
 }
 
 /** GET /ground_visibility response — pass analysis over N orbital periods. */

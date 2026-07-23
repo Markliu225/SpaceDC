@@ -392,6 +392,88 @@ def elevation_deg(sat_lat: float, sat_lon: float, sat_alt_km: float,
     return math.degrees(math.atan2(cos_psi - rho, math.sin(psi)))
 
 
+# ---------------------------------------------------------------------------
+# Communication bands. Higher frequency → more per-satellite throughput but
+# a higher elevation-mask requirement (low passes suffer rain/atmospheric
+# attenuation), so a band trades bandwidth against how many sats are usable.
+# ---------------------------------------------------------------------------
+COMMS_BANDS: dict[str, dict] = {
+    "UHF": {"label": "UHF",     "per_sat_mbps": 2.0,   "min_elevation_deg": 5.0},
+    "S":   {"label": "S-band",  "per_sat_mbps": 20.0,  "min_elevation_deg": 5.0},
+    "X":   {"label": "X-band",  "per_sat_mbps": 150.0, "min_elevation_deg": 10.0},
+    "Ka":  {"label": "Ka-band", "per_sat_mbps": 800.0, "min_elevation_deg": 20.0},
+}
+DEFAULT_BAND = "X"
+
+# Elevation thresholds sampled for the band-comparison curves (throughput at
+# each mask = sats-above-mask × band rate).
+_CDF_MASKS = [0, 5, 10, 15, 20, 25, 30, 35, 40]
+
+
+def get_band(band_id: str) -> dict:
+    return COMMS_BANDS.get(str(band_id), COMMS_BANDS[DEFAULT_BAND])
+
+
+def ground_analytics(
+    fleet_pos_km: list[tuple[float, float, float]],
+    fleet_lla: list[tuple[float, float, float]],
+    gs_lat: float, gs_lon: float,
+    effective_mask_deg: float,
+    per_sat_mbps: float,
+    solar_peak_w: float,
+    solar_bin: int,
+) -> dict:
+    """Per-tick ground-station analytics over the whole fleet (positions +
+    sub-points already computed by the caller). Returns visibility, aggregate
+    bandwidth for the active band, an elevation CDF (for the band-comparison
+    curves) and a solar-intensity histogram (per-bin sat count + collection).
+
+    Solar intensity is the illumination geometry factor 0..100 =
+    100·max(0, r̂·ŝ) — a satellite at the subsolar point reads 100, at the
+    terminator/night 0 — a visualization metric independent of the physics
+    array model. Binned by `solar_bin` (5 or 10)."""
+    sx, sy, sz = SUN_DIR_ECI
+    cdf = [0] * len(_CDF_MASKS)
+    visible: list[int] = []
+    best = -90.0
+    solar_bin = 10 if int(solar_bin) not in (5, 10) else int(solar_bin)
+    nbins = 100 // solar_bin
+    bin_count = [0] * nbins
+    bin_coll = [0.0] * nbins
+
+    for i, ((x, y, z), (la, lo, al)) in enumerate(zip(fleet_pos_km, fleet_lla)):
+        if al <= 0.0:  # (0,0,0) sgp4-error sentinel — skip dead sats
+            continue
+        e = elevation_deg(la, lo, al, gs_lat, gs_lon)
+        if e > best:
+            best = e
+        for mi, m in enumerate(_CDF_MASKS):
+            if e >= m:
+                cdf[mi] += 1
+        if e >= effective_mask_deg:
+            visible.append(i)
+        r = math.sqrt(x * x + y * y + z * z) or 1.0
+        intensity = max(0.0, (x * sx + y * sy + z * sz) / r) * 100.0
+        bi = min(nbins - 1, int(intensity // solar_bin))
+        bin_count[bi] += 1
+        bin_coll[bi] += (intensity / 100.0) * solar_peak_w
+
+    solar_hist = [
+        {"lo": b * solar_bin, "hi": (b + 1) * solar_bin,
+         "sat_count": bin_count[b], "collection_w": round(bin_coll[b], 1)}
+        for b in range(nbins)
+    ]
+    return {
+        "visible_sats": len(visible),
+        "best_elevation_deg": round(best, 2),
+        "visible_indices": visible[:64],
+        "aggregate_mbps": round(len(visible) * per_sat_mbps, 1),
+        "elevation_cdf": [{"mask_deg": m, "count": cdf[mi]}
+                          for mi, m in enumerate(_CDF_MASKS)],
+        "solar_hist": solar_hist,
+    }
+
+
 def ground_visibility_series(
     preset: ConstellationPreset,
     gs_lat: float, gs_lon: float,

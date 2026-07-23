@@ -16,10 +16,12 @@ from typing import Any, Callable, Optional
 log = logging.getLogger("space_compute_demo.engine")
 
 from models import (
+    ElevationCount,
     FleetSnapshot,
     GroundStationState,
     GroundTargetState,
     MissionState,
+    SolarHistBin,
     Mode,
     Parameters,
     SatelliteConfig,
@@ -798,24 +800,38 @@ class StateEngine:
             "targets_found": targets,
         })
 
-    # ---- ground-station target (Overview marker) ----
+    # ---- ground-station target + comms config (Overview) ----
     def set_ground_target(self, enabled: bool, name: str = "Singapore",
                           lat: float = 1.3521, lon: float = 103.8198,
-                          min_elevation_deg: float = 10.0) -> Optional[GroundTargetState]:
-        """Mark (or clear) the ground station. While enabled the fleet tick
-        computes constellation visibility from it every second."""
+                          elevation_mask_deg: float = 10.0,
+                          band: str = "X", solar_bin: int = 10,
+                          ) -> Optional[GroundTargetState]:
+        """Mark (or clear) the ground station and its comms config. The
+        effective elevation mask is max(user mask, the band's minimum); the
+        band sets per-sat throughput; solar_bin (5 or 10) sizes the solar
+        histogram. While enabled the fleet tick computes visibility,
+        bandwidth, the elevation CDF and the solar histogram each second."""
         if not enabled:
             self._ground_target = None
             return None
+        band_info = _consts.get_band(band)
+        band_id = band if band in _consts.COMMS_BANDS else _consts.DEFAULT_BAND
+        user_mask = max(0.0, min(60.0, float(elevation_mask_deg)))
+        eff_mask = max(user_mask, float(band_info["min_elevation_deg"]))
         self._ground_target = GroundTargetState(
             enabled=True, name=str(name),
             lat=max(-90.0, min(90.0, float(lat))),
             # Longitude is periodic — wrap (a clamp would silently move a
             # 0..360-convention input thousands of km).
             lon=((float(lon) + 180.0) % 360.0) - 180.0,
-            min_elevation_deg=max(0.0, min(60.0, float(min_elevation_deg))),
+            elevation_mask_deg=user_mask,
+            band=band_id,
+            band_label=band_info["label"],
+            band_mbps_per_sat=float(band_info["per_sat_mbps"]),
+            solar_bin=5 if int(solar_bin) == 5 else 10,
+            min_elevation_deg=eff_mask,
         )
-        # Fill the live visibility fields right away (works while paused).
+        # Fill the live analytics right away (works while paused).
         self._refresh_fleet_now()
         return self._ground_target
 
@@ -1046,21 +1062,25 @@ class StateEngine:
         # ride StatePacket.ground_target on the next snapshot.
         gt = self._ground_target
         if gt is not None and gt.enabled:
-            best = -90.0
-            visible: list[int] = []
-            for i, (la, lo, al) in enumerate(fleet_lla):
-                # Skip the (0,0,0) sgp4-error sentinel (alt = -Re) — a dead
-                # satellite must not score as a perfect overhead contact.
-                if al <= 0.0:
-                    continue
-                e = _consts.elevation_deg(la, lo, al, gt.lat, gt.lon)
-                if e > best:
-                    best = e
-                if e >= gt.min_elevation_deg:
-                    visible.append(i)
-            gt.visible_sats = len(visible)
-            gt.best_elevation_deg = round(best, 2)
-            gt.visible_indices = visible[:64]
+            # Reference per-sat solar peak (sunlit-normal) for the histogram's
+            # collection axis — the constellation sats share the active
+            # design's array characteristics.
+            s_mat = _SOLAR_MAT_TABLE.get(self._config.solar_material,
+                                         _SOLAR_MAT_TABLE["Si"])
+            solar_peak_w = (s_mat["efficiency"]
+                            * _solar_area_m2(self._twin_geometry)
+                            * _SOLAR_CONSTANT_W_M2)
+            a = _consts.ground_analytics(
+                fleet_pos_km, fleet_lla, gt.lat, gt.lon,
+                gt.min_elevation_deg, gt.band_mbps_per_sat,
+                solar_peak_w, gt.solar_bin,
+            )
+            gt.visible_sats = a["visible_sats"]
+            gt.best_elevation_deg = a["best_elevation_deg"]
+            gt.visible_indices = a["visible_indices"]
+            gt.aggregate_mbps = a["aggregate_mbps"]
+            gt.elevation_cdf = [ElevationCount(**c) for c in a["elevation_cdf"]]
+            gt.solar_hist = [SolarHistBin(**b) for b in a["solar_hist"]]
         return fleet_pos_km[0] if fleet_pos_km else (0.0, 0.0, 0.0)
 
     def _update_placeholder_physics(self, dt: float) -> None:

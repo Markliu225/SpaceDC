@@ -203,21 +203,47 @@ class CompareLiveVariant(BaseModel):
     tokens_per_s: float = 0.0
 
 
+class SolarHistBin(BaseModel):
+    """One bar of the solar-intensity histogram (Overview Solar tab)."""
+    lo: int            # intensity lower bound (inclusive), 0..100
+    hi: int            # upper bound (exclusive)
+    sat_count: int
+    collection_w: float
+
+
+class ElevationCount(BaseModel):
+    """Sats visible above a given elevation mask (band-comparison curves)."""
+    mask_deg: int
+    count: int
+
+
 class GroundTargetState(BaseModel):
     """Optional ground station marked on the Earth (Overview page) — when
-    enabled, every fleet tick also computes line-of-sight visibility from
-    this point to the whole constellation (elevation-angle model)."""
+    enabled, every fleet tick also computes line-of-sight visibility, the
+    active band's aggregate bandwidth, an elevation CDF (for the band curves)
+    and a solar-intensity histogram from this point to the whole fleet."""
     enabled: bool = False
     name: str = "Singapore"
     lat: float = 1.3521
     lon: float = 103.8198
-    min_elevation_deg: float = 10.0
-    # Live per-tick results.
+    # --- configuration (Overview config step) ---
+    # User-selected antenna elevation mask; the effective mask is the max of
+    # this and the active band's minimum.
+    elevation_mask_deg: float = 10.0
+    band: str = "X"
+    band_label: str = "X-band"
+    band_mbps_per_sat: float = 150.0
+    solar_bin: int = 10                 # histogram bin width, 5 or 10
+    min_elevation_deg: float = 10.0     # EFFECTIVE mask = max(user, band min)
+    # --- live per-tick analytics ---
     visible_sats: int = 0
     best_elevation_deg: float = -90.0
+    aggregate_mbps: float = 0.0
     # Indices (into the fleet) of currently-visible sats, capped at 64 so
     # a mega-constellation can't bloat the packet.
     visible_indices: list[int] = Field(default_factory=list)
+    elevation_cdf: list[ElevationCount] = Field(default_factory=list)
+    solar_hist: list[SolarHistBin] = Field(default_factory=list)
 
 
 class CompareLiveState(BaseModel):

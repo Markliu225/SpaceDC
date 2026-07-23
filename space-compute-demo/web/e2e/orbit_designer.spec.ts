@@ -92,4 +92,60 @@ test.describe('orbit designer', () => {
     await page.request.post('http://localhost:8001/ground_target', { data: { enabled: false } });
     await page.request.post('http://localhost:8001/constellation/single_iss');
   });
+
+  test('comms config drives band/bandwidth + analytics tabs render', async ({ page }) => {
+    // A dense constellation so the ground station gets contacts.
+    const apply = await page.request.post('http://localhost:8001/orbit_design', {
+      data: { altitude_km: 550, eccentricity: 0.001, inclination_deg: 53,
+              raan_deg: 0, arg_perigee_deg: 0, mean_anomaly_deg: 0,
+              planes: 8, sats_per_plane: 12, phasing: 1 },
+    });
+    expect(apply.ok()).toBeTruthy();
+
+    // Comms-band catalog: monotone throughput + elevation tradeoff.
+    const cat = await (await page.request.get('http://localhost:8001/comms_bands')).json();
+    const byId = Object.fromEntries(cat.bands.map((b: { id: string }) => [b.id, b]));
+    expect(byId.Ka.per_sat_mbps).toBeGreaterThan(byId.X.per_sat_mbps);
+    expect(byId.Ka.min_elevation_deg).toBeGreaterThan(byId.UHF.min_elevation_deg);
+
+    // Mark with Ka-band, elevation 5 → effective mask = max(5, Ka min 20) = 20.
+    const mark = await page.request.post('http://localhost:8001/ground_target', {
+      data: { enabled: true, band: 'Ka', elevation_mask_deg: 5, solar_bin: 5 },
+    });
+    expect(mark.ok()).toBeTruthy();
+    await expect
+      .poll(async () => {
+        const s = await (await page.request.get('http://localhost:8001/state')).json();
+        const g = s.ground_target;
+        return g && g.band === 'Ka' && g.min_elevation_deg === 20
+          && g.band_mbps_per_sat === 800 && g.solar_hist.length === 20
+          && g.elevation_cdf.length > 0
+          && g.aggregate_mbps === g.visible_sats * 800;
+      }, { timeout: 10_000 })
+      .toBe(true);
+
+    // UI: analytics tabs render their charts.
+    await page.goto('http://localhost:5173/', { waitUntil: 'domcontentloaded' });
+    await page.getByTestId('overview-tab-solar').click();
+    await expect(page.getByTestId('solar-histogram')).toBeVisible({ timeout: 10_000 });
+    await page.getByTestId('overview-tab-bands').click();
+    await expect(page.getByTestId('band-curves')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId('band-curves').locator('svg path')).not.toHaveCount(0);
+    await page.getByTestId('overview-tab-coverage').click();
+    await expect(page.getByTestId('coverage-charts')).toBeVisible({ timeout: 10_000 });
+
+    // Change the band live from the config (Designer tab).
+    await page.getByTestId('overview-tab-designer').click();
+    await page.getByTestId('band-S').click();
+    await expect
+      .poll(async () => {
+        const s = await (await page.request.get('http://localhost:8001/state')).json();
+        return s.ground_target?.band;
+      }, { timeout: 10_000 })
+      .toBe('S');
+
+    // Clean up.
+    await page.request.post('http://localhost:8001/ground_target', { data: { enabled: false } });
+    await page.request.post('http://localhost:8001/constellation/single_iss');
+  });
 });
