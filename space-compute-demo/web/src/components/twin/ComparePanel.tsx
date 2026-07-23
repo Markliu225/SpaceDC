@@ -191,8 +191,8 @@ export function ComparePanel() {
                       <tr key={String(v.value)} className="text-text-md">
                         <td className="py-0.5">
                           <span className="flex items-center gap-1.5">
-                            <span className="inline-block h-0 w-3.5 border-t-2 border-dashed"
-                                  style={{ borderColor: COMPARE_PALETTE[i] }} />
+                            <span className="inline-block h-[3px] w-3.5 rounded-full"
+                                  style={{ background: COMPARE_PALETTE[i] }} />
                             <span className="max-w-[200px] truncate text-text-hi">{v.label}</span>
                           </span>
                         </td>
@@ -205,9 +205,9 @@ export function ComparePanel() {
                   </tbody>
                 </table>
                 <p className="mt-1 text-[10px] text-text-faint">
-                  The Live Telemetry strip now shows only the variant curves (dashed) —
-                  the live trace returns when you stop. Starting a new comparison below
-                  replaces this one.
+                  The Live Telemetry strip now shows only the variant curves — the live
+                  trace returns when you stop. Starting a new comparison below replaces
+                  this one.
                 </p>
               </div>
             )}

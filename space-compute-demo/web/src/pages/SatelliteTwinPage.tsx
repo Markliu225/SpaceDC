@@ -9,7 +9,6 @@ import { Configurator } from '../components/twin/Configurator'
 import { DesignGallery } from '../components/twin/DesignGallery'
 import { MiniOrbitHud } from '../components/twin/MiniOrbitHud'
 import { TwinModulePopup } from '../components/twin/TwinModulePopup'
-import { SubsystemHealthRow } from '../components/twin/SubsystemHealthRow'
 import { TimeSeriesStrip } from '../components/twin/TimeSeriesStrip'
 import { ViewModeTabs, type TwinViewMode } from '../components/twin/ViewModeTabs'
 
@@ -24,14 +23,11 @@ import { ViewModeTabs, type TwinViewMode } from '../components/twin/ViewModeTabs
  *  │ Omniverse viewport (col-9)            1fr      │ Configurator col-3│
  *  │                                                │   3 sections + Δ  │
  *  ├────────────────────────────────────────────────┴───────────────────┤
- *  │ TimeSeriesStrip · 5 sparklines · 120 s        col-12 · 150 px      │
- *  ├────────────────────────────────────────────────────────────────────┤
- *  │ SubsystemHealthRow · 4 cards                  col-12 · 88 px       │
+ *  │ TimeSeriesStrip · 5 charts · 120 s            col-12 · 224 px      │
  *  └────────────────────────────────────────────────────────────────────┘
  *
- * Tracks: 56 / 1fr / 150 / 88. The viewport keeps a satellite-preset
- * camera (Kit will respond once Phase 3 lands); the Configurator + bars
- * stay reactive in Phase 1 via the local useTwinTelemetry synth.
+ * Tracks: 56 / 1fr / 224. The viewport keeps a satellite-preset camera;
+ * the Configurator + strip stay reactive via useTwinTelemetry.
  */
 export function SatelliteTwinPage() {
   const changeCamera = useDemoStore((s) => s.changeCamera)
@@ -53,7 +49,7 @@ export function SatelliteTwinPage() {
       style={{
         height: 'calc(100vh - 44px - 24px - 4px)',
         gridTemplateColumns: 'repeat(12, minmax(0, 1fr))',
-        gridTemplateRows: '56px minmax(0, 1fr) 150px 88px',
+        gridTemplateRows: '56px minmax(0, 1fr) 224px',
       }}
     >
       {/* Row 1 — Header strip. */}
@@ -87,11 +83,6 @@ export function SatelliteTwinPage() {
       {/* Row 3 — Time series strip (full width). */}
       <div className="col-span-12 min-h-0 overflow-hidden">
         <TimeSeriesStrip />
-      </div>
-
-      {/* Row 4 — Subsystem health (full width, 4 cards). */}
-      <div className="col-span-12 min-h-0 overflow-hidden">
-        <SubsystemHealthRow />
       </div>
     </div>
   )

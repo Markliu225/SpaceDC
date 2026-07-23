@@ -66,8 +66,8 @@ export function TimeSeriesStrip() {
             {compare.variants.map((v, i) => (
               <span key={String(v.value)} className="flex items-center gap-1 text-[10px] text-text-md">
                 <span
-                  className="inline-block h-0 w-3.5 border-t-2 border-dashed"
-                  style={{ borderColor: COMPARE_PALETTE[i] }}
+                  className="inline-block h-[3px] w-4 rounded-full"
+                  style={{ background: COMPARE_PALETTE[i] }}
                 />
                 {v.label}
               </span>
@@ -195,16 +195,39 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
     return { path: pathStr, areaPath: area, yMin: lo, yMax: hi, overlayPaths }
   }, [data, def, overlays, liveHidden])
 
+  const factor = def.factor ?? 1
   return (
     <div className="flex flex-col min-h-0">
       <div className="flex items-baseline justify-between">
         <span className="text-[10px] uppercase tracking-[0.10em] text-text-md">
           {def.label}
         </span>
-        <span className="flex items-baseline">
-          <Num value={currentValue} digits={def.digits} animate={false} className="text-[14px] font-semibold text-text-hi" />
-          <span className="ml-0.5 text-[10px] text-text-lo">{def.unit}</span>
-        </span>
+        {liveHidden && overlays && overlays.length > 0 ? (
+          // Comparison running: the live number matches no visible curve, so
+          // show each VARIANT's current value instead (dot carries the hue,
+          // the number stays in ink) — read a curve straight off its color.
+          <span className="flex items-baseline gap-1.5">
+            {overlays.map((ov, i) => (
+              <span key={i} className="flex items-center gap-0.5">
+                <span
+                  className="h-1.5 w-1.5 rounded-full"
+                  style={{ background: ov.color }}
+                />
+                <span className="text-[11px] font-semibold tabular text-text-hi">
+                  {ov.data.length > 0
+                    ? fmt(ov.data[ov.data.length - 1] * factor, def.digits, '')
+                    : '—'}
+                </span>
+              </span>
+            ))}
+            <span className="ml-0.5 text-[10px] text-text-lo">{def.unit}</span>
+          </span>
+        ) : (
+          <span className="flex items-baseline">
+            <Num value={currentValue} digits={def.digits} animate={false} className="text-[14px] font-semibold text-text-hi" />
+            <span className="ml-0.5 text-[10px] text-text-lo">{def.unit}</span>
+          </span>
+        )}
       </div>
       <div className="relative flex-1 min-h-0">
         {/* Right-edge y-axis tick labels. */}
@@ -267,13 +290,14 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
                 strokeLinejoin="round"
                 strokeLinecap="round"
                 vectorEffect="non-scaling-stroke"
-                style={{ filter: `drop-shadow(0 0 5px ${def.color})` }}
+                style={{ filter: `drop-shadow(0 0 2px ${def.color})` }}
               />
             </>
           )}
 
-          {/* Live what-if overlays — dashed, growing rightward from the
-              moment the comparison started. */}
+          {/* Live what-if overlays — solid matte strokes, NO glow: with the
+              live trace hidden there is nothing to confuse them with, and
+              distinction comes from hue separation + stroke weight. */}
           {overlayPaths.map((op, i) => (
             <path
               key={i}
@@ -281,12 +305,10 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
               d={op.d}
               fill="none"
               stroke={op.color}
-              strokeWidth={1.7}
-              strokeDasharray="5 3"
+              strokeWidth={2.4}
               strokeLinejoin="round"
               strokeLinecap="round"
               vectorEffect="non-scaling-stroke"
-              opacity={0.95}
             />
           ))}
 
@@ -305,7 +327,7 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
                 stroke="#0A0F1E"
                 strokeWidth={1.2}
                 vectorEffect="non-scaling-stroke"
-                style={{ filter: `drop-shadow(0 0 5px ${def.color})` }}
+                style={{ filter: `drop-shadow(0 0 2px ${def.color})` }}
               />
             )
           })()}

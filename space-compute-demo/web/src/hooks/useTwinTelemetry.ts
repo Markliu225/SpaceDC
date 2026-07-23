@@ -51,7 +51,7 @@ export interface CompareOverlay {
 }
 
 export interface TwinTelemetrySnapshot {
-  /** Per-tick instantaneous read used by the SubsystemHealthRow + scalar tiles. */
+  /** Per-tick instantaneous read used by the strip headers + scalar tiles. */
   current: {
     solar_w: number
     payload_w: number
