@@ -280,7 +280,13 @@ function advance(
   } else {
     const key = `${compareLive.dimension}|${compareLive.start_sim_time_s}|`
       + compareLive.variants.map((v) => String(v.value)).join(',')
+    // The elapsed-0 broadcast (fired by /compare/start before the first
+    // lockstep tick) carries pre-computation defaults (0 W payload/solar) —
+    // appending it would draw a false zero edge at every curve's start.
+    // Register the comparison identity but only append REAL stepped samples.
+    const stepped = compareLive.elapsed_s >= 1
     const growInto = (ring: number[], v: number): number[] => {
+      if (!stepped) return ring
       const out = ring.length >= HISTORY_LEN ? ring.slice(1) : ring.slice()
       out.push(v)
       return out

@@ -10,6 +10,11 @@ interface OverlayLine {
   data: number[]
 }
 
+/** Nested stroke widths by variant index (draw order = pick order): the
+ *  first variant is widest and drawn first, so coincident curves render as
+ *  nested colored edges instead of one color hiding the others. */
+const OVERLAY_WIDTHS = [3.8, 2.7, 1.8, 1.1]
+
 interface SeriesDef {
   key: keyof ReturnType<typeof useTwinTelemetry>['series']
   label: string
@@ -45,7 +50,7 @@ const HISTORY_S = 120
  *  - 3 horizontal gridlines (25/50/75 % of range)
  *  - y-axis tick labels: max (top-right) + min (bottom-right) per panel
  *  - dashed vertical "scars" wherever the SatelliteConfig changed
- *  - shared time axis labels at the bottom of the strip (-120s, -60s, now)
+ *  - its own framed panel + time axis (-120s, -60s, now)
  */
 export function TimeSeriesStrip() {
   const { current, series, scars, compare } = useTwinTelemetry()
@@ -82,7 +87,7 @@ export function TimeSeriesStrip() {
         )}
       </div>
 
-      <div className="mt-1 grid flex-1 min-h-0 grid-cols-5 gap-3">
+      <div className="mt-1.5 grid flex-1 min-h-0 grid-cols-5 gap-2.5">
         {SERIES.map((def) => (
           <Mini
             key={def.key}
@@ -99,16 +104,6 @@ export function TimeSeriesStrip() {
             // solid line would just double-draw it and clutter the read.
             liveHidden={compare !== null}
           />
-        ))}
-      </div>
-
-      <div className="mt-1 grid grid-cols-5 gap-3 text-[9px] tabular text-text-faint">
-        {SERIES.map((def) => (
-          <div key={def.key} className="flex justify-between">
-            <span>-{HISTORY_S}s</span>
-            <span>-{Math.round(HISTORY_S / 2)}s</span>
-            <span>now</span>
-          </div>
         ))}
       </div>
     </Card>
@@ -197,7 +192,10 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
 
   const factor = def.factor ?? 1
   return (
-    <div className="flex flex-col min-h-0">
+    // Each metric lives in its OWN framed panel — border + inset background
+    // + its own time axis — so the five charts read as five instruments, not
+    // one blurred strip.
+    <div className="flex min-h-0 flex-col rounded-md border border-border-weak bg-bg-inset/40 px-2 pb-1 pt-1.5">
       <div className="flex items-baseline justify-between">
         <span className="text-[10px] uppercase tracking-[0.10em] text-text-md">
           {def.label}
@@ -295,9 +293,12 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
             </>
           )}
 
-          {/* Live what-if overlays — solid matte strokes, NO glow: with the
-              live trace hidden there is nothing to confuse them with, and
-              distinction comes from hue separation + stroke weight. */}
+          {/* Live what-if overlays — solid matte strokes, NO glow. NESTED
+              widths (wide → narrow in draw order): when curves coincide —
+              which they legitimately do whenever the compared knob doesn't
+              move a metric — every variant still shows as a visible edge
+              around the narrower ones on top, instead of the last-drawn
+              color swallowing the rest. */}
           {overlayPaths.map((op, i) => (
             <path
               key={i}
@@ -305,7 +306,7 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
               d={op.d}
               fill="none"
               stroke={op.color}
-              strokeWidth={2.4}
+              strokeWidth={OVERLAY_WIDTHS[i] ?? 1.2}
               strokeLinejoin="round"
               strokeLinecap="round"
               vectorEffect="non-scaling-stroke"
@@ -348,6 +349,13 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
             )
           })}
         </svg>
+      </div>
+
+      {/* Per-panel time axis. */}
+      <div className="mt-0.5 flex justify-between text-[9px] tabular text-text-faint">
+        <span>-{HISTORY_S}s</span>
+        <span>-{Math.round(HISTORY_S / 2)}s</span>
+        <span>now</span>
       </div>
     </div>
   )
