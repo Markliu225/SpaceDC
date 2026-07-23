@@ -94,6 +94,10 @@ export function TimeSeriesStrip() {
               color: COMPARE_PALETTE[i],
               data: v.series[def.key],
             }))}
+            // While a comparison runs the live trace yields the stage: one
+            // variant is usually the current value anyway, so keeping the
+            // solid line would just double-draw it and clutter the read.
+            liveHidden={compare !== null}
           />
         ))}
       </div>
@@ -118,9 +122,11 @@ interface MiniProps {
   scars: TwinScar[]
   /** Live what-if variant curves — right-aligned growing rings. */
   overlays?: OverlayLine[]
+  /** Hide the live trace (comparison running — variants own the panel). */
+  liveHidden?: boolean
 }
 
-function Mini({ def, data, currentValue, scars, overlays }: MiniProps) {
+function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProps) {
   const gid     = useId().replace(/:/g, '')
   const gradId  = `tw-grad-${gid}`
 
@@ -130,13 +136,21 @@ function Mini({ def, data, currentValue, scars, overlays }: MiniProps) {
     const factor = def.factor ?? 1
     let lo = def.yMin !== undefined ? def.yMin * factor : Infinity
     let hi = def.yMax !== undefined ? def.yMax * factor : -Infinity
+    // With the live trace hidden (comparison running), the variants alone
+    // drive the autoscale — a hidden line must not stretch the range. Until
+    // the rings have ≥ 2 samples, fall back to the live data so the scale
+    // doesn't collapse in the first second.
+    const overlaysReady = (overlays ?? []).some((ov) => ov.data.length >= 2)
+    const scaleFromLive = !liveHidden || !overlaysReady
     if (def.yMin === undefined || def.yMax === undefined) {
-      // Autoscale over the live trace AND the what-if overlays, so a
-      // diverging variant never clips off the top/bottom of the panel.
-      for (const v of data) {
-        const u = v * factor
-        if (def.yMin === undefined && u < lo) lo = u
-        if (def.yMax === undefined && u > hi) hi = u
+      // Autoscale over the visible traces, so a diverging variant never
+      // clips off the top/bottom of the panel.
+      if (scaleFromLive) {
+        for (const v of data) {
+          const u = v * factor
+          if (def.yMin === undefined && u < lo) lo = u
+          if (def.yMax === undefined && u > hi) hi = u
+        }
       }
       for (const ov of overlays ?? []) {
         for (const v of ov.data) {
@@ -179,7 +193,7 @@ function Mini({ def, data, currentValue, scars, overlays }: MiniProps) {
       overlayPaths.push({ color: ov.color, d: `M ${parts.join(' L ')}` })
     }
     return { path: pathStr, areaPath: area, yMin: lo, yMax: hi, overlayPaths }
-  }, [data, def, overlays])
+  }, [data, def, overlays, liveHidden])
 
   return (
     <div className="flex flex-col min-h-0">
@@ -239,21 +253,27 @@ function Mini({ def, data, currentValue, scars, overlays }: MiniProps) {
             />
           ))}
 
-          {/* Subtle area fill, then the prominent line stroke. */}
-          <path d={areaPath} fill={`url(#${gradId})`} />
-          <path
-            d={path}
-            fill="none"
-            stroke={def.color}
-            strokeWidth={2.2}
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            vectorEffect="non-scaling-stroke"
-            style={{ filter: `drop-shadow(0 0 5px ${def.color})` }}
-          />
+          {/* Subtle area fill, then the prominent line stroke — hidden while
+              a comparison runs (the variants own the panel; one of them is
+              usually the current value anyway). */}
+          {!liveHidden && (
+            <>
+              <path d={areaPath} fill={`url(#${gradId})`} />
+              <path
+                d={path}
+                fill="none"
+                stroke={def.color}
+                strokeWidth={2.2}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
+                style={{ filter: `drop-shadow(0 0 5px ${def.color})` }}
+              />
+            </>
+          )}
 
-          {/* Live what-if overlays — dashed, thinner than the live trace,
-              growing rightward from the moment the comparison started. */}
+          {/* Live what-if overlays — dashed, growing rightward from the
+              moment the comparison started. */}
           {overlayPaths.map((op, i) => (
             <path
               key={i}
@@ -261,7 +281,7 @@ function Mini({ def, data, currentValue, scars, overlays }: MiniProps) {
               d={op.d}
               fill="none"
               stroke={op.color}
-              strokeWidth={1.4}
+              strokeWidth={1.7}
               strokeDasharray="5 3"
               strokeLinejoin="round"
               strokeLinecap="round"
@@ -271,7 +291,7 @@ function Mini({ def, data, currentValue, scars, overlays }: MiniProps) {
           ))}
 
           {/* Bright dot at the latest sample so the eye locks onto "now". */}
-          {data.length >= 2 && (() => {
+          {!liveHidden && data.length >= 2 && (() => {
             const lastIdx = data.length - 1
             const factor = def.factor ?? 1
             const lo = yMin

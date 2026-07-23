@@ -205,8 +205,9 @@ export function ComparePanel() {
                   </tbody>
                 </table>
                 <p className="mt-1 text-[10px] text-text-faint">
-                  Curves overlay the Live Telemetry strip (dashed lines). Starting a new
-                  comparison below replaces this one.
+                  The Live Telemetry strip now shows only the variant curves (dashed) —
+                  the live trace returns when you stop. Starting a new comparison below
+                  replaces this one.
                 </p>
               </div>
             )}
