@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 OrbitType = Literal["LEO", "SSO", "MEO", "GEO"]
 GpuType = Literal["H100", "H200", "B200", "MI300X"]
+AttitudeMode = Literal["free", "sun", "nadir", "velocity", "inertial"]
 Mode = Literal["on_orbit", "ground_only"]
 TaskPhase = Literal[
     "idle", "created", "capturing", "inferencing",
@@ -129,6 +130,13 @@ class SatelliteState(BaseModel):
     # integrates the angles per frame so the whole model visibly rotates.
     # Display-only — the power/thermal physics keeps its sun-tracking model.
     attitude_spin_dps: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    # Attitude pointing mode (Twin page attitude control): "free" = the
+    # reaction wheels above are in charge (manual tumble); otherwise the Kit
+    # close-up orients the body to a target — "sun" (panels to the Sun),
+    # "nadir" (payload to Earth), "velocity" (ram along-track), "inertial"
+    # (fixed). Selecting a mode zeroes the wheels; touching a wheel drops
+    # back to "free". Display-only, like the wheels.
+    attitude_mode: AttitudeMode = "free"
     # Deployable-geometry-driven areas (Feature 4) — solar = clusters × 2 sides,
     # radiator = dedicated ±Z panels (2 panels × 2 faces). Drive the power /
     # thermal balance so add/remove + resize change the live numbers.

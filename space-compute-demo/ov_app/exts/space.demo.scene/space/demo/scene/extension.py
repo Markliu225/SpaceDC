@@ -1036,6 +1036,27 @@ def apply_sun(sun_factor: float, sim_now_s: float | None = None,
     return wrote
 
 
+# Fixed-attitude target poses (rotateX, rotateY, rotateZ degrees) applied to
+# /World/Satellite. The stage-frame Sun direction is d = (sinθ, 0, cosθ)
+# with θ = acos(sun_cos); Earth's sub-satellite point faces +Z toward the
+# body. Panels are the model's +X face (see satellite geometry). These map
+# the pointing modes to body rotations:
+#   sun      → rotateY = θ−90 aims +X at d (tracks the swept Sun disk);
+#   nadir    → pitch the payload toward Earth;
+#   velocity → yaw the body along-track;
+#   inertial → authored pose.
+# The nadir/velocity axis choices are the demo's convention — if a hull's
+# payload face reads wrong in the RTX view, adjust the constant here only.
+def _attitude_target_xyz(mode: str, theta_rad: float) -> tuple[float, float, float]:
+    if mode == "sun":
+        return (0.0, math.degrees(theta_rad) - 90.0, 0.0)
+    if mode == "nadir":
+        return (90.0, 0.0, 0.0)
+    if mode == "velocity":
+        return (0.0, 0.0, 90.0)
+    return (0.0, 0.0, 0.0)   # inertial
+
+
 def update_twin_orbit(stage, tgt: dict, sm: dict, dt: float) -> None:
     """Per-frame orbital-motion driver for the satellite close-up stage.
 
@@ -1120,29 +1141,62 @@ def update_twin_orbit(stage, tgt: dict, sm: dict, dt: float) -> None:
             if rot.IsValid():
                 rot.Set(Gf.Vec3f(0.0, math.degrees(theta), 0.0))
 
-        # --- Reaction-wheel spin: integrate the body angles per frame -------
+        # --- Attitude: fixed pointing mode OR reaction-wheel tumble ---------
         # The hulls are authored recentred on the origin, so rotating the
-        # /World/Satellite root IS a centre-of-mass rotation. Any mix of
-        # the X/Y/Z rates may run (a slow tumble); each axis integrates
-        # with frame dt. The rates arrive with the 5 Hz poll.
+        # /World/Satellite root IS a centre-of-mass rotation. The body's
+        # rotateX/Y/Z ops carry the pose either way:
+        #   free    → integrate the X/Y/Z wheel rates per frame (a tumble);
+        #   sun     → ease +X (the panel normal) toward the swept Sun
+        #             direction — rotateY = θ−90 tracks the sun disk;
+        #   nadir   → payload faces Earth (fixed pitch);
+        #   velocity→ ram along-track (fixed yaw);
+        #   inertial→ hold the authored pose.
+        # A mode eases toward its target; leaving a mode resumes integrating
+        # the wheel accumulators from the current pose, so it never snaps.
+        mode = str(tgt.get("attitude_mode", "free"))
         spin = tgt.get("spin_dps") or (0.0, 0.0, 0.0)
         if isinstance(spin, (int, float)):          # pre-3-axis backends
             spin = (0.0, 0.0, float(spin))
         keys = ("spin_x", "spin_y", "spin_z")
-        if any(float(s) > 0.0 for s in spin) or any(sm.get(k) for k in keys):
+        active = (mode != "free"
+                  or any(float(s) > 0.0 for s in spin)
+                  or any(sm.get(k) for k in keys))
+        if active:
             sat_root = stage.GetPrimAtPath(TWIN_SAT_PATH)
             if sat_root.IsValid():
-                for i, (key, attr_name, adder) in enumerate((
-                        ("spin_x", "xformOp:rotateX", "AddRotateXOp"),
-                        ("spin_y", "xformOp:rotateY", "AddRotateYOp"),
-                        ("spin_z", "xformOp:rotateZ", "AddRotateZOp"))):
-                    sm[key] = (sm.get(key, 0.0)
-                               + float(spin[i]) * max(0.0, dt)) % 360.0
+                ops = []
+                for attr_name, adder in (("xformOp:rotateX", "AddRotateXOp"),
+                                         ("xformOp:rotateY", "AddRotateYOp"),
+                                         ("xformOp:rotateZ", "AddRotateZOp")):
                     attr = sat_root.GetAttribute(attr_name)
                     if not attr.IsValid():
-                        attr = getattr(UsdGeom.Xformable(sat_root),
-                                       adder)().GetAttr()
-                    attr.Set(float(sm[key]))
+                        attr = getattr(UsdGeom.Xformable(sat_root), adder)().GetAttr()
+                    ops.append(attr)
+                lerp = min(1.0, max(0.0, dt * 2.5))   # ~0.4 s settle
+                if mode == "free":
+                    # Wheels spinning → integrate the tumble. Wheels idle →
+                    # ease any residual pose (from a just-released mode, or a
+                    # stopped tumble, or after a backend reset) back to the
+                    # authored neutral orientation, so 'free + idle' always
+                    # means at rest — never a frozen leftover attitude.
+                    idle = not any(float(s) > 0.0 for s in spin)
+                    for i, key in enumerate(keys):
+                        cur = sm.get(key, 0.0)
+                        if idle:
+                            delta = ((0.0 - cur + 540.0) % 360.0) - 180.0
+                            nxt = (cur + delta * lerp) % 360.0
+                            sm[key] = 0.0 if abs(((nxt + 180.0) % 360.0) - 180.0) < 0.05 else nxt
+                        else:
+                            sm[key] = (cur + float(spin[i]) * max(0.0, dt)) % 360.0
+                        ops[i].Set(float(sm[key]))
+                else:
+                    tgt_xyz = _attitude_target_xyz(mode, theta)
+                    for i, key in enumerate(keys):
+                        cur = sm.get(key, float(ops[i].Get() or 0.0))
+                        # Shortest-arc ease so 350°→10° doesn't spin the long way.
+                        delta = ((tgt_xyz[i] - cur + 540.0) % 360.0) - 180.0
+                        sm[key] = (cur + delta * lerp) % 360.0
+                        ops[i].Set(float(sm[key]))
 
         # --- Roll-out wings (redwire): stretch from the root anchors --------
         # The flexible-blanket mock: scaleY = f about the deck-edge pivot
@@ -1527,6 +1581,9 @@ if _HAS_KIT:
                     # list [x,y,z] (deg/s); the driver also tolerates the
                     # old scalar-Z form.
                     "spin_dps": sat.get("attitude_spin_dps") or (0.0, 0.0, 0.0),
+                    # Fixed pointing mode (free|sun|nadir|velocity|inertial);
+                    # non-free eases the body to a target instead of tumbling.
+                    "attitude_mode": sat.get("attitude_mode", "free"),
                 }
 
             # Cache the mission snapshot + the wall time it arrived, so the

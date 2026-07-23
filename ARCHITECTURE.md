@@ -102,7 +102,7 @@ tick 体裹 `try/except`——一次瞬时 sgp4 失败只跳一拍，不会拖�
 | 3 | 应用整星设计 | 设计库 → `POST /designs/{id}/apply` → 配置+几何+作业表+平台常数原子切换 → 同管线 2 |
 | 4 | 切工作负载 | `POST /workload_profile` → 作业表替换、产出清零 |
 | 5 | 点击构件 | **闭环**：Kit 拾取 → `POST /selection` → 广播 `selection_changed` → Web 按 prim 路径弹面板；Web 主动选择走 WS 汇入同一广播，两侧选中态始终一致 |
-| 6 | 展开/旋转 | `POST /solar_deploy` / `/attitude_spin` → 引擎改目标 → 物理(产能×展开度)与 Kit 动画(Session 层拉伸/逐帧积分角度)各自跟随 |
+| 6 | 展开/姿态 | `POST /solar_deploy` / `/attitude_spin` / `/attitude_mode` → 引擎改目标 → 物理(产能×展开度)与 Kit 动画(Session 层拉伸/动量轮逐帧积分/指向模式缓动到目标)各自跟随；模式与动量轮互斥 |
 | 7 | 任务 | `POST /mission/start` → 相位机走墙钟 → `scene_ready` 加载门防抢跑 |
 | 8 | **实时 What-if 对比** | `POST /compare/start` → **在事件循环上冻结 `LiveSnapshot`**（1Hz tick 同循环，同步读不可能与 tick 交错——公平性关键）→ ×N 离线变体引擎从同一快照播种，之后**每个物理 tick 后同步步进一步**（lockstep，暂停即同停）→ 变体当前采样随 `StatePacket.compare_live` 广播，前端累积进遥测折线图滚动窗、虚线叠加实时生长分叉；`POST /compare/stop` 结束（**全程不触碰在线状态与 USD**） |
 | 9 | **轨道/星座设计** | 设计器编辑轨道六要素 + Walker 参数 → `POST /orbit_design` → 后端按开普勒关系合成参考 TLE、注册为 `custom_design` 预设并激活 → 引擎 tick、Kit 星座环、前端舰队传播器、覆盖地图在下一拍全部重新传播（设计所见即所得）；`GET /orbit_design` 随时读出当前星座六要素 |
@@ -169,15 +169,14 @@ tick 体裹 `try/except`——一次瞬时 sgp4 失败只跳一拍，不会拖�
 
 ## 4. 软件界面
 
-应用层六个页面（`web/src/pages/`），全部英文 UI：
+应用层聚焦为两个导航页面（`web/src/pages/`，全部英文 UI；早先的 Mission/Task/Control 占位页已移除）：
 
 | 页面 | 路由 | 能力 |
 | --- | --- | --- |
 | **态势总览** Overview | `/` | 地球+星座三维态势、14 参数遥测卡、星座预设切换、**四页签设计工作台**：轨道/星座设计器（六要素 + Walker）、新加坡地面站配置（仰角掩模/通信波段/太阳分档）、Coverage(可见星+带宽折线)、Solar(光照分档收集直方图)、Bands(波段吞吐-仰角对比曲线)、事件流 |
-| **卫星孪生体** Satellite Twin | `/satellite` | 主界面：Omniverse 特写视口（真实轨道运动/地影/构件拾取弹窗）+ 配置器（硬件/几何/负载/展开/三轴姿态）+ **设计库**（6 套整星、软件渲染缩略图）+ **实时 What-if 对比**（8 维度×2-4 变体，与物理 tick 同步步进、虚线叠加在遥测折线图上随时间生长分叉，面板含逐变体实时数值表）+ 120s 遥测带 + 子系统健康行 |
-| **任务** Mission | `/mission` | 天数天算全链路编排：采集→路由→在轨推理→下传→交付 |
-| **机舱** Interior | `/interior` | 1MW 级算力机舱内部布局（路由直达，无导航入口） |
-| Task / Control | `/task` `/control` | Phase-1 占位（任务卡片/参数对比） |
+| **卫星孪生体** Satellite Twin | `/satellite` | 主界面：Omniverse 特写视口（真实轨道运动/地影/构件拾取弹窗）+ 配置器（Compute+Workload/材料/几何/展开/**姿态控制**）+ **设计库**（6 套整星、软件渲染缩略图）+ **实时 What-if 对比**（8 维度×2-4 变体，与物理 tick 同步步进、虚线叠加在遥测折线图上随时间生长分叉，面板含逐变体实时数值表）+ 120s 遥测带 |
+
+**姿态控制**：四种指向模式（对日 sun / 对地 nadir / 沿速度 velocity / 惯性 inertial）与 X/Y/Z 动量轮互斥——选模式清零动量轮、Kit 特写把机体缓动到目标姿态；碰动量轮则退回 `free` 自由翻滚（`POST /attitude_mode` · `/attitude_spin`，display-only）。
 
 三维视口三态：WebRTC 流就绪时显示 Kit 渲染；连接中显示提示；离线时 Three.js 回退场景（真轨道追踪）兜底。视频元素全局单例（随路由卸载会杀掉 MediaStream、Kit 重连需 13s），仅流 `ready` 时覆盖到当前页占位槽。
 

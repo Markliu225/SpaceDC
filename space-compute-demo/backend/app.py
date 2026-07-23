@@ -634,6 +634,21 @@ async def http_solar_deploy(body: Optional[dict[str, Any]] = None):
     return {"ok": True, **r}
 
 
+@app.post("/attitude_mode")
+async def http_attitude_mode(body: Optional[dict[str, Any]] = None):
+    """Set the satellite's attitude pointing mode: 'free' (reaction wheels),
+    'sun' (panels to the Sun), 'nadir' (payload to Earth), 'velocity' (ram),
+    or 'inertial' (fixed). A non-free mode zeroes the wheels; the Kit close-up
+    orients the body to the target."""
+    mode = str((body or {}).get("mode", "free"))
+    try:
+        r = engine.set_attitude_mode(mode)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
+    return {"ok": True, **r}
+
+
 @app.post("/attitude_spin")
 async def http_attitude_spin(body: Optional[dict[str, Any]] = None):
     """Reaction-wheel demo: toggle a slow 360° rotation of the whole body

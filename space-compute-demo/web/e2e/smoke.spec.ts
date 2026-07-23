@@ -1,56 +1,35 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * End-to-end smoke test for Phase 1.
- * Preconditions (must be running):
- *   - backend @ :8001
- *   - Vite dev @ :5173
- *   - Kit streaming @ :49100
+ * Full-stack smoke test.
+ * Preconditions: backend @ :8001, Vite dev @ :5173 (Kit optional).
  */
-test('full stack: web connects to backend + attempts Kit stream', async ({ page }) => {
-  const logs: string[] = [];
-  page.on('console', (msg) => logs.push(`[${msg.type()}] ${msg.text()}`));
-  page.on('pageerror', (err) => logs.push(`[error] ${err.message}`));
+test('web connects to backend, sim advances, Overview renders', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
 
   await page.goto('http://localhost:5173/', { waitUntil: 'domcontentloaded', timeout: 30_000 });
 
-  // Backend WS should connect and status dot should turn green within 5 s.
+  // Backend WS connects → status dot turns green.
   await expect(page.locator('.dot.dot--ok')).toBeVisible({ timeout: 10_000 });
 
-  // Sim time should advance (start with T+000:00:00, then change within 3 ticks).
+  // Sim time advances.
   const firstTime = await page.locator('.shell__status span').first().innerText();
   await page.waitForTimeout(2500);
   const secondTime = await page.locator('.shell__status span').first().innerText();
   expect(secondTime).not.toBe(firstTime);
 
-  // Status cards should populate.
-  await expect(page.locator('.cards .card').first()).toBeVisible();
-  const cardCount = await page.locator('.cards .card').count();
-  expect(cardCount).toBeGreaterThanOrEqual(10);
+  // Nav is trimmed to the two live pages.
+  await expect(page.getByRole('link', { name: 'Overview' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Satellite Twin' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Mission' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Task' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Control' })).toHaveCount(0);
 
-  // SceneEmbed should mount — either the video container (stream ready) or placeholder.
-  await expect(page.locator('.scene-embed')).toBeVisible();
+  // Overview renders its KPI row + the orbit designer workbench.
+  await expect(page.getByText('Total Satellites', { exact: false })).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByTestId('overview-tab-designer')).toBeVisible();
 
-  // Wait up to 20 s for stream to start OR explicit failure. "timeout" means still connecting.
-  const finalStatus = await Promise.race([
-    page.waitForSelector('#main-div[style*="display: block"]', { timeout: 20_000 }).then(() => 'ready'),
-    page.waitForFunction(
-      () => (document.querySelector('.scene-embed__placeholder')?.textContent ?? '').toLowerCase().includes('failed'),
-      { timeout: 20_000 },
-    ).then(() => 'failed'),
-  ]).catch(() => 'timeout');
-
-  console.log('final scene status:', finalStatus);
-  console.log('console log tail:\n' + logs.slice(-30).join('\n'));
-
-  // We pass if the stream reached ready (best case) OR reached failed (Kit unreachable — backend+UI still verified).
-  expect(['ready', 'failed']).toContain(finalStatus);
+  expect(errors, `page errors: ${errors.join('; ')}`).toHaveLength(0);
 });
 
-test('task page: Start Task flows through backend state machine', async ({ page }) => {
-  await page.goto('http://localhost:5173/task', { waitUntil: 'domcontentloaded' });
-  await expect(page.locator('.dot.dot--ok')).toBeVisible({ timeout: 10_000 });
-  await page.getByRole('button', { name: 'Start Task' }).click();
-  // Task card should go from "no task" to showing a task id.
-  await expect(page.locator('.task-card')).toContainText(/task-\d+/, { timeout: 5_000 });
-});

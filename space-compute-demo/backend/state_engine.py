@@ -11,11 +11,12 @@ import asyncio
 import logging
 import math
 import time
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, get_args
 
 log = logging.getLogger("space_compute_demo.engine")
 
 from models import (
+    AttitudeMode,
     ElevationCount,
     FleetSnapshot,
     GroundStationState,
@@ -501,13 +502,15 @@ class StateEngine:
         self._sat.workload_totals = WorkloadTotals()
 
     _SPIN_AXES = {"x": 0, "y": 1, "z": 2}
+    _ATTITUDE_MODES = get_args(AttitudeMode)   # single source of truth
 
     def set_attitude_spin(self, action: str, axis: str = "z") -> dict:
         """Reaction-wheel demo: start/stop/toggle a slow 360° body rotation
         about any of the centre-of-mass X/Y/Z axes (axes combine into a
         tumble). Rate is a legible 1 rpm (6°/s) per axis; Kit integrates
         the angles per frame. Display-only — the sun-tracking power model
-        is unaffected."""
+        is unaffected. Touching a wheel drops out of any fixed pointing
+        mode back to 'free'."""
         idx = self._SPIN_AXES.get(str(axis).lower())
         if idx is None:
             raise ValueError(f"unknown attitude_spin axis {axis!r}")
@@ -518,7 +521,24 @@ class StateEngine:
             raise ValueError(f"unknown attitude_spin action {action!r}")
         rates[idx] = 6.0 if action == "start" else 0.0
         self._sat.attitude_spin_dps = tuple(rates)
-        return {"action": action, "axis": axis, "spin_dps": rates}
+        # Manual wheel control is mutually exclusive with a pointing mode.
+        self._sat.attitude_mode = "free"
+        return {"action": action, "axis": axis, "spin_dps": rates,
+                "attitude_mode": "free"}
+
+    def set_attitude_mode(self, mode: str) -> dict:
+        """Set a fixed attitude pointing mode (or 'free'). A non-free mode
+        zeroes the reaction wheels — the Kit close-up then orients the body
+        to the target instead of tumbling. Raises ValueError on unknown
+        modes."""
+        mode = str(mode).lower()
+        if mode not in self._ATTITUDE_MODES:
+            raise ValueError(f"unknown attitude mode {mode!r}")
+        self._sat.attitude_mode = mode
+        if mode != "free":
+            self._sat.attitude_spin_dps = (0.0, 0.0, 0.0)
+        return {"attitude_mode": mode,
+                "spin_dps": list(self._sat.attitude_spin_dps)}
 
     def set_solar_deploy(self, action: str) -> dict:
         """Command the roll-out solar array. 'deploy' → extend to 1.0,

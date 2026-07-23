@@ -1,6 +1,5 @@
 /**
- * Shared building blocks for the Twin module info popup (and the existing
- * Mission-page GpuInfoPopup, once they're unified). Lifted out of the
+ * Shared building blocks for the Twin module info popup. Lifted out of the
  * original popup file so all sub-panels render with identical rhythm
  * (header → bordered sections → label/value rows in mono-tabular numbers).
  */

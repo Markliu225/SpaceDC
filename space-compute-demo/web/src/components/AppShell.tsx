@@ -32,9 +32,6 @@ export function AppShell() {
         <nav className="shell__nav">
           <NavLink to="/" end>Overview</NavLink>
           <NavLink to="/satellite">Satellite Twin</NavLink>
-          <NavLink to="/mission">Mission</NavLink>
-          <NavLink to="/task">Task</NavLink>
-          <NavLink to="/control">Control</NavLink>
         </nav>
         <div className="shell__status">
           <span>{simTimeStr}</span>
@@ -48,7 +45,8 @@ export function AppShell() {
       <main className="shell__main">
         <Outlet />
       </main>
-      {/* Single persistent stream mount; each page's SceneEmbed acts as a positioning slot. */}
+      {/* Single persistent stream mount; each page's EarthViewport renders a
+          #scene-embed-slot that positions the shared WebRTC <video>. */}
       <StreamMount />
     </div>
   );

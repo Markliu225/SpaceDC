@@ -1,4 +1,4 @@
-import { Activity, Cpu, Maximize2, Snowflake, Sun } from 'lucide-react'
+import { Compass, Cpu, Maximize2, Snowflake, Sun } from 'lucide-react'
 import { Card } from '../primitives'
 import { hasFixedWings } from '../../data/satConfigOptions'
 import { useDemoStore } from '../../store/demoStore'
@@ -52,6 +52,9 @@ export function Configurator() {
           }))}
           onChange={(v) => update({ gpu: v })}
         />
+        {/* Workload lives with Compute — the GPU and the job it runs are one
+            concern. */}
+        <WorkloadPanel />
       </Section>
 
       <Section title="Solar Array" icon={<Sun size={12} strokeWidth={1.8} className="text-accent" />}>
@@ -104,8 +107,8 @@ export function Configurator() {
 
       <GeometryControls />
 
-      <Section title="Workload" icon={<Activity size={12} strokeWidth={1.8} className="text-accent" />}>
-        <WorkloadPanel />
+      <Section title="Attitude" icon={<Compass size={12} strokeWidth={1.8} className="text-accent" />}>
+        <AttitudeControl />
       </Section>
 
       <DesignSummary />
@@ -154,7 +157,6 @@ function GeometryControls() {
         incDisabled={ratio >= R.radiator_ratio.max - 1e-6}
       />
       {geom.architecture === 'redwire' && <SolarDeployControl />}
-      <AttitudeSpinControl />
     </Section>
   )
 }
@@ -205,53 +207,93 @@ function SolarDeployControl() {
   )
 }
 
-/** Reaction-wheel demo: spin the whole body 360° about any centre-of-mass
- * axis at a legible 1 rpm — the X/Y/Z toggles combine into a slow tumble.
- * POST /attitude_spin per axis; the Kit close-up integrates the angles per
- * frame. Display-only (the sun-tracking power model is unaffected). */
-function AttitudeSpinControl() {
-  const raw = useDemoStore(
-    (s) => s.lastState?.satellite?.attitude_spin_dps,
-  )
+/** Attitude control: pick a fixed pointing mode (Sun / Nadir / Ram /
+ * Inertial) OR spin the reaction wheels about the X/Y/Z centre-of-mass axes
+ * at 1 rpm. The two are mutually exclusive — selecting a mode zeroes the
+ * wheels (backend), and touching a wheel drops back to 'free' so no mode
+ * stays highlighted. Both POST to the backend; the Kit close-up either eases
+ * the body to the pointing target or integrates the tumble. Display-only. */
+const ATTITUDE_MODES: Array<{ id: string; label: string; title: string }> = [
+  { id: 'sun',      label: 'Sun',      title: '对日 · solar panels track the Sun' },
+  { id: 'nadir',    label: 'Nadir',    title: '对地 · payload faces Earth' },
+  { id: 'velocity', label: 'Ram',      title: '沿速度 · body aligned along-track' },
+  { id: 'inertial', label: 'Inertial', title: '惯性 · fixed in inertial space' },
+]
+
+function AttitudeControl() {
+  const mode = useDemoStore((s) => s.lastState?.satellite?.attitude_mode) ?? 'free'
+  const raw = useDemoStore((s) => s.lastState?.satellite?.attitude_spin_dps)
   const rates: number[] = Array.isArray(raw) ? raw : [0, 0, typeof raw === 'number' ? raw : 0]
   const anySpin = rates.some((r) => r > 0)
-  const toggle = async (axis: 'x' | 'y' | 'z') => {
+
+  const setMode = async (next: string) => {
+    // Clicking the active mode toggles back to free (wheels available again).
+    const target = mode === next ? 'free' : next
+    try {
+      await fetch(`${BACKEND_HTTP}/attitude_mode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: target }),
+      })
+    } catch { /* backend offline — inert in the local fallback */ }
+  }
+  const toggleWheel = async (axis: 'x' | 'y' | 'z') => {
     try {
       await fetch(`${BACKEND_HTTP}/attitude_spin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'toggle', axis }),
       })
-    } catch {
-      /* backend offline — control is inert in the local fallback */
-    }
+    } catch { /* backend offline — inert in the local fallback */ }
   }
   const axes: Array<'x' | 'y' | 'z'> = ['x', 'y', 'z']
+
   return (
-    <div
-      data-testid="attitude-spin"
-      className="flex items-center justify-between rounded border border-border-weak bg-bg-inset/40 px-2 py-1"
-    >
-      <span className="text-[11px] text-text-md">Reaction wheels</span>
-      <div className="flex items-center gap-1.5">
-        <span className={`font-mono tabular-nums text-[11px] ${anySpin ? 'text-accent' : 'text-text-lo'}`}>
-          {anySpin ? '1 rpm' : 'idle'}
-        </span>
-        {axes.map((ax, i) => (
+    <div data-testid="attitude-control" className="flex flex-col gap-1.5">
+      {/* Pointing-mode presets. */}
+      <div className="grid grid-cols-4 gap-1">
+        {ATTITUDE_MODES.map((m) => (
           <button
-            key={ax}
+            key={m.id}
             type="button"
-            onClick={() => toggle(ax)}
-            aria-pressed={rates[i] > 0}
-            className={`w-6 rounded border px-0 py-0.5 text-[10px] uppercase tracking-[0.08em] ${
-              rates[i] > 0
+            data-testid={`attitude-mode-${m.id}`}
+            onClick={() => void setMode(m.id)}
+            aria-pressed={mode === m.id}
+            title={m.title}
+            className={`rounded border px-1 py-1 text-[10px] tracking-[0.04em] ${
+              mode === m.id
                 ? 'border-accent/70 bg-accent/15 text-accent'
                 : 'border-border-weak text-text-md hover:bg-bg-cardHi hover:text-text-hi'
             }`}
           >
-            {ax.toUpperCase()}
+            {m.label}
           </button>
         ))}
+      </div>
+      {/* Reaction wheels — highlighted only while free-tumbling. */}
+      <div className="flex items-center justify-between rounded border border-border-weak bg-bg-inset/40 px-2 py-1">
+        <span className="text-[11px] text-text-md">Reaction wheels</span>
+        <div className="flex items-center gap-1.5">
+          <span className={`font-mono tabular-nums text-[11px] ${anySpin ? 'text-accent' : 'text-text-lo'}`}>
+            {anySpin ? '1 rpm' : mode !== 'free' ? 'held' : 'idle'}
+          </span>
+          {axes.map((ax, i) => (
+            <button
+              key={ax}
+              type="button"
+              data-testid={`attitude-wheel-${ax}`}
+              onClick={() => void toggleWheel(ax)}
+              aria-pressed={rates[i] > 0}
+              className={`w-6 rounded border px-0 py-0.5 text-[10px] uppercase tracking-[0.08em] ${
+                rates[i] > 0
+                  ? 'border-accent/70 bg-accent/15 text-accent'
+                  : 'border-border-weak text-text-md hover:bg-bg-cardHi hover:text-text-hi'
+              }`}
+            >
+              {ax.toUpperCase()}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   )

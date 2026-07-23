@@ -109,6 +109,9 @@ export interface SatelliteState {
    *  centre-of-mass axes — any mix runs as a tumble (POST /attitude_spin
    *  toggles per axis; Kit integrates the angles per frame). */
   attitude_spin_dps?: number[];
+  /** Fixed attitude pointing mode: free | sun | nadir | velocity | inertial.
+   *  Non-free zeroes the wheels; the Kit close-up orients the body. */
+  attitude_mode?: string;
   /** Typed-job detail for the active schedule block (ai_workloads.py). */
   workload_detail?: GpuJobDetail;
   /** Cumulative output since the workload profile / design was applied. */

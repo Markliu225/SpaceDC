@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useDemoStore } from '../store/demoStore'
 import { useBackendBridge } from '../hooks/useBackendBridge'
 import { useMockTelemetryFeed } from '../hooks/useMockTelemetryFeed'
@@ -10,7 +10,6 @@ import { DesignGallery } from '../components/twin/DesignGallery'
 import { MiniOrbitHud } from '../components/twin/MiniOrbitHud'
 import { TwinModulePopup } from '../components/twin/TwinModulePopup'
 import { TimeSeriesStrip } from '../components/twin/TimeSeriesStrip'
-import { ViewModeTabs, type TwinViewMode } from '../components/twin/ViewModeTabs'
 
 /**
  * SatelliteTwinPage — single-satellite deep dive. Targets 1440×900.
@@ -37,11 +36,9 @@ export function SatelliteTwinPage() {
   }, [connected, changeCamera])
 
   // Drive the shared global tick + backend mirror so other components
-  // (Subsystem cards, time-series strip) see fresh values.
+  // (time-series strip, configurator) see fresh values.
   useMockTelemetryFeed()
   useBackendBridge()
-
-  const [viewMode, setViewMode] = useState<TwinViewMode>('structure')
 
   return (
     <div
@@ -62,7 +59,6 @@ export function SatelliteTwinPage() {
           <DesignGallery />
           <ComparePanel />
         </div>
-        <ViewModeTabs value={viewMode} onChange={setViewMode} />
         <div className="text-[10px] uppercase tracking-[0.10em] text-text-lo">
           {connected ? 'Live · Streaming' : 'Offline'}
         </div>
