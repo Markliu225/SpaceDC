@@ -736,6 +736,86 @@ def Xform "World"
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
                     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
                 }
+                def Xform "Cluster3_00" (
+                    instanceable = true
+                    prepend references = </World/Satellite/_Protos/SolarTile>
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 3.0715, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster3_01" (
+                    instanceable = true
+                    prepend references = </World/Satellite/_Protos/SolarTile>
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 3.4794, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster3_10" (
+                    instanceable = true
+                    prepend references = </World/Satellite/_Protos/SolarTile>
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 3.0715, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster3_11" (
+                    instanceable = true
+                    prepend references = </World/Satellite/_Protos/SolarTile>
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 3.4794, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster4_00" (
+                    instanceable = true
+                    prepend references = </World/Satellite/_Protos/SolarTile>
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 3.8874, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster4_01" (
+                    instanceable = true
+                    prepend references = </World/Satellite/_Protos/SolarTile>
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 4.2953, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster4_10" (
+                    instanceable = true
+                    prepend references = </World/Satellite/_Protos/SolarTile>
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 3.8874, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster4_11" (
+                    instanceable = true
+                    prepend references = </World/Satellite/_Protos/SolarTile>
+                )
+                {
+                    double3 xformOp:translate = (0.0300, 4.2953, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
             }
             def Xform "WingNegY"
             {
@@ -967,6 +1047,86 @@ def Xform "World"
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
                     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
                 }
+                def Xform "Cluster3_00" (
+                    instanceable = true
+                    prepend references = </World/Satellite/_Protos/SolarTile>
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -3.4794, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster3_01" (
+                    instanceable = true
+                    prepend references = </World/Satellite/_Protos/SolarTile>
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -3.0715, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster3_10" (
+                    instanceable = true
+                    prepend references = </World/Satellite/_Protos/SolarTile>
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -3.4794, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster3_11" (
+                    instanceable = true
+                    prepend references = </World/Satellite/_Protos/SolarTile>
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -3.0715, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster4_00" (
+                    instanceable = true
+                    prepend references = </World/Satellite/_Protos/SolarTile>
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -4.2953, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster4_01" (
+                    instanceable = true
+                    prepend references = </World/Satellite/_Protos/SolarTile>
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -3.8874, 0.3316)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster4_10" (
+                    instanceable = true
+                    prepend references = </World/Satellite/_Protos/SolarTile>
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -4.2953, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
+                def Xform "Cluster4_11" (
+                    instanceable = true
+                    prepend references = </World/Satellite/_Protos/SolarTile>
+                )
+                {
+                    double3 xformOp:translate = (0.0300, -3.8874, -0.3796)
+                    float xformOp:rotateY = 90.0
+                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                }
             }
         }
 
@@ -989,10 +1149,10 @@ def Xform "World"
                 prepend references = </World/Satellite/_Protos/RadiatorPanel>
             )
             {
-                double3 xformOp:translate = (0.0260, 0.0000, 1.9350)
+                double3 xformOp:translate = (0.0260, 0.0000, 1.6100)
                 float xformOp:rotateX = 90
                 float xformOp:rotateZ = 90
-                double3 xformOp:scale = (2.5957, 1.3329, 1.0)
+                double3 xformOp:scale = (1.9340, 1.1918, 1.0)
                 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:rotateZ", "xformOp:scale"]
             }
             def Mesh "RadBoomBot" (
@@ -1012,10 +1172,10 @@ def Xform "World"
                 prepend references = </World/Satellite/_Protos/RadiatorPanel>
             )
             {
-                double3 xformOp:translate = (0.0260, 0.0000, -1.9350)
+                double3 xformOp:translate = (0.0260, 0.0000, -1.6100)
                 float xformOp:rotateX = 90
                 float xformOp:rotateZ = 90
-                double3 xformOp:scale = (2.5957, 1.3329, 1.0)
+                double3 xformOp:scale = (1.9340, 1.1918, 1.0)
                 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:rotateZ", "xformOp:scale"]
             }
         }
@@ -1087,13 +1247,13 @@ def Xform "World"
         def Camera "Closeup"
         {
             float focalLength = 22.0
-            float focusDistance = 3178
+            float focusDistance = 4454
             float2 clippingRange = (1, 90000)
             matrix4d xformOp:transform = (
                     (0.76822, 0.64018, -0.00000, 0.00000),
                     (-0.30320, 0.36384, 0.88073, 0.00000),
                     (0.56383, -0.67660, 0.47362, 0.00000),
-                    (1791.79565, -2150.15479, 1505.10835, 1.00000)
+                    (2511.44442, -3013.73331, 2109.61332, 1.00000)
             )
             uniform token[] xformOpOrder = ["xformOp:transform"]
         }
