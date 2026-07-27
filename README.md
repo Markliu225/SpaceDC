@@ -2,7 +2,7 @@
 
 **English** · [中文](README.zh-CN.md)
 
-A digital twin of an **orbital compute data center** — an Omniverse-rendered satellite streamed into a React web app and driven by a FastAPI physics engine. You can click any component for live telemetry, reconfigure the deployable solar / radiator geometry from the UI, and watch the real-time power and thermal physics respond.
+A digital twin of an **orbital compute data center** — an Omniverse-rendered satellite streamed into a React web app and driven by a FastAPI physics engine. Click any component for live telemetry; reconfigure the hardware and the deployable geometry from the UI — GPU, solar cells, radiator coating, battery chemistry, pointing attitude, wing span — and watch the coupled power / thermal / throughput physics respond in real time. The satellite's business is **serving LLM inference**, so the loop closes where it hurts: a radiator that runs hot throttles the GPUs and costs tokens per second.
 
 ## Architecture
 
@@ -15,13 +15,22 @@ A digital twin of an **orbital compute data center** — an Omniverse-rendered s
                                               physics + state engine
 ```
 
+Layer-by-layer walkthrough: **[ARCHITECTURE.md](ARCHITECTURE.md)**.
+
+The web app is **two pages**:
+
+- **Overview** — the constellation view: 3D Earth + fleet, coverage map, event log, and a four-tab orbit / ground-station workbench (feature 13).
+- **Satellite Twin** — the single-satellite view: the Omniverse viewport, the Configurator (compute · solar · radiator · battery · deployables · attitude), the live telemetry strip, and the Designs / Compare panels.
+
+Everything below lives under `space-compute-demo/`:
+
 | Dir | What | Port |
 |-----|------|------|
 | `web/` | React + TypeScript + Zustand + Three.js shell; WebRTC viewport with a local fallback scene | 5173 (dev) |
-| `backend/` | FastAPI state engine (orbit + power + thermal physics) + WebSocket broadcast | 8001 |
+| `backend/` | FastAPI state engine (orbit + power + thermal + LLM-performance physics) + WebSocket broadcast | 8001 |
 | `ov_app/` | Omniverse Kit app + extensions (`space.demo.scene` / `.selection` / …); WebRTC stream | 49100 |
 | `usd/` | USD stages — `satellite.usda` (lights + camera) sub-layers `twin_satellite.usda` (the body) | — |
-| `tools/` | USD generators + a GL-free preview renderer | — |
+| `tools/` | USD generators, a GL-free preview renderer, and the physics validators | — |
 | `assets_raw/` | source `.usdz` (backbone / solar / radiator) — large, kept out of git | — |
 | `data/`, `docs/` | mock cases, specs | — |
 
@@ -40,37 +49,41 @@ Geometry is parameterised at runtime via `usd/twin_params.json` (written by the 
 1. **Enlarged viewport** — the Twin page gives the Omniverse window most of the screen; side/bottom panels are compact.
 2. **Component-level interaction** — clicking a server, solar wing, radiator, or backbone part opens its info card (matched from the selected prim path).
 3. **Deployables editing** — the *Deployables* controls add/remove solar clusters (sides only) and resize / reshape the radiators; each change regenerates the USD model and reloads it in Kit.
-4. **Real-time physics** — solar illumination · panel area × efficiency · GPU workload · device power · radiator area × emissivity all feed a live power / thermal balance shown in the status cards and component panels. Editing the geometry changes the numbers immediately. See **[docs/physics.md](docs/physics.md)** for the full model.
+4. **Real-time physics** — solar illumination · panel area × efficiency · GPU workload · device power · radiator area × emissivity all feed a live power / thermal balance shown in the status cards and component panels. Editing the geometry changes the numbers immediately. See **[docs/physics.md](space-compute-demo/docs/physics.md)** for the full model.
 5. **Design library** — the *Designs* chip on the Twin page opens a gallery of complete satellite designs (`backend/design_presets.py`), each with a software-rendered thumbnail (`GET /designs/{id}/preview.png`, cached) and derived stats. Applying one (`POST /designs/{id}/apply`) switches the hardware loadout, deployable geometry (USD regen + Kit layer reload), GPU workload profile and platform constants together; hand-editing any knob afterwards degrades the active design to `custom`.
 6. **Six hull architectures** — each design is a genuinely different satellite shape (`twin_params.json` `architecture`): the classic single-truss, a 24-blade twin-truss tower, ISS-style ribbon blanket wings, the LUMID smallsat with integrated cross panels, a parabolic-dish comms hull with windmill wings, and the Redwire-style flat payload bay (its own row of discrete GPU modules faces the sun side, each independently clickable → GPU panel) with flat deck-parallel GaAs wings bolted onto the bay-edge lugs — added panels chain outward one by one — and boom radiators off the deck faces. The redwire wings are a **roll-out array**: the design applies stowed, and *Deploy* (`POST /solar_deploy`) reels the flexible blanket out of the bay edges over ~12 s — solar production scales with the deployed fraction (a stowed array genuinely starves the satellite) and the Kit close-up stretches the wing geometry from its root anchors in lockstep. Physics areas follow the architecture.
 7. **Typed AI workloads** — every schedule block runs a concrete job (`backend/ai_workloads.py`): Llama-3.3-70B pretraining/inference, Llama-3.1-8B fine-tuning, ViT-L/16 EO detection — resolved against the fitted GPU's dense datasheet TFLOPS into per-card MFU, effective TFLOPS, tokens/s / frames/s and heat, live in `satellite.workload_detail` and the GPU module popup.
 8. **Live orbital motion on the Twin page** — in the Kit close-up the Earth rotates under the live sub-satellite point and the sun disk + key light sweep the true zenith→sun angle (`satellite.sun_cos`), so ground track, day/night passes and eclipses play out in the viewport; with the stream offline the viewport falls back to a real-orbit chase view (`TwinOrbitFallback`) of the tracked satellite gliding along its SGP4-propagated ring, and the MiniOrbitHud reticle animates on a frame-rate-extrapolated sim clock. The backend refreshes the tracked satellite's kinematics on every `/state` read (single cached-Satrec sgp4 call), so Kit's 5 Hz poll sees continuous motion instead of 1 Hz steps.
-9. **Workload selector** — the *Workload* section in the Configurator switches the GPU job schedule live (`POST /workload_profile`); every option is annotated with how the current design copes (`GET /workload_profiles`: average demand vs solar supply, thermal ceiling, fit verdict, expected tokens/frames/kWh per cycle), and the panel shows the running job's model, MFU, effective TFLOPS, rate, electrical draw, per-GPU heat, radiated power and the cumulative output since the switch.
+9. **Workload selector** — the *Workload* block sits directly under *Compute* in the Configurator (the GPU and the job it runs are one concern) and switches the GPU job schedule live (`POST /workload_profile`); every option is annotated with how the current design copes (`GET /workload_profiles`: average demand vs solar supply, thermal ceiling, fit verdict, expected tokens/frames/kWh per cycle), and the panel shows the running job's model, MFU, effective TFLOPS, rate, electrical draw, per-GPU heat, radiated power and the cumulative output since the switch.
 10. **LLM serving is the primary business** — the workload system centres on serving a CATALOG of inference models (Llama-3.1-8B/70B/405B, Qwen2.5-Coder-32B, Qwen2.5-72B, Mistral-Small-24B), each job a distinct operating point on the decode law (batch, context, model size): multi-tier chat (`chat_serving`), frontier 405B serving (`frontier`), code-assist + long-context RAG (`code_rag`), batched 70B serving (`inference`, the default) — with EO vision and training as secondary stories. The *Redwire Serving Node* design flies Llama-405B on its 8×H200 tensor-parallel group.
-11. **Analytical LLM inference engine** — LLM jobs don't use an MFU guess: `backend/llm_perf.py` solves the real operating point from first principles (DVFS power aggregate `P = P_static + χ·x^θ`, compute-bound prefill/training power-law, memory-floor decode law with its bandwidth plateau, natural draw) **coupled to the satellite thermal state**: the structure is the GPUs' cold plate, `T_die = T_struct + P·R_th`, and the driver shrinks the power budget to hold the throttle target — so an undersized or degraded radiator visibly costs tokens/s (`gpu_thermal_throttle` / `gpu_thermal_runaway` alarms, die temp / SM clock / phase live in the panels). Calibrated against a published V100 power-cap measurement study and validated by `tools/validate_llm_perf.py` (52 checks) + `tools/validate_llm_engine.py` (32 closed-loop scenario checks); the *LLM serving (70B)* profile flies a decode-dominant schedule to showcase it. See **[docs/physics.md §4a](docs/physics.md)**.
+11. **Analytical LLM inference engine** — LLM jobs don't use an MFU guess: `backend/llm_perf.py` solves the real operating point from first principles (DVFS power aggregate `P = P_static + χ·x^θ`, compute-bound prefill/training power-law, memory-floor decode law with its bandwidth plateau, natural draw) **coupled to the satellite thermal state**: the structure is the GPUs' cold plate, `T_die = T_struct + P·R_th`, and the driver shrinks the power budget to hold the throttle target — so an undersized or degraded radiator visibly costs tokens/s (`gpu_thermal_throttle` / `gpu_thermal_runaway` alarms, die temp / SM clock / phase live in the panels). Calibrated against a published V100 power-cap measurement study and validated by `tools/validate_llm_perf.py` (52 checks) + `tools/validate_llm_engine.py` (32 closed-loop scenario checks); the *LLM serving (70B)* profile flies a decode-dominant schedule to showcase it. See **[docs/physics.md §4a](space-compute-demo/docs/physics.md)**.
 
 12. **Live what-if comparison** — the *Compare* chip on the Twin page opens an A/B/C bench (`backend/compare_sim.py`): pick any Configurator dimension (radiator coating, solar cell material, GPU model, wing span, radiator size, battery chemistry, battery pack size, workload profile — or whole designs) and 2–4 candidate values, then *Start*. Each variant is seeded from the live satellite's exact current state (same orbit phase, same SOC / structure temperature — an event-loop-consistent snapshot) and then **stepped in lockstep with every 1 Hz physics tick**; the variants' samples ride `StatePacket.compare_live` and grow as dashed overlays on the Live Telemetry strip, so you watch the choices diverge in real time as the simulation advances — a bare-aluminium radiator visibly climbs toward GPU thermal throttling and sheds tokens/s while OSR and graphite stay cool. The panel shows a live per-variant table (temp / SOC / payload / tok/s) and Stop ends it. Pure what-if: the live satellite and the viewport are never touched, and pausing the sim pauses the comparison too.
 
 13. **Orbit & constellation designer + ground-station analytics** — the Overview page's right column is a four-tab workbench. **Design**: edit the six classical orbital elements (a·e·i·Ω·ω·M, live readout for the active constellation) plus the Walker pattern; *Apply* synthesizes the reference TLE backend-side (`POST /orbit_design`), activates the design and every view re-propagates it at once — 3D fleet, coverage map, Kit rings, the physics engine's tracked satellite. Then the **ground-station config**: mark **Singapore** in red (coverage map + Kit Earth), and choose the antenna **elevation mask**, the **comms band** (UHF/S/X/Ka — higher bands carry more per-satellite throughput but need a higher elevation, so a band trades bandwidth against how many sats are usable) and the **solar histogram bin** (5 or 10). Once configured, three real-time analytics tabs follow the marked station live (all riding `StatePacket.ground_target`): **Coverage** — the status map plus line charts of visible-satellite count and aggregate bandwidth over time; **Solar** — a histogram of per-satellite solar-collection binned by illumination intensity (0–100); **Bands** — throughput-vs-elevation-mask curves for every comms band with the current operating point marked, making the band tradeoff visible. A one-orbit pass analysis (`GET /ground_visibility`) reports contact windows, coverage fraction and next-pass countdown.
 
+14. **Attitude control — and the power it costs** — the *Attitude* section at the foot of the Configurator flies the body. Four pointing modes — **Sun** (arrays track the Sun), **Nadir** (payload to Earth), **Ram** (along-track) and **Inertial** (orbit-normal, quasi-fixed in inertial space) — are mutually exclusive with the X/Y/Z reaction wheels (`POST /attitude_mode`): picking a mode zeroes the wheels, touching a wheel drops back to `free` and releases the chip. The Kit close-up eases the body to the commanded pose, sun-pointing tracking the swept Sun disk. It is not cosmetic: **solar collection is the panel normal projected onto the Sun vector** — sun-pointing holds 1.0 whenever lit, `free` is SADA sun-tracking (0.95), and body-fixed nadir / ram / inertial collect only `max(0, n̂·ŝ)`, so a badly chosen attitude can fall to **zero collection in full daylight**; eclipse gates every mode to 0. The live figure shows in the *Solar collection* readout and the power balance follows it the same tick.
+
+15. **Battery chemistry & pack sizing** — the *Battery* section chooses the chemistry (Li-ion / LiFePO₄ / Li-S / solid-state — each a gravimetric energy density in Wh/kg plus a round-trip efficiency) and the pack size tier (S/M/L/XL, in kg). Capacity is *derived* — pack mass × energy density, shown live in kWh — and the round-trip loss is booked once on the charging leg (discharge 1 : 1), so the tabulated efficiency is a true round-trip figure. Both knobs move the eclipse-survival story, both are Compare dimensions, and all six design presets carry them.
+
 ## Getting started
 
 ```bash
 # Backend  (Python 3.11, USD/pxr installed in the venv)
-cd backend
+cd space-compute-demo/backend
 python -m venv .venv && .venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn app:app --reload --port 8001
 
 # Web
-cd web
+cd space-compute-demo/web
 npm install
 npm run dev            # http://localhost:5173
 
 # Omniverse Kit app — see LAUNCH.md
 ```
 
-**One click:** double-click **`start_all.bat`** to launch the backend, web dev server, and Kit streaming app together (see [LAUNCH.md](LAUNCH.md)). Stop with `stop_all.bat`.
+**One click:** double-click **`space-compute-demo/start_all_windowed.bat`** to launch the backend, web dev server, and Kit streaming app together (see [LAUNCH.md](space-compute-demo/LAUNCH.md)). Stop with `stop_all.bat`.
 
 ## Tooling
 
@@ -79,6 +92,20 @@ npm run dev            # http://localhost:5173
 | `tools/gen_twin_satellite.py` | Generate the satellite USD (reads `usd/twin_params.json`; `--params p.json --out stage.usda` for the design-preview stages, with `use_dgx` / `preview_lite` keys) |
 | `tools/render_usd.py` | GL-free software renderer — preview any USD/USDZ without Kit |
 | `tools/inspect_backbone.py`, `tools/analyze_slots.py` | Geometry / slot surveys for the backbone |
+
+Physics validators — each prints a pass/fail summary at the end (all but `validate_physics.py` also exit non-zero on failure):
+
+| Validator | Covers | Needs |
+|-----------|--------|-------|
+| `tools/validate_physics.py` | Power / thermal balance across all six design presets | running backend |
+| `tools/validate_attitude_solar.py` | Per-mode solar incidence over an orbit sweep, eclipse gating, derived battery capacities (16 checks) | running backend |
+| `tools/validate_compare.py` | The offline compare twin against the live engine (14 checks) | running backend |
+| `tools/validate_llm_perf.py` | The analytical LLM operating-point solver (52 checks) | — |
+| `tools/validate_llm_engine.py` | Closed-loop thermal ↔ throughput scenarios (32 checks) | — |
+
+The backend-driven ones default to `:8001`; pass a port argument (`python tools/validate_physics.py 8123`) to point them at an isolated stack.
+
+End-to-end UI specs live in `web/e2e/` (Playwright).
 
 ## Notes
 
