@@ -1,6 +1,14 @@
 import { Check, Cpu, Layers, Sun, Thermometer } from 'lucide-react'
 import { assetPreviewSrc } from '../../../hooks/useSatelliteAssets'
 import type { SatelliteAssetInfo } from '../../../types/messages'
+import { AdaArt, SophiaArt } from './assetArt'
+
+/** Platforms drawn from the vendor's PUBLISHED reference design instead of
+ *  rendered from a hull — see assetArt.tsx for why. */
+const ASSET_ART: Record<string, (() => React.ReactElement) | undefined> = {
+  sophia: SophiaArt,
+  ada: AdaArt,
+}
 
 /**
  * Step 1 — pick the vendor PLATFORM. Each card is a genuinely different hull
@@ -65,6 +73,7 @@ function AssetCard({
   onPick: () => void
 }) {
   const s = a.stats
+  const Art = ASSET_ART[a.id]
   return (
     <button
       type="button"
@@ -78,15 +87,23 @@ function AssetCard({
           : 'border-border-weak bg-bg-inset/40 hover:border-border-glow hover:bg-bg-card-hi')
       }
     >
-      <div className="relative aspect-[4/3] w-full bg-[#05070e]">
-        <img
-          src={assetPreviewSrc(a)}
-          alt={`${a.name} preview`}
-          loading="lazy"
-          className="h-full w-full object-cover"
-          onError={(e) => { (e.target as HTMLImageElement).style.visibility = 'hidden' }}
-          onLoad={(e) => { (e.target as HTMLImageElement).style.visibility = '' }}
-        />
+      {/* Square, because the rendered previews are square — the drawn
+          platforms use the same box so every card's image area is identical.
+          Platforms whose hull we actually have show a render of the model they
+          will fly; the rest are drawn from the vendor's published reference
+          design (assetArt.tsx) rather than showing a stand-in hull that looks
+          nothing like the real satellite. */}
+      <div className="relative aspect-square w-full bg-[#05070e]">
+        {Art ? <Art /> : (
+          <img
+            src={assetPreviewSrc(a)}
+            alt={`${a.name} preview`}
+            loading="lazy"
+            className="h-full w-full object-cover"
+            onError={(e) => { (e.target as HTMLImageElement).style.visibility = 'hidden' }}
+            onLoad={(e) => { (e.target as HTMLImageElement).style.visibility = '' }}
+          />
+        )}
         {selected && (
           <span className="absolute left-2 top-2 flex items-center gap-1 rounded bg-accent px-1.5 py-0.5
                            text-[9px] font-semibold uppercase tracking-[0.10em] text-black">
@@ -108,7 +125,9 @@ function AssetCard({
             {a.vendor}
           </span>
         </div>
-        <span className="line-clamp-2 min-h-[2em] text-[10px] leading-snug text-text-lo">
+        {/* Exactly two lines tall whatever the tagline's length, so the stat
+            grids below line up across the row. */}
+        <span className="line-clamp-2 h-[2.75em] text-[10px] leading-snug text-text-lo">
           {a.tagline}
         </span>
 

@@ -132,17 +132,19 @@ ASSETS: dict[str, SatelliteAsset] = {a.id: a for a in [
     ),
     SatelliteAsset(
         id="sophia",
-        name="Sophia Space Tile",
+        name="Sophia Space TILE",
         vendor="Sophia Space",
-        tagline="Tile smallsat · integrated cross panels · 6 slots",
+        tagline="1 m² tile · solar face + radiating back · no fans",
         description=(
-            "Minimum launch mass and CAPEX: a compact tile bus whose "
-            "perovskite cells are integrated into the hull cross panels "
-            "instead of deploying on booms, with slim radiators and six "
-            "payload slots for a low-duty compute tile."
+            "TILE — Thermal Integrated LEO Edge: a one-square-metre, ~1 cm "
+            "thick panel that is the whole data center. Solar cells cover the "
+            "sunlit face, the processors sit inside, and the anti-sun face "
+            "radiates their heat straight to space — no fans, no coolant "
+            "loops. Tiles aggregate: one hosted on someone else's bus, ~40 as "
+            "a companion-orbit cluster, thousands for a full orbital DC."
         ),
         architecture="lumid",
-        slot_count=6, slot_group_size=3, slot_group_label="Column",
+        slot_count=6, slot_group_size=3, slot_group_label="Tile row",
         slot_labels=[f"T{i + 1}" for i in range(6)],
         config=SatelliteConfig(
             gpu="H100", solar_material="Perovskite", solar_size="S",
@@ -155,14 +157,16 @@ ASSETS: dict[str, SatelliteAsset] = {a.id: a for a in [
     ),
     SatelliteAsset(
         id="ada",
-        name="Ada Space Node",
+        name="Ada Space Compute Node",
         vendor="Ada Space",
-        tagline="Dish comms hull · windmill wings · 8 slots",
+        tagline="Networked smallsat · twin wings · 100 Gbps laser mesh",
         description=(
-            "Built for spiky target-of-opportunity tasking: a parabolic-dish "
-            "comms hull with windmill wings and max-span optical solar "
-            "reflector radiators that keep burst temperature flat across an "
-            "eight-slot bay."
+            "The Three-Body Computing Constellation bus: a compact "
+            "intelligent-networked smallsat that computes on orbit instead of "
+            "downlinking raw data — on-board AI accelerators, a space-based "
+            "model, and gimballed laser terminals meshing the whole ring at up "
+            "to 100 Gbps. Flies a sun-synchronous plane, twelve to a launch, "
+            "with max-span radiators for burst tasking."
         ),
         architecture="dish",
         slot_count=8, slot_group_size=4, slot_group_label="Bank",
