@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { dismissBuilder } from './twin';
 
 /**
  * Design gallery — switch the whole satellite design from the Twin page.
@@ -10,6 +11,7 @@ import { test, expect } from '@playwright/test';
 test.describe('design gallery', () => {
   test('lists presets with thumbnails and stats', async ({ page }) => {
     await page.goto('http://localhost:5173/satellite', { waitUntil: 'domcontentloaded' });
+    await dismissBuilder(page);
 
     // Trigger chip in the header strip.
     const trigger = page.getByRole('button', { name: /designs/i });
@@ -41,6 +43,7 @@ test.describe('design gallery', () => {
 
   test('applying a design switches model + physics + workload', async ({ page }) => {
     await page.goto('http://localhost:5173/satellite', { waitUntil: 'domcontentloaded' });
+    await dismissBuilder(page);
 
     // Reset to a known design first (idempotent even if a previous run
     // left another design active).

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { dismissBuilder } from './twin';
 
 /** Workload selector — switching the job schedule from the Twin page must
  *  swap the physics demand side, mark the design custom, restart the output
@@ -9,6 +10,7 @@ test('workload panel switches schedules and shows live output', async ({ page })
   // Known starting point.
   await page.request.post('http://localhost:8001/designs/baseline/apply');
   await page.goto('http://localhost:5173/satellite', { waitUntil: 'domcontentloaded' });
+  await dismissBuilder(page);
   await page.waitForTimeout(4_000);
 
   // The Workload section renders with the live readout.

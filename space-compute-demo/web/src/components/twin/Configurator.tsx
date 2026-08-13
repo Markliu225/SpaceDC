@@ -1,10 +1,12 @@
 import { BatteryCharging, Compass, Cpu, Maximize2, Snowflake, Sun } from 'lucide-react'
 import { Card } from '../primitives'
-import { batteryCapacityWh, hasFixedWings } from '../../data/satConfigOptions'
+import { batteryCapacityWh, hasFixedWings, slotGroups, GPU_SLOT_TINT } from '../../data/satConfigOptions'
 import { useDemoStore } from '../../store/demoStore'
+import { useTelemetryStore } from '../../store/useTelemetryStore'
 import { useTwinGeometry, GEOM_RANGE } from '../../hooks/useTwinGeometry'
 import { WorkloadPanel } from './WorkloadPanel'
 import {
+  ATTITUDE_MODES,
   BATTERY_MATERIAL_OPTIONS,
   BATTERY_SIZE_OPTIONS,
   GPU_OPTIONS,
@@ -16,6 +18,7 @@ import {
 import { useSatConfig } from '../../hooks/useSatConfig'
 import { ConfigDropdown } from './ConfigDropdown'
 import { DesignSummary } from './DesignSummary'
+import { Stepper } from './Stepper'
 
 /**
  * Configurator — the right-rail "design lab" where the viewer reconfigures
@@ -54,6 +57,7 @@ export function Configurator() {
           }))}
           onChange={(v) => update({ gpu: v })}
         />
+        <BayLoadout />
         {/* Workload lives with Compute — the GPU and the job it runs are one
             concern. */}
         <WorkloadPanel />
@@ -142,6 +146,33 @@ export function Configurator() {
 
       <DesignSummary />
     </Card>
+  )
+}
+
+/** The fitted payload bay, when the satellite was BUILT slot by slot. The GPU
+ *  dropdown above can only show one model, so a mixed bay would otherwise be
+ *  invisible here — and switching that dropdown re-fits every populated slot,
+ *  which the viewer should be able to see coming. */
+function BayLoadout() {
+  const slots = useTelemetryStore((s) => s.satConfig.gpu_slots) ?? []
+  if (slots.length === 0) return null
+  const groups = slotGroups(slots)
+  const fitted = groups.reduce((n, g) => n + g.count, 0)
+  return (
+    <div data-testid="bay-loadout"
+         className="flex items-center justify-between gap-2 rounded border border-border-weak
+                    bg-bg-inset/40 px-2 py-1 text-[10px]">
+      <span className="uppercase tracking-[0.08em] text-text-lo">Bay</span>
+      <span className="flex items-center gap-1.5">
+        {groups.map((g) => (
+          <span key={g.gpu} className="flex items-center gap-1 font-mono tabular-nums text-text-hi">
+            <span className="h-2 w-2 rounded-sm" style={{ background: GPU_SLOT_TINT[g.gpu] }} />
+            {g.count}×{g.gpu}
+          </span>
+        ))}
+        <span className="text-text-lo">· {fitted}/{slots.length}</span>
+      </span>
+    </div>
   )
 }
 
@@ -242,13 +273,6 @@ function SolarDeployControl() {
  * wheels (backend), and touching a wheel drops back to 'free' so no mode
  * stays highlighted. Both POST to the backend; the Kit close-up either eases
  * the body to the pointing target or integrates the tumble. Display-only. */
-const ATTITUDE_MODES: Array<{ id: string; label: string; title: string }> = [
-  { id: 'sun',      label: 'Sun',      title: '对日 · solar panels track the Sun' },
-  { id: 'nadir',    label: 'Nadir',    title: '对地 · payload faces Earth' },
-  { id: 'velocity', label: 'Ram',      title: '沿速度 · body aligned along-track' },
-  { id: 'inertial', label: 'Inertial', title: '惯性 · fixed in inertial space' },
-]
-
 function AttitudeControl() {
   const mode = useDemoStore((s) => s.lastState?.satellite?.attitude_mode) ?? 'free'
   const raw = useDemoStore((s) => s.lastState?.satellite?.attitude_spin_dps)
@@ -336,27 +360,6 @@ function AttitudeControl() {
             </button>
           ))}
         </div>
-      </div>
-    </div>
-  )
-}
-
-function Stepper({
-  label, value, onDec, onInc, decDisabled, incDisabled,
-}: {
-  label: string; value: string
-  onDec: () => void; onInc: () => void
-  decDisabled?: boolean; incDisabled?: boolean
-}) {
-  const btn = 'flex h-5 w-5 items-center justify-center rounded border border-border-weak text-text-md ' +
-    'hover:bg-bg-cardHi hover:text-text-hi disabled:opacity-30 disabled:cursor-not-allowed'
-  return (
-    <div className="flex items-center justify-between rounded border border-border-weak bg-bg-inset/40 px-2 py-1">
-      <span className="text-[11px] text-text-md">{label}</span>
-      <div className="flex items-center gap-1.5">
-        <button type="button" onClick={onDec} disabled={decDisabled} className={btn} aria-label={`decrease ${label}`}>−</button>
-        <span className="w-12 text-right font-mono tabular-nums text-[11px] text-text-hi">{value}</span>
-        <button type="button" onClick={onInc} disabled={incDisabled} className={btn} aria-label={`increase ${label}`}>+</button>
       </div>
     </div>
   )

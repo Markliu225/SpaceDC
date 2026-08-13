@@ -19,6 +19,7 @@ from models import (
     AttitudeMode,
     ElevationCount,
     FleetSnapshot,
+    GpuMixItem,
     GroundStationState,
     GroundTargetState,
     MissionState,
@@ -33,6 +34,7 @@ from models import (
     WorkloadTotals,
 )
 import ai_workloads as _ai
+import satellite_assets as _assets
 from services import orbit_catalog
 from services import constellations as _consts
 
@@ -90,6 +92,13 @@ _GPU_TABLE: dict[str, dict[str, float]] = {
     "MI300X": {"pflops": 2.62, "tdp_w": 750.0,  "cost_k": 28.0},
 }
 _GPU_CARDS_PER_SAT = 8
+# Payload-bay ceiling — the biggest hull in the catalog (twin_truss) carries
+# 24 rack slots; anything beyond that is a malformed request, not a design.
+_MAX_GPU_SLOTS = 24
+# EPS power budget per card: an idle floor at ~15 % TDP, scaling linearly with
+# utilization up to TDP. Datacenter GPUs (H100/H200/B200/MI300X) bench within
+# ~10 % of this curve.
+_IDLE_FRAC = 0.15
 
 _SOLAR_MAT_TABLE = {
     "Si":         {"efficiency": 0.22, "density_kg_m2": 2.5},
@@ -141,6 +150,105 @@ def _batt_capacity_wh(cfg) -> float:
 
 def _batt_efficiency(cfg) -> float:
     return _BATT_MAT_TABLE.get(cfg.battery_material, _BATT_MAT_TABLE["LiIon"])["efficiency"]
+
+
+# ---------------------------------------------------------------------------
+# Payload bay — per-slot GPU loadout (satellite builder step 3).
+#
+# `SatelliteConfig.gpu_slots` fits an individual card model into each rack slot
+# of the chosen platform, so a bay can hold H100s and B200s at once. Everything
+# downstream works off (card type, count) GROUPS: an empty slot list yields one
+# group and collapses to exactly the pre-per-slot single-GPU arithmetic.
+# ---------------------------------------------------------------------------
+def _slot_groups(cfg: SatelliteConfig, fallback_gpu: str,
+                 fallback_count: int) -> list[tuple[str, int]]:
+    """The fitted cards as homogeneous (type, count) groups, largest first."""
+    fitted = [s for s in (cfg.gpu_slots or []) if s]
+    if not fitted:
+        return [(fallback_gpu, max(1, int(fallback_count)))]
+    counts: dict[str, int] = {}
+    for s in fitted:
+        counts[s] = counts.get(s, 0) + 1
+    return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+
+
+def _group_operating_point(gpu_id: str, job_key: str, util: float, n: int,
+                           t_struct_c: Optional[float]):
+    """(typed-job detail, realized watts per card) for ONE homogeneous group.
+
+    The single place the EPS budget curve lives, so the live tick, the design
+    check and workload_adaptation can never drift apart."""
+    gpu = _GPU_TABLE.get(gpu_id, _GPU_TABLE["H100"])
+    cap_w = gpu["tdp_w"] * (_IDLE_FRAC + (1.0 - _IDLE_FRAC) * util)
+    det = _ai.job_detail(gpu_id, job_key, util, cap_w, n, t_struct_c=t_struct_c)
+    # LLM blocks come back with the REALIZED draw (decode sits below the cap on
+    # the bandwidth plateau); everything else spends its budget.
+    card_w = (det.power_w_per_gpu
+              if det is not None and det.engine == "analytic" else cap_w)
+    return det, card_w
+
+
+def _bay_job_detail(groups: list[tuple[str, int]], job_key: str, util: float,
+                    t_struct_c: Optional[float]):
+    """Resolve the active job across a possibly-MIXED payload bay.
+
+    Each distinct card type is its OWN tensor-parallel group — llm_perf's
+    ideal-TP algebra holds across identical silicon sharing a model, not across
+    H100s and B200s — so the satellite aggregate is the sum over groups while
+    the per-GPU columns become card-count-weighted means. A homogeneous bay has
+    one group and returns its detail untouched.
+
+    Returns (merged detail or None, total payload watts)."""
+    per_group: list[tuple[str, int, Any]] = []
+    payload_w = 0.0
+    for gpu_id, n in groups:
+        det, card_w = _group_operating_point(gpu_id, job_key, util, n, t_struct_c)
+        payload_w += card_w * n
+        per_group.append((gpu_id, n, det))
+    # An unknown job key resolves to None for every group alike (the job table
+    # is GPU-independent) — report no detail, exactly as the single-GPU path.
+    if not per_group or any(d is None for _, _, d in per_group):
+        return None, payload_w
+    if len(per_group) == 1:
+        return per_group[0][2], payload_w
+
+    total = sum(n for _, n, _ in per_group)
+
+    def wavg(pick) -> float:
+        return sum(pick(d) * n for _, n, d in per_group) / total
+
+    base = per_group[0][2]                  # the largest group (sorted above)
+    return base.model_copy(update={
+        "gpu_count": total,
+        "mfu": round(wavg(lambda d: d.mfu), 3),
+        "power_w_per_gpu": round(wavg(lambda d: d.power_w_per_gpu), 1),
+        "heat_w_per_gpu": round(wavg(lambda d: d.heat_w_per_gpu), 1),
+        "tflops_per_gpu": round(wavg(lambda d: d.tflops_per_gpu), 1),
+        "throughput_per_gpu": round(wavg(lambda d: d.throughput_per_gpu), 1),
+        "throughput_total": round(sum(d.throughput_total for _, _, d in per_group), 1),
+        # The analytic columns only mean something when EVERY group solved
+        # analytically — one MFU-path group degrades the whole readout.
+        "engine": ("analytic" if all(d.engine == "analytic" for _, _, d in per_group)
+                   else "mfu"),
+        "power_cap_w": round(wavg(lambda d: d.power_cap_w), 1),
+        "freq_frac": round(wavg(lambda d: d.freq_frac), 3),
+        # Alarms care about the HOTTEST die, not the average one.
+        "gpu_die_temp_c": round(max(d.gpu_die_temp_c for _, _, d in per_group), 1),
+        "thermal_throttled": any(d.thermal_throttled for _, _, d in per_group),
+        "thermal_runaway": any(d.thermal_runaway for _, _, d in per_group),
+        "mix": [GpuMixItem(gpu=g, count=n,
+                           power_w_per_gpu=d.power_w_per_gpu,
+                           heat_w_per_gpu=d.heat_w_per_gpu,
+                           tflops_per_gpu=d.tflops_per_gpu,
+                           throughput_per_gpu=d.throughput_per_gpu,
+                           throughput_total=d.throughput_total)
+                for g, n, d in per_group],
+    }), payload_w
+
+
+def _peak_card_watts(groups: list[tuple[str, int]]) -> float:
+    """Worst-case payload draw: every fitted card at 100 % duty."""
+    return sum(_GPU_TABLE.get(g, _GPU_TABLE["H100"])["tdp_w"] * n for g, n in groups)
 
 
 # Fixed inertial Sun direction (matches _set_tracked_kinematics + Kit lights).
@@ -488,16 +596,49 @@ class StateEngine:
         the new full config so the handler can echo it back. Unknown keys
         are ignored; bad values raise the underlying Pydantic ValidationError."""
         cleaned = {k: v for k, v in patch.items() if v is not None}
+        if "gpu_slots" in cleaned:
+            # [] clears the per-slot loadout back to "uniform `gpu` × count" —
+            # that is what every design preset's config carries.
+            slots = [s or None for s in cleaned["gpu_slots"]]
+            if len(slots) > _MAX_GPU_SLOTS:
+                raise ValueError(f"at most {_MAX_GPU_SLOTS} payload slots")
+            if slots and not any(slots):
+                raise ValueError("at least one payload slot must be fitted")
+            cleaned["gpu_slots"] = slots
+        elif "gpu" in cleaned and self._config.gpu_slots:
+            # The plain GPU dropdown (and the compare `gpu` dimension) re-fit
+            # the WHOLE bay: every populated slot takes the new card. Without
+            # this the authoritative slot list would silently swallow the edit.
+            cleaned["gpu_slots"] = [cleaned["gpu"] if s else None
+                                    for s in self._config.gpu_slots]
         self._config = self._config.model_copy(update=cleaned)
         # Pydantic re-validates via model_validate to ensure literals are
         # actually one of the allowed enum strings (model_copy alone does not).
         self._config = SatelliteConfig.model_validate(self._config.model_dump())
+        # A per-slot loadout is authoritative: it fixes the card count and the
+        # reported primary GPU (its largest group), so every legacy consumer of
+        # `gpu` / `gpu_count` keeps telling the truth about a mixed bay.
+        if self._config.gpu_slots:
+            groups = _slot_groups(self._config, self._config.gpu, self._gpu_count)
+            self._gpu_count = sum(n for _, n in groups)
+            if groups[0][0] != self._config.gpu:
+                self._config = self._config.model_copy(update={"gpu": groups[0][0]})
+        # Echo the fitted count NOW, not on the next tick: the handler
+        # broadcasts immediately after this call, and a packet claiming eight
+        # cards for a bay that just went down to five is simply wrong.
+        self._sat.gpu_count = self._gpu_count
         # Battery capacity is derived from the (material, size) config — keep
         # the reported value fresh for the immediate broadcast.
         self._sat.battery_capacity_wh = _batt_capacity_wh(self._config)
+        self._demand_cache = None
         if mark_custom and cleaned:
             self._design_id = "custom"
         return self._config
+
+    def _gpu_groups(self) -> list[tuple[str, int]]:
+        """The fitted payload as (card type, count) groups — one group for the
+        classic uniform loadout, one per distinct model for a built bay."""
+        return _slot_groups(self._config, self._config.gpu, self._gpu_count)
 
     @property
     def satellite_config(self) -> SatelliteConfig:
@@ -535,6 +676,15 @@ class StateEngine:
     @property
     def design_id(self) -> str:
         return self._design_id
+
+    @property
+    def asset_id(self) -> str:
+        """Which vendor platform (satellite_assets.py) the satellite flies on.
+        DERIVED from the hull — the architecture is what actually distinguishes
+        the platforms, so this can never drift out of sync with the model in
+        the viewport (a design preset on a truss really is the SpaceX bus).
+        "" for twin_truss / blanket, which no catalogued platform sells."""
+        return _assets.asset_for_architecture(self._twin_geometry.architecture)
 
     @property
     def workload_profile(self) -> str:
@@ -619,23 +769,16 @@ class StateEngine:
         standing alarm, the popup and the power trace tell ONE story.
         Memoized on the inputs that move it — the schedule walk costs a few
         closed-form solves, but this runs every tick."""
-        key = (profile_id, self._config.gpu, self._gpu_count,
-               self._platform_power_w)
+        groups = self._gpu_groups()
+        key = (profile_id, tuple(groups), self._platform_power_w)
         if self._demand_cache is not None and self._demand_cache[0] == key:
             return self._demand_cache[1]
         sched = _profile(profile_id)["schedule"]
-        gpu = _GPU_TABLE.get(self._config.gpu, _GPU_TABLE["H100"])
         total_dt = sum(d for _, d, _, _ in sched) or 1.0
-        IDLE_FRAC = 0.15
         demand = 0.0
         for _, dur, util, job_key in sched:
-            card_w = gpu["tdp_w"] * (IDLE_FRAC + (1.0 - IDLE_FRAC) * util)
-            det = _ai.job_detail(self._config.gpu, job_key, util, card_w,
-                                 self._gpu_count, t_struct_c=25.0)
-            if det is not None and det.engine == "analytic":
-                card_w = det.power_w_per_gpu
-            demand += ((card_w * self._gpu_count + self._platform_power_w)
-                       * dur / total_dt)
+            _, payload_w = _bay_job_detail(groups, job_key, util, 25.0)
+            demand += (payload_w + self._platform_power_w) * dur / total_dt
         self._demand_cache = (key, demand)
         return demand
 
@@ -648,20 +791,18 @@ class StateEngine:
         prof = _profile(profile_id)
         sched = prof["schedule"]
         cfg = self._config
-        gpu = _GPU_TABLE.get(cfg.gpu, _GPU_TABLE["H100"])
         s_mat = _SOLAR_MAT_TABLE.get(cfg.solar_material, _SOLAR_MAT_TABLE["Si"])
         r_mat = _RAD_MAT_TABLE.get(cfg.radiator_material, _RAD_MAT_TABLE["Aluminum"])
         geom = self._twin_geometry
-        n = self._gpu_count
+        groups = self._gpu_groups()
         platform_w = self._platform_power_w
-        IDLE_FRAC = 0.15
 
         total_dt = sum(d for _, d, _, _ in sched) or 1.0
         avg_util = sum(d * u for _, d, u, _ in sched) / total_dt
         peak_solar_w = s_mat["efficiency"] * _solar_area_m2(geom) * _SOLAR_CONSTANT_W_M2
         supply_avg_w = peak_solar_w * _POINTING_EFF * _SUNLIT_FRACTION
 
-        thermal_peak_w = (gpu["tdp_w"] * n + platform_w) * 0.95
+        thermal_peak_w = (_peak_card_watts(groups) + platform_w) * 0.95
         SIGMA, T_BG_K = 5.67e-8, 250.0
         thermal_emit_w = (r_mat["emissivity"] * SIGMA * _radiator_area_m2(geom)
                           * ((333.15) ** 4 - T_BG_K ** 4))
@@ -675,17 +816,13 @@ class StateEngine:
         tokens = frames = 0.0
         kwh = 0.0
         for _, dur, util, job_key in sched:
-            card_w = gpu["tdp_w"] * (IDLE_FRAC + (1 - IDLE_FRAC) * util)
-            det = _ai.job_detail(cfg.gpu, job_key, util, card_w, n,
-                                 t_struct_c=25.0)
+            det, payload_w = _bay_job_detail(groups, job_key, util, 25.0)
             if det is not None:
                 if det.throughput_unit == "tok/s":
                     tokens += det.throughput_total * dur
                 elif det.throughput_unit == "frames/s":
                     frames += det.throughput_total * dur
-                if det.engine == "analytic":
-                    card_w = det.power_w_per_gpu
-            kwh += (card_w * n + platform_w) * dur / 3.6e6
+            kwh += (payload_w + platform_w) * dur / 3.6e6
 
         power_margin = supply_avg_w / max(1.0, demand_avg_w) - 1.0
         thermal_margin = thermal_emit_w / max(1.0, thermal_peak_w) - 1.0
@@ -725,6 +862,7 @@ class StateEngine:
                                   else _DEFAULT_WORKLOAD_PROFILE)
         self._platform_power_w = float(preset.platform_power_w)
         self._gpu_count = max(1, int(preset.gpu_count))
+        self._sat.gpu_count = self._gpu_count
         self._reset_workload_totals()
         # Battery capacity is derived from the preset's (material, size)
         # config (set via set_config above); keep the current charge fraction
@@ -738,6 +876,46 @@ class StateEngine:
         self._solar_deploy_target = 0.0 if stowed else 1.0
         self._sat.solar_deploy_frac = 0.0 if stowed else 1.0
         self._design_id = preset.id
+        return geom
+
+    def apply_build(self, asset: Any, *, config_patch: dict[str, Any],
+                    geometry_patch: dict[str, Any],
+                    gpu_slots: list[Optional[str]],
+                    workload_profile: str,
+                    attitude_mode: Optional[str] = None) -> TwinGeometry:
+        """Commission a satellite the user BUILT: vendor platform + structure
+        design + per-slot payload + job schedule, applied in one shot (the
+        handler then regenerates the USD and bumps the version so Kit
+        reloads). `asset` is a satellite_assets.SatelliteAsset.
+
+        The hull comes from the asset — a build can reshape the wings and the
+        radiators, not turn a dish into a truss. Unlike a design preset the
+        result is by definition hand-made, so `design_id` degrades to custom
+        while `asset_id` records which platform it was built on."""
+        if len(gpu_slots) > asset.slot_count:
+            raise ValueError(f"{asset.name} has {asset.slot_count} payload slots")
+        # Short lists are legal (the UI always sends a full bay) — pad so the
+        # stored loadout always describes the whole platform.
+        slots: list[Optional[str]] = list(gpu_slots) + \
+            [None] * (asset.slot_count - len(gpu_slots))
+        if not any(slots):
+            raise ValueError("at least one payload slot must be fitted")
+
+        self.set_config({**config_patch, "gpu_slots": slots}, mark_custom=False)
+        geom = self.set_twin_geometry({**geometry_patch,
+                                       "architecture": asset.architecture},
+                                      mark_custom=False)
+        self.set_workload_profile(workload_profile, mark_custom=False)
+        self._platform_power_w = float(asset.platform_power_w)
+        self._sat.battery_capacity_wh = _batt_capacity_wh(self._config)
+        if attitude_mode is not None:
+            self.set_attitude_mode(attitude_mode)
+        # A commissioned satellite flies with its array out — the roll-out
+        # blanket's stowed-on-arrival beat belongs to the design gallery, not
+        # to a build the user just pressed Run on.
+        self._solar_deploy_target = 1.0
+        self._sat.solar_deploy_frac = 1.0
+        self._design_id = "custom"
         return geom
 
     # ---- 天数天算 mission ----
@@ -1092,6 +1270,7 @@ class StateEngine:
             twin_geometry=self._twin_geometry.model_copy(),
             mission=self._mission.model_copy(),
             design_id=self._design_id,
+            asset_id=self.asset_id,
             workload_profile=self._workload_profile,
             compare_live=(self._compare_session.payload()
                           if self._compare_session is not None else None),
@@ -1207,7 +1386,6 @@ class StateEngine:
 
         # --- Reconfigurable hardware lookups ----------------------------------
         cfg     = self._config
-        gpu     = _GPU_TABLE.get(cfg.gpu,                _GPU_TABLE["H100"])
         s_mat   = _SOLAR_MAT_TABLE.get(cfg.solar_material,     _SOLAR_MAT_TABLE["Si"])
         s_size  = _SOLAR_SIZE_TABLE.get(cfg.solar_size,        _SOLAR_SIZE_TABLE["M"])
         r_mat   = _RAD_MAT_TABLE.get(cfg.radiator_material,    _RAD_MAT_TABLE["Aluminum"])
@@ -1254,26 +1432,19 @@ class StateEngine:
             if workload > 0.20:
                 workload, job_key = 0.20, _IDLE_JOB  # power save: survival duty
         self._sat.workload = workload
-        # EPS power budget per card: idle floor at ~15% TDP, scales linearly
-        # with util up to TDP. Datacenter GPUs (H100/H200/B200/MI300X) bench
-        # within ~10% of this curve.
-        IDLE_FRAC = 0.15
-        gpu_count = self._gpu_count
-        gpu_cap_w_per_card = gpu["tdp_w"] * (IDLE_FRAC + (1.0 - IDLE_FRAC) * workload)
-        # Per-GPU operating point for the active block. LLM jobs run the
-        # ANALYTICAL engine (llm_perf via ai_workloads): the satellite
+        # Operating point for the active block, resolved per card-type group of
+        # the fitted bay (one group unless the builder mixed models). LLM jobs
+        # run the ANALYTICAL engine (llm_perf via ai_workloads): the satellite
         # structure temperature is the GPU cold plate, the thermal limit
         # (T_throttle − T_struct)/R_th caps the DVFS budget, and the card's
-        # REALIZED draw comes back out — so a hot structure visibly
-        # throttles clocks, tokens/s AND electrical demand. Vision/idle
-        # jobs keep the budget as the draw (MFU path).
-        detail = _ai.job_detail(cfg.gpu, job_key, workload, gpu_cap_w_per_card,
-                                gpu_count, t_struct_c=self._sat.temperature_c)
+        # REALIZED draw comes back out — so a hot structure visibly throttles
+        # clocks, tokens/s AND electrical demand. Vision/idle jobs keep the
+        # budget as the draw (MFU path).
+        groups = self._gpu_groups()
+        gpu_count = sum(n for _, n in groups)
+        detail, payload_w = _bay_job_detail(groups, job_key, workload,
+                                            self._sat.temperature_c)
         self._sat.workload_detail = detail
-        gpu_w_per_card = (detail.power_w_per_gpu
-                          if detail is not None and detail.engine == "analytic"
-                          else gpu_cap_w_per_card)
-        payload_w = gpu_w_per_card * gpu_count
         platform_w = self._platform_power_w
         self._sat.gpu_utilization = workload
         self._sat.payload_power_w = payload_w
@@ -1351,8 +1522,7 @@ class StateEngine:
             solar_supply_avg_w = peak_solar_w * _POINTING_EFF * _SUNLIT_FRACTION
 
         # Thermal peak demand: worst case is sustained 100 % workload.
-        peak_card_w = gpu["tdp_w"] * (IDLE_FRAC + (1.0 - IDLE_FRAC) * 1.0)
-        thermal_peak_demand_w = (peak_card_w * gpu_count + platform_w) * 0.95
+        thermal_peak_demand_w = (_peak_card_watts(groups) + platform_w) * 0.95
         # Thermal supply: emit at the +60 °C safe-operating ceiling.
         T_max_K = 60.0 + 273.15
         thermal_max_emit_w = epsilon * SIGMA * radiator_area_m2 * (T_max_K**4 - T_BG_K**4)

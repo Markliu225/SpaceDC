@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { dismissBuilder } from './twin';
 
 /**
  * Live what-if comparison — variant engines tick in lockstep with the live
@@ -66,6 +67,7 @@ test.describe('live compare', () => {
     await page.request.post('http://localhost:8001/compare/stop');
 
     await page.goto('http://localhost:5173/satellite', { waitUntil: 'domcontentloaded' });
+    await dismissBuilder(page);
 
     await page.getByTestId('compare-open').click();
     const dialog = page.getByRole('dialog', { name: /what-if comparison/i });
@@ -106,6 +108,7 @@ test.describe('live compare', () => {
     expect(degrade.ok()).toBeTruthy();
 
     await page.goto('http://localhost:5173/satellite', { waitUntil: 'domcontentloaded' });
+    await dismissBuilder(page);
     await page.getByTestId('compare-open').click();
     const dialog = page.getByRole('dialog', { name: /what-if comparison/i });
 

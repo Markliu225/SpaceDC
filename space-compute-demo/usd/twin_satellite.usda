@@ -115,6 +115,62 @@ def Xform "World"
                 token outputs:surface
             }
         }
+        def Material "GpuTag_H100"
+        {
+            token outputs:surface.connect = </World/Looks/GpuTag_H100/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.420, 0.478, 0.580)
+                color3f inputs:emissiveColor = (0.231, 0.263, 0.319)
+                float inputs:metallic = 0.000
+                float inputs:roughness = 0.350
+                int inputs:useSpecularWorkflow = 0
+                token outputs:surface
+            }
+        }
+        def Material "GpuTag_H200"
+        {
+            token outputs:surface.connect = </World/Looks/GpuTag_H200/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.231, 0.510, 0.965)
+                color3f inputs:emissiveColor = (0.127, 0.281, 0.531)
+                float inputs:metallic = 0.000
+                float inputs:roughness = 0.350
+                int inputs:useSpecularWorkflow = 0
+                token outputs:surface
+            }
+        }
+        def Material "GpuTag_B200"
+        {
+            token outputs:surface.connect = </World/Looks/GpuTag_B200/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.549, 0.361, 0.980)
+                color3f inputs:emissiveColor = (0.302, 0.199, 0.539)
+                float inputs:metallic = 0.000
+                float inputs:roughness = 0.350
+                int inputs:useSpecularWorkflow = 0
+                token outputs:surface
+            }
+        }
+        def Material "GpuTag_MI300X"
+        {
+            token outputs:surface.connect = </World/Looks/GpuTag_MI300X/Shader.outputs:surface>
+            def Shader "Shader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.902, 0.251, 0.224)
+                color3f inputs:emissiveColor = (0.496, 0.138, 0.123)
+                float inputs:metallic = 0.000
+                float inputs:roughness = 0.350
+                int inputs:useSpecularWorkflow = 0
+                token outputs:surface
+            }
+        }
         def Material "EarthMat"
         {
             token outputs:surface.connect = </World/Looks/EarthMat/Shader.outputs:surface>
@@ -414,6 +470,18 @@ def Xform "World"
                 matrix4d xformOp:transform = ((0.00000000, 0.00167549, 0.00000000, 0.00000000), (-0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (0.06497306, 0.20344395, 0.09929394, 1.00000000))
                 uniform token[] xformOpOrder = ["xformOp:transform"]
             }
+            def Mesh "Server_UpY_0_Tag" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                float3[] extent = [(-0.04030, 0.21350, 0.10100), (0.04030, 0.21750, 0.10600)]
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
+                point3f[] points = [(-0.04030, 0.21350, 0.10100), (0.04030, 0.21350, 0.10100), (0.04030, 0.21750, 0.10100), (-0.04030, 0.21750, 0.10100), (-0.04030, 0.21350, 0.10600), (0.04030, 0.21350, 0.10600), (0.04030, 0.21750, 0.10600), (-0.04030, 0.21750, 0.10600)]
+                uniform token subdivisionScheme = "none"
+                rel material:binding = </World/Looks/GpuTag_H100>
+            }
             def Xform "Server_UpY_1" (
                 prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
                 instanceable = true
@@ -421,6 +489,18 @@ def Xform "World"
             {
                 matrix4d xformOp:transform = ((0.00000000, 0.00167549, 0.00000000, 0.00000000), (-0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (0.06497306, 0.20344395, 0.19029394, 1.00000000))
                 uniform token[] xformOpOrder = ["xformOp:transform"]
+            }
+            def Mesh "Server_UpY_1_Tag" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                float3[] extent = [(-0.04030, 0.21350, 0.19200), (0.04030, 0.21750, 0.19700)]
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
+                point3f[] points = [(-0.04030, 0.21350, 0.19200), (0.04030, 0.21350, 0.19200), (0.04030, 0.21750, 0.19200), (-0.04030, 0.21750, 0.19200), (-0.04030, 0.21350, 0.19700), (0.04030, 0.21350, 0.19700), (0.04030, 0.21750, 0.19700), (-0.04030, 0.21750, 0.19700)]
+                uniform token subdivisionScheme = "none"
+                rel material:binding = </World/Looks/GpuTag_H100>
             }
             def Xform "Server_UpY_2" (
                 prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
@@ -430,6 +510,18 @@ def Xform "World"
                 matrix4d xformOp:transform = ((0.00000000, 0.00167549, 0.00000000, 0.00000000), (-0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (0.06497306, 0.20344395, 0.28079394, 1.00000000))
                 uniform token[] xformOpOrder = ["xformOp:transform"]
             }
+            def Mesh "Server_UpY_2_Tag" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                float3[] extent = [(-0.04030, 0.21350, 0.28250), (0.04030, 0.21750, 0.28750)]
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
+                point3f[] points = [(-0.04030, 0.21350, 0.28250), (0.04030, 0.21350, 0.28250), (0.04030, 0.21750, 0.28250), (-0.04030, 0.21750, 0.28250), (-0.04030, 0.21350, 0.28750), (0.04030, 0.21350, 0.28750), (0.04030, 0.21750, 0.28750), (-0.04030, 0.21750, 0.28750)]
+                uniform token subdivisionScheme = "none"
+                rel material:binding = </World/Looks/GpuTag_H100>
+            }
             def Xform "Server_UnY_0" (
                 prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
                 instanceable = true
@@ -437,6 +529,18 @@ def Xform "World"
             {
                 matrix4d xformOp:transform = ((0.00000000, -0.00167549, 0.00000000, 0.00000000), (0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (-0.06497306, -0.20344395, 0.09929394, 1.00000000))
                 uniform token[] xformOpOrder = ["xformOp:transform"]
+            }
+            def Mesh "Server_UnY_0_Tag" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                float3[] extent = [(-0.04030, -0.21750, 0.10100), (0.04030, -0.21350, 0.10600)]
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
+                point3f[] points = [(-0.04030, -0.21750, 0.10100), (0.04030, -0.21750, 0.10100), (0.04030, -0.21350, 0.10100), (-0.04030, -0.21350, 0.10100), (-0.04030, -0.21750, 0.10600), (0.04030, -0.21750, 0.10600), (0.04030, -0.21350, 0.10600), (-0.04030, -0.21350, 0.10600)]
+                uniform token subdivisionScheme = "none"
+                rel material:binding = </World/Looks/GpuTag_H100>
             }
             def Xform "Server_UnY_1" (
                 prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
@@ -446,6 +550,18 @@ def Xform "World"
                 matrix4d xformOp:transform = ((0.00000000, -0.00167549, 0.00000000, 0.00000000), (0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (-0.06497306, -0.20344395, 0.19029394, 1.00000000))
                 uniform token[] xformOpOrder = ["xformOp:transform"]
             }
+            def Mesh "Server_UnY_1_Tag" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                float3[] extent = [(-0.04030, -0.21750, 0.19200), (0.04030, -0.21350, 0.19700)]
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
+                point3f[] points = [(-0.04030, -0.21750, 0.19200), (0.04030, -0.21750, 0.19200), (0.04030, -0.21350, 0.19200), (-0.04030, -0.21350, 0.19200), (-0.04030, -0.21750, 0.19700), (0.04030, -0.21750, 0.19700), (0.04030, -0.21350, 0.19700), (-0.04030, -0.21350, 0.19700)]
+                uniform token subdivisionScheme = "none"
+                rel material:binding = </World/Looks/GpuTag_H100>
+            }
             def Xform "Server_UnY_2" (
                 prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
                 instanceable = true
@@ -453,6 +569,18 @@ def Xform "World"
             {
                 matrix4d xformOp:transform = ((0.00000000, -0.00167549, 0.00000000, 0.00000000), (0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (-0.06497306, -0.20344395, 0.28079394, 1.00000000))
                 uniform token[] xformOpOrder = ["xformOp:transform"]
+            }
+            def Mesh "Server_UnY_2_Tag" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                float3[] extent = [(-0.04030, -0.21750, 0.28250), (0.04030, -0.21350, 0.28750)]
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
+                point3f[] points = [(-0.04030, -0.21750, 0.28250), (0.04030, -0.21750, 0.28250), (0.04030, -0.21350, 0.28250), (-0.04030, -0.21350, 0.28250), (-0.04030, -0.21750, 0.28750), (0.04030, -0.21750, 0.28750), (0.04030, -0.21350, 0.28750), (-0.04030, -0.21350, 0.28750)]
+                uniform token subdivisionScheme = "none"
+                rel material:binding = </World/Looks/GpuTag_H100>
             }
             def Xform "Server_LpY_0" (
                 prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
@@ -462,6 +590,18 @@ def Xform "World"
                 matrix4d xformOp:transform = ((0.00000000, 0.00167549, 0.00000000, 0.00000000), (-0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (0.06497306, 0.20344395, -0.17940606, 1.00000000))
                 uniform token[] xformOpOrder = ["xformOp:transform"]
             }
+            def Mesh "Server_LpY_0_Tag" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                float3[] extent = [(-0.04030, 0.21350, -0.17770), (0.04030, 0.21750, -0.17270)]
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
+                point3f[] points = [(-0.04030, 0.21350, -0.17770), (0.04030, 0.21350, -0.17770), (0.04030, 0.21750, -0.17770), (-0.04030, 0.21750, -0.17770), (-0.04030, 0.21350, -0.17270), (0.04030, 0.21350, -0.17270), (0.04030, 0.21750, -0.17270), (-0.04030, 0.21750, -0.17270)]
+                uniform token subdivisionScheme = "none"
+                rel material:binding = </World/Looks/GpuTag_H100>
+            }
             def Xform "Server_LpY_1" (
                 prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
                 instanceable = true
@@ -469,6 +609,18 @@ def Xform "World"
             {
                 matrix4d xformOp:transform = ((0.00000000, 0.00167549, 0.00000000, 0.00000000), (-0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (0.06497306, 0.20344395, -0.27060606, 1.00000000))
                 uniform token[] xformOpOrder = ["xformOp:transform"]
+            }
+            def Mesh "Server_LpY_1_Tag" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                float3[] extent = [(-0.04030, 0.21350, -0.26890), (0.04030, 0.21750, -0.26390)]
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
+                point3f[] points = [(-0.04030, 0.21350, -0.26890), (0.04030, 0.21350, -0.26890), (0.04030, 0.21750, -0.26890), (-0.04030, 0.21750, -0.26890), (-0.04030, 0.21350, -0.26390), (0.04030, 0.21350, -0.26390), (0.04030, 0.21750, -0.26390), (-0.04030, 0.21750, -0.26390)]
+                uniform token subdivisionScheme = "none"
+                rel material:binding = </World/Looks/GpuTag_H100>
             }
             def Xform "Server_LpY_2" (
                 prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
@@ -478,6 +630,18 @@ def Xform "World"
                 matrix4d xformOp:transform = ((0.00000000, 0.00167549, 0.00000000, 0.00000000), (-0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (0.06497306, 0.20344395, -0.36180606, 1.00000000))
                 uniform token[] xformOpOrder = ["xformOp:transform"]
             }
+            def Mesh "Server_LpY_2_Tag" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                float3[] extent = [(-0.04030, 0.21350, -0.36010), (0.04030, 0.21750, -0.35510)]
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
+                point3f[] points = [(-0.04030, 0.21350, -0.36010), (0.04030, 0.21350, -0.36010), (0.04030, 0.21750, -0.36010), (-0.04030, 0.21750, -0.36010), (-0.04030, 0.21350, -0.35510), (0.04030, 0.21350, -0.35510), (0.04030, 0.21750, -0.35510), (-0.04030, 0.21750, -0.35510)]
+                uniform token subdivisionScheme = "none"
+                rel material:binding = </World/Looks/GpuTag_H100>
+            }
             def Xform "Server_LnY_0" (
                 prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
                 instanceable = true
@@ -485,6 +649,18 @@ def Xform "World"
             {
                 matrix4d xformOp:transform = ((0.00000000, -0.00167549, 0.00000000, 0.00000000), (0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (-0.06497306, -0.20344395, -0.17940606, 1.00000000))
                 uniform token[] xformOpOrder = ["xformOp:transform"]
+            }
+            def Mesh "Server_LnY_0_Tag" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                float3[] extent = [(-0.04030, -0.21750, -0.17770), (0.04030, -0.21350, -0.17270)]
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
+                point3f[] points = [(-0.04030, -0.21750, -0.17770), (0.04030, -0.21750, -0.17770), (0.04030, -0.21350, -0.17770), (-0.04030, -0.21350, -0.17770), (-0.04030, -0.21750, -0.17270), (0.04030, -0.21750, -0.17270), (0.04030, -0.21350, -0.17270), (-0.04030, -0.21350, -0.17270)]
+                uniform token subdivisionScheme = "none"
+                rel material:binding = </World/Looks/GpuTag_H100>
             }
             def Xform "Server_LnY_1" (
                 prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
@@ -494,6 +670,18 @@ def Xform "World"
                 matrix4d xformOp:transform = ((0.00000000, -0.00167549, 0.00000000, 0.00000000), (0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (-0.06497306, -0.20344395, -0.27060606, 1.00000000))
                 uniform token[] xformOpOrder = ["xformOp:transform"]
             }
+            def Mesh "Server_LnY_1_Tag" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                float3[] extent = [(-0.04030, -0.21750, -0.26890), (0.04030, -0.21350, -0.26390)]
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
+                point3f[] points = [(-0.04030, -0.21750, -0.26890), (0.04030, -0.21750, -0.26890), (0.04030, -0.21350, -0.26890), (-0.04030, -0.21350, -0.26890), (-0.04030, -0.21750, -0.26390), (0.04030, -0.21750, -0.26390), (0.04030, -0.21350, -0.26390), (-0.04030, -0.21350, -0.26390)]
+                uniform token subdivisionScheme = "none"
+                rel material:binding = </World/Looks/GpuTag_H100>
+            }
             def Xform "Server_LnY_2" (
                 prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
                 instanceable = true
@@ -501,6 +689,18 @@ def Xform "World"
             {
                 matrix4d xformOp:transform = ((0.00000000, -0.00167549, 0.00000000, 0.00000000), (0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (-0.06497306, -0.20344395, -0.36180606, 1.00000000))
                 uniform token[] xformOpOrder = ["xformOp:transform"]
+            }
+            def Mesh "Server_LnY_2_Tag" (
+                prepend apiSchemas = ["MaterialBindingAPI"]
+            )
+            {
+                uniform bool doubleSided = 1
+                float3[] extent = [(-0.04030, -0.21750, -0.36010), (0.04030, -0.21350, -0.35510)]
+                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
+                point3f[] points = [(-0.04030, -0.21750, -0.36010), (0.04030, -0.21750, -0.36010), (0.04030, -0.21350, -0.36010), (-0.04030, -0.21350, -0.36010), (-0.04030, -0.21750, -0.35510), (0.04030, -0.21750, -0.35510), (0.04030, -0.21350, -0.35510), (-0.04030, -0.21350, -0.35510)]
+                uniform token subdivisionScheme = "none"
+                rel material:binding = </World/Looks/GpuTag_H100>
             }
         }
 
@@ -776,46 +976,6 @@ def Xform "World"
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
                     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
                 }
-                def Xform "Cluster4_00" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, 3.8874, 0.3316)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster4_01" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, 4.2953, 0.3316)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster4_10" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, 3.8874, -0.3796)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster4_11" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, 4.2953, -0.3796)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
             }
             def Xform "WingNegY"
             {
@@ -1087,46 +1247,6 @@ def Xform "World"
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
                     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
                 }
-                def Xform "Cluster4_00" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, -4.2953, 0.3316)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster4_01" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, -3.8874, 0.3316)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster4_10" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, -4.2953, -0.3796)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster4_11" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, -3.8874, -0.3796)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
             }
         }
 
@@ -1247,13 +1367,13 @@ def Xform "World"
         def Camera "Closeup"
         {
             float focalLength = 22.0
-            float focusDistance = 4454
+            float focusDistance = 3647
             float2 clippingRange = (1, 90000)
             matrix4d xformOp:transform = (
                     (0.76822, 0.64018, -0.00000, 0.00000),
                     (-0.30320, 0.36384, 0.88073, 0.00000),
                     (0.56383, -0.67660, 0.47362, 0.00000),
-                    (2511.44442, -3013.73331, 2109.61332, 1.00000)
+                    (2056.04365, -2467.25238, 1727.07667, 1.00000)
             )
             uniform token[] xformOpOrder = ["xformOp:transform"]
         }

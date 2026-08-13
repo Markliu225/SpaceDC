@@ -15,6 +15,20 @@ TaskPhase = Literal[
 ]
 
 
+class GpuMixItem(BaseModel):
+    """One homogeneous card group of a MIXED payload bay (per-slot GPU
+    selection — see SatelliteConfig.gpu_slots). Each distinct card type is
+    its own tensor-parallel group; the satellite-level detail below is the
+    card-weighted merge of these."""
+    gpu: str
+    count: int
+    power_w_per_gpu: float = 0.0
+    heat_w_per_gpu: float = 0.0
+    tflops_per_gpu: float = 0.0
+    throughput_per_gpu: float = 0.0
+    throughput_total: float = 0.0
+
+
 class GpuJobDetail(BaseModel):
     """What the payload GPUs are ACTUALLY running this tick — the typed job
     from the active schedule block (ai_workloads.py) resolved against the
@@ -47,6 +61,11 @@ class GpuJobDetail(BaseModel):
     thermal_runaway: bool = False    # can't hold throttle target even parked
     t_mem_ms: float = 0.0            # frequency-immune memory floor per step
     t_comp_ms: float = 0.0           # frequency-scaled compute tail per step
+    # --- Mixed payload bay ---------------------------------------------------
+    # Populated ONLY when the fitted slots hold more than one card type: the
+    # per-group breakdown behind the merged columns above. Empty for the
+    # (normal) homogeneous loadout, where the columns are exact.
+    mix: list[GpuMixItem] = Field(default_factory=list)
 
 
 class WorkloadTotals(BaseModel):
@@ -325,6 +344,13 @@ class SatelliteConfig(BaseModel):
     # (mass tier). Effective capacity = mass × density, so both matter.
     battery_material: BatteryMaterial = "LiIon"
     battery_size: BatterySize = "L"
+    # Per-slot payload loadout (satellite builder, step 3): one entry per rack
+    # slot of the chosen platform — a GpuType for a fitted card, None for an
+    # empty slot. EMPTY LIST = "uniform `gpu` × the engine's card count", which
+    # is what every design preset and the plain GPU dropdown produce, so the
+    # homogeneous path is unchanged. When present this list is AUTHORITATIVE:
+    # it fixes the card count and `gpu` echoes its largest group.
+    gpu_slots: list[Optional[GpuType]] = Field(default_factory=list)
 
 
 Architecture = Literal["truss", "twin_truss", "blanket", "lumid", "dish",
@@ -375,3 +401,7 @@ class StatePacket(BaseModel):
     # GPUs are running.
     design_id: str = "custom"
     workload_profile: str = "balanced"
+    # Vendor platform the satellite is built on (satellite_assets.py) — set by
+    # the satellite builder and inferred from the hull when a design preset is
+    # applied. "" when the current hull belongs to no catalogued platform.
+    asset_id: str = ""

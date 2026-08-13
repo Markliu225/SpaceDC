@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { dismissBuilder } from './twin';
 
 /** Analytical LLM engine — flying the 'inference' schedule must resolve the
  *  active block through llm_perf's operating-point solve (engine=analytic):
@@ -19,6 +20,7 @@ test('LLM inference flies the analytic operating point end to end', async ({ pag
     data: { profile: 'inference' },
   });
   await page.goto('http://localhost:5173/satellite', { waitUntil: 'domcontentloaded' });
+  await dismissBuilder(page);
 
   // Backend truth: an analytic decode operating point on /state.
   await expect

@@ -21,6 +21,7 @@ from fastapi import HTTPException
 
 import compare_sim
 import design_presets
+import satellite_assets
 from models import Envelope, StatePacket
 from services import constellations, orbit_catalog
 from state_engine import StateEngine
@@ -89,8 +90,16 @@ def _restore_geometry_from_disk() -> None:
              ("architecture", "solar_clusters_per_side",
               "radiator_long", "radiator_ratio")},
             mark_custom=False)
-        log.info("twin geometry restored from disk: %s",
-                 engine.twin_geometry.model_dump())
+        # The model on disk also shows WHICH slots carry a card (a built bay
+        # renders only its fitted blades) — restore that too, or the physics
+        # would count eight cards against an eight-blade model that the last
+        # session had cut down to four.
+        slots = params.get("gpu_slots")
+        if isinstance(slots, list) and any(slots):
+            engine.set_config({"gpu_slots": slots}, mark_custom=False)
+        log.info("twin geometry restored from disk: %s (slots=%s)",
+                 engine.twin_geometry.model_dump(),
+                 engine.satellite_config.gpu_slots or "uniform")
     except Exception as e:  # noqa: BLE001
         log.warning("could not restore twin geometry: %s", e)
 
@@ -216,22 +225,31 @@ async def _regenerate_twin_latest() -> bool:
     on disk so Kit can never reload a stale or half-written layer."""
     async with _regen_lock:
         ok = await asyncio.to_thread(
-            _regenerate_twin, engine.twin_geometry.model_dump())
+            _regenerate_twin, engine.twin_geometry.model_dump(),
+            list(engine.satellite_config.gpu_slots))
         if ok:
             engine.bump_twin_version()
         return ok
 
 
-def _regenerate_twin(geom: dict[str, Any]) -> bool:
+def _regenerate_twin(geom: dict[str, Any],
+                     gpu_slots: list[Any] | None = None) -> bool:
     """Write twin_params.json and re-run the USD generator with this Python
     (the backend venv has pxr). Returns True on a clean regenerate."""
     try:
-        _TWIN_PARAMS.write_text(json.dumps({
+        params: dict[str, Any] = {
             "architecture": geom.get("architecture", "truss"),
             "solar_clusters_per_side": geom["solar_clusters_per_side"],
             "radiator_long": geom["radiator_long"],
             "radiator_ratio": geom["radiator_ratio"],
-        }, indent=2), encoding="utf-8")
+        }
+        # Per-slot payload: the generator drops a blade only into the fitted
+        # slots, so a half-populated bay reads as one in the viewport. Omitted
+        # entirely for the uniform loadout — the generator then fills every
+        # slot, exactly as before.
+        if gpu_slots:
+            params["gpu_slots"] = gpu_slots
+        _TWIN_PARAMS.write_text(json.dumps(params, indent=2), encoding="utf-8")
         r = subprocess.run([sys.executable, str(_GEN_SCRIPT)],
                            capture_output=True, text=True, timeout=120)
         if r.returncode != 0:
@@ -290,24 +308,30 @@ def _design_fingerprint(preset: design_presets.DesignPreset) -> str:
     return hashlib.md5(blob.encode()).hexdigest()[:10]
 
 
-def _render_design_preview(preset: design_presets.DesignPreset) -> Path | None:
+def _render_design_preview(preset: design_presets.DesignPreset,
+                           cache_id: str | None = None) -> Path | None:
     """Blocking: generate the per-design stage (procedural blades — the DGX
     asset is too heavy for thumbnails) and software-render an iso PNG.
     Cached by geometry fingerprint; returns the PNG path or None.
+
+    `cache_id` overrides the cache/scratch namespace so the satellite-asset
+    cards can reuse this renderer without their entries colliding with a
+    same-named design preset (both "redwire").
 
     The renderer writes to a temp name that is os.replace'd into the cache
     only on success — a killed/failed render can never leave a truncated PNG
     that png.exists() would then serve forever."""
     _PREVIEW_DIR.mkdir(exist_ok=True)
+    cid = cache_id or preset.id
     fp = _design_fingerprint(preset)
-    png = _PREVIEW_DIR / f"{preset.id}_{fp}.png"
+    png = _PREVIEW_DIR / f"{cid}_{fp}.png"
     if png.exists():
         return png
     # .png suffix retained so PIL picks the encoder from the extension.
-    tmp = _PREVIEW_DIR / f"_tmp_{preset.id}_{fp}.png"
-    stage = _REPO_ROOT / "usd" / f"_preview_design_{preset.id}.usda"
+    tmp = _PREVIEW_DIR / f"_tmp_{cid}_{fp}.png"
+    stage = _REPO_ROOT / "usd" / f"_preview_design_{cid}.usda"
     try:
-        params = _PREVIEW_DIR / f"{preset.id}_{fp}.params.json"
+        params = _PREVIEW_DIR / f"{cid}_{fp}.params.json"
         params.write_text(json.dumps({**preset.geometry_patch(),
                                       "use_dgx": False, "preview_lite": True},
                                      indent=2), encoding="utf-8")
@@ -330,7 +354,7 @@ def _render_design_preview(preset: design_presets.DesignPreset) -> Path | None:
             log.error("preview render failed (%s): %s", preset.id, r.stderr[-500:])
             return None
         tmp.replace(png)
-        _prune_preview_artifacts(preset.id, keep_fp=fp)
+        _prune_preview_artifacts(cid, keep_fp=fp)
         log.info("design preview rendered: %s", png.name)
         return png
     except Exception as e:  # noqa: BLE001
@@ -353,9 +377,10 @@ def _prune_preview_artifacts(design_id: str, keep_fp: str) -> None:
                 pass
 
 
-async def _preview_path(preset: design_presets.DesignPreset) -> Path | None:
+async def _preview_path(preset: design_presets.DesignPreset,
+                        cache_id: str | None = None) -> Path | None:
     async with _preview_semaphore:
-        return await asyncio.to_thread(_render_design_preview, preset)
+        return await asyncio.to_thread(_render_design_preview, preset, cache_id)
 
 
 async def _prewarm_previews() -> None:
@@ -364,13 +389,17 @@ async def _prewarm_previews() -> None:
     is normally a no-op; the delay keeps the CPU free during the launch
     window when Kit + the web dev server + the browser are all starting."""
     await asyncio.sleep(45.0)
-    missing = [p for p in design_presets.PRESETS.values()
-               if not (_PREVIEW_DIR / f"{p.id}_{_design_fingerprint(p)}.png").exists()]
+    pending: list[tuple[Any, str]] = [
+        (p, p.id) for p in design_presets.PRESETS.values()
+    ] + [
+        (a, f"asset_{a.id}") for a in satellite_assets.ASSETS.values()
+    ]
+    missing = [(o, cid) for o, cid in pending
+               if not (_PREVIEW_DIR / f"{cid}_{_design_fingerprint(o)}.png").exists()]
     if missing:
-        log.info("prewarming %d design preview(s): %s",
-                 len(missing), [p.id for p in missing])
-    for preset in missing:
-        await _preview_path(preset)
+        log.info("prewarming %d preview(s): %s", len(missing), [c for _, c in missing])
+    for obj, cid in missing:
+        await _preview_path(obj, cache_id=cid)
 
 
 @app.get("/designs")
@@ -418,6 +447,134 @@ async def http_design_preview(design_id: str):
         raise HTTPException(503, "preview render failed — see backend log")
     return FileResponse(png, media_type="image/png",
                         headers={"Cache-Control": "public, max-age=3600"})
+
+
+# --- Satellite assets + builder (Twin page build flow) ---------------------
+# An asset is the bare VENDOR PLATFORM (hull + payload-bay slot count + the
+# loadout it ships with); the builder walks asset → structure → per-slot
+# payload → workload and commits all four at once via /satellite_build.
+@app.get("/satellite_assets")
+async def http_list_satellite_assets():
+    """Every buildable platform with the headline stats of its factory
+    loadout, plus which platform the live satellite is flying on ("" when the
+    current hull belongs to no catalogued vendor)."""
+    assets = satellite_assets.list_summaries()
+    for a in assets:
+        asset = satellite_assets.get_asset(a["id"])
+        if asset is not None:
+            a["preview_url"] += f"?v={_design_fingerprint(asset)}"
+    return {"active": engine.asset_id, "assets": assets}
+
+
+@app.get("/satellite_assets/{asset_id}/preview.png")
+async def http_asset_preview(asset_id: str):
+    asset = satellite_assets.get_asset(asset_id)
+    if asset is None:
+        raise HTTPException(404, f"unknown satellite asset {asset_id!r}")
+    png = await _preview_path(asset, cache_id=f"asset_{asset_id}")
+    if png is None:
+        raise HTTPException(503, "preview render failed — see backend log")
+    return FileResponse(png, media_type="image/png",
+                        headers={"Cache-Control": "public, max-age=3600"})
+
+
+def _build_probe(body: dict[str, Any]) -> StateEngine:
+    """A throwaway engine carrying the DRAFT satellite. The builder needs the
+    physics verdict for a design that is not flying yet, and the only honest
+    source of that verdict is the engine itself — so commission the draft on a
+    detached instance (no ticking, no USD, no broadcast) and ask it. Raises
+    ValueError / KeyError for a malformed draft, like apply_build does."""
+    asset = satellite_assets.get_asset(str(body.get("asset", "")))
+    if asset is None:
+        raise KeyError(body.get("asset"))
+    config_patch = dict(body.get("config") or {})
+    config_patch.pop("gpu_slots", None)
+    probe = StateEngine(lambda *_a, **_k: None)
+    probe.apply_build(
+        asset,
+        config_patch=config_patch,
+        geometry_patch=dict(body.get("geometry") or {}),
+        gpu_slots=list(body.get("gpu_slots") or []),
+        workload_profile=str(body.get("workload_profile") or asset.workload_profile),
+    )
+    return probe
+
+
+@app.post("/satellite_build/preview")
+async def http_satellite_build_preview(body: dict[str, Any]):
+    """Dry-run the draft: derived stats + how EVERY job schedule would cope
+    with it. Same numbers /workload_profiles reports for the live satellite,
+    so the fit verdict the builder shows before Run is the one the panels show
+    after it. Nothing about the live satellite is touched."""
+    import state_engine as _se
+    try:
+        probe = _build_probe(body)
+    except KeyError:
+        raise HTTPException(404, f"unknown satellite asset {body.get('asset')!r}")
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(422, f"invalid satellite build: {e}") from e
+
+    cfg, geom = probe.satellite_config, probe.twin_geometry
+    groups = probe._gpu_groups()
+    s_mat = _se._SOLAR_MAT_TABLE[cfg.solar_material]
+    solar_area = _se._solar_area_m2(geom)
+    return {
+        "asset_id": probe.asset_id,
+        "stats": {
+            "gpu_count": sum(n for _, n in groups),
+            "mix": [{"gpu": g, "count": n} for g, n in groups],
+            "compute_pflops": round(
+                sum(_se._GPU_TABLE[g]["pflops"] * n for g, n in groups), 1),
+            "payload_peak_w": round(_se._peak_card_watts(groups)),
+            "solar_area_m2": round(solar_area, 1),
+            "radiator_area_m2": round(_se._radiator_area_m2(geom), 1),
+            "peak_solar_w": round(s_mat["efficiency"] * solar_area * 1361.0),
+            "battery_capacity_wh": round(_se._batt_capacity_wh(cfg)),
+            "platform_power_w": round(probe._platform_power_w),
+        },
+        "profiles": [probe.workload_adaptation(pid)
+                     for pid in _se._WORKLOAD_PROFILES],
+    }
+
+
+@app.post("/satellite_build")
+async def http_satellite_build(body: dict[str, Any]):
+    """Commission the satellite the builder just configured: vendor platform
+    (hull) + structure design (power / thermal / deployables) + the per-slot
+    payload loadout + the job schedule, applied in ONE shot so the physics
+    never runs a half-built satellite. Then regenerate the USD (Kit reloads on
+    the version bump) and broadcast."""
+    asset = satellite_assets.get_asset(str(body.get("asset", "")))
+    if asset is None:
+        raise HTTPException(404, f"unknown satellite asset {body.get('asset')!r}")
+    config_patch = dict(body.get("config") or {})
+    config_patch.pop("gpu_slots", None)      # the slot list is its own field
+    slots = body.get("gpu_slots")
+    if not isinstance(slots, list):
+        raise HTTPException(422, "gpu_slots must be a list of GPU ids / nulls")
+    try:
+        engine.apply_build(
+            asset,
+            config_patch=config_patch,
+            geometry_patch=dict(body.get("geometry") or {}),
+            gpu_slots=list(slots),
+            workload_profile=str(body.get("workload_profile")
+                                 or asset.workload_profile),
+            attitude_mode=(str(body["attitude_mode"])
+                           if body.get("attitude_mode") else None),
+        )
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(422, f"invalid satellite build: {e}") from e
+    regen_ok = await _regenerate_twin_latest()
+    await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
+    return {
+        "ok": True,
+        "regenerated": regen_ok,
+        "asset_id": engine.asset_id,
+        "satellite_config": engine.satellite_config.model_dump(),
+        "twin_geometry": engine.twin_geometry.model_dump(),
+        "workload_profile": engine.workload_profile,
+    }
 
 
 # --- Workload profiles (workload selector) ---------------------------------

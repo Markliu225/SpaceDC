@@ -7,6 +7,18 @@ export type TaskPhase =
   | 'idle' | 'created' | 'capturing' | 'inferencing'
   | 'packaging' | 'downlink' | 'delivered';
 
+/** One homogeneous card group of a mixed payload bay (per-slot GPU selection —
+ *  mirrors backend models.GpuMixItem). */
+export interface GpuMixItem {
+  gpu: string;
+  count: number;
+  power_w_per_gpu: number;
+  heat_w_per_gpu: number;
+  tflops_per_gpu: number;
+  throughput_per_gpu: number;
+  throughput_total: number;
+}
+
 /** What the payload GPUs are ACTUALLY running this tick — the typed job from
  *  the active schedule block resolved against the fitted GPU's datasheet
  *  (mirrors backend ai_workloads.py / models.GpuJobDetail). */
@@ -47,6 +59,10 @@ export interface GpuJobDetail {
   t_mem_ms?: number;
   /** Frequency-scaled compute time per step (ms). */
   t_comp_ms?: number;
+  /** Per-card-type breakdown — present ONLY when the fitted slots hold more
+   *  than one GPU model, in which case the columns above are card-weighted
+   *  means (totals are still sums). */
+  mix?: GpuMixItem[];
 }
 
 /** Cumulative payload output since the active workload profile (or design)
@@ -234,6 +250,11 @@ export interface SatelliteConfig {
   radiator_size: RadiatorSize;
   battery_material: BatteryMaterial;
   battery_size: BatterySize;
+  /** Per-slot payload loadout (satellite builder step 3): one entry per rack
+   *  slot of the platform — a GPU model for a fitted card, null for an empty
+   *  slot. Absent/empty = the uniform `gpu` loadout every design preset flies,
+   *  in which case the card count comes from the design. */
+  gpu_slots?: (GpuType | null)[];
 }
 
 /** Hull configuration — each is a genuinely different satellite shape. */
@@ -293,6 +314,90 @@ export interface DesignPresetInfo {
 export interface DesignsResponse {
   active: string;
   designs: DesignPresetInfo[];
+}
+
+// ---------------------------------------------------------------------------
+// Satellite assets + builder (backend satellite_assets.py — Twin page build
+// flow: platform → structure design → per-slot payload → workload → Run).
+// ---------------------------------------------------------------------------
+
+/** Headline stats of an asset's FACTORY loadout (GET /satellite_assets). */
+export interface SatelliteAssetStats {
+  solar_area_m2: number;
+  radiator_area_m2: number;
+  peak_solar_w: number;
+  compute_pflops: number;
+  mass_kg: number;
+  gpu_tdp_w: number;
+  radiator_emissivity: number;
+}
+
+/** One buildable vendor platform: which hull flies, how many payload slots it
+ *  has, and the loadout it ships with. */
+export interface SatelliteAssetInfo {
+  id: string;
+  name: string;
+  vendor: string;
+  tagline: string;
+  description: string;
+  architecture: Architecture;
+  slot_count: number;
+  /** Slots per visual group in the builder's bay grid. */
+  slot_group_size: number;
+  slot_group_label: string;
+  /** Per-slot names, in the same order as the 3D model's slots. */
+  slot_labels: string[];
+  config: SatelliteConfig;
+  solar_clusters_per_side: number;
+  radiator_long: number;
+  radiator_ratio: number;
+  workload_profile: string;
+  default_gpu: GpuType;
+  default_gpu_count: number;
+  platform_power_w: number;
+  battery_capacity_wh: number;
+  stats: SatelliteAssetStats;
+  preview_url: string;
+}
+
+/** GET /satellite_assets — `active` is "" when the live hull belongs to no
+ *  catalogued platform (the twin_truss / blanket design presets). */
+export interface SatelliteAssetsResponse {
+  active: string;
+  assets: SatelliteAssetInfo[];
+}
+
+/** POST /satellite_build(/preview) request body. */
+export interface SatelliteBuildRequest {
+  asset: string;
+  config: SatelliteConfig;
+  geometry: {
+    solar_clusters_per_side: number;
+    radiator_long: number;
+    radiator_ratio: number;
+  };
+  gpu_slots: (GpuType | null)[];
+  workload_profile: string;
+  attitude_mode?: string;
+}
+
+/** POST /satellite_build/preview — the draft dry-run: derived stats plus how
+ *  every job schedule would cope, computed by a detached engine so the verdict
+ *  shown before Run is the one the panels show after it. */
+export interface SatelliteBuildPreview {
+  asset_id: string;
+  stats: {
+    gpu_count: number;
+    mix: { gpu: string; count: number }[];
+    compute_pflops: number;
+    payload_peak_w: number;
+    solar_area_m2: number;
+    radiator_area_m2: number;
+    peak_solar_w: number;
+    battery_capacity_wh: number;
+    platform_power_w: number;
+  };
+  profiles: WorkloadProfileInfo[];
 }
 
 // ---------------------------------------------------------------------------
@@ -497,6 +602,9 @@ export interface StatePacket {
   mission?: MissionState;
   /** Active design preset id ("custom" after manual config/geometry edits). */
   design_id?: string;
+  /** Vendor platform the current hull belongs to (satellite_assets.py) —
+   *  derived from the architecture, "" for twin_truss / blanket. */
+  asset_id?: string;
   /** Workload profile id the GPU job schedule is running. */
   workload_profile?: string;
 }

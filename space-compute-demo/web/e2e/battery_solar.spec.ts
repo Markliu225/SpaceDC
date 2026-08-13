@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { dismissBuilder } from './twin';
 
 /**
  * R6 — battery config + attitude-driven solar collection, verified through the
@@ -14,6 +15,7 @@ const BACK = process.env.E2E_BACK ?? 'http://localhost:8001';
 test.describe('battery config + attitude solar', () => {
   test('battery capacity readout follows chemistry × pack size', async ({ page }) => {
     await page.goto(`${FRONT}/satellite`, { waitUntil: 'domcontentloaded' });
+    await dismissBuilder(page);
 
     const capacity = page.getByText(/Capacity .* kWh/);
     await expect(capacity).toBeVisible({ timeout: 10_000 });
@@ -50,6 +52,7 @@ test.describe('battery config + attitude solar', () => {
   test('solar-collection readout tracks the commanded attitude', async ({ page }) => {
     await page.request.post(`${BACK}/attitude_mode`, { data: { mode: 'free' } });
     await page.goto(`${FRONT}/satellite`, { waitUntil: 'domcontentloaded' });
+    await dismissBuilder(page);
 
     const control = page.getByTestId('attitude-control');
     await expect(control).toBeVisible({ timeout: 10_000 });
@@ -88,6 +91,7 @@ test.describe('battery config + attitude solar', () => {
 
   test('capture configurator screenshot', async ({ page }) => {
     await page.goto(`${FRONT}/satellite`, { waitUntil: 'domcontentloaded' });
+    await dismissBuilder(page);
     await expect(page.getByTestId('attitude-control')).toBeVisible({ timeout: 10_000 });
     await page.getByTestId('attitude-mode-sun').click();
     await page.waitForTimeout(1200);

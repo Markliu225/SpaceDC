@@ -73,6 +73,21 @@ RACKS = [
     ("LnY", -1.0, SLOT_Z_LOWER),
 ]
 
+# Per-slot payload loadout (twin_params.json "gpu_slots"), one entry per slot
+# in the RACKS order walked below — a GPU id for a fitted card, null for an
+# empty slot. EMPTY LIST = the classic "every slot carries a blade" model, so
+# stages generated without the key are byte-identical to before.
+GPU_SLOTS: list = []
+# Card-type tints for the slot marker bar on each fitted blade. Mirrors
+# web/src/data/satConfigOptions.ts GPU_SLOT_TINT so the 3D model and the
+# builder's slot grid agree on which colour means which card.
+GPU_TINTS = {
+    "H100":   (0.420, 0.478, 0.580),
+    "H200":   (0.231, 0.510, 0.965),
+    "B200":   (0.549, 0.361, 0.980),
+    "MI300X": (0.902, 0.251, 0.224),
+}
+
 # Blade box (backbone metres): X width, Y depth (cantilever), Z height. Sized
 # to seat inside the ~0.045 m frame opening with margin and span most of the
 # arm without colliding with the spine-side / tip-side posts.
@@ -546,6 +561,11 @@ def looks_scope() -> str:
     blocks = [material_block(k, v) for k, v in SERVER_MATERIALS.items()]
     blocks.append(server_front_material())
     blocks += [material_block(k, v) for k, v in SOLAR_MATERIALS.items()]
+    if GPU_SLOTS:
+        blocks += [material_block(f"GpuTag_{g}", {
+            "diffuse": c, "metallic": 0.0, "roughness": 0.35,
+            "emissive": tuple(v * 0.55 for v in c),
+        }) for g, c in GPU_TINTS.items()]
     if PREVIEW_LITE:
         blocks += [material_block(k, v) for k, v in LITE_MATERIALS.items()]
     blocks.append(earth_material())
@@ -691,16 +711,53 @@ def dgx_blade(name: str, cx: float, cy: float, cz: float, y_sign: float) -> str:
     )
 
 
-def servers_group(z_off: float = 0.0, tag: str = "") -> str:
+def _slot_gpu(idx: int):
+    """Card fitted in slot `idx`, or None. With no configured loadout every
+    slot is implicitly full (the pre-builder behaviour), so this returns None
+    and the caller keeps emitting a blade regardless."""
+    if not GPU_SLOTS or idx >= len(GPU_SLOTS):
+        return None
+    g = GPU_SLOTS[idx]
+    return g if g in GPU_TINTS else None
+
+
+def gpu_tag_mesh(name: str, cx: float, cy: float, cz: float,
+                 y_sign: float, gpu: str) -> str:
+    """The card-type marker bar across the bottom of a fitted blade's front
+    face — emissive so which model sits in which slot stays readable through
+    eclipse. A sibling of the blade (never a child): the DGX blades are
+    `instanceable`, which forbids children, and keeping the blade prim path
+    untouched keeps the click-to-panel matcher working."""
+    return box_mesh(name, cx,
+                    cy + y_sign * (BLADE_D / 2 + 0.003),
+                    cz - (BLADE_H / 2 - 0.004),
+                    BLADE_W * 0.62, 0.004, 0.005, f"GpuTag_{gpu}")
+
+
+def servers_group(z_off: float = 0.0, tag: str = "", slot_offset: int = 0) -> str:
     """The 12 blades of one backbone segment. `z_off`/`tag` let twin_truss
-    stack a second segment's worth (Server_<rack>_<i>U / ...D)."""
+    stack a second segment's worth (Server_<rack>_<i>U / ...D); `slot_offset`
+    continues the GPU_SLOTS index into that second segment.
+
+    With a per-slot loadout configured (satellite builder), ONLY the fitted
+    slots get a blade and each one wears its card-type marker — a four-card
+    build genuinely reads as four blades in a twelve-slot rack."""
     make = dgx_blade if USE_DGX else server_blade
-    blades = []
+    parts = []
+    idx = slot_offset
     for rack_name, y_sign, zs in RACKS:
         cy = y_sign * SLOT_Y_ABS
         for i, cz in enumerate(zs):
-            blades.append(make(f"Server_{rack_name}_{i}{tag}", 0.0, cy, cz + z_off, y_sign))
-    body = "\n".join(blades)
+            fitted = _slot_gpu(idx)
+            idx += 1
+            if GPU_SLOTS and fitted is None:
+                continue                     # empty slot — leave the frame bare
+            blade = f"Server_{rack_name}_{i}{tag}"
+            parts.append(make(blade, 0.0, cy, cz + z_off, y_sign))
+            if fitted is not None:
+                parts.append(gpu_tag_mesh(f"{blade}_Tag", 0.0, cy, cz + z_off,
+                                          y_sign, fitted))
+    body = "\n".join(parts)
     name = f"Servers{tag}" if tag else "Servers"
     return f'def Xform "{name}"\n{{\n{indent(body, "    ")}\n}}'
 
@@ -1168,7 +1225,7 @@ def _architecture_parts() -> list[str]:
             _backbone_prim("BackboneUp", +SPINE_END_Z),
             _backbone_prim("BackboneDown", -SPINE_END_Z),
             servers_group(+SPINE_END_Z, "U"),
-            servers_group(-SPINE_END_Z, "D"),
+            servers_group(-SPINE_END_Z, "D", slot_offset=len(RACKS) * 3),
             solar_group(),
             radiator_group(),
         ]
@@ -1347,6 +1404,7 @@ def _parse_cli(argv: list[str]) -> tuple[Path | None, Path]:
 
 def main(argv: list[str] | None = None) -> None:
     global N_PANELS, RAD_LONG, RAD_RATIO, USE_DGX, PREVIEW_LITE, ARCHITECTURE
+    global GPU_SLOTS
     import sys
     params_path, out_path = _parse_cli(sys.argv[1:] if argv is None else argv)
     p = _load_params(params_path)
@@ -1359,10 +1417,18 @@ def main(argv: list[str] | None = None) -> None:
     # is ~150 MB and only worth composing in the live Kit stage.
     USE_DGX = bool(p.get("use_dgx", USE_DGX))
     PREVIEW_LITE = bool(p.get("preview_lite", PREVIEW_LITE))
+    # Per-slot payload — unknown ids and over-long lists degrade to empty
+    # slots rather than failing the regen (the stage on disk is what Kit
+    # shows; half a model is worse than the default one).
+    slots = p.get("gpu_slots") or []
+    GPU_SLOTS = ([g if isinstance(g, str) and g in GPU_TINTS else None
+                  for g in slots][:len(RACKS) * 6] if isinstance(slots, list) else [])
     if p:
+        fitted = sum(1 for g in GPU_SLOTS if g)
         print(f"[gen] params: arch={ARCHITECTURE} solar/side={N_PANELS} "
               f"rad_long={RAD_LONG} rad_ratio={RAD_RATIO} "
-              f"dgx={USE_DGX} lite={PREVIEW_LITE}")
+              f"dgx={USE_DGX} lite={PREVIEW_LITE} "
+              f"slots={f'{fitted}/{len(GPU_SLOTS)}' if GPU_SLOTS else 'all'}")
     out = build_usda()
     # Atomic publish: Kit force-reloads this layer the moment the backend
     # bumps the geometry version, and an unrelated earlier reload could also

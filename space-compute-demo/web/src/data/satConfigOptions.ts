@@ -42,6 +42,30 @@ export const GPU_OPTIONS: GpuOption[] = [
 
 export const GPU_CARDS_PER_SAT = 8
 
+/**
+ * Slot-marker palette — which colour means which card in the builder's bay
+ * grid AND on the 3D model's blades. Mirrors gen_twin_satellite.GPU_TINTS
+ * exactly; it is deliberately NOT `GpuOption.tint`, which carries the brand
+ * colours (B200's near-black reads fine as a 6 px dropdown swatch and
+ * disappears as a status bar on a dark hull).
+ */
+export const GPU_SLOT_TINT: Record<GpuType, string> = {
+  H100:   '#6B7A94',
+  H200:   '#3B82F6',
+  B200:   '#8C5CFA',
+  MI300X: '#E64039',
+}
+
+/** Fitted slots collapsed to (card, count) groups, largest first — mirrors
+ *  backend state_engine._slot_groups. */
+export function slotGroups(slots: readonly (GpuType | null)[]): Array<{ gpu: GpuType; count: number }> {
+  const counts = new Map<GpuType, number>()
+  for (const s of slots) if (s) counts.set(s, (counts.get(s) ?? 0) + 1)
+  return [...counts.entries()]
+    .map(([gpu, count]) => ({ gpu, count }))
+    .sort((a, b) => b.count - a.count || a.gpu.localeCompare(b.gpu))
+}
+
 export interface SolarMaterialOption {
   id: SolarMaterial
   label: string
@@ -116,6 +140,16 @@ export const BATTERY_MATERIAL_OPTIONS: BatteryMaterialOption[] = [
   { id: 'LiFePO4',    label: 'LiFePO4',      density_wh_kg: 160, efficiency: 0.96, tint: '#059669' },
   { id: 'LiS',        label: 'Lithium-Sulfur', density_wh_kg: 400, efficiency: 0.90, tint: '#7C3AED' },
   { id: 'SolidState', label: 'Solid-State',  density_wh_kg: 350, efficiency: 0.97, tint: '#D97706' },
+]
+
+/** Fixed attitude pointing modes (backend models.AttitudeMode minus 'free',
+ *  which is what the reaction wheels leave behind). Shared by the Configurator's
+ *  live control and the builder's structure step. */
+export const ATTITUDE_MODES: Array<{ id: string; label: string; title: string }> = [
+  { id: 'sun',      label: 'Sun',      title: '对日 · solar panels track the Sun' },
+  { id: 'nadir',    label: 'Nadir',    title: '对地 · payload faces Earth' },
+  { id: 'velocity', label: 'Ram',      title: '沿速度 · body aligned along-track' },
+  { id: 'inertial', label: 'Inertial', title: '惯性 · fixed in inertial space' },
 ]
 
 export interface BatterySizeOption {

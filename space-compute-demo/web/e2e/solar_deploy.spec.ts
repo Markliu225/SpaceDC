@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { dismissBuilder } from './twin';
 
 /** Roll-out solar array (redwire) — applying the design arrives STOWED,
  *  POST /solar_deploy animates the fraction ~12 s to full, production
@@ -24,6 +25,7 @@ test('roll-out array deploys on command and drives solar production', async ({ p
 
   // The control is visible on the redwire design.
   await page.goto('http://localhost:5173/satellite', { waitUntil: 'domcontentloaded' });
+  await dismissBuilder(page);
   const control = page.getByTestId('solar-deploy');
   await expect(control).toBeVisible({ timeout: 15_000 });
   await expect(control).toContainText('Deploy');

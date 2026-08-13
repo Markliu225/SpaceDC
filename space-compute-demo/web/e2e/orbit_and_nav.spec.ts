@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { dismissBuilder } from './twin';
 import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -27,6 +28,7 @@ test('orbit motion + page-triggered camera switch', async ({ page }) => {
 
   // Navigate to Satellite Twin — page mounts, changeCamera('satellite') fires.
   await page.getByRole('link', { name: 'Satellite Twin' }).click();
+  await dismissBuilder(page);
   // Wait for Kit to process preset change + re-frame.
   await page.waitForTimeout(4000);
   await page.screenshot({ path: resolve(out, 'scene_satellite.png') });

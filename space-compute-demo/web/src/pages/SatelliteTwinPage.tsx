@@ -10,6 +10,9 @@ import { DesignGallery } from '../components/twin/DesignGallery'
 import { MiniOrbitHud } from '../components/twin/MiniOrbitHud'
 import { TwinModulePopup } from '../components/twin/TwinModulePopup'
 import { TimeSeriesStrip } from '../components/twin/TimeSeriesStrip'
+import { SatelliteBuilder } from '../components/twin/builder/SatelliteBuilder'
+import { BuilderChip } from '../components/twin/builder/BuilderChip'
+import { useBuilderStore } from '../store/useBuilderStore'
 
 /**
  * SatelliteTwinPage — single-satellite deep dive. Targets 1440×900.
@@ -31,6 +34,7 @@ import { TimeSeriesStrip } from '../components/twin/TimeSeriesStrip'
 export function SatelliteTwinPage() {
   const changeCamera = useDemoStore((s) => s.changeCamera)
   const connected    = useDemoStore((s) => s.connected)
+  const builderOpen  = useBuilderStore((s) => s.open)
   useEffect(() => {
     if (connected) changeCamera('satellite')
   }, [connected, changeCamera])
@@ -39,6 +43,21 @@ export function SatelliteTwinPage() {
   // (time-series strip, configurator) see fresh values.
   useMockTelemetryFeed()
   useBackendBridge()
+
+  // The build flow owns the whole page while it runs: selecting a platform,
+  // fitting slots and reading the design check all want the space, and the
+  // viewport would be showing the PREVIOUS satellite anyway (nothing is
+  // applied until Run). Everything below is untouched once it closes.
+  if (builderOpen) {
+    return (
+      <div
+        className="w-full bg-bg-app font-sans text-text-md overflow-hidden"
+        style={{ height: 'calc(100vh - 44px - 24px - 4px)' }}
+      >
+        <SatelliteBuilder />
+      </div>
+    )
+  }
 
   return (
     <div
@@ -56,6 +75,7 @@ export function SatelliteTwinPage() {
             Satellite Twin
           </span>
           <SatelliteSelector />
+          <BuilderChip />
           <DesignGallery />
           <ComparePanel />
         </div>

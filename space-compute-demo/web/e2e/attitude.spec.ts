@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { dismissBuilder } from './twin';
 
 /**
  * Satellite attitude control — pointing modes vs reaction wheels are mutually
@@ -10,6 +11,7 @@ test.describe('attitude control', () => {
     // Known start.
     await page.request.post('http://localhost:8001/attitude_mode', { data: { mode: 'free' } });
     await page.goto('http://localhost:5173/satellite', { waitUntil: 'domcontentloaded' });
+    await dismissBuilder(page);
 
     const control = page.getByTestId('attitude-control');
     await expect(control).toBeVisible({ timeout: 10_000 });

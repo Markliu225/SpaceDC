@@ -1,7 +1,7 @@
 import { Section, Row } from './PopupPrimitives'
 import { useDemoStore } from '../../../store/demoStore'
 import { useTelemetryStore } from '../../../store/useTelemetryStore'
-import { gpuOption, GPU_CARDS_PER_SAT } from '../../../data/satConfigOptions'
+import { gpuOption, slotGroups, GPU_CARDS_PER_SAT } from '../../../data/satConfigOptions'
 
 /** Sub-panel for one of the GPU modules. Shows the active GPU type's
  * static spec (per-card + per-sat aggregate) plus the LIVE typed workload
@@ -14,14 +14,37 @@ import { gpuOption, GPU_CARDS_PER_SAT } from '../../../data/satConfigOptions'
 export function GpuPanel({ cardIdx }: { cardIdx: number }) {
   const sat = useDemoStore((s) => s.lastState?.satellite)
   const cfg = useTelemetryStore((s) => s.satConfig)
-  const gpu = gpuOption(cfg.gpu)
+  // With a per-slot loadout (satellite builder) THIS slot's card is what the
+  // viewer clicked — reporting the satellite's primary model would describe a
+  // different blade. Falls back to the uniform loadout when no bay was built.
+  const slots = cfg.gpu_slots ?? []
+  const slotGpu = slots.length ? slots[cardIdx - 1] ?? null : null
+  const gpu = gpuOption(slotGpu ?? cfg.gpu)
 
   const cards = sat?.gpu_count ?? GPU_CARDS_PER_SAT
-  const perSatPflops = gpu.pflops_per_card * cards
-  const perSatTdpKw  = (gpu.tdp_w * cards) / 1000
+  const groups = slots.length ? slotGroups(slots) : []
+  const mixed = groups.length > 1
+  const perSatPflops = mixed
+    ? groups.reduce((p, g) => p + gpuOption(g.gpu).pflops_per_card * g.count, 0)
+    : gpu.pflops_per_card * cards
+  const perSatTdpKw = (mixed
+    ? groups.reduce((w, g) => w + gpuOption(g.gpu).tdp_w * g.count, 0)
+    : gpu.tdp_w * cards) / 1000
 
   const util = sat?.gpu_utilization
-  const wd   = sat?.workload_detail
+  const wdSat = sat?.workload_detail
+  // A mixed bay's satellite-level detail is a card-weighted merge; this card
+  // belongs to exactly one group, so show that group's operating point.
+  const wdGroup = slotGpu
+    ? wdSat?.mix?.find((m) => m.gpu === slotGpu)
+    : undefined
+  const wd = wdSat && wdGroup
+    ? { ...wdSat,
+        power_w_per_gpu: wdGroup.power_w_per_gpu,
+        heat_w_per_gpu: wdGroup.heat_w_per_gpu,
+        tflops_per_gpu: wdGroup.tflops_per_gpu,
+        throughput_total: wdGroup.throughput_total }
+    : wdSat
   const analytic = wd?.engine === 'analytic'
   // Junction temp exists only on the analytic path (die = struct + P·R_th);
   // the MFU path knows just the structure temp (the card's cold plate) —
@@ -38,10 +61,14 @@ export function GpuPanel({ cardIdx }: { cardIdx: number }) {
   return (
     <>
       <Section title={`Module · ${String(cardIdx).padStart(2, '0')}`}>
-        <Row label="Model"    value={gpu.label} />
+        <Row label="Model"    value={slots.length && !slotGpu ? 'Empty slot' : gpu.label} />
         <Row label="Cards"    value={cards.toString()} unit="×" />
       </Section>
       <Section title={`Aggregate (${cards}×)`}>
+        {mixed && (
+          <Row label="Loadout"
+               value={groups.map((g) => `${g.count}×${g.gpu}`).join(' + ')} />
+        )}
         <Row label="Compute"  value={perSatPflops.toFixed(2)} unit="PF" />
         <Row label="TDP"      value={perSatTdpKw.toFixed(1)}  unit="kW" />
       </Section>
