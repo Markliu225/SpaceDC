@@ -17,7 +17,15 @@ interface ConfigDropdownProps<T extends string> {
   onChange: (v: T) => void
   /** Optional icon shown left of the label (lucide icon component). */
   icon?: ReactNode
+  /** 'sm' (default) is the dense Configurator rail; 'md' is the satellite
+   *  builder, which has a whole page to spend and needs readable type. */
+  size?: 'sm' | 'md'
 }
+
+const SIZES = {
+  sm: { label: 'text-[10px]', value: 'text-[12px] px-2 py-1',   option: 'text-[12px] px-2 py-1.5', meta: 'text-[10px]' },
+  md: { label: 'text-[12px]', value: 'text-[14px] px-2.5 py-2', option: 'text-[13px] px-2.5 py-2', meta: 'text-[12px]' },
+} as const
 
 /**
  * ConfigDropdown — single-select picker styled to match SatelliteSelector.
@@ -28,10 +36,11 @@ interface ConfigDropdownProps<T extends string> {
  * option id type so each call is type-safe (e.g. GpuType for the GPU one).
  */
 export function ConfigDropdown<T extends string>({
-  label, value, options, onChange, icon,
+  label, value, options, onChange, icon, size = 'sm',
 }: ConfigDropdownProps<T>) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const sz = SIZES[size]
 
   useEffect(() => {
     if (!open) return
@@ -51,7 +60,7 @@ export function ConfigDropdown<T extends string>({
     <div ref={ref} className="relative">
       <div className="flex items-center gap-1.5 mb-1">
         {icon}
-        <span className="text-[10px] uppercase tracking-[0.10em] text-text-lo">
+        <span className={`${sz.label} uppercase tracking-[0.10em] text-text-lo`}>
           {label}
         </span>
       </div>
@@ -60,7 +69,7 @@ export function ConfigDropdown<T extends string>({
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-2 rounded border border-border-weak bg-bg-inset/60 px-2 py-1 text-[12px] text-text-hi hover:border-border-med"
+        className={`flex w-full items-center justify-between gap-2 rounded border border-border-weak bg-bg-inset/60 ${sz.value} text-text-hi hover:border-border-med`}
       >
         <span className="flex items-center gap-2 min-w-0">
           {selected.swatch && (
@@ -84,8 +93,8 @@ export function ConfigDropdown<T extends string>({
                 type="button"
                 onClick={() => { onChange(o.id); setOpen(false) }}
                 className={[
-                  'flex w-full items-center gap-2 px-2 py-1.5 text-left text-[12px] transition-colors',
-                  o.id === value ? 'bg-accent/15 text-text-hi' : 'text-text-md hover:bg-bg-cardHi',
+                  'flex w-full items-center gap-2 text-left transition-colors', sz.option,
+                  o.id === value ? 'bg-accent/15 text-text-hi' : 'text-text-md hover:bg-bg-card-hi',
                 ].join(' ')}
               >
                 {o.swatch && (
@@ -96,7 +105,7 @@ export function ConfigDropdown<T extends string>({
                 )}
                 <span className="flex-1 min-w-0 truncate">{o.label}</span>
                 {o.meta && (
-                  <span className="text-[10px] tabular text-text-lo">{o.meta}</span>
+                  <span className={`${sz.meta} tabular text-text-lo`}>{o.meta}</span>
                 )}
               </button>
             </li>

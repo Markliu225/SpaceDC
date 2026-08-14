@@ -120,7 +120,7 @@ tick 体裹 `try/except`——一次瞬时 sgp4 失败只跳一拍，不会拖�
 
 ### 2.4 交互管线
 
-八条管线覆盖全部交互，共同模式：**命令进入唯一权威源 → 状态改变 → 广播/轮询送回三端**，UI 从不自己预测结果。
+十一条管线覆盖全部交互，共同模式：**命令进入唯一权威源 → 状态改变 → 广播/轮询送回三端**，UI 从不自己预测结果。
 
 | # | 交互 | 管线 |
 | --- | --- | --- |
@@ -134,6 +134,7 @@ tick 体裹 `try/except`——一次瞬时 sgp4 失败只跳一拍，不会拖�
 | 8 | **实时 What-if 对比** | `POST /compare/start` → **在事件循环上冻结 `LiveSnapshot`**（1Hz tick 同循环，同步读不可能与 tick 交错——公平性关键）→ ×N 离线变体引擎从同一快照播种，之后**每个物理 tick 后同步步进一步**（lockstep，暂停即同停）→ 变体当前采样随 `StatePacket.compare_live` 广播，前端累积进遥测折线图滚动窗、虚线叠加实时生长分叉；`POST /compare/stop` 结束（**全程不触碰在线状态与 USD**） |
 | 9 | **轨道/星座设计** | 设计器编辑轨道六要素 + Walker 参数 → `POST /orbit_design` → 后端按开普勒关系合成参考 TLE、注册为 `custom_design` 预设并激活 → 引擎 tick、Kit 星座环、前端舰队传播器、覆盖地图在下一拍全部重新传播（设计所见即所得）；`GET /orbit_design` 随时读出当前星座六要素 |
 | 10 | **地面站配置 + 分析** | `POST /ground_target` 标红新加坡并配置仰角掩模/通信波段/太阳分档 → 舰队 tick 顺带算逐星仰角+太阳强度（`_consts.ground_analytics`），结果随 `StatePacket.ground_target` 广播：可见星数、聚合带宽(可见×波段速率)、仰角 CDF、太阳直方图 → 覆盖地图红标+接触环、Coverage 折线图(前端 `useCoverageHistory` 滚动累积)、Solar 直方图、Bands 波段对比曲线；`GET /comms_bands` 波段目录、`GET /ground_visibility` worker 线程离线采样一整轨过境 |
+| 11 | **卫星选型/搭建** | 向导四步（平台→结构→逐槽位载荷→作业档案）**全程只改前端草稿**；每次编辑防抖调 `POST /satellite_build/preview` —— 后端**另起一个 detached `StateEngine` 把草稿装配出来**再问它 `workload_adaptation`，返回与在线面板同源的派生指标与逐档案适配判定（**Run 前看到的设计校验就是 Run 后的结果**，且试算全程不触碰在线状态/USD）；Run 一次 `POST /satellite_build` **原子落地**（平台构型 + 硬件配置 + 逐槽位载荷 + 作业档案一起写）→ 接管线 2 再生 USD、bump version、Kit 重载 |
 
 ---
 
@@ -150,7 +151,7 @@ tick 体裹 `try/except`——一次瞬时 sgp4 失败只跳一拍，不会拖�
 | 太阳能 | `state_engine.py` | 面积、材料 η、日照、**姿态**、展开度 → `solar_input_w`、`solar_incidence` | `η·A·1361·入射率·展开度`；入射率随姿态：对日=1、free SADA=0.95、nadir/velocity/inertial=`max(0, 板面法向·太阳)` 几何投影 |
 | 功率/电池 | `state_engine.py` | 作业 util、TDP、太阳输入、**电池化学/包尺寸** → `payload_power_w`、SOC | EPS 每卡预算 + Wh 积分；容量=包质量×化学能量密度，往返效率只计充电一侧 |
 | 热控 | `state_engine.py` | 耗散功率、面积、涂层 ε → 温度、辐射功率 | 集总热质 + 斯特藩-玻尔兹曼 |
-| AI 作业 | `ai_workloads.py` | 作业类型、GPU、功率上限、结构温度 → MFU/吞吐/实际功耗 | 数据手册算力表 + 类型化作业目录 |
+| AI 作业 | `ai_workloads.py` | 作业类型、GPU、功率上限、结构温度 → MFU/吞吐/实际功耗 | 数据手册算力表 + 类型化作业目录；**混插舱按卡型分组**，每组自成理想 TP 组、整星按组求和（`state_engine._bay_job_detail`，同构舱严格退化为单组算术） |
 | LLM 推理 | `llm_perf.py` | 模型/批量/上下文、功率热约束 → 频率、tok/s、结温 | DVFS 聚合 + decode 访存下限 + 热节流耦合（V100 实测校准） |
 
 三个验证器守住物理正确性：`validate_physics.py`（整轨 9 项）、`validate_llm_perf.py`（理论 52 项）、`validate_llm_engine.py`（闭环 32 项）。
@@ -176,17 +177,18 @@ tick 体裹 `try/except`——一次瞬时 sgp4 失败只跳一拍，不会拖�
 
 ### 3.4 数据实体契约
 
-广播链路上的跨进程数据都是 `backend/models.py` 定义的 Pydantic 实体（前端在 `types/messages.ts` 镜像同名 TypeScript 类型）；两处例外：`DesignPreset` 在 `design_presets.py`，`/compare/run` 返回体由 `compare_sim` 构造为 wire dict、仅在前端定型为 `CompareResult`。**广播顶层实体是 `StatePacket`**——三端看到的"世界"就是它：
+广播链路上的跨进程数据都是 `backend/models.py` 定义的 Pydantic 实体（前端在 `types/messages.ts` 镜像同名 TypeScript 类型）；两处例外：`DesignPreset` 在 `design_presets.py`、`SatelliteAsset` 在 `satellite_assets.py`，`/compare/run` 返回体由 `compare_sim` 构造为 wire dict、仅在前端定型为 `CompareResult`。**广播顶层实体是 `StatePacket`**——三端看到的"世界"就是它：
 
 | 实体 | 关键字段 | 谁写 | 谁读 | 链路 |
 | --- | --- | --- | --- | --- |
 | `StatePacket` | sim_time_s · running · camera_preset · design_id · workload_profile + 下列全部 | 引擎每 tick | Web(WS 1Hz)、Kit(HTTP 5Hz) | 广播 / 轮询 |
 | `SatelliteState` | lat/lon/alt · sunlit · sun_cos · 功率三元组 · SOC · 温度 · 告警 · 展开度 · 姿态角速度 | 引擎每 tick | 全部遥测面板、Kit 轨道/灯光驱动 | 随 StatePacket |
-| `SatelliteConfig` | gpu · solar/radiator 材料与尺寸 | Web 配置器 | 引擎(物理)、Kit(材质 variant) | WS `set_config` / REST |
+| `SatelliteConfig` | gpu · solar/radiator 材料与尺寸 · **gpu_slots(逐槽位载荷)** | Web 配置器/搭建向导 | 引擎(物理)、Kit(材质 variant) | WS `set_config` / REST |
 | `TwinGeometry` | architecture · 板簇数 · 散热板尺寸比例 · **version(Kit 重载触发器)** | Web 几何控件、设计应用 | 引擎(面积)、生成器、Kit | REST → USD 再生管线 |
-| `GpuJobDetail` | 作业/模型 · engine=analytic\|mfu · 实际功耗 · 频率 · 结温 · 节流标志 | LLM 引擎每 tick | GPU/Workload 面板 | 随 SatelliteState |
+| `GpuJobDetail` | 作业/模型 · engine=analytic\|mfu · 实际功耗 · 频率 · 结温 · 节流标志 · **mix(混插分组明细)** | LLM 引擎每 tick | GPU/Workload 面板 | 随 SatelliteState |
 | `FleetSnapshot` / `MissionState` | 星座聚合 / 任务相位 | 引擎 | 总览页 / 任务页 | 随 StatePacket |
 | `DesignPreset` | 配置+几何+作业表+平台常数 | 静态定义 | 设计库 UI、apply 管线 | `GET/POST /designs` |
+| `SatelliteAsset` | 厂商平台：构型 · 槽位数与分组 · 出厂配置 | 静态定义(`satellite_assets.py`) | 搭建向导、preview/build 管线 | `GET /satellite_assets` |
 | `CompareResult` | variants[]·每变体 series+summary | `compare_sim` 一次性 | Compare 面板 | `POST /compare/run`（不进广播——What-if 不是世界状态） |
 
 统一信封：所有 WS 消息共用 `{type, ts, payload, request_id?}`，一处分发。
@@ -200,7 +202,9 @@ tick 体裹 `try/except`——一次瞬时 sgp4 失败只跳一拍，不会拖�
 | 页面 | 路由 | 能力 |
 | --- | --- | --- |
 | **态势总览** Overview | `/` | 地球+星座三维态势、14 参数遥测卡、星座预设切换、**四页签设计工作台**：轨道/星座设计器（六要素 + Walker）、新加坡地面站配置（仰角掩模/通信波段/太阳分档）、Coverage(可见星+带宽折线)、Solar(光照分档收集直方图)、Bands(波段吞吐-仰角对比曲线)、事件流 |
-| **卫星孪生体** Satellite Twin | `/satellite` | 主界面：Omniverse 特写视口（真实轨道运动/地影/构件拾取弹窗）+ 配置器（Compute+Workload/材料/几何/展开/**电池化学·包尺寸**/**姿态控制**）+ **设计库**（6 套整星、软件渲染缩略图）+ **实时 What-if 对比**（8 配置维度含电池化学·包尺寸 ×2-4 变体，与物理 tick 同步步进、虚线叠加在遥测折线图上随时间生长分叉，面板含逐变体实时数值表）+ 120s 遥测带 |
+| **卫星孪生体** Satellite Twin | `/satellite` | 进入即 **卫星搭建向导**（见下）；Run 后是主界面：Omniverse 特写视口（真实轨道运动/地影/构件拾取弹窗）+ 配置器（Compute+Workload/材料/几何/展开/**电池化学·包尺寸**/**姿态控制**）+ **设计库**（6 套整星、软件渲染缩略图）+ **实时 What-if 对比**（8 配置维度含电池化学·包尺寸 ×2-4 变体，与物理 tick 同步步进、虚线叠加在遥测折线图上随时间生长分叉，面板含逐变体实时数值表）+ 120s 遥测带 |
+
+**卫星搭建向导**（`web/src/components/twin/builder/`）：四步把一颗星从零配出来——① **选型**四种厂商平台（SpaceX 桁架 12 槽 / Redwire 扁平舱 7 模块 / Sophia Space TILE 6 槽 / Ada Space 计算节点 8 槽，各自映射到一种真实 hull 构型，出厂即带该构型下已审计设计预设的配置）；② **结构设计**电(电池片/翼段数/化学/电池包)、热(涂层/散热板跨度与长宽比)、轨道指向——**板面尺寸按真实量纲手输**（翼段数 1–8、散热板跨度 0.54–5.4 m、长宽比 1.2–6，越界钳位、非法回退），面积随手实时推导；③ **载荷设计**逐槽位选卡（"画笔"式点选，可留空、可混插）；④ **作业档案**。**按 Run 之前只改前端草稿**，每次编辑走试算端点在独立引擎实例上装配草稿再问设计校验（管线 11），Run 一次原子落地。没有厂商几何的两家平台（Sophia/Ada）在选型卡上按其公开 reference design 手绘等轴测图，而不是渲染我们的替身 hull。
 
 **姿态控制**：四种指向模式（对日 sun / 对地 nadir / 沿速度 velocity / 惯性 inertial）与 X/Y/Z 动量轮互斥——选模式清零动量轮、Kit 特写把机体缓动到目标姿态；碰动量轮则退回 `free` 自由翻滚（`POST /attitude_mode` · `/attitude_spin`，display-only）。姿态**真实驱动太阳能收集**：板面法向随模式变化，入射率 = `max(0, 法向·太阳)`，对日恒满发、体固定姿态随几何在 0…1 间摆动（配置器"Solar collection"读数实时显示，见物理模型 §太阳能）。
 
