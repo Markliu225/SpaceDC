@@ -12,7 +12,7 @@
 
 **图 1** 在轨算力卫星集群仿真平台软件的总体架构
 
-**计算层**为仿真提供所需的基础科学计算与领域模型，集中在 `backend/`，其唯一职责是产生业务数值（位置、瓦特、℃、SOC、tokens/s）。图中按 Orbit / Communication / Computing / Power / Thermal 五列组织：轨道预报（SGP4 真实传播 + 星下点/日照，支持 Walker 星座）、太阳能（`η·A·1361·入射率·展开度`，入射率随卫星姿态几何投影）、功率/电池（EPS 每卡预算 + Wh 积分，可配电池化学与包尺寸）、热控（集总热质 + 斯特藩-玻尔兹曼辐射）、AI 作业目录与 LLM 推理（DVFS + decode 访存下限 + 热节流耦合，V100 实测校准）；通信/链路（ISL/GSL、拓扑、天线指向）列为规划与图示能力。三个验证器守护物理正确性。模型清单、公式与热-算力反馈闭环见 §3。
+**计算层**为仿真提供所需的基础科学计算与领域模型，集中在 `backend/`，其唯一职责是产生业务数值（位置、瓦特、℃、SOC、tokens/s）。图中按 Orbit / Communication / Computing / Power / Thermal 五列组织：轨道预报（SGP4 真实传播 + WGS-84 星下点 + 解析太阳历/圆锥本影半影地影，支持 Walker 星座）、太阳能（`η·A·S₀/d²·入射率·蚀分数·展开度`，入射率随卫星姿态几何投影）、功率/电池（EPS 每卡预算 + Wh 积分，可配电池化学与包尺寸）、热控（集总热质 + 斯特藩-玻尔兹曼辐射 + 太阳/反照/地球红外环境热流，涂层 α/ε）、AI 作业目录与 LLM 推理（DVFS + decode 访存下限 + 热节流耦合，V100 实测校准）；通信/链路（ISL/GSL、拓扑、天线指向）列为规划与图示能力。三个验证器守护物理正确性；轨道/电/热三模块经本机 STK 11.6（含 SEET）数值对标（`tools/stk_benchmark/`，51/51 判据通过）。模型清单、公式与热-算力反馈闭环见 §3。
 
 **服务层**以云服务架构构建，在计算层之上整合出运行时机制，又可细分为若干服务。核心是**仿真引擎服务**——即图中**物理实时引擎**（`StateEngine`）：它既是积分器又是调度器，也是**业务状态的单一权威源**；每个物理 tick（1Hz）按固定顺序调用计算层全部模型一遍，再 broadcast 态势，应用层与渲染服务从不各自积分、永不漂移。**场景渲染 SDK**（Omniverse Kit）提供 RTX 渲染、USD Stage 与 WebRTC 720p 推流；**实体功能插件**（Scene / Core / Message / Setup）在渲染宿主内承担场景编排与消息通道。**数据收发服务**为系统提供统一的数据汇集与传输——WS 统一信封 `{type, ts, payload, request_id?}` 加 REST（1Hz 广播 / 5Hz 轮询）。**仿真控管服务**（Simulation Runtime Control / Entity Control）提供运行时控管与实体控制，并由三维资产库供给几何参数等主题数据。此外，**对比仿真服务**以 lockstep 同步步进实现并行 / 实时 What-if 对比；**仿真评估**落在任务性能验证、设计校验与对比评估上；**动态实体生成**对应 Walker 星座 / 实体的按需合成。上层全部服务化、部署可上云，客户端以 Web 形式登陆操作（浏览器经 WebRTC 观看 Kit 渲染视口）。各服务的进程形态与运行时约定见 §1。
 
@@ -147,10 +147,10 @@ tick 体裹 `try/except`——一次瞬时 sgp4 失败只跳一拍，不会拖�
 
 | 模型 | 文件 | 输入 → 输出 | 方法 |
 | --- | --- | --- | --- |
-| 轨道预报 | `services/orbit_catalog.py` `services/constellations.py` | TLE、sim 时间 → ECI 位置、lat/lon/alt、日照、Walker 舰队 | SGP4 真实传播 + 星下点转换 |
-| 太阳能 | `state_engine.py` | 面积、材料 η、日照、**姿态**、展开度 → `solar_input_w`、`solar_incidence` | `η·A·1361·入射率·展开度`；入射率随姿态：对日=1、free SADA=0.95、nadir/velocity/inertial=`max(0, 板面法向·太阳)` 几何投影 |
+| 轨道预报 | `services/orbit_catalog.py` `services/constellations.py` `services/geodyn.py` | TLE、sim 时间 → ECI 位置、WGS-84 lat/lon/alt、蚀分数、Walker 舰队、地面站仰角 | SGP4 真实传播 + IAU-82 GMST/WGS-84 星下点 + 解析太阳历 + 圆锥本影/半影 + ECEF/ENU 仰角（STK 11 对标 ≤10⁻⁷°/≤5 s/≤1 s） |
+| 太阳能 | `state_engine.py` | 面积、材料 η、蚀分数、**姿态**、展开度 → `solar_input_w`、`solar_incidence` | `η·A·(S₀/d²)·入射率·蚀分数·展开度`；入射率随姿态：对日=1、free SADA=0.95、nadir/velocity/inertial=`max(0, 板面法向·太阳)` 几何投影（STK 对标 24h 能量差 ≤0.4%） |
 | 功率/电池 | `state_engine.py` | 作业 util、TDP、太阳输入、**电池化学/包尺寸** → `payload_power_w`、SOC | EPS 每卡预算 + Wh 积分；容量=包质量×化学能量密度，往返效率只计充电一侧 |
-| 热控 | `state_engine.py` | 耗散功率、面积、涂层 ε → 温度、辐射功率 | 集总热质 + 斯特藩-玻尔兹曼 |
+| 热控 | `state_engine.py` | 耗散功率、面积、涂层 **α/ε**、轨道位置/蚀分数 → 温度、辐射功率 | 集总热质 + 斯特藩-玻尔兹曼 + 太阳吸收/地球反照/地球红外环境热流（球-地视因子；STK SEET 对标分段均温差 ≤0.4 K） |
 | AI 作业 | `ai_workloads.py` | 作业类型、GPU、功率上限、结构温度 → MFU/吞吐/实际功耗 | 数据手册算力表 + 类型化作业目录；**混插舱按卡型分组**，每组自成理想 TP 组、整星按组求和（`state_engine._bay_job_detail`，同构舱严格退化为单组算术） |
 | LLM 推理 | `llm_perf.py` | 模型/批量/上下文、功率热约束 → 频率、tok/s、结温 | DVFS 聚合 + decode 访存下限 + 热节流耦合（V100 实测校准） |
 

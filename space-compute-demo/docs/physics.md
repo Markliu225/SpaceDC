@@ -16,9 +16,10 @@ All symbols below are SI unless noted.
 
 | Symbol | Value | Meaning |
 |--------|-------|---------|
-| `S` | 1361 W/m² | Solar constant (`_SOLAR_CONSTANT_W_M2`) |
+| `S₀` | 1361 W/m² | Solar constant **at 1 AU** (`_SOLAR_CONSTANT_W_M2`); per-tick flux is `S = S₀/d_AU²` at the true Earth–Sun distance |
 | `σ` | 5.67×10⁻⁸ W/m²K⁴ | Stefan–Boltzmann constant |
-| `T_bg` | 250 K | Effective deep-space + Earth-IR background |
+| `q_IR` | 237 W/m² | Mean Earth outgoing longwave flux (`geodyn.EARTH_IR_W_M2`) |
+| `a` | 0.30 | Earth albedo (`geodyn.EARTH_ALBEDO`) |
 | `IDLE_FRAC` | 0.15 | GPU idle floor as a fraction of TDP |
 | `cards` | 8 | GPU cards per satellite (`_GPU_CARDS_PER_SAT`) |
 | `P_platform` | 600 W | Bus / platform housekeeping load |
@@ -53,11 +54,12 @@ So solar scales only with the side count (panels are added along the sides), and
 
 ## 3. Solar power (illumination → generation)
 
-The sun is fixed in the inertial frame at direction `ŝ = unit(0.648, −0.648, 0.398)` (the raw triple is normalized once at load — `_SUN_UNIT` — so the dot products below are true cosines). With the satellite position `r`:
+The Sun is the **real analytic Sun** (`services/geodyn.py:sun_teme` — Vallado mean-element model, ≤0.05° vs the STK ephemeris), evaluated at the absolute epoch `DEMO_EPOCH + t·60`. Eclipse is the **conical umbra/penumbra model**: `illum ∈ [0,1]` is the visible fraction of the solar disc behind the Earth's limb (`geodyn.sun_visible_fraction` — apparent-disc overlap, same construction as STK's dual-cone shadow; STK-benchmarked event timing ≤5 s). With the satellite position `r` and Sun unit vector `ŝ(t)`:
 
 ```
-cos θ = (r · ŝ) / |r|
-sunlit = cos θ > −0.05            (small dawn/dusk margin)
+cos θ  = (r · ŝ) / |r|
+illum  = visible solar-disc fraction (1 full sun · 0 umbra · smooth through penumbra)
+sunlit = illum ≥ 0.5
 ```
 
 **Incidence is attitude-dependent.** The panel normal `n̂` is set by the commanded pointing mode (`attitude_mode`), and incidence is its projection onto the sun — `max(0, n̂ · ŝ)` — gated to 0 in eclipse:
@@ -74,10 +76,10 @@ So sun-pointing guarantees continuous daylight power, while a body-fixed attitud
 
 (Earlier builds reused `max(0, cos θ)` — the angle to the *position vector* — as the *only* incidence model, i.e. nadir for every design. That averaged only ≈0.22 over an orbit, so no plausible array could ever close the power budget and the battery pinned at 0. The sun/free tracking modes fix that; nadir/velocity/inertial remain available as honest body-fixed geometries.)
 
-`sun_factor = max(0, cos θ)` is still exported to drive the Kit key-light. Generated power is panel efficiency × area × flux × incidence:
+`sun_factor = max(0, cos θ)` (0 in eclipse) is still exported to drive the Kit key-light. Generated power is panel efficiency × area × true flux × incidence × eclipse fraction:
 
 ```
-P_solar = η · A_solar · S · incidence
+P_solar = η · A_solar · (S₀/d_AU²) · incidence · illum
 ```
 
 `η` comes from the chosen cell material: **Si 0.22 · GaAs 0.32 · Perovskite 0.38**.
@@ -159,28 +161,31 @@ SOC    = clamp(SOC + ΔSOC, 0, 1)
 
 ---
 
-## 6. Thermal (Stefan–Boltzmann radiator)
+## 6. Thermal (Stefan–Boltzmann radiator + orbital environment)
 
-Heat in is the dissipated electrical power (≈95%, the rest leaves as RF); heat out is grey-body radiation from the radiator area:
+Heat in is the dissipated electrical power (≈95%, the rest leaves as RF) **plus the orbital thermal environment** — direct solar absorption, Earth albedo and Earth IR — so the temperature swings with the eclipse cycle (STK SEET-benchmarked: sunlit/eclipse segment means within 0.4 K on the reference sphere). With `F = (1−√(1−(R⊕/r)²))/2` the Earth-disc view factor and `S = S₀/d_AU²`:
 
 ```
-Q_in  = (P_payload + P_platform) · 0.95
-Q_out = ε · σ · A_rad · (T⁴ − T_bg⁴)             (radiator_power_w, ≥ 0)
+Q_env = α·S·illum·A_rad/4                      (direct solar — convex-body mean projected area)
+      + α·a·S·A_rad·F·max(0, cos θ)            (Earth albedo)
+      + ε·q_IR·A_rad·F                         (Earth IR — present in eclipse too)
+Q_in  = (P_payload + P_platform) · 0.95 + Q_env
+Q_out = ε · σ · A_rad · T⁴                     (radiator_power_w, ≥ 0)
 dT/dt = (Q_in − Q_out) / C_th
 T     = clamp(T + dT/dt · dt · k_time, −80 °C, 95 °C)
 ```
 
-`ε` is the radiator coating: **Aluminium 0.10 · White paint 0.85 · OSR 0.92 · Graphite 0.96** (bare aluminium is a deliberately poor radiator — pick a coating to actually reject heat).
+The radiator coating sets **both** optical properties (`α/ε` is the thermal-control design ratio): **Aluminium ε 0.10 / α 0.25 · White paint 0.85 / 0.25 · OSR 0.92 / 0.08 · Graphite 0.96 / 0.90** (bare aluminium's α/ε = 2.5 makes it a genuinely poor radiator — pick a coating to actually reject heat).
 
 ---
 
 ## 7. Downlink
 
-A simple ground-pass visibility model:
+Real elevation-mask geometry against the configured ground target (default Singapore 1.3521° N / 103.8198° E, X-band 10° mask), using the same WGS-84 ECEF elevation model as the coverage analytics (`constellations.elevation_deg` — STK-benchmarked access windows to ≤1 s):
 
 ```
-visible = sin(t / 30) > 0.4
-downlink = 120 Mbps if visible else 0
+visible  = elevation(sat sub-point → ground target) ≥ mask
+downlink = band rate if visible else 0
 ```
 
 ---
@@ -195,7 +200,8 @@ P_supply_avg = 0.95 · 0.5 · (η · A_solar · S)    (tracking losses × sunlit
 P_supply_avg = 1.0 · (η · A_solar · S)           (dawn-dusk SSO — never eclipsed)
 
 Q_peak_demand = (TDP · cards + P_platform) · 0.95            (sustained 100% util)
-Q_max_emit    = ε · σ · A_rad · (T_ceil⁴ − T_bg⁴),  T_ceil = 60 °C
+Q_max_emit    = ε · σ · A_rad · T_ceil⁴ − Q_env_worst,  T_ceil = 60 °C
+                (Q_env_worst = §6 environment at full sun, subsolar albedo)
 ```
 
 The supply check uses the **same tracking model** as the per-tick `P_solar`, so a design that passes the check really does hold its battery over an orbit in the running sim (and vice versa).
@@ -221,8 +227,8 @@ The supply check uses the **same tracking model** as the per-tick `P_solar`, so 
 
 ## 10. What's real vs. simplified
 
-- **Real:** η·A·flux·cos solar generation, idle-floor GPU power curve, Wh battery integration, Stefan–Boltzmann radiation with a lumped thermal mass, the geometry-driven areas, and the analytical LLM operating point (DVFS power aggregate, memory-floor decode law, ceiling law, thermal-limit throttling — anchored to published V100 power-cap measurements) — all respond correctly to config/geometry changes.
-- **Simplified for legibility:** fixed inertial sun direction (no seasonal/precession), a scripted workload trace instead of a real scheduler, single-node lumped thermal mass (no gradients; the GPU die is quasi-static on top of it via R_th), a 60× time acceleration on battery/thermal, and a sinusoidal ground-pass model. Modern-GPU (H100/B200/MI300X) DVFS exponents and serving-stack fractions are documented assumptions sanity-checked against public serving benchmarks, not fits. Numbers are representative, not flight-grade.
+- **Real (STK 11-benchmarked, see `tools/stk_benchmark/`):** SGP4/TEME propagation (machine-precision vs STK), WGS-84 geodetic sub-points via true GMST (≤10⁻⁷ °), the analytic Sun (≤0.05°), conical umbra/penumbra eclipse (event timing ≤5 s, sunlit fraction ≤0.1 pp), WGS-84 ground-station elevation and access windows (≤1 s), η·A·S(d)·cos·illum solar generation (24 h energy ≤0.4 % vs STK-derived truth), idle-floor GPU power curve, Wh battery integration, Stefan–Boltzmann radiation with solar/albedo/Earth-IR environment heating (SEET segment means ≤0.4 K), the geometry-driven areas, and the analytical LLM operating point (DVFS power aggregate, memory-floor decode law, ceiling law, thermal-limit throttling — anchored to published V100 power-cap measurements).
+- **Simplified for legibility:** a scripted workload trace instead of a real scheduler, single-node lumped thermal mass (no gradients; the GPU die is quasi-static on top of it via R_th), a 60× time acceleration on battery/thermal, spherical-Earth shadow (no oblateness — worth a few seconds at eclipse edges), no atmospheric refraction on elevation, and the dawn-dusk SSO preset still forces permanent sunlight for its demo story. Modern-GPU (H100/B200/MI300X) DVFS exponents and serving-stack fractions are documented assumptions sanity-checked against public serving benchmarks, not fits. Numbers are representative, not flight-grade.
 
 ---
 
@@ -231,6 +237,7 @@ The supply check uses the **same tracking model** as the per-tick `P_solar`, so 
 | Concern | Location |
 |---------|----------|
 | All physics | `backend/state_engine.py` → `StateEngine` update + `_solar_area_m2` / `_radiator_area_m2` / `_gpu_workload_util` |
+| Sun / eclipse / WGS-84 / GMST / view factor | `backend/services/geodyn.py` (STK benchmark: `tools/stk_benchmark/`) |
 | LLM perf/power/thermal theory | `backend/llm_perf.py` (GPU_PERF / LLM_PERF catalogs, `solve_operating_point`) — validated by `tools/validate_llm_perf.py` + `tools/validate_llm_engine.py` |
 | Typed jobs → operating point | `backend/ai_workloads.py` → `job_detail` (analytic path for LLM jobs) |
 | Hardware tables | `_GPU_TABLE`, `_SOLAR_MAT_TABLE`, `_RAD_MAT_TABLE` (state_engine.py) |
