@@ -99,15 +99,16 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
     DesignPreset(
         id="compute_max",
         name="Compute Max",
-        tagline="12x B200 · twin-truss tower · graphite wide radiators",
+        tagline="12x B200 · twin-truss tower · OSR wide radiators",
         description=(
             "Maximum on-orbit FLOPS: TWO backbone segments stacked into a "
             "24-slot tower carrying twelve B200s, perovskite wings on the "
-            "joint, and oversized graphite radiators for sustained training."
+            "joint, and oversized OSR radiators for sustained training "
+            "(graphite's solar absorptivity would eat the margin in daylight)."
         ),
         config=SatelliteConfig(
             gpu="B200", solar_material="Perovskite", solar_size="L",
-            radiator_material="Graphite", radiator_size="Wide",
+            radiator_material="OSR", radiator_size="Wide",
             battery_material="LiIon", battery_size="XL",),
         architecture="twin_truss",
         solar_clusters_per_side=8, radiator_long=2.6, radiator_ratio=2.0,
@@ -135,18 +136,19 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
     DesignPreset(
         id="thermal_guard",
         name="Thermal Guard",
-        tagline="H200 · dish comms hull · OSR max-area radiators",
+        tagline="H200 · dish comms hull · OSR radiators",
         description=(
             "Built for spiky target-of-opportunity tasking: a parabolic-dish "
-            "comms hull with windmill wings, plus max-span optical solar "
-            "reflector radiators that keep burst temperature flat."
+            "comms hull with windmill wings, plus optical-solar-reflector "
+            "radiators sized so burst heat stays flat without freezing the "
+            "bus through eclipse."
         ),
         config=SatelliteConfig(
             gpu="H200", solar_material="GaAs", solar_size="M",
             radiator_material="OSR", radiator_size="Wide",
             battery_material="LiIon", battery_size="M",),
         architecture="dish",
-        solar_clusters_per_side=3, radiator_long=3.0, radiator_ratio=1.5,
+        solar_clusters_per_side=3, radiator_long=1.8, radiator_ratio=1.5,
         workload_profile="burst", gpu_count=8,
         platform_power_w=600.0,
     ),
