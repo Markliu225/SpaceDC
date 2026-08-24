@@ -79,6 +79,23 @@ class WorkloadTotals(BaseModel):
     duration_s: float = 0.0
 
 
+class OrbitalElements(BaseModel):
+    """Live osculating classical elements of the tracked satellite, derived
+    each tick from the SGP4 position/velocity (services/elements.py — the
+    NTU OE/RV layer). Degrees on the wire; singular cases resolved by the
+    documented conventions (circular → argp=0, anomaly=argument of latitude;
+    equatorial → raan=0), never NaN."""
+    semi_major_axis_km: float = 0.0
+    eccentricity: float = 0.0
+    inclination_deg: float = 0.0
+    raan_deg: float = 0.0
+    arg_periapsis_deg: float = 0.0
+    true_anomaly_deg: float = 0.0
+    period_s: float = 0.0
+    apogee_alt_km: float = 0.0
+    perigee_alt_km: float = 0.0
+
+
 class SatelliteState(BaseModel):
     id: str = "sat-001"
     orbit_type: OrbitType = "LEO"
@@ -89,6 +106,10 @@ class SatelliteState(BaseModel):
     # can drop the satellite icon at exactly the propagated point without
     # re-doing the math. None when no propagator has run yet.
     sat_xyz_km: Optional[tuple[float, float, float]] = None
+    # Osculating classical elements at the current tick (None until the
+    # first propagation). The orbit designer edits MEAN elements to build
+    # TLEs; these are the instantaneous truth the propagator actually flies.
+    orbital_elements: Optional[OrbitalElements] = None
     sunlit: bool = True
     # Normalised solar incidence, 0..1 = max(0, cos(angle between sat→sun
     # and the sub-solar direction)). 0 in eclipse, 1 at solar noon. Drives

@@ -76,13 +76,14 @@ So sun-pointing guarantees continuous daylight power, while a body-fixed attitud
 
 (Earlier builds reused `max(0, cos θ)` — the angle to the *position vector* — as the *only* incidence model, i.e. nadir for every design. That averaged only ≈0.22 over an orbit, so no plausible array could ever close the power budget and the battery pinned at 0. The sun/free tracking modes fix that; nadir/velocity/inertial remain available as honest body-fixed geometries.)
 
-`sun_factor = max(0, cos θ)` (0 in eclipse) is still exported to drive the Kit key-light. Generated power is panel efficiency × area × true flux × incidence × eclipse fraction:
+`sun_factor = max(0, cos θ)` (0 in eclipse) is still exported to drive the Kit key-light. Generated power is panel efficiency × area × true flux × incidence × eclipse fraction × the cell's **temperature derating** (single-node model: panels share the bus temperature, so a hot satellite genuinely generates less — the thermal→power loop that mirrors the thermal→compute one):
 
 ```
-P_solar = η · A_solar · (S₀/d_AU²) · incidence · illum
+P_solar = η · A_solar · (S₀/d_AU²) · incidence · illum · η_T
+η_T     = clamp(1 + k · (T − 25 °C), 0, 1.25)          (datasheet linear derating)
 ```
 
-`η` comes from the chosen cell material: **Si 0.22 · GaAs 0.32 · Perovskite 0.38**.
+`η` (at the 25 °C reference) and `k` come from the chosen cell material: **Si 0.22 / −0.45 %·K⁻¹ · GaAs 0.32 / −0.20 %·K⁻¹ · Perovskite 0.38 / −0.30 %·K⁻¹**. The steady-state design checks (§8) evaluate at the 25 °C reference (η_T = 1).
 
 ---
 
@@ -238,6 +239,7 @@ The supply check uses the **same tracking model** as the per-tick `P_solar`, so 
 |---------|----------|
 | All physics | `backend/state_engine.py` → `StateEngine` update + `_solar_area_m2` / `_radiator_area_m2` / `_gpu_workload_util` |
 | Sun / eclipse / WGS-84 / GMST / view factor | `backend/services/geodyn.py` (STK benchmark: `tools/stk_benchmark/`) |
+| Classical elements OE↔RV (osculating broadcast) | `backend/services/elements.py` (NTU CV-001/CV-002 conventions) — validated by `tools/validate_elements.py` |
 | LLM perf/power/thermal theory | `backend/llm_perf.py` (GPU_PERF / LLM_PERF catalogs, `solve_operating_point`) — validated by `tools/validate_llm_perf.py` + `tools/validate_llm_engine.py` |
 | Typed jobs → operating point | `backend/ai_workloads.py` → `job_detail` (analytic path for LLM jobs) |
 | Hardware tables | `_GPU_TABLE`, `_SOLAR_MAT_TABLE`, `_RAD_MAT_TABLE` (state_engine.py) |

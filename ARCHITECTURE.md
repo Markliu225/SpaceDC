@@ -147,14 +147,14 @@ tick 体裹 `try/except`——一次瞬时 sgp4 失败只跳一拍，不会拖�
 
 | 模型 | 文件 | 输入 → 输出 | 方法 |
 | --- | --- | --- | --- |
-| 轨道预报 | `services/orbit_catalog.py` `services/constellations.py` `services/geodyn.py` | TLE、sim 时间 → ECI 位置、WGS-84 lat/lon/alt、蚀分数、Walker 舰队、地面站仰角 | SGP4 真实传播 + IAU-82 GMST/WGS-84 星下点 + 解析太阳历 + 圆锥本影/半影 + ECEF/ENU 仰角（STK 11 对标 ≤10⁻⁷°/≤5 s/≤1 s） |
-| 太阳能 | `state_engine.py` | 面积、材料 η、蚀分数、**姿态**、展开度 → `solar_input_w`、`solar_incidence` | `η·A·(S₀/d²)·入射率·蚀分数·展开度`；入射率随姿态：对日=1、free SADA=0.95、nadir/velocity/inertial=`max(0, 板面法向·太阳)` 几何投影（STK 对标 24h 能量差 ≤0.4%） |
+| 轨道预报 | `services/orbit_catalog.py` `services/constellations.py` `services/geodyn.py` `services/elements.py` | TLE、sim 时间 → ECI 位置、WGS-84 lat/lon/alt、蚀分数、**密切六根数**、Walker 舰队、地面站仰角 | SGP4 真实传播 + IAU-82 GMST/WGS-84 星下点 + 解析太阳历 + 圆锥本影/半影 + ECEF/ENU 仰角（STK 11 对标 ≤10⁻⁷°/≤5 s/≤1 s）+ OE↔RV 层（NTU CV-001/002 约定，逐 tick 广播） |
+| 太阳能 | `state_engine.py` | 面积、材料 η+温度系数、蚀分数、**姿态**、结构温度、展开度 → `solar_input_w`、`solar_incidence` | `η·A·(S₀/d²)·入射率·蚀分数·η_T(T)·展开度`，η_T=1+k(T−25°C) 逐材料数据手册降额；入射率随姿态：对日=1、free SADA=0.95、nadir/velocity/inertial=`max(0, 板面法向·太阳)` 几何投影（STK 对标 24h 能量差 ≤0.4%） |
 | 功率/电池 | `state_engine.py` | 作业 util、TDP、太阳输入、**电池化学/包尺寸** → `payload_power_w`、SOC | EPS 每卡预算 + Wh 积分；容量=包质量×化学能量密度，往返效率只计充电一侧 |
 | 热控 | `state_engine.py` | 耗散功率、面积、涂层 **α/ε**、轨道位置/蚀分数 → 温度、辐射功率 | 集总热质 + 斯特藩-玻尔兹曼 + 太阳吸收/地球反照/地球红外环境热流（球-地视因子；STK SEET 对标分段均温差 ≤0.4 K） |
 | AI 作业 | `ai_workloads.py` | 作业类型、GPU、功率上限、结构温度 → MFU/吞吐/实际功耗 | 数据手册算力表 + 类型化作业目录；**混插舱按卡型分组**，每组自成理想 TP 组、整星按组求和（`state_engine._bay_job_detail`，同构舱严格退化为单组算术） |
 | LLM 推理 | `llm_perf.py` | 模型/批量/上下文、功率热约束 → 频率、tok/s、结温 | DVFS 聚合 + decode 访存下限 + 热节流耦合（V100 实测校准） |
 
-三个验证器守住物理正确性：`validate_physics.py`（整轨 9 项）、`validate_llm_perf.py`（理论 52 项）、`validate_llm_engine.py`（闭环 32 项）。
+六个验证器 + 一条 STK 对标管线守住物理正确性：`validate_physics.py`（整轨 6 预设×9 项）、`validate_llm_perf.py`（理论 52 项）、`validate_llm_engine.py`（闭环 32 项）、`validate_attitude_solar.py`（姿态-发电 16 项）、`validate_compare.py`（锁步+第一性定律 14 项）、`validate_elements.py`（根数层 27 项）、`tools/stk_benchmark/`（对 STK 11.6 真值 51 项）。
 
 ### 3.2 模型标准接口
 

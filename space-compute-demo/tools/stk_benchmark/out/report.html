@@ -239,8 +239,8 @@ ul { padding-left: 22px; } li { margin: 4px 0; max-width: 74ch; }
 <div class="tblwrap"><table>
   <thead><tr><th>#</th><th>集成项</th><th>NTU 来源</th><th>给引擎带来什么</th><th>依赖成本</th></tr></thead>
   <tbody>
-    <tr><td>1</td><td><strong>根数层 OE↔RV</strong>（含圆/赤道/逆行奇异约定）</td><td><code>orbits/elements.py</code>（140 行，纯 numpy）</td><td>引擎目前只有 TLE/TEME 视图；补上"六要素视图/编辑"，轨道设计器可显示实时密切根数</td><td><span class="pass">零</span>（可改纯 math）</td></tr>
-    <tr><td>2</td><td><strong>电池片 η(T) 温度系数</strong>（−0.4%/K）</td><td><code>power.py:40-47</code>（4 行）</td><td>替换硬编码 <code>_POINTING_EFF=0.95</code> 中的温度损耗部分，把已修好的热模型与发电功率闭环——散热板差→板温高→发电降</td><td><span class="pass">零</span></td></tr>
+    <tr><td>1 ✅</td><td><strong>根数层 OE↔RV</strong>（已落地：services/elements.py + 广播 orbital_elements，validate_elements 27 项全过）（含圆/赤道/逆行奇异约定）</td><td><code>orbits/elements.py</code>（140 行，纯 numpy）</td><td>引擎目前只有 TLE/TEME 视图；补上"六要素视图/编辑"，轨道设计器可显示实时密切根数</td><td><span class="pass">零</span>（可改纯 math）</td></tr>
+    <tr><td>2 ✅</td><td><strong>电池片 η(T) 温度系数</strong>（已落地：逐材料 k 接入发电公式，validate_compare 太阳定律端到端验证）（−0.4%/K）</td><td><code>power.py:40-47</code>（4 行）</td><td>替换硬编码 <code>_POINTING_EFF=0.95</code> 中的温度损耗部分，把已修好的热模型与发电功率闭环——散热板差→板温高→发电降</td><td><span class="pass">零</span></td></tr>
     <tr><td>3</td><td><strong>接入窗口亚秒求根</strong>（三次 Hermite 插值 + 区间求根）</td><td><code>access.py:126-306</code> 方法论</td><td>把窗口边界从采样网格精度提到 0.01 s 级（NTU AC-002 判据），且可完全去 scipy 化（~150 行）</td><td>低</td></tr>
     <tr><td>4</td><td><strong>J2 / 二体解析传播 + 大气阻力表</strong></td><td><code>orbits/propagation.py</code> · <code>forces.py</code>（J2 闭式 5 行、28 段指数大气）</td><td>脱离 TLE 的假想轨道推演与轨道衰减演示；J2 长期项可修正自定义设计的合成 TLE 偏差</td><td>低-中（DOP853 可换定步长 RK4）</td></tr>
     <tr><td>5</td><td><strong>EGM2008 70×70 HPOP + 三体 + EOP</strong></td><td><code>gravity.py</code>（ICGEM 解析纯 numpy）+ astropy 系</td><td>研究级精度基准。计算量（毫秒级/次求导）与 astropy 依赖不匹配 1 Hz×1500 星主循环——建议做成<strong>离线参考星历服务</strong>（与 What-if 对比同型的旁路架构），不进 tick</td><td>高（astropy+scipy）</td></tr>
@@ -251,7 +251,7 @@ ul { padding-left: 22px; } li { margin: 4px 0; max-width: 74ch; }
   <li><strong>可直接复用为回归金标准</strong>：NTU 测试集内置 Vallado SGP4 官方验证向量（位置断言 2 cm）与"解析太阳 vs 星历 &lt;0.05°"断言，可零依赖并入我们的 geodyn 回归。</li>
   <li><strong>姿态动力学</strong>（四元数刚体欧拉方程）可为动量轮/自由翻滚显示提供真动力学，替代现在的 display-only 角速度；需去 scipy 化（~40 行手写四元数）。</li>
   <li><strong>注意</strong>：NTU 的 <code>Ephemeris/OrbitState</code> 冻结数据类构造时强制校验+拷贝数组，1 Hz×1500 星路径不可直接套用，搬运时保留公式、剥离容器。</li>
-  <li>本次对标已按 NTU 测试报告执行并达标的用例：OD-003（SGP4）、CV-003（坐标转换）、SE-001/003/004/005（太阳/β/强度/功率）、AC-001（接入传播）。仍未执行的：OD-001/002/004（二体/J2/HPOP——待集成项 4/5 落地后按同一管线补测）、AD-001/002（姿态）、SE-002/006（星历太阳/SRP）、AC-002（接入插值——集成项 3）。</li>
+  <li>本次对标已按 NTU 测试报告执行并达标的用例：OD-003（SGP4）、CV-003（坐标转换）、SE-001/003/004/005（太阳/β/强度/功率）、AC-001（接入传播）。CV-001/002（OE↔RV）已由 validate_elements 按其判据执行通过。仍未执行的：OD-001/002/004（二体/J2/HPOP——待集成项 4/5 落地后按同一管线补测）、AD-001/002（姿态）、SE-002/006（星历太阳/SRP）、AC-002（接入插值——集成项 3）。</li>
 </ul>
 
 <h2><span class="no">07</span>复跑方法</h2>

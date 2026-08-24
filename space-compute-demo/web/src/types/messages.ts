@@ -92,12 +92,28 @@ export interface WorkloadProfileInfo {
   jobs: string[];
 }
 
+/** Mirror of backend models.OrbitalElements — live osculating elements. */
+export interface OrbitalElements {
+  semi_major_axis_km: number;
+  eccentricity: number;
+  inclination_deg: number;
+  raan_deg: number;
+  arg_periapsis_deg: number;
+  true_anomaly_deg: number;
+  period_s: number;
+  apogee_alt_km: number;
+  perigee_alt_km: number;
+}
+
 export interface SatelliteState {
   id: string;
   orbit_type: OrbitType;
   lat: number;
   lon: number;
   altitude_km: number;
+  /** Live osculating classical elements from the tracked SGP4 state
+   *  (deg on the wire; singular cases resolved, never NaN). */
+  orbital_elements?: OrbitalElements | null;
   sunlit: boolean;
   /** Normalised solar incidence 0..1 (0 = eclipse, 1 = solar noon). */
   sun_factor?: number;

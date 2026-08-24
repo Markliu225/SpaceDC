@@ -74,7 +74,12 @@ def main() -> int:
 
     means = {}
     for mode in ("free", "sun", "nadir", "velocity", "inertial"):
-        rows = sample_mode(mode, WIN)
+        # velocity's ram-vector incidence sweeps its full range only over a
+        # complete orbit (~93 s wall at 60x); a fractional-orbit window can
+        # land on the v.s plateau and read an artificially small swing, so
+        # sample velocity for a full revolution to keep the check
+        # phase-independent.
+        rows = sample_mode(mode, WIN * 3.2 if mode == "velocity" else WIN)
         L = lit(rows)
         eclipse = [r for r in rows if not r["sunlit"]]
         incs = [r["inc"] for r in L]

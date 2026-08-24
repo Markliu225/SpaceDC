@@ -23,6 +23,7 @@ from models import (
     GroundStationState,
     GroundTargetState,
     MissionState,
+    OrbitalElements,
     SolarHistBin,
     Mode,
     Parameters,
@@ -38,6 +39,7 @@ import satellite_assets as _assets
 from services import orbit_catalog
 from services import constellations as _consts
 from services import geodyn as _geodyn
+from services import elements as _elements
 
 TICK_HZ = 1.0
 
@@ -101,11 +103,24 @@ _MAX_GPU_SLOTS = 24
 # ~10 % of this curve.
 _IDLE_FRAC = 0.15
 
+# Cell efficiency is quoted at the 25 °C reference; the per-material power
+# temperature coefficient (fraction/K, all negative) derates it as the
+# structure warms — standard datasheet behavior (Si ≈ −0.45 %/K,
+# triple-junction GaAs ≈ −0.20 %/K, perovskite lab cells ≈ −0.30 %/K).
 _SOLAR_MAT_TABLE = {
-    "Si":         {"efficiency": 0.22, "density_kg_m2": 2.5},
-    "GaAs":       {"efficiency": 0.32, "density_kg_m2": 3.0},
-    "Perovskite": {"efficiency": 0.38, "density_kg_m2": 1.8},
+    "Si":         {"efficiency": 0.22, "temp_coeff_per_k": -0.0045, "density_kg_m2": 2.5},
+    "GaAs":       {"efficiency": 0.32, "temp_coeff_per_k": -0.0020, "density_kg_m2": 3.0},
+    "Perovskite": {"efficiency": 0.38, "temp_coeff_per_k": -0.0030, "density_kg_m2": 1.8},
 }
+_SOLAR_TEMP_REF_C = 25.0
+
+
+def _solar_temp_factor(s_mat: dict, temp_c: float) -> float:
+    """η(T)/η_ref — linear datasheet derating around the 25 °C reference
+    (NTU power.py convention), clamped to a physical band so an extreme
+    cold excursion can't produce runaway efficiency."""
+    k = s_mat.get("temp_coeff_per_k", -0.0045)
+    return max(0.0, min(1.25, 1.0 + k * (temp_c - _SOLAR_TEMP_REF_C)))
 _SOLAR_SIZE_TABLE = {
     "S":  {"area_m2_per_panel": 4.0,  "panel_count": 2},
     "M":  {"area_m2_per_panel": 8.0,  "panel_count": 2},
@@ -1187,6 +1202,26 @@ class StateEngine:
         self._sat.lon = lon
         self._sat.altitude_km = alt
 
+        # Live osculating classical elements from the same SGP4 state the
+        # display flies (NTU OE/RV layer — services/elements.py). Cheap
+        # closed-form; None on degenerate states (sgp4 error sentinel).
+        try:
+            oe = _elements.rv_to_oe(pos_km, self._tracked_vel_km_s)
+            a = oe["a_km"]
+            self._sat.orbital_elements = OrbitalElements(
+                semi_major_axis_km=a,
+                eccentricity=oe["e"],
+                inclination_deg=math.degrees(oe["inc_rad"]),
+                raan_deg=math.degrees(oe["raan_rad"]),
+                arg_periapsis_deg=math.degrees(oe["argp_rad"]),
+                true_anomaly_deg=math.degrees(oe["nu_rad"]),
+                period_s=_elements.period_s(a),
+                apogee_alt_km=a * (1.0 + oe["e"]) - _geodyn.WGS84_A_KM,
+                perigee_alt_km=a * (1.0 - oe["e"]) - _geodyn.WGS84_A_KM,
+            )
+        except (ValueError, ZeroDivisionError):
+            self._sat.orbital_elements = None
+
         # Real Sun + conical Earth-shadow geometry (STK-benchmarked): analytic
         # Sun at the absolute epoch (demo epoch + t × TIME_SCALE), visible
         # solar-disc fraction through umbra/penumbra, and true solar
@@ -1291,6 +1326,7 @@ class StateEngine:
         self._sat.solar_incidence = incidence
         solar_w = (s_mat["efficiency"] * _solar_area_m2(self._twin_geometry)
                    * self._solar_s_w_m2 * incidence * self._solar_illum
+                   * _solar_temp_factor(s_mat, self._sat.temperature_c)
                    * self._sat.solar_deploy_frac)
         self._sat.solar_input_w = solar_w
         self._sat.battery_charge_w = solar_w - (self._sat.payload_power_w
@@ -1464,10 +1500,15 @@ class StateEngine:
             frac = max(self._solar_deploy_target, frac - step)
         self._sat.solar_deploy_frac = frac
         # True irradiance at the current Earth-Sun distance × the visible
-        # solar-disc fraction (0 in umbra, partial through the penumbra).
+        # solar-disc fraction (0 in umbra, partial through the penumbra)
+        # × the cell's η(T) datasheet derating at the structure temperature
+        # (single-node model: the panels share the bus temperature) — a hot
+        # satellite now genuinely generates less, closing the thermal→power
+        # loop alongside the thermal→compute one.
         self._sat.solar_input_w = (
             s_mat["efficiency"] * panel_area_m2 * self._solar_s_w_m2
-            * incidence * self._solar_illum * frac
+            * incidence * self._solar_illum
+            * _solar_temp_factor(s_mat, self._sat.temperature_c) * frac
         )
 
         # --- Workload-driven GPU utilization ----------------------------------

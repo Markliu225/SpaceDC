@@ -18,7 +18,8 @@ B. FIRST-PRINCIPLES RE-DERIVATION — treating the broadcast variant samples
      thermal:  T' = T + ((P_load+P_plat)*0.95 + Q_env
                          - eps*sigma*A_rad*T_K^4)*60/160000
      battery:  SOC' = SOC + eff_chg(P_solar - P_load - P_plat)*60/(E_batt*3600)
-     solar:    P_solar = eta*A_solar*S_eff*0.95 while sunlit (free/SADA mode)
+     solar:    P_solar = eta*A_solar*S_eff*0.95*(1+k*(T-25)) while sunlit
+               (free/SADA mode; k = cell temperature coefficient, Si -0.45%/K)
      EPS cap:  P_load <= N*TDP*(0.15+0.85*util)  (equality on the MFU path)
    A mismatch would mean the live modules do not implement the documented
    physics. Run: backend/.venv/Scripts/python tools/validate_compare.py
@@ -43,6 +44,7 @@ R_EARTH_TH = 6371.0
 EMISSIVITY = {"Aluminum": 0.10, "WhitePaint": 0.85, "OSR": 0.92, "Graphite": 0.96}
 ALPHA = {"Aluminum": 0.25, "WhitePaint": 0.25, "OSR": 0.08, "Graphite": 0.90}
 EFF_SI = 0.22
+SOLAR_TEMP_COEFF_SI = -0.0045   # fraction/K around the 25 C reference
 BATT_EFF_LIION = 0.95
 H100_TDP = 700.0
 DEMO_JD = 2460545.0  # 2024-08-22 12:00:00 UTC — engine demo epoch
@@ -195,8 +197,11 @@ def main() -> int:
     for t in usable:
         v = by_elapsed[t]["compare_live"]["variants"][0]
         if v["solar_input_w"] > 1.0:
+            temp_factor = max(0.0, min(1.25, 1.0 + SOLAR_TEMP_COEFF_SI
+                                       * (v["temperature_c"] - 25.0)))
             peak_expected = (EFF_SI * a_solar
-                             * s_eff_w_m2(by_elapsed[t]["sim_time_s"]) * 0.95)
+                             * s_eff_w_m2(by_elapsed[t]["sim_time_s"])
+                             * 0.95 * temp_factor)
             worst_sun = max(worst_sun, abs(v["solar_input_w"] - peak_expected) / peak_expected)
             n_sun += 1
         cap = n_gpu * H100_TDP * (0.15 + 0.85 * v["gpu_utilization"])

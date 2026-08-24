@@ -120,7 +120,11 @@ def main():
             sunlit = illum >= 0.5
             inten_rows.append([t, 1 if sunlit else 0, illum])
 
-            # state_engine solar input: η·A·S_eff·incidence·illum (frac=1)
+            # state_engine solar input: η·A·S_eff·incidence·illum, evaluated
+            # at the 25 °C reference temperature (η_T = 1) — the benchmark
+            # isolates the ORBIT-GEOMETRY chain; the η(T) derating is
+            # verified end-to-end against the live engine by
+            # tools/validate_compare.py's solar law instead.
             base = cases.SOLAR_EFFICIENCY * cases.SOLAR_AREA_M2 * s_eff
             inc_sun = 1.0 if sunlit else 0.0
             inc_nadir = max(0.0, cos_a) if sunlit else 0.0
