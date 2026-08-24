@@ -37,6 +37,7 @@ import ai_workloads as _ai
 import satellite_assets as _assets
 from services import orbit_catalog
 from services import constellations as _consts
+from services import geodyn as _geodyn
 
 TICK_HZ = 1.0
 
@@ -112,11 +113,14 @@ _SOLAR_SIZE_TABLE = {
     "XL": {"area_m2_per_panel": 16.0, "panel_count": 4},
 }
 
+# Radiator coatings: ε (IR emission) + α (solar absorption) — the α/ε ratio
+# is the core thermal-control design number. Values are standard coating data
+# (bare aluminum, S13G-class white paint, quartz OSR, graphite/black).
 _RAD_MAT_TABLE = {
-    "Aluminum":   {"emissivity": 0.10, "density_kg_m2": 4.0},
-    "WhitePaint": {"emissivity": 0.85, "density_kg_m2": 4.4},
-    "OSR":        {"emissivity": 0.92, "density_kg_m2": 4.6},
-    "Graphite":   {"emissivity": 0.96, "density_kg_m2": 3.6},
+    "Aluminum":   {"emissivity": 0.10, "absorptivity": 0.25, "density_kg_m2": 4.0},
+    "WhitePaint": {"emissivity": 0.85, "absorptivity": 0.25, "density_kg_m2": 4.4},
+    "OSR":        {"emissivity": 0.92, "absorptivity": 0.08, "density_kg_m2": 4.6},
+    "Graphite":   {"emissivity": 0.96, "absorptivity": 0.90, "density_kg_m2": 3.6},
 }
 _RAD_SIZE_TABLE = {
     "Compact":  {"area_m2_per_panel": 1.0},
@@ -284,6 +288,20 @@ _SOLAR_CONSTANT_W_M2 = 1361.0
 # what the simulation actually delivers.
 _POINTING_EFF    = 0.95
 _SUNLIT_FRACTION = 0.5
+
+
+def _thermal_env_in_w(alpha: float, epsilon: float, area_m2: float,
+                      r_km: float, s_w_m2: float, illum: float,
+                      cos_zen: float) -> float:
+    """Environmental heat absorbed by the radiating surfaces (W): direct
+    solar on the convex-body mean projected area (A/4), Earth albedo and
+    Earth IR through the Earth-disc view factor. Mirrors the STK SEET
+    isothermal model (benchmarked to <0.2 K in eclipse segments)."""
+    f = _geodyn.earth_view_factor(max(r_km, _geodyn.R_EARTH_THERMAL_KM))
+    q_sun = alpha * s_w_m2 * illum * (area_m2 / 4.0)
+    q_alb = alpha * _geodyn.EARTH_ALBEDO * s_w_m2 * area_m2 * f * max(0.0, cos_zen)
+    q_ir = epsilon * _geodyn.EARTH_IR_W_M2 * area_m2 * f
+    return q_sun + q_alb + q_ir
 
 # --- Deployable-geometry areas (Feature 4) --------------------------------
 # Mirror tools/gen_twin_satellite.py: a solar "cluster" is a 2×2 grid filling
@@ -483,6 +501,12 @@ def _gpu_workload_util(t: float, profile_id: str) -> tuple[float, str]:
 
 
 class StateEngine:
+    # Sun/eclipse state refreshed by _set_tracked_kinematics each tick; the
+    # class-level defaults only cover reads before the first tick.
+    _sun_unit_eci: tuple[float, float, float] = _SUN_UNIT
+    _solar_illum: float = 1.0
+    _solar_s_w_m2: float = _SOLAR_CONSTANT_W_M2
+
     def __init__(self, on_state: Callable[[StatePacket], Any]):
         self._on_state = on_state
         self._sim_time_s: float = 0.0
@@ -803,9 +827,18 @@ class StateEngine:
         supply_avg_w = peak_solar_w * _POINTING_EFF * _SUNLIT_FRACTION
 
         thermal_peak_w = (_peak_card_watts(groups) + platform_w) * 0.95
-        SIGMA, T_BG_K = 5.67e-8, 250.0
-        thermal_emit_w = (r_mat["emissivity"] * SIGMA * _radiator_area_m2(geom)
-                          * ((333.15) ** 4 - T_BG_K ** 4))
+        # Same emission-ceiling model as the live design check: capacity at
+        # +60 °C minus the worst-case environmental load (full sun, subsolar).
+        SIGMA = 5.67e-8
+        rad_area = _radiator_area_m2(geom)
+        r_km = (math.sqrt(sum(c * c for c in self._sat.sat_xyz_km))
+                or (_geodyn.WGS84_A_KM + 550.0))
+        q_env_worst = _thermal_env_in_w(
+            r_mat.get("absorptivity", 0.25), r_mat["emissivity"], rad_area,
+            r_km, self._solar_s_w_m2, 1.0, 1.0)
+        thermal_emit_w = max(
+            0.0,
+            r_mat["emissivity"] * SIGMA * rad_area * (333.15) ** 4 - q_env_worst)
 
         # Demand side: the shared schedule-average (per-block analytic
         # realized draw for LLM blocks at the 25 °C no-throttle baseline) —
@@ -1154,16 +1187,26 @@ class StateEngine:
         self._sat.lon = lon
         self._sat.altitude_km = alt
 
-        # Sunlit: in scene the sun direction is fixed in inertial frame at
-        # azimuth -45° / elevation +23.5°. The satellite is in sunlight when
-        # its position dotted with the sun direction is positive.
-        sun_dx, sun_dy, sun_dz = 0.648, -0.648, 0.398
+        # Real Sun + conical Earth-shadow geometry (STK-benchmarked): analytic
+        # Sun at the absolute epoch (demo epoch + t × TIME_SCALE), visible
+        # solar-disc fraction through umbra/penumbra, and true solar
+        # irradiance at the current Earth-Sun distance.
+        scaled_t = t * orbit_catalog.TIME_SCALE
+        jd = orbit_catalog.DEMO_JD0 + orbit_catalog.DEMO_FR0 + scaled_t / 86400.0
+        sun_km, r_au = _geodyn.sun_teme(jd)
+        sn = math.sqrt(sun_km[0] ** 2 + sun_km[1] ** 2 + sun_km[2] ** 2) or 1.0
+        self._sun_unit_eci = (sun_km[0] / sn, sun_km[1] / sn, sun_km[2] / sn)
+        self._solar_s_w_m2 = _SOLAR_CONSTANT_W_M2 / (r_au * r_au)
+        illum = _geodyn.sun_visible_fraction((x_km, y_km, z_km), sun_km)
+        self._solar_illum = illum
+        self._sat.solar_illum = illum
         r_norm = max(1e-6, math.sqrt(x_km * x_km + y_km * y_km + z_km * z_km))
-        cos_a = (x_km * sun_dx + y_km * sun_dy + z_km * sun_dz) / r_norm
-        self._sat.sunlit = cos_a > -0.05  # tiny dawn/dusk margin
+        cos_a = (x_km * self._sun_unit_eci[0] + y_km * self._sun_unit_eci[1]
+                 + z_km * self._sun_unit_eci[2]) / r_norm
+        self._sat.sunlit = illum >= 0.5  # majority of the solar disc visible
         # Normalised incidence for the Kit Sun driver — 0 in eclipse, 1 at
         # solar noon. Same cos_a the solar-input model uses.
-        self._sat.sun_factor = max(0.0, cos_a)
+        self._sat.sun_factor = max(0.0, cos_a) if self._sat.sunlit else 0.0
         # Raw zenith→sun cosine for the Kit sun-direction driver (see
         # models.SatelliteState.sun_cos). Dawn-dusk rides the terminator, so
         # its sun sits broadside on the horizon (cos ≈ 0).
@@ -1176,6 +1219,8 @@ class StateEngine:
             self._sat.sunlit = True
             self._sat.sun_factor = 1.0
             self._sat.sun_cos = 0.0
+            self._solar_illum = 1.0
+            self._sat.solar_illum = 1.0
         return cos_a
 
     def _solar_incidence(self) -> float:
@@ -1212,7 +1257,7 @@ class StateEngine:
             n = _unit(_cross(sat.sat_xyz_km, self._tracked_vel_km_s))
         else:
             n = r
-        return max(0.0, _dot(n, _SUN_UNIT))
+        return max(0.0, _dot(n, self._sun_unit_eci))
 
     def _refresh_display_kinematics(self) -> None:
         """Refresh the tracked satellite's position-derived fields at the
@@ -1245,7 +1290,7 @@ class StateEngine:
         incidence = self._solar_incidence()
         self._sat.solar_incidence = incidence
         solar_w = (s_mat["efficiency"] * _solar_area_m2(self._twin_geometry)
-                   * _SOLAR_CONSTANT_W_M2 * incidence
+                   * self._solar_s_w_m2 * incidence * self._solar_illum
                    * self._sat.solar_deploy_frac)
         self._sat.solar_input_w = solar_w
         self._sat.battery_charge_w = solar_w - (self._sat.payload_power_w
@@ -1323,7 +1368,7 @@ class StateEngine:
         fleet_pos_km = _consts.propagate_fleet(preset, t)
         # Tracked satellite's velocity (for the attitude/solar geometry).
         _p, self._tracked_vel_km_s = _consts.propagate_tracked_rv(preset, t)
-        kpis = _consts.synthesize_kpis(preset, fleet_pos_km)
+        kpis = _consts.synthesize_kpis(preset, fleet_pos_km, t)
         self._fleet_snapshot = FleetSnapshot(
             constellation_id=preset.id,
             name=preset.name,
@@ -1368,6 +1413,7 @@ class StateEngine:
                 fleet_pos_km, fleet_lla, gt.lat, gt.lon,
                 gt.min_elevation_deg, gt.band_mbps_per_sat,
                 solar_peak_w, gt.solar_bin,
+                sun_unit=_consts.sun_unit_at(t),
             )
             gt.visible_sats = a["visible_sats"]
             gt.best_elevation_deg = a["best_elevation_deg"]
@@ -1417,9 +1463,11 @@ class StateEngine:
         elif frac > self._solar_deploy_target:
             frac = max(self._solar_deploy_target, frac - step)
         self._sat.solar_deploy_frac = frac
+        # True irradiance at the current Earth-Sun distance × the visible
+        # solar-disc fraction (0 in umbra, partial through the penumbra).
         self._sat.solar_input_w = (
-            s_mat["efficiency"] * panel_area_m2 * _SOLAR_CONSTANT_W_M2
-            * incidence * frac
+            s_mat["efficiency"] * panel_area_m2 * self._solar_s_w_m2
+            * incidence * self._solar_illum * frac
         )
 
         # --- Workload-driven GPU utilization ----------------------------------
@@ -1483,14 +1531,21 @@ class StateEngine:
         self._sat.battery_soc = max(0.0, min(1.0, self._sat.battery_soc + d_soc))
 
         # --- Thermal (Stefan-Boltzmann, accelerated 60x) ----------------------
-        # Heat in = electrical power dissipated as heat (≈ payload + platform
-        # minus a small fraction that leaves as RF — call it 5%).
+        # Heat in = electrical dissipation (payload + platform minus ~5% RF)
+        # PLUS the orbital environment: direct solar absorption (coating α),
+        # Earth albedo and Earth IR — so the temperature now swings with the
+        # eclipse cycle like the STK SEET reference instead of sitting on a
+        # fixed 250 K background.
         SIGMA = 5.67e-8             # W/m²K⁴ Stefan-Boltzmann
-        T_BG_K = 250.0              # effective deep-space + Earth IR background
         epsilon = r_mat["emissivity"]
+        alpha = r_mat.get("absorptivity", 0.25)
         T_K = self._sat.temperature_c + 273.15
-        Q_in = (payload_w + platform_w) * 0.95
-        Q_out = epsilon * SIGMA * radiator_area_m2 * (T_K**4 - T_BG_K**4)
+        r_km = math.sqrt(sum(c * c for c in self._sat.sat_xyz_km)) or _geodyn.WGS84_A_KM
+        q_env = _thermal_env_in_w(alpha, epsilon, radiator_area_m2, r_km,
+                                  self._solar_s_w_m2, self._solar_illum,
+                                  self._sat.sun_cos)
+        Q_in = (payload_w + platform_w) * 0.95 + q_env
+        Q_out = epsilon * SIGMA * radiator_area_m2 * T_K**4
         self._sat.radiator_power_w = max(0.0, Q_out)
         # Thermal mass — typical 200 kg sat with aluminum/structures: c_p ~ 800
         # J/kg·K, mass ~ 200 kg → 160 kJ/K. Picked here for legible dynamics.
@@ -1501,8 +1556,17 @@ class StateEngine:
         self._sat.temperature_c = max(-80.0, min(95.0, T_K_new - 273.15))
 
         # --- Downlink ---------------------------------------------------------
-        self._gs.visible = math.sin(t / 30.0) > 0.4
-        self._sat.downlink_mbps = 120.0 if self._gs.visible else 0.0
+        # Real elevation-mask geometry against the configured ground target
+        # (default Singapore / X-band) — replaces the sin(t/30) placeholder.
+        gt = self._ground_target
+        gs_lat = gt.lat if gt is not None else 1.3521
+        gs_lon = gt.lon if gt is not None else 103.8198
+        gs_mask = gt.min_elevation_deg if gt is not None else 10.0
+        gs_mbps = gt.band_mbps_per_sat if gt is not None else 150.0
+        elev = _consts.elevation_deg(self._sat.lat, self._sat.lon,
+                                     self._sat.altitude_km, gs_lat, gs_lon)
+        self._gs.visible = elev >= gs_mask
+        self._sat.downlink_mbps = gs_mbps if self._gs.visible else 0.0
         self._gs.rx_mbps = self._sat.downlink_mbps
 
         # --- Design check (solar supply vs avg demand; thermal headroom) ------
@@ -1523,9 +1587,15 @@ class StateEngine:
 
         # Thermal peak demand: worst case is sustained 100 % workload.
         thermal_peak_demand_w = (_peak_card_watts(groups) + platform_w) * 0.95
-        # Thermal supply: emit at the +60 °C safe-operating ceiling.
+        # Thermal supply: emission capacity at the +60 °C safe-operating
+        # ceiling minus the worst-case environmental load (full sun, subsolar
+        # albedo) — same flux model the per-tick integration uses.
         T_max_K = 60.0 + 273.15
-        thermal_max_emit_w = epsilon * SIGMA * radiator_area_m2 * (T_max_K**4 - T_BG_K**4)
+        q_env_worst = _thermal_env_in_w(alpha, epsilon, radiator_area_m2, r_km,
+                                        self._solar_s_w_m2, 1.0, 1.0)
+        thermal_max_emit_w = max(
+            0.0,
+            epsilon * SIGMA * radiator_area_m2 * T_max_K**4 - q_env_worst)
 
         self._sat.solar_demand_avg_w    = solar_demand_avg_w
         self._sat.solar_supply_avg_w    = solar_supply_avg_w

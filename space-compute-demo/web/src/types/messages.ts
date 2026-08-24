@@ -101,6 +101,9 @@ export interface SatelliteState {
   sunlit: boolean;
   /** Normalised solar incidence 0..1 (0 = eclipse, 1 = solar noon). */
   sun_factor?: number;
+  /** Visible fraction of the solar disc (conical umbra/penumbra model):
+   *  1 full sun · 0 umbra · smooth 0..1 through the penumbra. */
+  solar_illum?: number;
   solar_input_w: number;
   /** Attitude-dependent panel-normal·Sun incidence 0..1 (sun-pointing ≈ 1;
    *  a body-fixed nadir/ram/inertial array projects geometrically). */

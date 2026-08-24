@@ -171,30 +171,22 @@ def sample_orbit(mode: str, n_points: int = 128) -> list[tuple[float, float, flo
 # ---------------------------------------------------------------------------
 # Lat/lon/altitude helper — used by SatelliteState so the existing 14
 # parameter cards (LAT / LON / ALTITUDE) keep working with real positions.
-# Uses a quick ECI → ECEF approximation (skipping precession/nutation) plus
-# a simple ECEF → geodetic conversion. Good enough for the demo's display
-# — not for navigation work.
+# TEME → ECEF by true GMST at the demo epoch + scaled time, then WGS-84
+# geodetic latitude/altitude (STK-benchmarked: ≤0.006° / ≤0.06 km against
+# STK 11 LLA State — see tools/stk_benchmark).
 # ---------------------------------------------------------------------------
 EARTH_RADIUS_KM = 6378.137  # WGS-84 equatorial radius
 
+from . import geodyn  # noqa: E402  (after constants — avoids cycle at import)
+
 
 def eci_to_lat_lon_alt(x_km: float, y_km: float, z_km: float, sim_t_s: float) -> tuple[float, float, float]:
-    """Approximate (lat_deg, lon_deg, alt_km). Uses GMST-rotation for ECI->ECEF
-    so the sub-point reflects Earth's spin."""
-    # GMST in radians at demo epoch + sim_t_s (scaled). 86164.0905 s = sidereal day.
+    """(lat_deg, lon_deg, alt_km) — geodetic WGS-84 sub-point at the real
+    absolute epoch (DEMO_EPOCH + sim_t_s × TIME_SCALE)."""
     scaled = sim_t_s * TIME_SCALE
-    omega_earth = 2.0 * math.pi / 86164.0905
-    gmst = (omega_earth * scaled) % (2.0 * math.pi)
-    cos_g, sin_g = math.cos(gmst), math.sin(gmst)
-    # Rotate ECI by -GMST around Z to get ECEF.
-    xe =  cos_g * x_km + sin_g * y_km
-    ye = -sin_g * x_km + cos_g * y_km
-    ze = z_km
-    r_xy = math.hypot(xe, ye)
-    lon = math.degrees(math.atan2(ye, xe))
-    # Wrap to [-180, 180].
+    jd = DEMO_JD0 + DEMO_FR0 + scaled / 86400.0
+    xe, ye, ze = geodyn.teme_to_ecef(x_km, y_km, z_km, jd)
+    lat, lon, alt = geodyn.ecef_to_geodetic(xe, ye, ze)
     if lon > 180:  lon -= 360
     if lon < -180: lon += 360
-    lat = math.degrees(math.atan2(ze, r_xy))
-    alt = math.hypot(r_xy, ze) - EARTH_RADIUS_KM
     return lat, lon, alt

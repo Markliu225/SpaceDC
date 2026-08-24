@@ -94,6 +94,12 @@ class SatelliteState(BaseModel):
     # and the sub-solar direction)). 0 in eclipse, 1 at solar noon. Drives
     # the satellite-stage Sun light INTENSITY in Kit.
     sun_factor: float = 1.0
+    # Visible fraction of the solar disc (conical umbra/penumbra model):
+    # 1 full sun · 0 umbra · smooth 0..1 through the penumbra. This is the
+    # exact factor the solar-power and thermal models consume (sunlit is
+    # just solar_illum >= 0.5), broadcast so validators/UI can re-derive
+    # the physics without re-running the shadow geometry.
+    solar_illum: float = 1.0
     # Raw cosine of the zenith→sun angle (−1..1, unclamped — negative in
     # eclipse). Under the yaw-steering attitude the sun always sits in the
     # satellite's X-Z plane, so this single number fixes the full sun

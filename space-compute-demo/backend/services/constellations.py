@@ -26,6 +26,8 @@ from typing import Optional
 
 from sgp4.api import Satrec, jday
 
+from . import geodyn
+
 
 # ---------------------------------------------------------------------------
 # Demo time scale (shared with orbit_catalog so single-sat demos keep the
@@ -381,15 +383,11 @@ def preset_elements(preset: ConstellationPreset) -> dict:
 # ---------------------------------------------------------------------------
 def elevation_deg(sat_lat: float, sat_lon: float, sat_alt_km: float,
                   gs_lat: float, gs_lon: float) -> float:
-    p1 = math.radians(gs_lat)
-    p2 = math.radians(sat_lat)
-    dl = math.radians(sat_lon - gs_lon)
-    cos_psi = (math.sin(p1) * math.sin(p2)
-               + math.cos(p1) * math.cos(p2) * math.cos(dl))
-    cos_psi = max(-1.0, min(1.0, cos_psi))
-    psi = math.acos(cos_psi)
-    rho = EARTH_RADIUS_KM / (EARTH_RADIUS_KM + max(1.0, sat_alt_km))
-    return math.degrees(math.atan2(cos_psi - rho, math.sin(psi)))
+    """Geodetic elevation via WGS-84 ECEF vectors (replaces the earlier
+    spherical-Earth central-angle formula; STK-benchmarked to seconds-level
+    access-window agreement)."""
+    sat_ecef = geodyn.geodetic_to_ecef(sat_lat, sat_lon, sat_alt_km)
+    return geodyn.elevation_from_ecef(sat_ecef, gs_lat, gs_lon, 0.0)
 
 
 # ---------------------------------------------------------------------------
@@ -422,6 +420,7 @@ def ground_analytics(
     per_sat_mbps: float,
     solar_peak_w: float,
     solar_bin: int,
+    sun_unit: tuple[float, float, float] | None = None,
 ) -> dict:
     """Per-tick ground-station analytics over the whole fleet (positions +
     sub-points already computed by the caller). Returns visibility, aggregate
@@ -431,8 +430,10 @@ def ground_analytics(
     Solar intensity is the illumination geometry factor 0..100 =
     100·max(0, r̂·ŝ) — a satellite at the subsolar point reads 100, at the
     terminator/night 0 — a visualization metric independent of the physics
-    array model. Binned by `solar_bin` (5 or 10)."""
-    sx, sy, sz = SUN_DIR_ECI
+    array model. Binned by `solar_bin` (5 or 10). `sun_unit` should be the
+    real Sun direction for the current tick (sun_unit_at); the fixed scene
+    light remains only as a fallback."""
+    sx, sy, sz = sun_unit if sun_unit is not None else SUN_DIR_ECI
     cdf = [0] * len(_CDF_MASKS)
     visible: list[int] = []
     best = -90.0
@@ -560,10 +561,17 @@ def get_preset(preset_id: str) -> Optional[ConstellationPreset]:
 # ---------------------------------------------------------------------------
 # Per-tick fleet propagation + KPI synthesis.
 # ---------------------------------------------------------------------------
-# Sun direction in ECI used to flag eclipse-side sats. Matches the +X
-# azimuth -45°, +23.5° elevation choice the USD overview stage uses for the
-# directional light.
+# Legacy fixed sun direction — kept ONLY as a fallback for callers that
+# cannot supply a time (the USD overview stage's directional light). All
+# physics paths now pass the real analytic Sun (geodyn.sun_unit_and_flux).
 SUN_DIR_ECI = (0.648, -0.648, 0.398)
+
+
+def sun_unit_at(sim_t_s: float) -> tuple[float, float, float]:
+    """Real unit Sun direction (TEME) at demo epoch + sim_t_s × TIME_SCALE."""
+    jd = DEMO_JD0 + DEMO_FR0 + (sim_t_s * TIME_SCALE) / 86400.0
+    unit, _flux = geodyn.sun_unit_and_flux(jd)
+    return unit
 
 
 def propagate_tracked(preset: ConstellationPreset, sim_t_s: float) -> tuple[float, float, float]:
@@ -608,8 +616,21 @@ def propagate_fleet(preset: ConstellationPreset, sim_t_s: float) -> list[tuple[f
     return pts
 
 
-def count_eclipse(positions_km: list[tuple[float, float, float]]) -> int:
-    """Count sats currently on the night side (dot with sun_dir < 0)."""
+def count_eclipse(positions_km: list[tuple[float, float, float]],
+                  sim_t_s: float | None = None) -> int:
+    """Count sats currently in the Earth's shadow. With a time, uses the real
+    Sun + conical umbra/penumbra test (< half the solar disc visible); the
+    legacy fixed-sun hemisphere test remains only for time-less callers."""
+    if sim_t_s is not None:
+        jd = DEMO_JD0 + DEMO_FR0 + (sim_t_s * TIME_SCALE) / 86400.0
+        sun_km, _r_au = geodyn.sun_teme(jd)
+        n = 0
+        for pos in positions_km:
+            if pos == (0.0, 0.0, 0.0):
+                continue
+            if geodyn.sun_visible_fraction(pos, sun_km) < 0.5:
+                n += 1
+        return n
     sx, sy, sz = SUN_DIR_ECI
     n = 0
     for x, y, z in positions_km:
@@ -619,12 +640,13 @@ def count_eclipse(positions_km: list[tuple[float, float, float]]) -> int:
     return n
 
 
-def synthesize_kpis(preset: ConstellationPreset, positions_km: list[tuple[float, float, float]]) -> dict:
+def synthesize_kpis(preset: ConstellationPreset, positions_km: list[tuple[float, float, float]],
+                    sim_t_s: float | None = None) -> dict:
     """Roll the preset template + live propagated positions into a flat KPI dict."""
     T = preset.total_sats
     online = int(round(T * preset.online_rate))
     standby = int(round(T * preset.standby_rate))
-    eclipse = max(0, min(count_eclipse(positions_km), online))  # only online sats can be in eclipse
+    eclipse = max(0, min(count_eclipse(positions_km, sim_t_s), online))  # only online sats can be in eclipse
     online_visible = max(0, online - eclipse)
     offline = max(0, T - online - standby - eclipse)
     # Re-normalise rounding drift back into offline.
