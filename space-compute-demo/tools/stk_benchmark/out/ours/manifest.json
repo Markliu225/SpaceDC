@@ -1,0 +1,10 @@
+{
+  "epoch_iso": "2024-08-22T12:00:00Z",
+  "time_scale_note": "driven at scaled seconds (engine sim_t x 60)",
+  "physics": "geodyn v2 (real sun, conical eclipse, WGS84, env thermal)",
+  "cases": [
+    "leo_iss",
+    "sso_landsat",
+    "geo_goes"
+  ]
+}

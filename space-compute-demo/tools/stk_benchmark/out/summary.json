@@ -1,0 +1,461 @@
+[
+  {
+    "id": "B1",
+    "case": "leo_iss",
+    "metric": "TEME |Δr| max (km)",
+    "value": 2.9244038084923393e-10,
+    "gate": "≤0.001",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B1",
+    "case": "leo_iss",
+    "metric": "TEME |Δv| max (km/s)",
+    "value": 3.296924993541758e-13,
+    "gate": "≤1e-6",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B2",
+    "case": "leo_iss",
+    "metric": "lat max Δ (deg)",
+    "value": 4.487787919060793e-11,
+    "gate": "≤0.02",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B2",
+    "case": "leo_iss",
+    "metric": "lon max Δ (deg)",
+    "value": 1.1066001626147681e-07,
+    "gate": "≤0.02",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B2",
+    "case": "leo_iss",
+    "metric": "alt max Δ (km)",
+    "value": 3.1984654924599454e-09,
+    "gate": "≤1.0",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B3",
+    "case": "leo_iss",
+    "metric": "太阳方向角差 max (deg)",
+    "value": 0.00405884539263795,
+    "gate": "≤0.5",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B3",
+    "case": "leo_iss",
+    "metric": "β 角差 max (deg)",
+    "value": 0.002555231224036447,
+    "gate": "≤0.5",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B4",
+    "case": "leo_iss",
+    "metric": "日照占比差 (pp)",
+    "value": 0.07722266648613196,
+    "gate": "≤1",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B4",
+    "case": "leo_iss",
+    "metric": "地影事件时刻差 max (s)",
+    "value": 4.843223734002095,
+    "gate": "≤15",
+    "pass": true,
+    "note": "漏 0 / 多 0"
+  },
+  {
+    "id": "B6",
+    "case": "leo_iss",
+    "metric": "光照因子电平 RMS",
+    "value": 0.0006708839294238483,
+    "gate": "≤0.02",
+    "pass": true,
+    "note": "过渡样本 5 个由 B4 定时门限管辖"
+  },
+  {
+    "id": "B7",
+    "case": "leo_iss",
+    "metric": "对日姿态 24h 能量差",
+    "value": 0.2428057380228184,
+    "gate": "≤2%",
+    "pass": true,
+    "note": "STK 196870.5 Wh vs 我方 196392.5 Wh"
+  },
+  {
+    "id": "B7",
+    "case": "leo_iss",
+    "metric": "对地姿态 24h 能量差",
+    "value": 0.007710780168658724,
+    "gate": "≤2%",
+    "pass": true,
+    "note": "STK 86300.4 Wh vs 我方 86293.7 Wh"
+  },
+  {
+    "id": "B8",
+    "case": "leo_iss",
+    "metric": "SOC 最低点差 (pp)",
+    "value": 0.0,
+    "gate": "≤5",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B9",
+    "case": "leo_iss",
+    "metric": "光照段温差 mean (K)",
+    "value": 0.3407515115884028,
+    "gate": "≤10",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B9",
+    "case": "leo_iss",
+    "metric": "地影段温差 mean (K)",
+    "value": 0.3118646718551441,
+    "gate": "≤10",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B5",
+    "case": "leo_iss",
+    "metric": "接入窗口@0° 起止差 max (s)",
+    "value": 0.9574040709994733,
+    "gate": "≤1 且无漏/误报",
+    "pass": true,
+    "note": "STK 5 窗 vs 我方 5 窗，漏 0 多 0"
+  },
+  {
+    "id": "B5",
+    "case": "leo_iss",
+    "metric": "接入窗口@5° 起止差 max (s)",
+    "value": 0.8710370359985973,
+    "gate": "≤1 且无漏/误报",
+    "pass": true,
+    "note": "STK 5 窗 vs 我方 5 窗，漏 0 多 0"
+  },
+  {
+    "id": "B5",
+    "case": "leo_iss",
+    "metric": "接入窗口@10° 起止差 max (s)",
+    "value": 0.843353718999424,
+    "gate": "≤1 且无漏/误报",
+    "pass": true,
+    "note": "STK 3 窗 vs 我方 3 窗，漏 0 多 0"
+  },
+  {
+    "id": "B5",
+    "case": "leo_iss",
+    "metric": "接入窗口@20° 起止差 max (s)",
+    "value": 0.994862113999261,
+    "gate": "≤1 且无漏/误报",
+    "pass": true,
+    "note": "STK 1 窗 vs 我方 1 窗，漏 0 多 0"
+  },
+  {
+    "id": "B1",
+    "case": "sso_landsat",
+    "metric": "TEME |Δr| max (km)",
+    "value": 2.0667454139617565e-10,
+    "gate": "≤0.001",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B1",
+    "case": "sso_landsat",
+    "metric": "TEME |Δv| max (km/s)",
+    "value": 2.1769070067263287e-13,
+    "gate": "≤1e-6",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B2",
+    "case": "sso_landsat",
+    "metric": "lat max Δ (deg)",
+    "value": 4.3449688291730126e-11,
+    "gate": "≤0.02",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B2",
+    "case": "sso_landsat",
+    "metric": "lon max Δ (deg)",
+    "value": 1.1065948868349551e-07,
+    "gate": "≤0.02",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B2",
+    "case": "sso_landsat",
+    "metric": "alt max Δ (km)",
+    "value": 5.114202394906897e-09,
+    "gate": "≤1.0",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B3",
+    "case": "sso_landsat",
+    "metric": "太阳方向角差 max (deg)",
+    "value": 0.005221203924730317,
+    "gate": "≤0.5",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B3",
+    "case": "sso_landsat",
+    "metric": "β 角差 max (deg)",
+    "value": 0.0004734346070875972,
+    "gate": "≤0.5",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B4",
+    "case": "sso_landsat",
+    "metric": "日照占比差 (pp)",
+    "value": 0.00565288881015924,
+    "gate": "≤1",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B4",
+    "case": "sso_landsat",
+    "metric": "地影事件时刻差 max (s)",
+    "value": 3.9075704619972385,
+    "gate": "≤15",
+    "pass": true,
+    "note": "漏 0 / 多 0"
+  },
+  {
+    "id": "B6",
+    "case": "sso_landsat",
+    "metric": "光照因子电平 RMS",
+    "value": 0.008621898323786972,
+    "gate": "≤0.02",
+    "pass": true,
+    "note": "过渡样本 7 个由 B4 定时门限管辖"
+  },
+  {
+    "id": "B7",
+    "case": "sso_landsat",
+    "metric": "对日姿态 24h 能量差",
+    "value": 0.389441894730145,
+    "gate": "≤2%",
+    "pass": true,
+    "note": "STK 218471.5 Wh vs 我方 217620.7 Wh"
+  },
+  {
+    "id": "B7",
+    "case": "sso_landsat",
+    "metric": "对地姿态 24h 能量差",
+    "value": 0.001509631773450869,
+    "gate": "≤2%",
+    "pass": true,
+    "note": "STK 71221.7 Wh vs 我方 71220.6 Wh"
+  },
+  {
+    "id": "B8",
+    "case": "sso_landsat",
+    "metric": "SOC 最低点差 (pp)",
+    "value": 0.0,
+    "gate": "≤5",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B9",
+    "case": "sso_landsat",
+    "metric": "光照段温差 mean (K)",
+    "value": 0.31275036643249066,
+    "gate": "≤10",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B9",
+    "case": "sso_landsat",
+    "metric": "地影段温差 mean (K)",
+    "value": 0.22358082112835712,
+    "gate": "≤10",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B5",
+    "case": "sso_landsat",
+    "metric": "接入窗口@0° 起止差 max (s)",
+    "value": 0.8392951169953449,
+    "gate": "≤1 且无漏/误报",
+    "pass": true,
+    "note": "STK 4 窗 vs 我方 4 窗，漏 0 多 0"
+  },
+  {
+    "id": "B5",
+    "case": "sso_landsat",
+    "metric": "接入窗口@5° 起止差 max (s)",
+    "value": 0.7732668660028139,
+    "gate": "≤1 且无漏/误报",
+    "pass": true,
+    "note": "STK 4 窗 vs 我方 4 窗，漏 0 多 0"
+  },
+  {
+    "id": "B5",
+    "case": "sso_landsat",
+    "metric": "接入窗口@10° 起止差 max (s)",
+    "value": 0.9836359600012656,
+    "gate": "≤1 且无漏/误报",
+    "pass": true,
+    "note": "STK 4 窗 vs 我方 4 窗，漏 0 多 0"
+  },
+  {
+    "id": "B5",
+    "case": "sso_landsat",
+    "metric": "接入窗口@20° 起止差 max (s)",
+    "value": 0.7105446700006723,
+    "gate": "≤1 且无漏/误报",
+    "pass": true,
+    "note": "STK 2 窗 vs 我方 2 窗，漏 0 多 0"
+  },
+  {
+    "id": "B1",
+    "case": "geo_goes",
+    "metric": "TEME |Δr| max (km)",
+    "value": 1.61554879149133e-10,
+    "gate": "≤0.001",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B1",
+    "case": "geo_goes",
+    "metric": "TEME |Δv| max (km/s)",
+    "value": 1.2147794528071342e-14,
+    "gate": "≤1e-6",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B2",
+    "case": "geo_goes",
+    "metric": "lat max Δ (deg)",
+    "value": 1.8693380177126073e-14,
+    "gate": "≤0.02",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B2",
+    "case": "geo_goes",
+    "metric": "lon max Δ (deg)",
+    "value": 1.1065961302847427e-07,
+    "gate": "≤0.02",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B2",
+    "case": "geo_goes",
+    "metric": "alt max Δ (km)",
+    "value": 5.093170329928398e-11,
+    "gate": "≤1.0",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B3",
+    "case": "geo_goes",
+    "metric": "太阳方向角差 max (deg)",
+    "value": 0.01737341345659924,
+    "gate": "≤0.5",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B3",
+    "case": "geo_goes",
+    "metric": "β 角差 max (deg)",
+    "value": 0.0021300835556079534,
+    "gate": "≤0.5",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B4",
+    "case": "geo_goes",
+    "metric": "日照占比差 (pp)",
+    "value": 0.0,
+    "gate": "≤1",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B6",
+    "case": "geo_goes",
+    "metric": "光照因子电平 RMS",
+    "value": 0.0,
+    "gate": "≤0.02",
+    "pass": true,
+    "note": "过渡样本 0 个由 B4 定时门限管辖"
+  },
+  {
+    "id": "B7",
+    "case": "geo_goes",
+    "metric": "对日姿态 24h 能量差",
+    "value": 0.004199371678765944,
+    "gate": "≤2%",
+    "pass": true,
+    "note": "STK 307686.6 Wh vs 我方 307673.7 Wh"
+  },
+  {
+    "id": "B7",
+    "case": "geo_goes",
+    "metric": "对地姿态 24h 能量差",
+    "value": 0.0234371278775048,
+    "gate": "≤2%",
+    "pass": true,
+    "note": "STK 96065.5 Wh vs 我方 96042.9 Wh"
+  },
+  {
+    "id": "B8",
+    "case": "geo_goes",
+    "metric": "SOC 最低点差 (pp)",
+    "value": 0.0,
+    "gate": "≤5",
+    "pass": true,
+    "note": ""
+  },
+  {
+    "id": "B9",
+    "case": "geo_goes",
+    "metric": "光照段温差 mean (K)",
+    "value": 0.16115956843327892,
+    "gate": "≤10",
+    "pass": true,
+    "note": ""
+  }
+]

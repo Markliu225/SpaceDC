@@ -145,15 +145,20 @@ check_true(f"throttled llm_batch tok/s falls vs healthy ({tok_thr:.0f} < {tok_he
            0.0 < tok_thr < tok_healthy * 0.97)
 check_true("gpu_thermal alarm raised while throttled",
            all(any(a.startswith("gpu_thermal") for a in r["alarms"]) for r in throttled))
-# Negative feedback: throttling sheds electrical load, so heat input drops
-# with it — the structure settles below runaway instead of railing at the
-# engine's 95 C clamp.
-tail = hist_b[-300:]
-swing = max(r["T_struct"] for r in tail) - min(r["T_struct"] for r in tail)
-check_true(f"feedback loop settles in deep throttle (last-300s swing {swing:.1f} K, "
-           f"ends {tail[-1]['T_struct']:.1f}C, no runaway)",
-           swing < 6.0 and tail[-1]["T_struct"] < 90.0
-           and not any(r["runaway"] for r in tail))
+# Negative feedback under the orbital environment: throttling sheds
+# electrical load, and the eclipse phase sheds the solar/albedo input, so
+# the loop cycles as a bounded limit cycle — sunlit stress (deep throttle /
+# runaway episodes on bare aluminum, whose alpha/eps=2.5 cannot reject even
+# the environment at 95 C) followed by eclipse recovery — instead of
+# diverging onto the 95 C clamp permanently.
+tail = hist_b[-600:]
+t_min = min(r["T_struct"] for r in tail)
+railed = sum(1 for r in tail if r["T_struct"] >= 94.5) / len(tail)
+stressed = sum(1 for r in tail if r["throttled"] or r["runaway"])
+check_true(f"feedback + eclipse cycling keeps the loop bounded (tail min "
+           f"{t_min:.1f}C recovers below 85C, railed {railed:.0%} < 70%, "
+           f"{stressed} stressed ticks)",
+           t_min < 85.0 and railed < 0.70 and stressed > 0)
 
 print("== Scenario B2: stub radiators — thermal runaway flagged ==")
 eng3 = make_engine()

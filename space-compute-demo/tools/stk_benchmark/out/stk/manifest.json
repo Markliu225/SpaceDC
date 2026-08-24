@@ -1,0 +1,22 @@
+{
+  "epoch_utcg": "22 Aug 2024 12:00:00.000",
+  "duration_s": 86400.0,
+  "step_s": 60.0,
+  "stk_version": "11.6.0",
+  "seet": {
+    "leo_iss": "configured",
+    "sso_landsat": "configured",
+    "geo_goes": "configured"
+  },
+  "cases": {
+    "leo_iss": {
+      "seet": "ok"
+    },
+    "sso_landsat": {
+      "seet": "ok"
+    },
+    "geo_goes": {
+      "seet": "ok"
+    }
+  }
+}
