@@ -1,57 +1,80 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { colors } from '../../../design/tokens'
-
-const RADIUS = 1.72      // just OUTSIDE the inclined-ribbon bouquet so it reads
-const THICK  = 0.032     // bold — clearly the special terminator orbit
+import { useSunDisplay } from './sky'
 
 /**
- * Dawn-Dusk (terminator) orbit — a Sun-synchronous orbit whose orbital plane is
- * perpendicular to the Sun line, so the ring rides the day/night terminator
- * great circle and a satellite on it is always in sunlight. The Sun drifts with
- * the same omega as Earth.tsx; the ring re-orients every frame so its plane
- * normal stays locked to the Sun direction. Rendered amber (ribbon palette)
- * + steady to stand apart from the 24 inclined ribbons.
+ * TerminatorRing — the day/night boundary of the rendered Earth, drawn as a
+ * great circle on the limb.
+ *
+ * This is a RULER, not a spacecraft. Its plane normal is the broadcast sun
+ * direction — the same vector `Earth.tsx` lights the globe with — so the circle
+ * traces exactly where the shader's terminator falls. A dawn–dusk SSO design
+ * should land its shells ON this circle; a Walker i=53° design visibly should
+ * not. It renders for EVERY constellation so the comparison is always
+ * available — but only once a real sun vector has arrived; with the sky frame
+ * unknown the ring is not drawn at all.
+ *
+ * Deliberately subtle: a 1 px line (WebGL ignores `linewidth`, which is what we
+ * want here), `text.lo` at 0.35 alpha, no glow. Its peak luminance is roughly
+ * 0.15 after the alpha, far below the composer's 0.95 bloom threshold, so it
+ * contributes nothing to bloom. Depth testing is left ON, so the far half is
+ * occluded by the globe and the line reads as drawn on the sphere.
+ *
+ * (File keeps its historical name — it used to hold a decorative dawn–dusk
+ * orbit ribbon that spun on the render clock.)
  */
-export function DawnDuskOrbit() {
-  const meshRef = useRef<THREE.Mesh>(null!)
+
+// r = 1.0 is the Earth's limb; the extra 2 mm of scene units clears the
+// 96-segment sphere's facets so the line does not z-fight the surface.
+const TERMINATOR_RADIUS = 1.002
+const SEGMENTS = 256
+
+/** Name on the three.js object so a review can assert the ring exists —
+ *  `data-testid` is not a thing inside a WebGL canvas. */
+export const TERMINATOR_OBJECT_NAME = 'terminator-reference'
+
+export function TerminatorRing() {
+  const ref = useRef<THREE.LineLoop>(null!)
+  const { sun, live } = useSunDisplay()
+
+  // Unit circle in the XY plane — its normal is +Z, which we then rotate onto
+  // the sun direction every frame. Building it once keeps the per-frame cost at
+  // a single quaternion.
   const geom = useMemo(() => {
-    const pts: THREE.Vector3[] = []
-    const N = 128
-    for (let k = 0; k <= N; k++) {
-      const th = (k / N) * Math.PI * 2
-      pts.push(new THREE.Vector3(Math.cos(th) * RADIUS, Math.sin(th) * RADIUS, 0))
+    const pos = new Float32Array(SEGMENTS * 3)
+    for (let i = 0; i < SEGMENTS; i++) {
+      const th = (i / SEGMENTS) * Math.PI * 2
+      pos[i * 3 + 0] = Math.cos(th) * TERMINATOR_RADIUS
+      pos[i * 3 + 1] = Math.sin(th) * TERMINATOR_RADIUS
+      pos[i * 3 + 2] = 0
     }
-    const curve = new THREE.CatmullRomCurve3(pts, true, 'catmullrom', 0.5)
-    return new THREE.TubeGeometry(curve, 240, THICK, 8, true)
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3))
+    return g
   }, [])
+  useEffect(() => () => geom.dispose(), [geom])
 
-  const up  = useMemo(() => new THREE.Vector3(0, 0, 1), [])
-  const sun = useMemo(() => new THREE.Vector3(), [])
-  const q   = useMemo(() => new THREE.Quaternion(), [])
+  const planeNormal = useMemo(() => new THREE.Vector3(0, 0, 1), [])
 
-  useFrame((state) => {
-    if (!meshRef.current) return
-    const omega = (Math.PI * 2) / 90              // matches Earth.tsx sun drift
-    const t = state.clock.elapsedTime
-    sun.set(Math.cos(omega * t), 0.25, Math.sin(omega * t)).normalize()
-    // Ring's default normal is +Z; rotate +Z onto the Sun direction so the ring
-    // lies in the plane ⊥ Sun = the terminator great circle.
-    q.setFromUnitVectors(up, sun)
-    meshRef.current.quaternion.copy(q)
+  useFrame(() => {
+    if (ref.current) ref.current.quaternion.setFromUnitVectors(planeNormal, sun)
   })
 
+  // No sky frame yet ⇒ no known terminator. Draw nothing rather than a ring
+  // around an invented sun; the globe is flat-lit to match (see shaders.ts).
+  if (!live) return null
+
   return (
-    <mesh ref={meshRef} geometry={geom}>
-      <meshBasicMaterial
-        color={colors.ribbons[2]}
+    <lineLoop ref={ref} name={TERMINATOR_OBJECT_NAME} geometry={geom}>
+      <lineBasicMaterial
+        color={colors.text.lo}
         transparent
-        opacity={0.8}
-        blending={THREE.NormalBlending}
+        opacity={0.35}
         depthWrite={false}
         toneMapped={false}
       />
-    </mesh>
+    </lineLoop>
   )
 }

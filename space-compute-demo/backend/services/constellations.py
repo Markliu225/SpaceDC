@@ -24,18 +24,25 @@ import math
 from dataclasses import dataclass, field
 from typing import Optional
 
-from sgp4.api import Satrec, jday
+from sgp4.api import Satrec
 
 from . import geodyn
+from . import timebase
 
 
 # ---------------------------------------------------------------------------
-# Demo time scale (shared with orbit_catalog so single-sat demos keep the
-# same cadence). 60× → an ISS LEO orbit (~93 min real) finishes in ~93 s
-# of wall clock.
+# Demo time scale + epoch. Mission time is owned by services.timebase (one
+# source of truth, shared with orbit_catalog so single-sat demos keep the same
+# cadence); these names are re-exported because tools/stk_benchmark imports
+# them from this module. 60× → an ISS LEO orbit (~93 min real) finishes in
+# ~93 s of wall clock.
+#
+# They are the DEFAULT-mission values: propagation goes through
+# timebase.jd_at / jd_after so a re-timed mission window is honoured, while
+# the benchmark tooling keeps a fixed handle on the demo epoch.
 # ---------------------------------------------------------------------------
-TIME_SCALE = 60.0
-DEMO_JD0, DEMO_FR0 = jday(2024, 8, 22, 12, 0, 0)
+TIME_SCALE = timebase.TIME_SCALE
+DEMO_JD0, DEMO_FR0 = timebase.DEMO_JD0, timebase.DEMO_FR0
 
 
 # ---------------------------------------------------------------------------
@@ -85,13 +92,34 @@ class ConstellationPreset:
     gsl_total: int           # ground-station links (constellation-wide constant)
     coverage_pct: float      # demo-friendly hard-coded coverage
 
-    # Monotonic design revision — bumped by make_custom_preset so consumers
-    # keyed on the (constant) custom id still see a change. 0 for built-ins.
+    # Monotonic design revision — bumped by make_custom_preset /
+    # make_sso_preset so consumers keyed on the (constant) custom id still see
+    # a change. 0 for built-ins.
     revision: int = 0
+
+    # Constellation pattern this preset was generated from. "walker" spreads
+    # ONE base TLE over `planes` RAAN steps; "sso" stacks `planes` independent
+    # sun-synchronous shells (see `shell_tles`).
+    mode: str = "walker"
+    # SSO design parameters that produced this preset (None for Walker) — the
+    # /orbit_design response echoes them back to the designer.
+    sso: Optional[dict] = None
+    # One (line1, line2) per shell, low->high. When set, `build_fleet` iterates
+    # shells instead of spreading RAAN off the single base TLE. Element 0 is
+    # always the same TLE as base_tle_line1/2, so inclination_deg /
+    # altitude_km / period_s / ring_eci_km / preset_elements() keep describing
+    # the LOWEST shell.
+    shell_tles: Optional[list[tuple[str, str]]] = None
 
     # Cached fleet — populated lazily by `build_fleet`.
     _fleet: Optional[list[Satrec]] = field(default=None, init=False, repr=False)
     _ring_eci_km: Optional[list[tuple[float, float, float]]] = field(default=None, init=False, repr=False)
+    # timebase.revision() the cached ring was sampled at — the ring starts at
+    # mission start, so a re-timed window must resample it.
+    _ring_rev: int = field(default=-1, init=False, repr=False)
+    # One ring PER plane (walker) / PER shell (sso); same cache discipline.
+    _rings_eci_km: Optional[list[list[tuple[float, float, float]]]] = field(default=None, init=False, repr=False)
+    _rings_rev: int = field(default=-1, init=False, repr=False)
 
     @property
     def total_sats(self) -> int:
@@ -116,9 +144,26 @@ class ConstellationPreset:
 
     # -- fleet construction ------------------------------------------------
     def build_fleet(self) -> list[Satrec]:
-        """Build all `total_sats` sgp4.Satrec objects via Walker offsets."""
+        """Build all `total_sats` sgp4.Satrec objects.
+
+        Two layouts share the mean-anomaly spread:
+          * `shell_tles` set (SSO) — each shell already carries its own
+            inclination, altitude and RAAN, so only M is patched per sat.
+          * otherwise (Walker) — one base TLE, RAAN stepped per plane."""
         if self._fleet is not None:
             return self._fleet
+        if self.shell_tles:
+            T = self.total_sats
+            S = self.sats_per_plane
+            shell_fleet: list[Satrec] = []
+            for k, (l1, l2) in enumerate(self.shell_tles):
+                shell_raan = _parse_field(l2, 17, 25)
+                base_m = _parse_field(l2, 43, 51)
+                for j in range(S):
+                    m = base_m + j * (360.0 / S) + k * self.phasing * (360.0 / T)
+                    shell_fleet.append(Satrec.twoline2rv(l1, _patch_line2(l2, shell_raan, m)))
+            self._fleet = shell_fleet
+            return shell_fleet
         base_raan = _parse_field(self.base_tle_line2, 17, 25)
         base_m    = _parse_field(self.base_tle_line2, 43, 51)
         T = self.total_sats
@@ -140,18 +185,69 @@ class ConstellationPreset:
         All other planes are rotations of this ring about +Z; all other sats in
         a plane sit at fixed phase offsets along the same ring. Sampling once
         is enough — the Kit extension reuses the ring for every plane via a
-        rotation matrix."""
-        if self._ring_eci_km is not None:
+        rotation matrix.
+
+        The ring starts at MISSION START, so the cache is keyed on
+        timebase.revision() — re-timing the mission resamples it instead
+        of drawing a stale ring."""
+        rev = timebase.revision()
+        if self._ring_eci_km is not None and self._ring_rev == rev:
             return self._ring_eci_km
         sat0 = self.build_fleet()[0]
         period = self.period_s
         pts: list[tuple[float, float, float]] = []
         for i in range(n_points):
-            t = (i / n_points) * period
-            _e, r, _v = sat0.sgp4(DEMO_JD0, DEMO_FR0 + t / 86400.0)
+            t = (i / n_points) * period          # real seconds, one revolution
+            jd, fr = timebase.jd_after(t)
+            _e, r, _v = sat0.sgp4(jd, fr)
             pts.append((float(r[0]), float(r[1]), float(r[2])))
         self._ring_eci_km = pts
+        self._ring_rev = rev
         return pts
+
+    def rings_eci_km(self, n_points: int = 128) -> list[list[tuple[float, float, float]]]:
+        """One ring per plane (Walker) / per shell (SSO), low index first.
+
+        `rings_eci_km()[0]` is the same sample set as `ring_eci_km()` — the
+        legacy single-ring key stays valid — but consumers no longer have to
+        reconstruct the other planes themselves. That reconstruction was the
+        bug the Kit renderer shipped: it rotated the one ring by `k·360/planes`
+        for EVERY pattern, which turns an SSO design (whose shells all share
+        one dawn-dusk RAAN and differ only in altitude/inclination) into a fan
+        of `layers` different planes. Walker still IS that rotation, so it is
+        done here, once, where the pattern is known.
+
+        Cached on timebase.revision() exactly like `ring_eci_km`."""
+        rev = timebase.revision()
+        if self._rings_eci_km is not None and self._rings_rev == rev:
+            return self._rings_eci_km
+        base = self.ring_eci_km(n_points)
+        rings: list[list[tuple[float, float, float]]] = [list(base)]
+        if self.shell_tles:
+            # Each shell carries its own altitude AND its own sun-synchronous
+            # inclination, so it has to be propagated, not rotated. Sat 0 of
+            # shell k is fleet index k * sats_per_plane.
+            fleet = self.build_fleet()
+            for k in range(1, len(self.shell_tles)):
+                sat_k = fleet[k * self.sats_per_plane]
+                period = 86400.0 / _parse_field(self.shell_tles[k][1], 52, 63)
+                pts: list[tuple[float, float, float]] = []
+                for i in range(n_points):
+                    jd, fr = timebase.jd_after((i / n_points) * period)
+                    _e, r, _v = sat_k.sgp4(jd, fr)
+                    pts.append((float(r[0]), float(r[1]), float(r[2])))
+                rings.append(pts)
+        else:
+            # Walker: plane k is the base plane rotated by k·360/planes about
+            # ECI +Z (exactly the RAAN step `build_fleet` patches into line 2).
+            for k in range(1, self.planes):
+                th = math.radians(k * 360.0 / self.planes)
+                c, sn = math.cos(th), math.sin(th)
+                rings.append([(c * x - sn * y, sn * x + c * y, z)
+                              for (x, y, z) in base])
+        self._rings_eci_km = rings
+        self._rings_rev = rev
+        return rings
 
 
 # ---------------------------------------------------------------------------
@@ -273,8 +369,26 @@ EARTH_RADIUS_KM = 6378.137
 _MU_EARTH = 3.986004418e14  # m^3/s^2
 
 _CUSTOM_LINE1 = "1 99999U 26001A   24235.50000000  .00000100  00000-0  10000-3 0  9990"
-# Bumped on every make_custom_preset so same-id redesigns are detectable.
+# Last WALKER design the user applied. /orbit_design publishes `walker` and
+# `sso` side by side so the designer can switch pattern without a round trip;
+# reading the ACTIVE preset for the walker block made an SSO apply report
+# `planes = layers` (an SSO reuses `planes` as its shell count) and poisoned
+# the Walker draft. Mirrors `_last_sso` below.
+_DEFAULT_WALKER = {"planes": 3, "sats_per_plane": 8, "phasing": 1}
+_last_walker: Optional[dict] = None
+# Bumped on every make_custom_preset / make_sso_preset so same-id redesigns
+# are detectable.
 _design_revision = 0
+
+
+def _custom_line1() -> str:
+    """The designer's reference line 1 with its epoch field (cols 19-32) set
+    to the mission epoch. At the default epoch this rewrites
+    `24235.50000000` with itself, so a default-mission design is byte-for-byte
+    the historical TLE."""
+    return (_CUSTOM_LINE1[:18]
+            + timebase.tle_epoch_field(timebase.mission().epoch_utc)
+            + _CUSTOM_LINE1[32:])
 
 
 def make_custom_preset(
@@ -328,8 +442,10 @@ def make_custom_preset(
         f"{arg_perigee_deg:8.4f} {mean_anomaly_deg:8.4f} {mm_rev_day:11.8f}123456"
     )
 
-    global _design_revision
+    global _design_revision, _last_walker
     _design_revision += 1
+    _last_walker = {"planes": planes, "sats_per_plane": sats_per_plane,
+                    "phasing": phasing}
     total = planes * sats_per_plane
     preset = ConstellationPreset(
         id=CUSTOM_ID,
@@ -337,9 +453,10 @@ def make_custom_preset(
         description=(f"Designer orbit — {altitude_km:.0f} km, "
                      f"i={inclination_deg:.1f}°, Walker {planes}×{sats_per_plane} "
                      f"f={phasing}."),
-        base_tle_line1=_CUSTOM_LINE1,
+        base_tle_line1=_custom_line1(),
         base_tle_line2=line2,
         planes=planes, sats_per_plane=sats_per_plane, phasing=phasing,
+        mode="walker",
         # Formulaic KPI template, scaled by fleet size (demo numbers).
         online_rate=0.97, standby_rate=0.02,
         throughput_per_sat_mbps=150.0, duty_factor=0.5,
@@ -350,6 +467,380 @@ def make_custom_preset(
     )
     PRESETS[CUSTOM_ID] = preset
     return preset
+
+
+def walker_config(preset: Optional[ConstellationPreset] = None) -> dict:
+    """The `walker` block for /orbit_design: the ACTIVE preset's own Walker
+    parameters when it is a Walker pattern (so the designer shows Starlink's
+    72x22 while Starlink is flying), otherwise the last Walker design, else
+    the defaults. Never an SSO preset's shell count."""
+    if preset is not None and getattr(preset, "mode", "walker") != "sso":
+        planes = int(preset.planes)
+        spp = int(preset.sats_per_plane)
+        phasing = int(preset.phasing)
+    else:
+        cfg = _last_walker or _DEFAULT_WALKER
+        planes = int(cfg["planes"])
+        spp = int(cfg["sats_per_plane"])
+        phasing = int(cfg["phasing"])
+    return {"planes": planes, "sats_per_plane": spp, "phasing": phasing,
+            "total_sats": planes * spp}
+
+
+# ---------------------------------------------------------------------------
+# Sun-synchronous (SSO) design.
+#
+# An SSO precesses its ascending node at exactly the rate the mean Sun moves
+# along the ecliptic, so the local solar time of the node is frozen. The
+# secular J2 nodal drift is
+#
+#     Ω̇ = -3/2 · J2 · (Re/p)² · n · cos i
+#
+# and setting it equal to the Sun's apparent motion Ω̇_sun gives the
+# sun-synchronous condition
+#
+#     cos i = -2 Ω̇_sun / (3 J2 (Re/p)² n),   n = √(μ/a³),  p = a(1 - e²)
+#
+# SANITY: a = 6878 km (500 km circular), e = 0 → i = 97.40°, the textbook
+# 500 km sun-synchronous inclination. `_assert_sso_sanity()` below checks it
+# at import time, so a mistyped constant can never ship silently.
+#
+# SSO fixes every element except altitude, so the designer only chooses an
+# altitude range; e = 0 and ω = 0 fall out of the definition.
+# ---------------------------------------------------------------------------
+J2 = 1.08262668e-3
+# 2π / 365.2422 mean solar days = 1.99106e-7 rad/s
+OMEGA_DOT_SUN = 2.0 * math.pi / (365.2422 * 86400.0)
+_MU_EARTH_KM3_S2 = _MU_EARTH / 1.0e9          # m³/s² → km³/s²
+
+# Designer limits (mirrored by the /orbit_design validation table).
+SSO_ALT_MIN_KM = 250.0
+SSO_ALT_MAX_KM = 1600.0
+SSO_MAX_LAYERS = 12
+
+_DEFAULT_SSO = {
+    "alt_min_km": 500.0,
+    "alt_max_km": 700.0,
+    "layers": 3,
+    "sats_per_plane": 8,
+    "phasing": 1,
+    "ltan_hours": 18.0,          # dusk ascending node (see LTAN_CHOICES)
+}
+# Last SSO design the user applied — /orbit_design always publishes an `sso`
+# block so the designer can pre-fill the form even while Walker is in force.
+_last_sso: Optional[dict] = None
+
+
+def sso_inclination_deg(altitude_km: float, eccentricity: float = 0.0) -> float:
+    """Sun-synchronous inclination (deg) for a circular-ish orbit at
+    `altitude_km`. Raises ValueError when |cos i| > 1, i.e. the altitude is
+    too high for any inclination to keep the node sun-synchronous."""
+    a_km = EARTH_RADIUS_KM + float(altitude_km)
+    e = float(eccentricity)
+    p_km = a_km * (1.0 - e * e)
+    if a_km <= 0.0 or p_km <= 0.0:
+        raise ValueError("altitude/eccentricity do not describe a valid orbit")
+    n_rad_s = math.sqrt(_MU_EARTH_KM3_S2 / (a_km ** 3))
+    cos_i = -2.0 * OMEGA_DOT_SUN / (
+        3.0 * J2 * (EARTH_RADIUS_KM / p_km) ** 2 * n_rad_s)
+    if abs(cos_i) > 1.0:
+        raise ValueError(
+            f"no sun-synchronous solution at {altitude_km:.0f} km "
+            "— lower the altitude")
+    return math.degrees(math.acos(cos_i))
+
+
+def _assert_sso_sanity() -> None:
+    """Import-time guard on the textbook 500 km case (see the block comment)."""
+    i500 = sso_inclination_deg(500.0)
+    assert abs(i500 - 97.40) < 0.02, f"SSO formula drifted: i(500 km) = {i500}"
+
+
+_assert_sso_sanity()
+
+
+# ---------------------------------------------------------------------------
+# Dawn-dusk geometry -- what makes an SSO a TERMINATOR orbit.
+#
+# A sun-synchronous inclination only freezes the LOCAL SOLAR TIME of the node;
+# WHICH local time is set by the RAAN. The plane stands on the day/night
+# terminator when its normal points along the Earth->Sun line, i.e.
+#
+#     LTAN (hours) = 12 + (RAAN - alpha_sun) / 15 deg
+#         =>  RAAN = alpha_sun + 15 * (LTAN - 12)
+#
+# so LTAN 18:00 (dusk ascending node) is alpha_sun + 90 deg and LTAN 06:00
+# (dawn) is alpha_sun - 90 deg. alpha_sun is read from `geodyn.sun_teme` AT THE
+# MISSION EPOCH, in TEME -- the same frame the TLE's RAAN lives in, so SGP4
+# reads the number we meant.
+#
+# EVERY shell of a design shares that one RAAN; only the altitude (and the
+# sun-synchronous inclination that goes with it) changes shell to shell. That
+# is what renders as concentric rings on ONE plane. The previous
+# `RAAN_k = k * 360 / layers` spread put every layer on a DIFFERENT plane,
+# none of them the terminator -- the bug this replaces.
+#
+# HONESTY NOTE -- beta, the Sun's elevation above the orbit plane:
+#
+#     sin beta = sin i * cos dec * sin(RAAN - alpha_sun) + cos i * sin dec
+#              = sin(i + dec)                            when LTAN = 18:00
+#
+# beta = 90 deg means the plane contains the terminator exactly. RAAN =
+# alpha_sun + 90 deg is the RAAN that MAXIMISES beta -- but at the demo epoch
+# (2024-08-22, dec = +11.5 deg) with i ~ 98.2 deg that maximum is only
+# beta ~ 70.3 deg: the plane genuinely sits ~20 deg off the terminator because
+# of the Sun's declination. beta reaches 90 deg when dec = -(i - 90) ~ -8.2
+# deg, i.e. around 5 Oct and 8 Mar, which the user can dial in via `epoch_utc`.
+# We PUBLISH beta so the UI can say so. We do NOT bend i or RAAN to force
+# beta = 90 -- that would stop the orbit being sun-synchronous.
+# ---------------------------------------------------------------------------
+LTAN_DAWN_H = 6.0
+LTAN_DUSK_H = 18.0
+LTAN_CHOICES = (LTAN_DAWN_H, LTAN_DUSK_H)
+
+
+def sun_ra_dec_deg(jd_utc: float) -> tuple[float, float]:
+    """(right ascension, declination) of the Sun in TEME, degrees. RA is
+    wrapped into 0..360; declination is signed."""
+    (sx, sy, sz), _r_au = geodyn.sun_teme(jd_utc)
+    return (math.degrees(math.atan2(sy, sx)) % 360.0,
+            math.degrees(math.atan2(sz, math.hypot(sx, sy))))
+
+
+def epoch_sun_ra_dec_deg() -> tuple[float, float]:
+    """The Sun's RA/dec at the MISSION EPOCH, not at "now" -- a TLE's RAAN is
+    an epoch quantity, so the Sun it is measured against must be too."""
+    return sun_ra_dec_deg(timebase.jd_utc_at_epoch())
+
+
+def dawn_dusk_raan_deg(ltan_hours: float = LTAN_DUSK_H,
+                       sun_ra_deg: Optional[float] = None) -> float:
+    """The shared dawn-dusk RAAN (deg) for a local time of ascending node.
+    Pass `sun_ra_deg` to reuse an alpha_sun already computed for this epoch."""
+    ra = epoch_sun_ra_dec_deg()[0] if sun_ra_deg is None else float(sun_ra_deg)
+    return (ra + 15.0 * (float(ltan_hours) - 12.0)) % 360.0
+
+
+def beta_angle_deg(inclination_deg: float, raan_deg: float,
+                   sun_ra_deg: float, sun_dec_deg: float) -> float:
+    """Sun elevation above the orbit plane, degrees: beta = asin(h_hat . s_hat)
+    with the orbit normal h_hat = (sin i sin RAAN, -sin i cos RAAN, cos i).
+    |beta| = 90 means the plane contains the terminator."""
+    i = math.radians(float(inclination_deg))
+    d_ra = math.radians(float(raan_deg) - float(sun_ra_deg))
+    dec = math.radians(float(sun_dec_deg))
+    sin_b = (math.sin(i) * math.cos(dec) * math.sin(d_ra)
+             + math.cos(i) * math.sin(dec))
+    return math.degrees(math.asin(max(-1.0, min(1.0, sin_b))))
+
+
+def validate_ltan(ltan_hours: float) -> float:
+    """Only the two terminator local times are offered: 06:00 (dawn node) and
+    18:00 (dusk node). Any other LTAN is a perfectly good SSO but not a
+    dawn-dusk one, and this designer only builds dawn-dusk."""
+    v = float(ltan_hours)
+    if v not in LTAN_CHOICES:
+        raise ValueError("ltan_hours must be 6.0 (dawn) or 18.0 (dusk)")
+    return v
+
+
+def sso_shell_plan(alt_min_km: float, alt_max_km: float, layers: int,
+                   sats_per_plane: int,
+                   ltan_hours: float = LTAN_DUSK_H) -> list[dict]:
+    """The `layers` dawn-dusk shells of an SSO design, low -> high.
+
+    Altitude steps linearly from `alt_min_km` to `alt_max_km` (a single layer
+    sits at `alt_min_km`) and inclination is that altitude's sun-synchronous
+    solution -- so the ~0.8 deg inclination spread across 500-700 km is REAL
+    and must not be flattened; it is what keeps each shell individually
+    sun-synchronous. RAAN is the SHARED dawn-dusk node, identical on every
+    shell -- that is what makes the shells concentric rings on one plane."""
+    L = max(1, int(layers))
+    lo = float(alt_min_km)
+    hi = float(alt_max_km)
+    sun_ra, sun_dec = epoch_sun_ra_dec_deg()
+    raan = round(dawn_dusk_raan_deg(ltan_hours, sun_ra), 4)
+    shells: list[dict] = []
+    for k in range(L):
+        frac = 0.0 if L == 1 else k / (L - 1)
+        alt = lo + (hi - lo) * frac
+        inc = sso_inclination_deg(alt)
+        shells.append({
+            "altitude_km": round(alt, 3),
+            "inclination_deg": round(inc, 4),
+            "raan_deg": raan,
+            "beta_deg": round(beta_angle_deg(inc, raan, sun_ra, sun_dec), 3),
+            "sats": int(sats_per_plane),
+        })
+    # The whole point of the pattern: one plane, many altitudes.
+    assert len({sh["raan_deg"] for sh in shells}) == 1, (
+        "dawn-dusk shells must share one RAAN")
+    return shells
+
+
+def _mean_motion_rev_day(altitude_km: float) -> float:
+    a_m = (EARTH_RADIUS_KM + float(altitude_km)) * 1000.0
+    n_rad_s = math.sqrt(_MU_EARTH / (a_m ** 3))
+    return 86400.0 / (2.0 * math.pi / n_rad_s)
+
+
+def _validate_sso(alt_min_km: float, alt_max_km: float, layers: int,
+                  sats_per_plane: int, phasing: int,
+                  ltan_hours: float = LTAN_DUSK_H) -> tuple:
+    if not SSO_ALT_MIN_KM <= alt_min_km <= SSO_ALT_MAX_KM:
+        raise ValueError(
+            f"alt_min_km must be within {SSO_ALT_MIN_KM:.0f}..{SSO_ALT_MAX_KM:.0f}")
+    if not SSO_ALT_MIN_KM <= alt_max_km <= SSO_ALT_MAX_KM:
+        raise ValueError(
+            f"alt_max_km must be within {SSO_ALT_MIN_KM:.0f}..{SSO_ALT_MAX_KM:.0f}")
+    if alt_min_km > alt_max_km:
+        raise ValueError("alt_min_km must be <= alt_max_km")
+    layers = int(layers)
+    sats_per_plane = int(sats_per_plane)
+    phasing = int(phasing)
+    if not 1 <= layers <= SSO_MAX_LAYERS:
+        raise ValueError(f"layers must be within 1..{SSO_MAX_LAYERS}")
+    if not 1 <= sats_per_plane <= 60:
+        raise ValueError("sats_per_plane must be within 1..60")
+    if not 0 <= phasing < max(1, layers):
+        raise ValueError("phasing (Walker f) must be within 0..layers-1")
+    ltan_hours = validate_ltan(ltan_hours)
+    # No explicit perigee guard here: SSO orbits are circular by definition and
+    # SSO_ALT_MIN_KM (250 km) already sits above the Walker designer's 160 km
+    # perigee floor, so SGP4 can never be handed a decaying element set.
+    return (float(alt_min_km), float(alt_max_km), layers, sats_per_plane,
+            phasing, ltan_hours)
+
+
+def sso_config(shells_from: Optional[dict] = None) -> dict:
+    """The `sso` block for /orbit_design: the last applied SSO design (or the
+    defaults), with its shell table, total and dawn-dusk geometry recomputed
+    at the CURRENT mission epoch -- so switching the pattern radio previews
+    the RAAN/beta the design would actually get if applied now.
+
+    `raan_deg` is the shared dawn-dusk node (identical on every shell) and
+    `beta_deg` is the Sun's elevation above that plane for the LOWEST shell;
+    per-shell beta rides in `shells[*].beta_deg` (it moves ~0.8 deg across a
+    500-700 km stack, because each shell has its own SSO inclination)."""
+    cfg = dict(shells_from or _last_sso or _DEFAULT_SSO)
+    layers = int(cfg["layers"])
+    spp = int(cfg["sats_per_plane"])
+    ltan = float(cfg.get("ltan_hours", LTAN_DUSK_H))
+    sun_ra, _sun_dec = epoch_sun_ra_dec_deg()
+    shells = sso_shell_plan(cfg["alt_min_km"], cfg["alt_max_km"],
+                            layers, spp, ltan)
+    return {
+        "alt_min_km": float(cfg["alt_min_km"]),
+        "alt_max_km": float(cfg["alt_max_km"]),
+        "layers": layers,
+        "sats_per_plane": spp,
+        "phasing": int(cfg["phasing"]),
+        "total_sats": layers * spp,
+        "ltan_hours": ltan,
+        "raan_deg": shells[0]["raan_deg"],
+        "sun_ra_deg": round(sun_ra, 4),
+        "beta_deg": shells[0]["beta_deg"],
+        "shells": shells,
+    }
+
+
+def make_sso_preset(
+    alt_min_km: float = 500.0,
+    alt_max_km: float = 700.0,
+    layers: int = 3,
+    sats_per_plane: int = 8,
+    phasing: int = 1,
+    ltan_hours: float = LTAN_DUSK_H,
+) -> ConstellationPreset:
+    """Build (and register) a DAWN-DUSK sun-synchronous constellation:
+    `layers` shells stacked low -> high on ONE terminator plane, one orbital
+    plane each, every shell at its own SSO inclination and all of them at the
+    same dawn-dusk RAAN. Registered under CUSTOM_ID exactly like the Walker
+    designer, so the whole pipeline (engine tick, Kit rings, coverage map)
+    follows. Raises ValueError on out-of-range parameters."""
+    global _design_revision, _last_sso
+    (alt_min_km, alt_max_km, layers,
+     sats_per_plane, phasing, ltan_hours) = _validate_sso(
+        alt_min_km, alt_max_km, layers, sats_per_plane, phasing, ltan_hours)
+
+    shells = sso_shell_plan(alt_min_km, alt_max_km, layers, sats_per_plane,
+                            ltan_hours)
+    line1 = _custom_line1()
+    ecc7 = f"{0.0:.7f}"[2:9]            # circular by definition -> "0000000"
+    shell_tles: list[tuple[str, str]] = []
+    for sh in shells:
+        mm = _mean_motion_rev_day(sh["altitude_km"])
+        line2 = (
+            f"2 99999 {sh['inclination_deg']:8.4f} {sh['raan_deg']:8.4f} {ecc7} "
+            f"{0.0:8.4f} {0.0:8.4f} {mm:11.8f}123456"
+        )
+        shell_tles.append((line1, line2))
+
+    total = layers * sats_per_plane
+    _last_sso = {"alt_min_km": alt_min_km, "alt_max_km": alt_max_km,
+                 "layers": layers, "sats_per_plane": sats_per_plane,
+                 "phasing": phasing, "ltan_hours": ltan_hours}
+    _design_revision += 1
+    preset = ConstellationPreset(
+        id=CUSTOM_ID,
+        name="Custom Design",
+        description=(f"Dawn-dusk sun-synchronous — {layers} shell(s) on one "
+                     f"terminator plane, {alt_min_km:.0f}–{alt_max_km:.0f} km, "
+                     f"i={shells[0]['inclination_deg']:.2f}–"
+                     f"{shells[-1]['inclination_deg']:.2f}°, "
+                     f"LTAN {int(ltan_hours):02d}:00, "
+                     f"Ω={shells[0]['raan_deg']:.2f}°, "
+                     f"β={shells[0]['beta_deg']:.1f}°, "
+                     f"{sats_per_plane} sats/plane, f={phasing}."),
+        # Shell 0 doubles as the reference TLE: inclination_deg, altitude_km,
+        # period_s, ring_eci_km and preset_elements() all describe the LOWEST
+        # shell (documented in the /orbit_design contract).
+        base_tle_line1=shell_tles[0][0],
+        base_tle_line2=shell_tles[0][1],
+        planes=layers, sats_per_plane=sats_per_plane, phasing=phasing,
+        # Same formulaic KPI template as the Walker designer (demo numbers).
+        online_rate=0.97, standby_rate=0.02,
+        throughput_per_sat_mbps=150.0, duty_factor=0.5,
+        isl_per_sat=2 if layers >= 2 else 0,
+        gsl_total=min(12, total),
+        coverage_pct=round(min(100.0, 100.0 * total / (total + 40.0)), 1),
+        revision=_design_revision,
+        mode="sso",
+        sso=sso_config(_last_sso),
+        shell_tles=shell_tles,
+    )
+    PRESETS[CUSTOM_ID] = preset
+    return preset
+
+
+# ---------------------------------------------------------------------------
+# Propagator catalog. SGP4 is the only implemented model; the other three are
+# published so the designer can show the real menu (and say why they are off)
+# instead of pretending the choice does not exist.
+# ---------------------------------------------------------------------------
+PROPAGATORS: list[dict] = [
+    {"id": "sgp4", "label": "SGP4", "implemented": True,
+     "note": "NORAD mean elements, SGP4/SDP4 perturbations"},
+    {"id": "twobody", "label": "Two-body", "implemented": False,
+     "note": "Keplerian point mass, no perturbations"},
+    {"id": "j2", "label": "J2", "implemented": False,
+     "note": "Secular J2 nodal + apsidal drift"},
+    {"id": "hpop", "label": "HPOP", "implemented": False,
+     "note": "Numerical integration, full force model"},
+]
+DEFAULT_PROPAGATOR = "sgp4"
+
+
+def get_propagator(propagator_id: str) -> dict:
+    """Look up a propagator by id. Raises ValueError for unknown ids and for
+    the three catalogued-but-unimplemented models."""
+    pid = str(propagator_id)
+    entry = next((p for p in PROPAGATORS if p["id"] == pid), None)
+    if entry is None or not entry["implemented"]:
+        avail = ", ".join(p["id"] for p in PROPAGATORS if p["implemented"])
+        raise ValueError(
+            f"propagator {pid!r} is not implemented (available: {avail})")
+    return entry
 
 
 def preset_elements(preset: ConstellationPreset) -> dict:
@@ -561,16 +1052,19 @@ def get_preset(preset_id: str) -> Optional[ConstellationPreset]:
 # ---------------------------------------------------------------------------
 # Per-tick fleet propagation + KPI synthesis.
 # ---------------------------------------------------------------------------
-# Legacy fixed sun direction — kept ONLY as a fallback for callers that
-# cannot supply a time (the USD overview stage's directional light). All
-# physics paths now pass the real analytic Sun (geodyn.sun_unit_and_flux).
+# Legacy fixed sun direction. NOT a sun — at the demo epoch it points 141°
+# away from the real one. It survives only as the last-resort branch of the
+# two functions below for callers that hand in no time at all; every path
+# that knows its instant uses the analytic Sun (geodyn.sun_unit_and_flux via
+# `sun_unit_at`), and the renderers now take the Sun from the broadcast
+# FleetSnapshot.sun_unit_teme rather than from any constant. Do not reach for
+# this in new code: pass a time.
 SUN_DIR_ECI = (0.648, -0.648, 0.398)
 
 
 def sun_unit_at(sim_t_s: float) -> tuple[float, float, float]:
-    """Real unit Sun direction (TEME) at demo epoch + sim_t_s × TIME_SCALE."""
-    jd = DEMO_JD0 + DEMO_FR0 + (sim_t_s * TIME_SCALE) / 86400.0
-    unit, _flux = geodyn.sun_unit_and_flux(jd)
+    """Real unit Sun direction (TEME) at mission start + sim_t_s × TIME_SCALE."""
+    unit, _flux = geodyn.sun_unit_and_flux(timebase.jd_utc_at(sim_t_s))
     return unit
 
 
@@ -580,8 +1074,8 @@ def propagate_tracked(preset: ConstellationPreset, sim_t_s: float) -> tuple[floa
     kinematics on every /state read (Kit polls at 5 Hz) instead of once per
     1 Hz physics tick."""
     sat = preset.build_fleet()[0]
-    scaled = sim_t_s * TIME_SCALE
-    e, r, _v = sat.sgp4(DEMO_JD0, DEMO_FR0 + scaled / 86400.0)
+    jd, fr = timebase.jd_at(sim_t_s)
+    e, r, _v = sat.sgp4(jd, fr)
     if e:
         return (0.0, 0.0, 0.0)
     return (float(r[0]), float(r[1]), float(r[2]))
@@ -594,8 +1088,8 @@ def propagate_tracked_rv(
     velocity is needed for the attitude/solar geometry (ram + orbit-normal
     panel pointing). Single cached-Satrec sgp4 call."""
     sat = preset.build_fleet()[0]
-    scaled = sim_t_s * TIME_SCALE
-    e, r, v = sat.sgp4(DEMO_JD0, DEMO_FR0 + scaled / 86400.0)
+    jd, fr = timebase.jd_at(sim_t_s)
+    e, r, v = sat.sgp4(jd, fr)
     if e:
         return (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)
     return (float(r[0]), float(r[1]), float(r[2])), (float(v[0]), float(v[1]), float(v[2]))
@@ -604,11 +1098,10 @@ def propagate_tracked_rv(
 def propagate_fleet(preset: ConstellationPreset, sim_t_s: float) -> list[tuple[float, float, float]]:
     """Return ECI km positions for every sat in the preset at sim_t."""
     fleet = preset.build_fleet()
-    scaled = sim_t_s * TIME_SCALE
-    offset_days = scaled / 86400.0
+    jd, fr = timebase.jd_at(sim_t_s)
     pts: list[tuple[float, float, float]] = []
     for sat in fleet:
-        e, r, _v = sat.sgp4(DEMO_JD0, DEMO_FR0 + offset_days)
+        e, r, _v = sat.sgp4(jd, fr)
         if e:
             pts.append((0.0, 0.0, 0.0))
         else:
@@ -622,8 +1115,7 @@ def count_eclipse(positions_km: list[tuple[float, float, float]],
     Sun + conical umbra/penumbra test (< half the solar disc visible); the
     legacy fixed-sun hemisphere test remains only for time-less callers."""
     if sim_t_s is not None:
-        jd = DEMO_JD0 + DEMO_FR0 + (sim_t_s * TIME_SCALE) / 86400.0
-        sun_km, _r_au = geodyn.sun_teme(jd)
+        sun_km, _r_au = geodyn.sun_teme(timebase.jd_utc_at(sim_t_s))
         n = 0
         for pos in positions_km:
             if pos == (0.0, 0.0, 0.0):

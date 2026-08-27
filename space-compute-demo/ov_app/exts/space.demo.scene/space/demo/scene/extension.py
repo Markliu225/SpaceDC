@@ -1,22 +1,31 @@
 """space.demo.scene — orchestrator for the Omniverse overview stage.
 
-Three motions in the overview stage:
-  1. Earth self-rotation around +Z (wall-clock, backend-independent).
-  2. Constellation rings — one BasisCurves per orbital plane, rebuilt
-     whenever the active preset changes.
-  3. Fleet positions — every sat's ECI point written into a UsdGeom.Points
-     prim each frame, derived from the cached base ring + per-sat Walker
+Four motions in the overview stage:
+  1. Earth self-rotation around +Z, driven by the backend's broadcast
+     `constellation.gmst_rad` — the same sky frame the fleet ECI km live in.
+  2. The Sun (DistantLight) re-aimed from the backend's broadcast
+     `constellation.sun_unit_teme`, so the rendered day/night terminator is
+     the physical one for this sim instant.
+  3. Constellation rings — one BasisCurves per ring the backend publishes in
+     `rings_eci_km`, rebuilt whenever the active preset changes.
+  4. Fleet positions — every sat's ECI point written into a UsdGeom.Points
+     prim each frame, derived from ITS OWN plane's ring + per-sat Walker
      phase offsets (no SGP4 in Kit).
 
-The backend's /constellations/{id} endpoint returns the base orbit ring
-(128 ECI km samples for plane 0 / sat 0) and the Walker params. From
-those everything else is derived in Kit:
-  * Ring K = base ring rotated about +Z by k × 360°/P.
-  * Sat (k, j) at sim_t = ring point at phase
+The backend's /constellations/{id} endpoint returns `rings_eci_km` — one
+128-sample ECI km ring per Walker plane / per SSO shell — plus the Walker
+params. Kit derives only the along-track phase:
+  * Sat (k, j) at sim_t = a point on RING k at phase
         (sim_t × time_scale × 360° / period
          + j × 360° / sats_per_plane
          + k × phasing × 360° / total) mod 360°
-    interpolated linearly along the (rotated) ring.
+    interpolated linearly along ring k.
+
+Kit no longer rotates one base ring by k × 360°/P to fabricate the other
+planes: an SSO design's shells all share ONE dawn–dusk RAAN and differ only in
+altitude, so that rotation fanned them out into planes that do not exist. The
+single-ring `ring_eci_km` response is still honoured as a fallback (with the
+old rotation) so an older backend keeps rendering.
 """
 from __future__ import annotations
 
@@ -110,6 +119,10 @@ CONSTEL_ROOT     = "/World/ConstellationGroup"
 RINGS_ROOT       = f"{CONSTEL_ROOT}/Rings"
 FLEET_POINTS     = f"{CONSTEL_ROOT}/Fleet"
 FLEET_MAT        = f"{CONSTEL_ROOT}/Fleet/Mat"
+# Overview-stage sun. usd/overview.usda authors the DistantLight with a NEUTRAL
+# placeholder direction; the real one is written from the backend's broadcast
+# sun_unit_teme every time it changes — see set_overview_sun.
+OVERVIEW_SUN_PATH = "/World/Environment/Sun"
 
 # Scene scale — overview.usda is metersPerUnit = 100000 so 1 unit = 100 km.
 SCENE_KM_PER_UNIT = 100.0
@@ -148,6 +161,13 @@ CAM_OFFSET_DIR = (0.52, -0.52, 0.42)   # subject → camera direction (normalise
 CAM_GLOBAL_EYE = (180.0, -180.0, 120.0)
 CAM_LERP = 0.10   # per-frame easing toward the desired pose (dolly feel)
 
+# True sidereal rotation period (s). The Earth's rotateZ comes from the
+# backend's broadcast GMST; between 5 Hz polls it is extrapolated at this rate
+# × the sim time scale so the spin stays smooth at frame rate.
+SIDEREAL_DAY_S = 86164.0905
+# LEGACY decorative spin — used only while the backend has never broadcast a
+# gmst_rad (offline, or a build predating the field), so the globe never
+# freezes. It is ~16× the true rate and carries no physical longitude.
 EARTH_ROTATION_PERIOD_S = 90.0
 
 # Ring palette — 6 hues, cycled per orbital plane. Matches the Web Three.js
@@ -252,12 +272,18 @@ def _rotate_z(pt: tuple[float, float, float], angle_rad: float) -> tuple[float, 
 
 def rebuild_constellation(
     stage,
-    base_ring_units: list[tuple[float, float, float]],
-    planes: int,
+    rings_units: list[list[tuple[float, float, float]]],
     sats_per_plane: int,
     phasing: int,
 ) -> bool:
-    """Author P rings under /Rings + initial Walker positions in /Fleet."""
+    """Author one BasisCurves per PUBLISHED ring under /Rings + the initial
+    fleet positions in /Fleet.
+
+    `rings_units` is the backend's `rings_eci_km` converted to scene units:
+    ONE ring per Walker plane / per SSO shell, each already carrying its own
+    RAAN and (for SSO) its own altitude and inclination. Kit does not rotate
+    them — doing so is what fanned the dawn–dusk shells into three planes.
+    """
     rings_prim = stage.GetPrimAtPath(RINGS_ROOT)
     if not rings_prim or not rings_prim.IsValid():
         _log(f"rebuild_constellation: missing {RINGS_ROOT}")
@@ -271,12 +297,13 @@ def rebuild_constellation(
     for child in list(rings_prim.GetChildren()):
         stage.RemovePrim(child.GetPath())
 
-    if not base_ring_units:
-        _log("rebuild_constellation: empty base ring")
+    rings_units = [r for r in (rings_units or []) if r]
+    if not rings_units:
+        _log("rebuild_constellation: no rings published")
         return False
-    n_pts = len(base_ring_units)
+    n_pts = len(rings_units[0])
 
-    planes = max(1, int(planes))
+    planes = len(rings_units)
     sats_per_plane = max(1, int(sats_per_plane))
     total_sats = planes * sats_per_plane
 
@@ -289,10 +316,8 @@ def rebuild_constellation(
     for i, mp in enumerate(ring_mat_paths):
         if not stage.GetPrimAtPath(mp):
             _author_ring_material(stage, mp, RING_HUES[i])
-    for k in range(planes):
-        angle = k * 2.0 * math.pi / planes
-        pts_rot = [_rotate_z(p, angle) for p in base_ring_units]
-        closed = pts_rot + [pts_rot[0]]
+    for k, ring in enumerate(rings_units):
+        closed = list(ring) + [ring[0]]
         ring_path = Sdf.Path(f"{RINGS_ROOT}/Ring_{k:03d}")
         curves = UsdGeom.BasisCurves.Define(stage, ring_path)
         curves.GetTypeAttr().Set("linear")
@@ -321,10 +346,10 @@ def rebuild_constellation(
     # 4. Initial fleet positions (sim_t=0) — the per-frame driver overwrites
     # this; we set something sensible so the points appear immediately even
     # before the first _on_update tick.
-    positions = compute_fleet_positions(base_ring_units, planes, sats_per_plane, phasing, sim_phase_rad=0.0)
+    positions = compute_fleet_positions(rings_units, sats_per_plane, phasing, sim_phase_rad=0.0)
     _set_fleet_points(stage, positions)
 
-    _log(f"fleet authored: {total_sats} sats ({n_pts}-pt base ring)")
+    _log(f"fleet authored: {total_sats} sats ({n_pts}-pt rings)")
     return True
 
 
@@ -359,40 +384,44 @@ def _bind_material(stage, prim, mat_path: Sdf.Path) -> None:
 
 
 def compute_fleet_positions(
-    base_ring_units: list[tuple[float, float, float]],
-    planes: int,
+    rings_units: list[list[tuple[float, float, float]]],
     sats_per_plane: int,
     phasing: int,
     sim_phase_rad: float,
 ) -> list[tuple[float, float, float]]:
-    """Walker layout. Each sat sits at a phase offset along its plane's
-    (rotated) base ring. `sim_phase_rad` advances every frame so the whole
-    fleet drifts in sync without per-sat propagation."""
-    n = len(base_ring_units)
-    total = planes * sats_per_plane
+    """Walker layout. Sat (k, j) rides RING k — the ring the backend actually
+    published for that plane/shell — at a phase offset along it. Nothing is
+    rotated here, so the dots always sit exactly on the drawn rings.
+    `sim_phase_rad` advances every frame so the whole fleet drifts in sync
+    without per-sat propagation."""
     positions: list[tuple[float, float, float]] = []
-    for k in range(planes):
-        plane_angle = k * 2.0 * math.pi / planes
+    rings = [r for r in (rings_units or []) if r]
+    if not rings:
+        return positions
+    planes = len(rings)
+    sats_per_plane = max(1, int(sats_per_plane))
+    total = planes * sats_per_plane
+    for k, ring in enumerate(rings):
+        n = len(ring)
         for j in range(sats_per_plane):
             walker_phase = (
                 sim_phase_rad
                 + j * 2.0 * math.pi / sats_per_plane
                 + k * phasing * 2.0 * math.pi / total
             )
-            # Sample base ring at that phase.
+            # Sample THIS plane's own ring at that phase.
             t = (walker_phase % (2.0 * math.pi)) / (2.0 * math.pi)
             f = t * n
             i0 = int(f) % n
             i1 = (i0 + 1) % n
             a = f - math.floor(f)
-            p0 = base_ring_units[i0]
-            p1 = base_ring_units[i1]
-            lerped = (
+            p0 = ring[i0]
+            p1 = ring[i1]
+            positions.append((
                 p0[0] + (p1[0] - p0[0]) * a,
                 p0[1] + (p1[1] - p0[1]) * a,
                 p0[2] + (p1[2] - p0[2]) * a,
-            )
-            positions.append(_rotate_z(lerped, plane_angle))
+            ))
     return positions
 
 
@@ -404,7 +433,23 @@ def _set_fleet_points(stage, positions: list[tuple[float, float, float]]) -> Non
     pts.GetPointsAttr().Set(Vt.Vec3fArray([Gf.Vec3f(*p) for p in positions]))
 
 
-def set_earth_rotation(stage, sim_time_s: float) -> None:
+def set_earth_rotation(stage, sim_time_s: float,
+                       gmst_rad: Optional[float] = None) -> None:
+    """Spin the Earth about its +Z geographic axis.
+
+    `gmst_rad` is the backend's broadcast Greenwich sidereal angle for this
+    instant, in the SAME frame as the fleet ECI km and sun_unit_teme. The mesh
+    carries geographic longitude L at local azimuth L + GROUND_MARKER_LON_OFFSET_DEG
+    (earth_day.jpg is Greenwich-centred, so local +X shows lon −180), hence
+
+        rotateZ = GMST − GROUND_MARKER_LON_OFFSET_DEG
+
+    puts that site at ECI right ascension GMST + L — where it physically is.
+    Ground markers are Earth children, so they inherit this and stay correct.
+
+    `gmst_rad=None` (backend offline, or a build with no gmst_rad) falls back
+    to the legacy decorative wall-clock spin so the globe never freezes.
+    """
     prim = stage.GetPrimAtPath(EARTH_PATH)
     if not prim or not prim.IsValid():
         return
@@ -416,8 +461,85 @@ def set_earth_rotation(stage, sim_time_s: float) -> None:
             break
     if rotZ is None:
         return
-    angle_deg = (sim_time_s * 360.0 / EARTH_ROTATION_PERIOD_S) % 360.0
+    if gmst_rad is not None and math.isfinite(gmst_rad):
+        angle_deg = (math.degrees(gmst_rad) - GROUND_MARKER_LON_OFFSET_DEG) % 360.0
+    else:
+        angle_deg = (sim_time_s * 360.0 / EARTH_ROTATION_PERIOD_S) % 360.0
     rotZ.Set(angle_deg)
+
+
+def _unit_or_none(v) -> Optional[tuple[float, float, float]]:
+    """A finite, non-degenerate 3-vector normalised to unit length, else None.
+    The backend's default sun_unit_teme is (0,0,0) — that is the "no sky frame
+    yet" sentinel and must NOT be aimed at."""
+    try:
+        x, y, z = float(v[0]), float(v[1]), float(v[2])
+    except Exception:  # noqa: BLE001 — any malformed payload
+        return None
+    n = math.sqrt(x * x + y * y + z * z)
+    if not math.isfinite(n) or n < 1e-9:
+        return None
+    return (x / n, y / n, z / n)
+
+
+def _sun_rotate_xyz(sun_unit: tuple[float, float, float]) -> tuple[float, float, float]:
+    """Euler angles (deg) for `xformOp:rotateXYZ` that aim a DistantLight's
+    local +Z at `sun_unit`, so it shines along −Z, i.e. sun → Earth.
+
+    With ry = 0, Rz(rz)·Rx(rx)·(0,0,1) = (sin rz·sin rx, −cos rz·sin rx, cos rx),
+    so rx = acos(z) and rz = atan2(x, −y). Sanity: the stage's old hard-coded
+    sun (0.648, −0.648, 0.398) round-trips to its old (66.5, 0, 45)."""
+    x, y, z = sun_unit
+    rx = math.degrees(math.acos(max(-1.0, min(1.0, z))))
+    rz = math.degrees(math.atan2(x, -y)) if math.hypot(x, y) > 1e-9 else 0.0
+    return (rx, 0.0, rz)
+
+
+# Re-author the sun only once it has actually moved this far (deg). The sun
+# drifts ~0.99°/day, i.e. ~0.0007° per wall-second at the demo's 60× time
+# scale, so this rewrites the attribute about twice a minute instead of at the
+# 5 Hz poll rate — well under the eye's threshold either way.
+SUN_REAIM_EPS_DEG = 0.02
+
+
+def _sun_moved(new: tuple[float, float, float],
+               old: Optional[tuple[float, float, float]]) -> bool:
+    """True if `new` differs from the last authored direction enough to be
+    worth re-writing the light (or nothing has been authored yet)."""
+    if old is None:
+        return True
+    dot = max(-1.0, min(1.0, new[0] * old[0] + new[1] * old[1] + new[2] * old[2]))
+    return math.degrees(math.acos(dot)) > SUN_REAIM_EPS_DEG
+
+
+def set_overview_sun(stage, sun_unit: Optional[tuple[float, float, float]]) -> bool:
+    """Aim /World/Environment/Sun down the real Earth→Sun line.
+
+    `sun_unit` is FleetSnapshot.sun_unit_teme: the unit Earth→Sun vector in the
+    SAME frame and at the SAME instant as the fleet ECI km the packet carries.
+    Taking the light direction from that vector and nothing else is what makes
+    "the orbit rings lie on the terminator" true by construction instead of by
+    coincidence. Returns True iff the rotation was written."""
+    if not sun_unit:
+        return False
+    prim = stage.GetPrimAtPath(OVERVIEW_SUN_PATH)
+    if not prim or not prim.IsValid():
+        return False
+    xform = UsdGeom.Xformable(prim)
+    op = None
+    for candidate in xform.GetOrderedXformOps():
+        if candidate.GetOpType() == UsdGeom.XformOp.TypeRotateXYZ:
+            op = candidate
+            break
+    if op is None:
+        op = xform.AddRotateXYZOp()
+    rx, ry, rz = _sun_rotate_xyz(sun_unit)
+    attr = op.GetAttr()
+    if attr.GetTypeName() == Sdf.ValueTypeNames.Double3:
+        attr.Set(Gf.Vec3d(rx, ry, rz))
+    else:
+        attr.Set(Gf.Vec3f(rx, ry, rz))
+    return True
 
 
 # ---------------------------------------------------------------------------
@@ -482,11 +604,13 @@ def _place_hero_sat(stage, path: str, pos, visible: bool, spin_deg: float = 0.0)
 # and a geographic longitude L sits at phi = L + 180 (verified by sampling
 # the texture under known landmarks).
 #
-# NOTE the overview Earth's rotation is DECORATIVE (90 s/rev wall clock),
-# ~16× faster than the GMST frame the backend computes visibility in — the
-# marker sticks to the right spot on the TEXTURE, but 3D sat-overhead
-# geometry will not correlate with ground_target.visible_sats. The
-# authoritative visibility read is the 2D coverage map + the numbers.
+# The Earth's rotateZ is now the REAL one — the backend's broadcast gmst_rad,
+# applied as rotateZ = GMST − this offset (see set_earth_rotation). So the
+# marker sits at ECI right ascension GMST + lon, where the site physically is,
+# and sat-overhead geometry in the viewport DOES correlate with
+# ground_target.visible_sats. Fallback only: with no gmst_rad broadcast the
+# spin reverts to the decorative 90 s/rev wall clock and that correlation is
+# lost — there the 2D coverage map stays the authoritative read.
 GROUND_MARKER_PATH = f"{EARTH_PATH}/GroundMarker"
 GROUND_MARKER_MAT  = f"{EARTH_PATH}/GroundMarkerMat"
 GROUND_MARKER_LON_OFFSET_DEG = 180.0
@@ -1320,14 +1444,26 @@ if _HAS_KIT:
             self._anchor_wall_s: float = time.monotonic()
             self._backend_running: bool = True
 
-            # Earth spin — separate wall-clock anchor.
+            # Earth spin — driven by the broadcast GMST; this wall-clock
+            # anchor is only the offline fallback.
             self._earth_anchor_wall_s: float = time.monotonic()
             self._earth_rotation_logged: bool = False
+
+            # Broadcast sky frame (FleetSnapshot.gmst_rad / .sun_unit_teme):
+            # the single authority for the rendered terminator. Both stay None
+            # until a packet actually carries them, and every consumer falls
+            # back to its legacy behaviour while they are None.
+            self._gmst_rad: Optional[float] = None
+            self._gmst_sim_s: Optional[float] = None   # sim_time_s of that GMST
+            self._sun_unit: Optional[tuple[float, float, float]] = None
+            self._sun_applied: Optional[tuple[float, float, float]] = None
+            self._sky_logged: bool = False
 
             # Constellation cache.
             self._constellation_id: Optional[str] = None
             self._pending_constellation: Optional[str] = "single_iss"   # bootstrap
-            self._base_ring_units: list[tuple[float, float, float]] = []
+            # One ring per Walker plane / SSO shell, in scene units.
+            self._rings_units: list[list[tuple[float, float, float]]] = []
             self._planes: int = 1
             self._sats_per_plane: int = 1
             self._phasing: int = 0
@@ -1479,10 +1615,31 @@ if _HAS_KIT:
                     detail = await asyncio.to_thread(fetch_constellation, pending)
                     if detail is not None:
                         try:
-                            pts_km = detail.get("ring_eci_km", [])
-                            if pts_km:
-                                self._base_ring_units = [_km_to_units(tuple(p)) for p in pts_km]
-                                self._planes         = int(detail.get("planes", 1))
+                            rings_km = detail.get("rings_eci_km") or []
+                            if not rings_km:
+                                # Legacy single-ring backend: rebuild the old
+                                # per-plane rotation so it still renders. NOTE
+                                # an SSO design served this way WILL fan out —
+                                # that is exactly the bug rings_eci_km fixes.
+                                base = detail.get("ring_eci_km") or []
+                                n_pl = max(1, int(detail.get("planes", 1)))
+                                if base:
+                                    rings_km = [
+                                        [_rotate_z(tuple(p), k * 2.0 * math.pi / n_pl)
+                                         for p in base]
+                                        for k in range(n_pl)
+                                    ]
+                                    _log("rings_eci_km absent — falling back to "
+                                         f"ring_eci_km rotated into {n_pl} plane(s)")
+                            if rings_km:
+                                rings_units = [[_km_to_units(tuple(p)) for p in ring]
+                                               for ring in rings_km if ring]
+                                declared = int(detail.get("planes", len(rings_units)))
+                                if declared != len(rings_units):
+                                    _log(f"published {len(rings_units)} ring(s) but "
+                                         f"planes={declared} — trusting the rings")
+                                self._rings_units    = rings_units
+                                self._planes         = len(rings_units)
                                 self._sats_per_plane = int(detail.get("sats_per_plane", 1))
                                 self._phasing        = int(detail.get("phasing", 0))
                                 self._period_s       = float(detail.get("period_s", 5574.0))
@@ -1492,7 +1649,7 @@ if _HAS_KIT:
                                     self, "_pending_constellation_rev", 0)
                                 self._constellation_dirty = True
                                 _log(f"constellation cached: {pending} "
-                                     f"({self._planes}p × {self._sats_per_plane}s, "
+                                     f"({self._planes} ring(s) × {self._sats_per_plane}s, "
                                      f"period={self._period_s:.0f}s, scale=x{self._time_scale:.0f})")
                         except Exception as exc:  # noqa: BLE001
                             _log(f"constellation parse error: {exc}")
@@ -1534,6 +1691,9 @@ if _HAS_KIT:
                         # ground marker is gone, so force a re-author on the
                         # next poll if a target is (still) set.
                         self._ground_marker_key = None
+                        # ...and the sun's authored direction reverts to the
+                        # stage's placeholder, so force a re-aim.
+                        self._sun_applied = None
                         # When we land on the satellite stage, re-apply the
                         # cached hardware loadout. The stage swap closed the
                         # previous stage's variant selections so we have to
@@ -1617,6 +1777,24 @@ if _HAS_KIT:
             # design revision the snapshot carries — a same-id redesign must
             # refetch the ring or the viewport keeps drawing the old orbit.
             constel = state.get("constellation") or {}
+
+            # Sky frame for the overview renderer — the Greenwich sidereal
+            # angle and the Earth→Sun unit vector for the instant this packet
+            # describes, in the same TEME frame as the fleet ECI km. Absent on
+            # an older backend, in which case both stay None and the renderer
+            # keeps its legacy fallbacks.
+            gm = constel.get("gmst_rad")
+            if isinstance(gm, (int, float)) and math.isfinite(float(gm)):
+                self._gmst_rad = float(gm)
+                self._gmst_sim_s = backend_sim
+            sun_unit = _unit_or_none(constel.get("sun_unit_teme"))
+            if sun_unit is not None:
+                self._sun_unit = sun_unit
+                if not self._sky_logged:
+                    self._sky_logged = True
+                    _log(f"sky frame live: sun_unit_teme={sun_unit}, "
+                         f"gmst={self._gmst_rad}")
+
             cid = constel.get("constellation_id")
             rev = int(constel.get("design_rev", 0) or 0)
             cached_rev = getattr(self, "_constellation_rev", 0)
@@ -1626,6 +1804,22 @@ if _HAS_KIT:
                      f"{self._constellation_id} r{cached_rev} -> {cid} r{rev}")
                 self._pending_constellation = cid
                 self._pending_constellation_rev = rev
+
+        def _gmst_now(self, sim_now: Optional[float]) -> Optional[float]:
+            """The broadcast GMST advanced to THIS frame. The backend sends it
+            at 5 Hz; between packets it advances at the true sidereal rate
+            × the sim time scale, which keeps the spin smooth at 60 fps
+            without inventing a rate. None while the backend has never sent
+            one — the caller then falls back to the decorative spin."""
+            g = self._gmst_rad
+            if g is None or not math.isfinite(g):
+                return None
+            if sim_now is None or self._gmst_sim_s is None:
+                return g
+            d_sim = sim_now - self._gmst_sim_s
+            if not math.isfinite(d_sim):
+                return g
+            return g + d_sim * self._time_scale * 2.0 * math.pi / SIDEREAL_DAY_S
 
         # ---- per-frame update --------------------------------------------
         def _on_update(self, _event) -> None:
@@ -1667,30 +1861,46 @@ if _HAS_KIT:
             if self._current_stage != self._stages.get("overview"):
                 return
 
-            # Earth spin — wall-clock, unaffected by backend.
-            earth_sim_s = time.monotonic() - self._earth_anchor_wall_s
-            set_earth_rotation(stage, earth_sim_s)
+            # Sim clock for this frame (None until the first /state poll).
+            sim_now = (
+                self._anchor_sim_s + (
+                    (time.monotonic() - self._anchor_wall_s)
+                    if self._backend_running else 0.0)
+                if self._anchor_sim_s is not None else None
+            )
+
+            # Sky frame — the Earth spins by the broadcast GMST and the Sun is
+            # aimed by the broadcast sun_unit_teme, so the rendered terminator
+            # is the one the orbits were designed against.
+            gmst_now = self._gmst_now(sim_now)
+            set_earth_rotation(
+                stage, time.monotonic() - self._earth_anchor_wall_s, gmst_now)
+            if self._sun_unit is not None and _sun_moved(self._sun_unit, self._sun_applied):
+                first_aim = self._sun_applied is None
+                if set_overview_sun(stage, self._sun_unit):
+                    self._sun_applied = self._sun_unit
+                    if first_aim:
+                        _log(f"sun aimed at {self._sun_unit} "
+                             f"(rotateXYZ {_sun_rotate_xyz(self._sun_unit)})")
             if not self._earth_rotation_logged:
-                _log("earth rotation driver tick — overview stage active")
+                _log("earth rotation driver tick — overview stage active "
+                     f"(gmst={'broadcast' if gmst_now is not None else 'wall-clock fallback'})")
                 self._earth_rotation_logged = True
 
             # Constellation rebuild on first cache or any switch.
-            if self._constellation_dirty and self._base_ring_units:
+            if self._constellation_dirty and self._rings_units:
                 rebuild_constellation(
-                    stage, self._base_ring_units,
-                    self._planes, self._sats_per_plane, self._phasing,
+                    stage, self._rings_units,
+                    self._sats_per_plane, self._phasing,
                 )
                 self._constellation_dirty = False
 
             # Per-frame fleet position update.
-            if not self._base_ring_units or self._anchor_sim_s is None:
+            if not self._rings_units or sim_now is None:
                 return
-            sim_now = self._anchor_sim_s + (
-                (time.monotonic() - self._anchor_wall_s) if self._backend_running else 0.0
-            )
             sim_phase_rad = (sim_now * self._time_scale * 2.0 * math.pi / self._period_s) % (2.0 * math.pi)
             positions = compute_fleet_positions(
-                self._base_ring_units, self._planes, self._sats_per_plane, self._phasing,
+                self._rings_units, self._sats_per_plane, self._phasing,
                 sim_phase_rad=sim_phase_rad,
             )
             _set_fleet_points(stage, positions)

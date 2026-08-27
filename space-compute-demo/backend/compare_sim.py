@@ -28,6 +28,7 @@ from typing import Any
 from sgp4.api import Satrec
 
 import design_presets
+from services import timebase as _timebase
 from models import (
     CompareLiveState,
     CompareLiveVariant,
@@ -122,9 +123,8 @@ class _OfflineTwin(StateEngine):
                                          preset.base_tle_line2)
 
     def _tick_fleet(self, t: float) -> tuple[float, float, float]:
-        scaled = t * _consts.TIME_SCALE
-        e, r, v = self._satrec.sgp4(_consts.DEMO_JD0,
-                                    _consts.DEMO_FR0 + scaled / 86400.0)
+        jd, fr = _timebase.jd_at(t)
+        e, r, v = self._satrec.sgp4(jd, fr)
         if e:
             self._tracked_vel_km_s = (0.0, 0.0, 0.0)
             return (0.0, 0.0, 0.0)

@@ -4,37 +4,37 @@ import { Vector3 } from 'three'
 import { colors } from '../../design/tokens'
 import { Stars } from '../overview/earth/Stars'
 import { useSatPosition } from '../../hooks/useFleetPositions'
+import { useSkyFrame } from '../../hooks/useSkyFrame'
 import { useSmoothSimTime } from '../../hooks/useSmoothSimTime'
 import { useTelemetryStore } from '../../store/useTelemetryStore'
 import {
   ConstellationRings, DayNightEarth, GmstWireframe, SatReticle, SunMarker,
 } from './orbitScene'
-import {
-  EARTH_RADIUS_KM, SIDEREAL_DAY_S, SUN_DIR_ECI, eciToDisplay,
-} from './orbitMath'
+import { EARTH_RADIUS_KM, eciToDisplay } from './orbitMath'
 
 /**
  * TwinOrbitFallback — the Twin page's full-viewport LOCAL render when the
  * Omniverse stream is offline. Unlike the Overview page's decorative
  * FallbackEarth (mock fleet on stylised ribbons), this draws the REAL orbit:
- * the day/night Earth under the backend's fixed ECI sun, the active
- * constellation's true orbit ring(s), and the tracked satellite gliding
- * along its SGP4-propagated position on the smoothly-extrapolated sim clock
- * — so the "satellite moving around the Earth" story survives Kit being
+ * an Earth spinning by the broadcast GMST under the broadcast sun direction,
+ * the active constellation's true orbit ring(s), and the tracked satellite
+ * gliding along its SGP4-propagated position on the smoothly-extrapolated sim
+ * clock — so the "satellite moving around the Earth" story survives Kit being
  * down. A chase camera keeps the satellite in frame the whole orbit.
  */
 export function TwinOrbitFallback() {
   const simTime   = useSmoothSimTime()
   const selected  = useTelemetryStore((s) => s.selectedSatIdx)
   const detail    = useTelemetryStore((s) => s.constellationDetail)
-  const timeScale = detail?.time_scale ?? 60
   const sat       = useSatPosition(selected, simTime)
 
+  // Sun + GMST come from the backend packet (hooks/useSkyFrame) — same frame
+  // and same instant as the ECI km the rings and the reticle are drawn from.
+  const { sunDisplay, gmstRad } = useSkyFrame()
   const sunDir = useMemo(
-    () => new Vector3(...eciToDisplay(SUN_DIR_ECI)).normalize(),
-    [],
+    () => (sunDisplay ? new Vector3(...sunDisplay).normalize() : null),
+    [sunDisplay],
   )
-  const gmst = (simTime * timeScale / SIDEREAL_DAY_S) * 2 * Math.PI
 
   const satPos = useMemo<[number, number, number] | null>(() => {
     if (!sat) return null
@@ -57,13 +57,13 @@ export function TwinOrbitFallback() {
       <Suspense fallback={null}>
         <Stars />
       </Suspense>
-      <DayNightEarth sunDir={sunDir} />
-      <GmstWireframe gmst={gmst} />
+      <DayNightEarth sunDir={sunDir} gmst={gmstRad} />
+      <GmstWireframe gmst={gmstRad} />
       {detail && detail.ring_eci_km.length > 0 && sat && (
         <ConstellationRings detail={detail} selectedPlane={sat.planeIdx} />
       )}
       {satPos && <SatReticle pos={satPos} scale={1.6} />}
-      <SunMarker dir={sunDir} />
+      {sunDir && <SunMarker dir={sunDir} />}
       <ChaseCamera satPos={satPos} />
     </Canvas>
   )

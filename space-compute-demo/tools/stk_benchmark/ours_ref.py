@@ -9,6 +9,16 @@ geodyn) and mirrors state_engine.py's short inline formulas verbatim, driven
 at scaled-time = real seconds since the DEMO epoch (the engine multiplies
 sim time by TIME_SCALE=60; we feed sim_t = t/60 so both sides share one
 absolute timeline).
+
+TIME SOURCE: pinned to the DEMO mission for the whole file. The mission
+window is now user-settable (services.timebase), and this file mixes two
+routes into it -- `sgp4_rv` / `sun_state` want the demo epoch explicitly,
+while `oc.eci_to_lat_lon_alt` reads whatever mission is installed. Calling
+`timebase.reset_mission()` at import makes those the same instant again, so
+benchmark truth cannot drift just because someone applied a re-timed design
+in the same interpreter. Both routes go through `services.timebase` helpers
+that reduce to the historical `DEMO_JD0 / DEMO_FR0 + t/86400` arithmetic
+bit-for-bit, so the exported CSVs are unchanged.
 """
 
 import csv
@@ -27,21 +37,32 @@ from sgp4.api import Satrec  # noqa: E402
 from services import orbit_catalog as oc  # noqa: E402
 from services import constellations as cs  # noqa: E402
 from services import geodyn  # noqa: E402
+from services import timebase  # noqa: E402
+
+# Pin the whole file to the demo mission (see the module docstring).
+timebase.reset_mission()
 
 SIGMA = 5.67e-8
 
 
 def sgp4_rv(satrec, t_s):
-    """TEME position/velocity at DEMO epoch + t_s (mirrors oc._propagate_eci)."""
-    e, r, v = satrec.sgp4(oc.DEMO_JD0, oc.DEMO_FR0 + t_s / 86400.0)
+    """TEME position/velocity at DEMO epoch + t_s (mirrors oc._propagate_eci).
+
+    `timebase.jd_after` returns (DEMO_JD0, DEMO_FR0 + t_s/86400.0) under the
+    pinned demo mission -- identical arithmetic to the old inline form."""
+    jd, fr = timebase.jd_after(t_s)
+    e, r, v = satrec.sgp4(jd, fr)
     if e:
         return None, None
     return r, v
 
 
 def sun_state(t_s):
-    """Real sun at the absolute epoch: (vector km, unit, S_eff W/m²)."""
-    jd = oc.DEMO_JD0 + oc.DEMO_FR0 + t_s / 86400.0
+    """Real sun at the absolute epoch: (vector km, unit, S_eff W/m²).
+
+    `timebase.jd_utc_after` sums (DEMO_JD0 + DEMO_FR0) + t_s/86400.0 in that
+    order -- identical arithmetic to the old inline form."""
+    jd = timebase.jd_utc_after(t_s)
     sun_km, r_au = geodyn.sun_teme(jd)
     n = math.sqrt(sum(c * c for c in sun_km)) or 1.0
     unit = (sun_km[0] / n, sun_km[1] / n, sun_km[2] / n)

@@ -13,16 +13,29 @@ import { colors } from '../../design/tokens'
  * orbitScene — the shared Three.js building blocks for the REAL-orbit views:
  * the MiniOrbitHud (bottom-left of the Twin viewport) and TwinOrbitFallback
  * (the full-viewport local render when the Omniverse stream is offline).
- * Both draw the same physically-honest scene: a day/night Earth lit from the
- * backend's fixed ECI sun direction, a GMST-rotating wireframe, the active
- * constellation's orbit rings, and the tracked satellite as a pulsing
- * reticle moving along its true propagated position.
+ *
+ * Both draw the same scene: a day/night Earth spinning by the BROADCAST GMST
+ * under an inertial sun taken from the BROADCAST `sun_unit_teme` (see
+ * `hooks/useSkyFrame`), the active constellation's orbit rings in ECI, and the
+ * tracked satellite as a pulsing reticle on its true propagated position.
+ *
+ * Every ECI quantity — ring point, satellite, and the sun alike — reaches this
+ * scene through the SAME `eciToDisplay` transform, so a dawn–dusk ring lands on
+ * the rendered terminator by construction rather than by coincidence. Neither
+ * the sun direction nor GMST is synthesised here; when the sky frame is unknown
+ * the Earth renders in an explicit no-terminator state instead of guessing.
  */
 
 // ---------------------------------------------------------------------------
 // Day/night Earth — solid sphere with a sun-direction shader. The lit
 // hemisphere glows cyan; the dark side is near-black. Terminator is a soft
 // smoothstep so the boundary reads but isn't a hard line.
+//
+// The mesh is spun about display +Y by GMST while `uSunDir` stays inertial —
+// the planet turns under the light, never the other way round. On today's
+// untextured sphere that rotation is visually neutral, but it gives the surface
+// a defined longitude shared with GmstWireframe (which has always rotated), so
+// the grid and any future surface detail cannot disagree about where 0°E is.
 // ---------------------------------------------------------------------------
 const dayNightVert = /* glsl */`
   varying vec3 vNormalW;
@@ -36,13 +49,20 @@ const dayNightVert = /* glsl */`
 `
 const dayNightFrag = /* glsl */`
   precision highp float;
+  // Unit vector = the broadcast sun direction; ZERO LENGTH = no sky frame yet.
+  // With no sun we render a flat unlit-data globe rather than a terminator
+  // pointing somewhere made up. (Encoded in the length rather than a second
+  // uniform so the render loop only ever mutates this one nested Vector3.)
   uniform vec3 uSunDir;
   varying vec3 vNormalW;
   varying vec3 vPositionW;
   void main() {
     vec3 N = normalize(vNormalW);
-    float ndl = dot(N, normalize(uSunDir));
-    float day = smoothstep(-0.15, 0.45, ndl);
+    float sunLen = length(uSunDir);
+    float hasSun = step(1e-4, sunLen);
+    vec3 S = hasSun > 0.5 ? uSunDir / sunLen : vec3(0.0, 0.0, 1.0);
+    float ndl = dot(N, S);
+    float day = mix(0.35, smoothstep(-0.15, 0.45, ndl), hasSun);
     vec3 nightCol = vec3(0.015, 0.025, 0.05);
     vec3 dayCol   = vec3(0.08, 0.28, 0.55);
     vec3 col = mix(nightCol, dayCol, day);
@@ -53,25 +73,39 @@ const dayNightFrag = /* glsl */`
   }
 `
 
-export function DayNightEarth({ sunDir }: { sunDir: Vector3 }) {
+export function DayNightEarth({
+  sunDir, gmst = 0,
+}: { sunDir: Vector3 | null; gmst?: number }) {
+  const ref = useRef<Group>(null!)
+  // Built once: the sun moves by mutating the uniform, not by rebuilding the
+  // material (which the old `[sunDir]` dep did on every packet, leaking one
+  // ShaderMaterial per tick now that the direction is live).
   const material = useMemo(() => new ShaderMaterial({
     vertexShader: dayNightVert,
     fragmentShader: dayNightFrag,
-    uniforms: { uSunDir: { value: sunDir.clone() } },
-  }), [sunDir])
-  useFrame(() => { material.uniforms.uSunDir.value.copy(sunDir) })
+    uniforms: { uSunDir: { value: new Vector3(0, 0, 0) } },
+  }), [])
+  useEffect(() => () => material.dispose(), [material])
+  useFrame(() => {
+    const u = material.uniforms.uSunDir.value as Vector3
+    if (sunDir) u.copy(sunDir)
+    else u.set(0, 0, 0)
+    if (ref.current) ref.current.rotation.y = gmst
+  })
   return (
-    <mesh>
-      <sphereGeometry args={[0.985, 48, 48]} />
-      <primitive object={material} attach="material" />
-    </mesh>
+    <group ref={ref}>
+      <mesh>
+        <sphereGeometry args={[0.985, 48, 48]} />
+        <primitive object={material} attach="material" />
+      </mesh>
+    </group>
   )
 }
 
 // ---------------------------------------------------------------------------
 // Wireframe overlay — sparse lat/lon grid on top of the day/night sphere.
-// Rotates with GMST so the surface and the fixed-ECI sun direction give a
-// visibly drifting terminator.
+// Rotates by the same broadcast GMST as the sphere beneath it, so the grid
+// marks real longitudes and the terminator drifts across it at the true rate.
 // ---------------------------------------------------------------------------
 function makeLatLonGrid(radius: number, parallels: number, meridians: number): BufferGeometry {
   const pts: number[] = []
@@ -195,15 +229,19 @@ export function SatReticle({ pos, scale = 1 }: { pos: [number, number, number]; 
   )
 }
 
+/** Beacon on the broadcast sun direction. Callers render it only when the sky
+ *  frame is known — there is no default position to fall back to. */
 export function SunMarker({ dir }: { dir: Vector3 }) {
   // A small distant beacon well outside the orbit shell — sized so it reads
-  // as "the sun is over there", not a nearby body.
-  const pos = useMemo<[number, number, number]>(
-    () => [dir.x * 3.6, dir.y * 3.6, dir.z * 3.6],
-    [dir],
-  )
+  // as "the sun is over there", not a nearby body. Tracked per frame so the
+  // marker follows the live vector whether the caller replaces it or mutates
+  // it in place.
+  const ref = useRef<Group>(null!)
+  useFrame(() => {
+    if (ref.current) ref.current.position.copy(dir).multiplyScalar(3.6)
+  })
   return (
-    <group position={pos}>
+    <group ref={ref} position={[dir.x * 3.6, dir.y * 3.6, dir.z * 3.6]}>
       <mesh>
         <sphereGeometry args={[0.045, 12, 12]} />
         <meshBasicMaterial color="#FFE9B0" />

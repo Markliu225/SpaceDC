@@ -23,30 +23,29 @@ from dataclasses import dataclass
 from typing import Iterable, Optional
 import math
 
-from sgp4.api import Satrec, jday
+from sgp4.api import Satrec
+
+from . import timebase
 
 
 # ---------------------------------------------------------------------------
-# Demo time scale. Real LEO period is ~90 min; for a demo we want one orbit
-# to take a handful of wall-clock seconds. SimTime fed to SGP4 = wall_sim_s
-# * TIME_SCALE. A 60× scale puts one ISS orbit at ~90 s — matches the
-# previous placeholder cadence and the Earth's 90 s/rev visual setting.
+# Demo time scale + epoch now live in services.timebase (one source of truth
+# for mission time). Re-exported here under their historical names because
+# tools/stk_benchmark and tools/validate_elements.py import them from this
+# module. Real LEO period is ~90 min; a 60× scale puts one ISS orbit at ~90 s
+# of wall clock — matching the Earth's 90 s/rev visual setting.
+#
+# NOTE these are the DEFAULT-mission values. Propagation must go through
+# timebase.jd_at / jd_after, which follow a re-timed mission window; these
+# constants stay pinned to the demo epoch for the benchmark tooling.
 # ---------------------------------------------------------------------------
-TIME_SCALE = 60.0
-
-# A fixed epoch we use as "demo t=0". This is purely a reference point — TLEs
-# are propagated forward from this Julian Date by sim_t seconds. Picking a
-# date close to the TLE epoch keeps propagation accuracy reasonable; SGP4
-# stays usable for ~weeks around the TLE epoch.
-DEMO_EPOCH_YEAR  = 2024
-DEMO_EPOCH_MONTH = 8
-DEMO_EPOCH_DAY   = 22
-DEMO_EPOCH_HOUR  = 12
-
-DEMO_JD0, DEMO_FR0 = jday(
-    DEMO_EPOCH_YEAR, DEMO_EPOCH_MONTH, DEMO_EPOCH_DAY,
-    DEMO_EPOCH_HOUR, 0, 0,
-)
+TIME_SCALE       = timebase.TIME_SCALE
+DEMO_EPOCH_YEAR  = timebase.DEMO_EPOCH_YEAR
+DEMO_EPOCH_MONTH = timebase.DEMO_EPOCH_MONTH
+DEMO_EPOCH_DAY   = timebase.DEMO_EPOCH_DAY
+DEMO_EPOCH_HOUR  = timebase.DEMO_EPOCH_HOUR
+DEMO_JD0         = timebase.DEMO_JD0
+DEMO_FR0         = timebase.DEMO_FR0
 
 
 @dataclass(frozen=True)
@@ -130,11 +129,12 @@ def _make_satrec(mode: str) -> Satrec:
 
 
 def _propagate_eci(satrec: Satrec, scaled_t_s: float) -> tuple[float, float, float]:
-    """ECI position in km at DEMO_EPOCH + scaled_t_s seconds."""
-    # SGP4 wants Julian date split into integer day + fraction. jday() returns
-    # (jd, fr) for an absolute date; we add the offset as a fractional day.
-    offset_days = scaled_t_s / 86400.0
-    e, r, _v = satrec.sgp4(DEMO_JD0, DEMO_FR0 + offset_days)
+    """ECI position in km at mission start + scaled_t_s REAL seconds."""
+    # SGP4 wants the Julian date split into integer day + fraction; timebase
+    # anchors the day on the mission start and folds the offset into the
+    # fraction.
+    jd, fr = timebase.jd_after(scaled_t_s)
+    e, r, _v = satrec.sgp4(jd, fr)
     if e:
         # SGP4 error codes 1-6 mean the TLE has decayed or numerical issues.
         # Don't crash the engine — return zeros and let the scene render at origin.
@@ -143,7 +143,7 @@ def _propagate_eci(satrec: Satrec, scaled_t_s: float) -> tuple[float, float, flo
 
 
 def propagate(mode: str, sim_t_s: float) -> tuple[float, float, float]:
-    """Position in ECI km at demo time `sim_t_s` (real wall-seconds since demo start)."""
+    """Position in ECI km at demo time `sim_t_s` (sim-seconds since mission start)."""
     satrec = _make_satrec(mode)
     return _propagate_eci(satrec, sim_t_s * TIME_SCALE)
 
@@ -151,8 +151,8 @@ def propagate(mode: str, sim_t_s: float) -> tuple[float, float, float]:
 def sample_orbit(mode: str, n_points: int = 128) -> list[tuple[float, float, float]]:
     """N samples around one full orbital period, equally spaced in sim time.
 
-    Returns ECI km positions tracing one revolution starting at the demo
-    epoch. The +1 sample at the end is omitted because the curve is closed
+    Returns ECI km positions tracing one revolution starting at the mission
+    start. The +1 sample at the end is omitted because the curve is closed
     by the consumer (Kit's `BasisCurves` periodic mode); we keep the loop
     open here so the caller can choose linear or periodic interpretation.
     """
@@ -171,7 +171,7 @@ def sample_orbit(mode: str, n_points: int = 128) -> list[tuple[float, float, flo
 # ---------------------------------------------------------------------------
 # Lat/lon/altitude helper — used by SatelliteState so the existing 14
 # parameter cards (LAT / LON / ALTITUDE) keep working with real positions.
-# TEME → ECEF by true GMST at the demo epoch + scaled time, then WGS-84
+# TEME → ECEF by true GMST at the mission start + scaled time, then WGS-84
 # geodetic latitude/altitude (STK-benchmarked: ≤0.006° / ≤0.06 km against
 # STK 11 LLA State — see tools/stk_benchmark).
 # ---------------------------------------------------------------------------
@@ -182,9 +182,8 @@ from . import geodyn  # noqa: E402  (after constants — avoids cycle at import)
 
 def eci_to_lat_lon_alt(x_km: float, y_km: float, z_km: float, sim_t_s: float) -> tuple[float, float, float]:
     """(lat_deg, lon_deg, alt_km) — geodetic WGS-84 sub-point at the real
-    absolute epoch (DEMO_EPOCH + sim_t_s × TIME_SCALE)."""
-    scaled = sim_t_s * TIME_SCALE
-    jd = DEMO_JD0 + DEMO_FR0 + scaled / 86400.0
+    absolute epoch (mission start + sim_t_s × TIME_SCALE)."""
+    jd = timebase.jd_utc_at(sim_t_s)
     xe, ye, ze = geodyn.teme_to_ecef(x_km, y_km, z_km, jd)
     lat, lon, alt = geodyn.ecef_to_geodetic(xe, ye, ze)
     if lon > 180:  lon -= 360

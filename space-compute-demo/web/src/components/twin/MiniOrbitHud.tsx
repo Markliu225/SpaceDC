@@ -2,26 +2,27 @@ import { Canvas } from '@react-three/fiber'
 import { useMemo } from 'react'
 import { Vector3 } from 'three'
 import { useSatPosition } from '../../hooks/useFleetPositions'
+import { useSkyFrame } from '../../hooks/useSkyFrame'
 import { useSmoothSimTime } from '../../hooks/useSmoothSimTime'
 import { useDemoStore } from '../../store/demoStore'
 import { useTelemetryStore } from '../../store/useTelemetryStore'
 import {
   ConstellationRings, DayNightEarth, GmstWireframe, SatReticle, SunMarker,
 } from './orbitScene'
-import {
-  EARTH_RADIUS_KM, SIDEREAL_DAY_S, SUN_DIR_ECI,
-  eciToDisplay,
-} from './orbitMath'
+import { EARTH_RADIUS_KM, eciToDisplay } from './orbitMath'
 
 /**
  * MiniOrbitHud — compact orbit HUD at the bottom-left of the Satellite
  * Twin viewport. Shows the active constellation (every plane's orbit ring),
  * highlights the selected sat's plane, places the sat as a pulsing reticle,
- * a sun marker at SUN_DIR_ECI, and a solid day/night Earth sphere whose
- * terminator is computed from the SAME sun direction the backend uses for
- * `sun_factor`. The reticle + wireframe animate on the smoothly-extrapolated
- * sim clock (useSmoothSimTime) so the orbital motion glides at frame rate
- * instead of jumping once per second.
+ * a sun marker on the sun direction BROADCAST with the current fleet packet,
+ * and a day/night Earth whose terminator is computed from that same vector —
+ * the one the backend lights `sun_factor` with, in the same frame at the same
+ * instant, via `hooks/useSkyFrame`. The reticle animates on the
+ * smoothly-extrapolated sim clock (useSmoothSimTime) so the orbital motion
+ * glides at frame rate instead of jumping once per second; the Earth's spin
+ * steps at the 1 Hz broadcast rate, which at 60x time scale is 0.25 degrees a
+ * step — true beats smooth.
  */
 
 function Brackets() {
@@ -44,7 +45,6 @@ export function MiniOrbitHud() {
   const simTime   = useSmoothSimTime()
   const selected  = useTelemetryStore((s) => s.selectedSatIdx)
   const detail    = useTelemetryStore((s) => s.constellationDetail)
-  const timeScale = detail?.time_scale ?? 60
   // The physics engine tracks fleet[0]; when it is the selected sat and the
   // backend is live, the badge + LAT/LON/ALT read the engine's authoritative
   // values so the HUD can never contradict the telemetry panels (the local
@@ -59,13 +59,10 @@ export function MiniOrbitHud() {
         altitudeKm: backendSat.altitude_km }
     : local
 
+  const { sunDisplay, gmstRad } = useSkyFrame()
   const sunDir = useMemo(
-    () => new Vector3(...eciToDisplay(SUN_DIR_ECI)).normalize(),
-    [],
-  )
-  const gmst = useMemo(
-    () => (simTime * timeScale / SIDEREAL_DAY_S) * 2 * Math.PI,
-    [simTime, timeScale],
+    () => (sunDisplay ? new Vector3(...sunDisplay).normalize() : null),
+    [sunDisplay],
   )
 
   const satPos = useMemo<[number, number, number] | null>(() => {
@@ -116,13 +113,13 @@ export function MiniOrbitHud() {
             gl={{ antialias: true, alpha: true }}
           >
             <ambientLight intensity={0.3} />
-            <DayNightEarth sunDir={sunDir} />
-            <GmstWireframe gmst={gmst} />
+            <DayNightEarth sunDir={sunDir} gmst={gmstRad} />
+            <GmstWireframe gmst={gmstRad} />
             {detail && detail.ring_eci_km.length > 0 && sat && (
               <ConstellationRings detail={detail} selectedPlane={sat.planeIdx} />
             )}
             {satPos && <SatReticle pos={satPos} />}
-            <SunMarker dir={sunDir} />
+            {sunDir && <SunMarker dir={sunDir} />}
           </Canvas>
         </div>
 

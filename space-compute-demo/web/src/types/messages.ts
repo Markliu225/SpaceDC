@@ -213,6 +213,20 @@ export interface FleetSnapshot {
   isl_links: number;
   gsl_links: number;
   agg_throughput_mbps: number;
+  /** Instantaneous whole-fleet solar collection (W), eclipse included.
+   *  Independent of the ground target — feeds the energy-harvest chart. */
+  solar_total_w: number;
+  /** Sats with sun_visible_fraction > 0 (i.e. not fully eclipsed). */
+  solar_lit_sats: number;
+  /** Earth→Sun unit vector, TEME — the SAME frame and the SAME instant as the
+   *  fleet ECI km this packet carries. The single authority for every
+   *  renderer's day/night terminator and for the dawn–dusk β preview: an
+   *  orbit designed against this sun lands on the rendered terminator by
+   *  construction rather than by coincidence. */
+  sun_unit_teme: [number, number, number];
+  /** Greenwich mean sidereal time (radians) at this packet's instant. The
+   *  Earth mesh is spun by this; the sun above stays inertial. */
+  gmst_rad: number;
   /** Monotonic revision of the custom orbit design (bumps on each redesign
    *  even though the constellation id stays "custom_design"). 0 for built-ins. */
   design_rev?: number;
@@ -250,6 +264,13 @@ export interface ConstellationDetail {
   /** Sampled positions of the base orbit (plane 0, sat 0) in ECI km.
    *  Other planes = rotation about +Z; other sats = phase offset along ring. */
   ring_eci_km: [number, number, number][];
+  /** One sampled ring per plane (Walker) / per shell (SSO), ECI km, each
+   *  propagated from that plane's own TLE. `rings_eci_km[0]` is
+   *  `ring_eci_km`. SSO shells share one RAAN and differ only in altitude and
+   *  the sun-synchronous inclination that goes with it, so they draw as
+   *  concentric rings on one plane — consumers must NOT re-derive planes by
+   *  rotating ring 0 about +Z. */
+  rings_eci_km: [number, number, number][][];
 }
 
 /** Reconfigurable hardware loadout for one satellite. Drives both backend
@@ -530,12 +551,73 @@ export interface OrbitElements {
   period_min: number;
 }
 
-/** GET/POST /orbit_design payload — active constellation's elements + Walker. */
+/** One entry of the static propagation-model catalog. Only SGP4 is
+ *  implemented; the rest render (disabled) so the roadmap is visible. */
+export interface PropagatorOption {
+  id: string;
+  label: string;
+  implemented: boolean;
+  note: string;
+}
+
+/** One sun-synchronous shell of an SSO design (one plane per shell).
+ *  Every shell of a design carries the SAME `raan_deg` — the dawn–dusk node —
+ *  and differs only in altitude, in the sun-synchronous inclination that goes
+ *  with it, and therefore marginally in β. */
+export interface SsoShell {
+  altitude_km: number;
+  inclination_deg: number;
+  raan_deg: number;
+  sats: number;
+  /** Sun elevation above this shell's plane, degrees. |β| = 90° ⇔ the plane
+   *  contains the day/night terminator. */
+  beta_deg: number;
+}
+
+/** SSO pattern parameters + the shells they generate. Always present in
+ *  OrbitDesignInfo (last used values, else the defaults). */
+export interface SsoConfig {
+  alt_min_km: number;
+  alt_max_km: number;
+  layers: number;
+  sats_per_plane: number;
+  phasing: number;
+  total_sats: number;
+  /** Local time of the ascending node, hours: 18 = dusk, 6 = dawn. */
+  ltan_hours: number;
+  /** The shared dawn–dusk RAAN actually used: α_sun + 15°(LTAN − 12). */
+  raan_deg: number;
+  /** α_sun at the mission epoch (TEME), the RAAN above is measured from it. */
+  sun_ra_deg: number;
+  /** β of shell 0 — see SsoShell.beta_deg. NOT forced to 90°: the residual is
+   *  real seasonal geometry (the sun's declination), and hacking i or Ω to
+   *  hide it would stop the orbit being sun-synchronous. */
+  beta_deg: number;
+  shells: SsoShell[];
+}
+
+/** GET/POST /orbit_design payload — the active constellation's elements plus
+ *  the mission window, propagation model and constellation pattern in force. */
 export interface OrbitDesignInfo {
   active: string;
   name: string;
+  /** Constellation pattern in force. "custom" (TLE import) is never returned. */
+  mode: 'walker' | 'sso';
+  /** Selected propagation model id — always "sgp4" today. */
+  propagator: string;
+  /** Static catalog of all four models, implemented or not. */
+  propagators: PropagatorOption[];
+  /** ISO-8601 UTC mission instants. */
+  epoch_utc: string;
+  start_utc: string;
+  end_utc: string;
+  /** end_utc - start_utc, in real seconds. */
+  window_s: number;
+  /** Sim seconds → real seconds (60 = one sim second is a real minute). */
+  time_scale: number;
   elements: OrbitElements;
   walker: { planes: number; sats_per_plane: number; phasing: number; total_sats: number };
+  sso: SsoConfig;
 }
 
 /** One communication band: throughput vs elevation-mask requirement. */

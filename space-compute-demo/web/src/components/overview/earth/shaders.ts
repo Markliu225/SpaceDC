@@ -1,8 +1,11 @@
 /**
  * Custom GLSL for the fallback Earth.
  *
- * EARTH — day-side / night-side blend driven by sun direction. We don't
- * have CC0 8K textures in this repo, so the look is fully procedural:
+ * EARTH — day-side / night-side blend driven by `uSunDir`, which is the
+ * BROADCAST sun direction in display space (see sky.ts); the mesh itself is
+ * spun by GMST, and lighting is done in world space so the terminator lands
+ * where the sky frame says it does. We don't have CC0 8K textures in this
+ * repo, so the surface look is fully procedural:
  *   - day color from latitude (cooler near poles, warm equator green)
  *   - night color from a faint city-light glow proxy (perlin-ish)
  *   - blend factor = smoothstep(dot(normal, sun))
@@ -29,6 +32,10 @@ export const earthFrag = /* glsl */`
   precision highp float;
   uniform vec3 uSunDir;
   uniform float uTime;
+  // 1 once a real sun direction has been broadcast, 0 before that. At 0 the
+  // globe is shown evenly lit: with no sky frame there is no terminator, and
+  // inventing one is the exact bug this round exists to remove.
+  uniform float uSunKnown;
   varying vec3 vNormalW;
   varying vec3 vPositionW;
   varying vec2 vUv;
@@ -71,6 +78,8 @@ export const earthFrag = /* glsl */`
     // Lambertian falloff + small ambient lift so terminator isn't a hard line.
     float dayK = smoothstep(-0.12, 0.18, ndl);
     vec3 lit = mix(nightCol, dayCol * (0.35 + 0.65 * max(0.0, ndl)), dayK);
+    // Sun unknown -> flat daylight, no claimed day/night boundary.
+    lit = mix(dayCol * 0.72, lit, clamp(uSunKnown, 0.0, 1.0));
 
     // Subtle blue-shift at the limb to suggest atmosphere scattering on top.
     float limb = pow(1.0 - clamp(dot(N, normalize(cameraPosition - vPositionW)), 0.0, 1.0), 2.5);

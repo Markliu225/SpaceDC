@@ -3,7 +3,7 @@
     defaultPrim = "World"
     upAxis = "Z"
     metersPerUnit = 100000
-    doc = "Overview stage — Earth (sublayer earth_mesh.usda) self-rotates around its +Z geographic axis. Sun fixed in world space at 23.5° elevation above the equatorial plane → tilted terminator. /World/ConstellationGroup is fully authored at runtime by space.demo.scene based on the active constellation preset fetched from the backend."
+    doc = "Overview stage — Earth (sublayer earth_mesh.usda) rotates around its +Z geographic axis by the backend's broadcast GMST, and /World/Environment/Sun is re-aimed from the backend's broadcast sun_unit_teme, so the rendered day/night terminator is the physical one for the current sim instant rather than a fixed art direction. Both are written by space.demo.scene, which also authors /World/ConstellationGroup in full from the active preset's rings_eci_km (one ring per Walker plane / per SSO shell)."
     subLayers = [
         @./earth_mesh.usda@
     ]
@@ -18,9 +18,19 @@ def Xform "World"
 {
     # --------------------------------------------------------------------
     # Lights — single Sun + faint Sky ambient.
-    # Sun rotateXYZ(66.5°, 0, 45°) puts D_sun = (0.648, -0.648, 0.398) →
-    # azimuth -45° in XY, elevation +23.5° above equator → terminator
-    # tilted 23.5° from the N-S meridian.
+    #
+    # The Sun's DIRECTION is authored at runtime by space.demo.scene
+    # (set_overview_sun) from the backend's broadcast sun_unit_teme — the unit
+    # Earth→Sun vector in the same TEME frame, at the same instant, as the
+    # fleet ECI positions. A DistantLight emits along its local −Z, so the
+    # rotateXYZ below is the one that aims local +Z at the sun.
+    #
+    # The value here is a NEUTRAL PLACEHOLDER only: (90, 0, 90) puts the sun on
+    # the ECI +X axis (right ascension 0°, declination 0°). It is what renders
+    # while the backend is offline, and it deliberately claims no season and no
+    # tilt — the old hard-coded (66.5, 0, 45) / (0.648, -0.648, 0.398) was a
+    # made-up sun 141° away from the real one, which is why nothing lined up
+    # with the terminator.
     # --------------------------------------------------------------------
     def Xform "Environment"
     {
@@ -29,7 +39,7 @@ def Xform "World"
             float inputs:angle = 0.53
             float inputs:intensity = 3500.0
             color3f inputs:color = (1.0, 0.97, 0.92)
-            float3 xformOp:rotateXYZ = (66.5, 0, 45)
+            float3 xformOp:rotateXYZ = (90, 0, 90)
             uniform token[] xformOpOrder = ["xformOp:rotateXYZ"]
         }
         def DomeLight "Sky"
@@ -42,7 +52,11 @@ def Xform "World"
 
     # --------------------------------------------------------------------
     # Earth — overlay on the prim defined in earth_mesh.usda. xformOp:rotateZ
-    # is driven each frame by space.demo.scene (default value, no timeSamples).
+    # is driven each frame by space.demo.scene (default value, no timeSamples)
+    # as GMST − 180°: earth_day.jpg is Greenwich-centred, so local +X shows
+    # longitude −180 and that offset lands geographic longitude L at ECI right
+    # ascension GMST + L. Ground markers are children of this prim, so they
+    # inherit the spin and stay on their real sub-point.
     # --------------------------------------------------------------------
     over "Earth"
     {
@@ -53,8 +67,12 @@ def Xform "World"
     # --------------------------------------------------------------------
     # Constellation group — populated at runtime by space.demo.scene on
     # every constellation preset change:
-    #   - Rings/Ring_K : one BasisCurves per orbital plane (P rings).
-    #                    Each plane = base ring rotated about +Z by k·360°/P.
+    #   - Rings/Ring_K : one BasisCurves per ring in the backend's
+    #                    rings_eci_km — one per Walker plane, one per SSO
+    #                    shell. Kit does NOT rotate a single ring per plane
+    #                    any more: SSO shells share one dawn–dusk RAAN and
+    #                    differ only in altitude, and that rotation fanned
+    #                    them into planes that do not exist.
     #                    Non-emissive, thin gray-blue.
     #   - Fleet        : single UsdGeom.Points prim with T positions —
     #                    fast to update at 30 fps even for 1500+ sats.

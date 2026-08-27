@@ -23,7 +23,7 @@ import compare_sim
 import design_presets
 import satellite_assets
 from models import Envelope, StatePacket
-from services import constellations, orbit_catalog
+from services import constellations, orbit_catalog, timebase
 from state_engine import StateEngine
 
 log = logging.getLogger("space_compute_demo")
@@ -155,9 +155,17 @@ async def http_constellations():
 
 @app.get("/constellations/{preset_id}")
 async def http_constellation_detail(preset_id: str):
-    """Return one preset's params + the precomputed base orbit ring (128 ECI
-    km samples). The Kit renderer uses the ring + Walker params to lay out
-    every sat without round-tripping per-sat positions."""
+    """Return one preset's params + the precomputed orbit rings (128 ECI km
+    samples each). The Kit renderer and the Overview globe draw the rings and
+    use the pattern params to lay out every sat without round-tripping per-sat
+    positions.
+
+    `rings_eci_km` carries ONE ring per orbital plane (Walker) or per shell
+    (SSO); `ring_eci_km` is the legacy single-ring key and is exactly
+    `rings_eci_km[0]`. Consumers must stop rebuilding the other planes by
+    rotating ring 0 about +Z: that is only correct for Walker, and it is what
+    turned a dawn-dusk SSO design (all shells on ONE plane, differing only in
+    altitude and its sun-synchronous inclination) into a fan of planes."""
     preset = constellations.get_preset(preset_id)
     if preset is None:
         raise HTTPException(404, f"unknown constellation preset {preset_id!r}")
@@ -174,6 +182,7 @@ async def http_constellation_detail(preset_id: str):
         "period_s": preset.period_s,
         "time_scale": constellations.TIME_SCALE,
         "ring_eci_km": preset.ring_eci_km(),
+        "rings_eci_km": preset.rings_eci_km(),
     }
 
 
@@ -608,57 +617,135 @@ async def http_set_workload_profile(body: dict[str, Any]):
 
 
 # --- Orbit designer (Overview page) ----------------------------------------
-@app.get("/orbit_design")
-async def http_get_orbit_design():
-    """The ACTIVE constellation's classical orbital elements + Walker
-    parameters — the designer displays these for any preset, then edits
-    them into a custom design."""
+def _orbit_design_payload() -> dict[str, Any]:
+    """The /orbit_design body — GET and POST publish the identical
+    shape (POST just prefixes "ok": true).
+
+    It carries four things the designer's right column walks through in order:
+    the mission window (start/end + epoch), the propagator catalog, the
+    pattern in force, and the parameters of BOTH patterns — `walker` and
+    `sso` are always present so switching the pattern radio can pre-fill the
+    form without a round trip. `elements` describes the active reference
+    orbit; for an SSO design that is the LOWEST shell.
+
+    `end_utc` / `window_s` are ADVISORY: they size and label the analysis
+    window (and are validated: end > start, <= 30 days), but nothing stops the
+    sim clock when it is reached — a demo that freezes mid-presentation is
+    worse than one that runs past its window. Treat them as a stated interval
+    of interest, not a fence."""
     preset = (constellations.get_preset(engine.constellation_id)
               or constellations.get_preset("single_iss"))
+    m = timebase.mission()
     return {
         "active": preset.id,
         "name": preset.name,
+        "mode": getattr(preset, "mode", "walker"),
+        # Only SGP4 is implemented, so it is always the propagator in force;
+        # the catalog below is what the designer renders (three disabled).
+        "propagator": constellations.DEFAULT_PROPAGATOR,
+        "propagators": constellations.PROPAGATORS,
+        "epoch_utc": timebase.iso_z(m.epoch_utc),
+        "start_utc": timebase.iso_z(m.start_utc),
+        "end_utc": timebase.iso_z(m.end_utc),
+        "window_s": m.window_s,
+        "time_scale": timebase.TIME_SCALE,
         "elements": constellations.preset_elements(preset),
-        "walker": {"planes": preset.planes,
-                   "sats_per_plane": preset.sats_per_plane,
-                   "phasing": preset.phasing,
-                   "total_sats": preset.total_sats},
+        # NOT read blindly off the active preset: an SSO design reuses
+        # `planes` as its shell count, so an SSO apply used to report
+        # `planes = layers` and poison the designer's Walker draft.
+        "walker": constellations.walker_config(preset),
+        # The ACTIVE SSO design's own block when one is flying (built at ITS
+        # epoch, so raan/beta describe what is really in orbit); otherwise a
+        # preview of the last/default SSO parameters at the current epoch.
+        "sso": (preset.sso if getattr(preset, "sso", None)
+                else constellations.sso_config()),
     }
+
+
+@app.get("/orbit_design")
+async def http_get_orbit_design():
+    """The ACTIVE constellation's classical orbital elements, mission
+    window, propagator catalog and both pattern parameter sets — the
+    designer displays these for any preset, then edits them into a custom
+    design."""
+    return _orbit_design_payload()
 
 
 @app.post("/orbit_design")
 async def http_post_orbit_design(body: dict[str, Any]):
-    """Design a constellation from the six classical orbital elements +
-    Walker parameters: synthesize the reference TLE, register the design as
-    the 'custom_design' preset and make it active — the whole pipeline
-    (engine tick, Kit rings, web fallback propagator, coverage map) follows
-    on the next poll/broadcast."""
+    """Design a constellation and make it active.
+
+    Every key is optional; a body carrying only the nine Walker keys behaves
+    exactly as it always has. `mode` picks the pattern:
+
+      walker  six classical orbital elements + Walker t/p/f (the default)
+      sso     an altitude range split into `layers` DAWN-DUSK sun-synchronous
+              shells, all sharing one terminator plane; SSO fixes every
+              element except altitude, and `ltan_hours` (6.0 dawn / 18.0 dusk,
+              default 18.0) picks which side of the terminator the ascending
+              node sits on. Any other LTAN is 422.
+      custom  TLE import — not implemented, rejected with 422
+
+    The design synthesizes reference TLE(s), registers them as the
+    'custom_design' preset and makes it active, so the whole pipeline (engine
+    tick, Kit rings, web fallback propagator, coverage map) follows on the
+    next poll/broadcast. The mission window rides along: epoch anchors the
+    TLE (and is the instant the dawn-dusk RAAN is solved at), start is sim
+    second 0, and end is ADVISORY — it labels the analysis window but does
+    not stop the clock."""
+    b = body or {}
+    mode = str(b.get("mode", "walker")).strip().lower()
+    if mode == "custom":
+        raise HTTPException(422, "TLE import is not implemented")
+    if mode not in ("walker", "sso"):
+        raise HTTPException(422, f"invalid orbit design: unknown mode {mode!r} "
+                                 "(available: walker, sso)")
     try:
-        preset = constellations.make_custom_preset(
-            altitude_km=float(body.get("altitude_km", 550.0)),
-            eccentricity=float(body.get("eccentricity", 0.001)),
-            inclination_deg=float(body.get("inclination_deg", 53.0)),
-            raan_deg=float(body.get("raan_deg", 0.0)) % 360.0,
-            arg_perigee_deg=float(body.get("arg_perigee_deg", 0.0)) % 360.0,
-            mean_anomaly_deg=float(body.get("mean_anomaly_deg", 0.0)) % 360.0,
-            planes=int(body.get("planes", 3)),
-            sats_per_plane=int(body.get("sats_per_plane", 8)),
-            phasing=int(body.get("phasing", 1)),
-        )
+        constellations.get_propagator(
+            b.get("propagator", constellations.DEFAULT_PROPAGATOR))
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from e
+
+    # Install the mission window BEFORE building — the reference TLE's epoch
+    # field comes from it. Roll back if the design itself is invalid so a
+    # rejected request leaves no half-applied state behind.
+    prev = timebase.mission()
+    try:
+        timebase.set_mission(b.get("epoch_utc"), b.get("start_utc"),
+                             b.get("end_utc"))
     except (TypeError, ValueError) as e:
+        raise HTTPException(422, f"invalid mission window: {e}") from e
+    try:
+        if mode == "sso":
+            preset = constellations.make_sso_preset(
+                alt_min_km=float(b.get("alt_min_km", 500.0)),
+                alt_max_km=float(b.get("alt_max_km", 700.0)),
+                layers=int(b.get("layers", 3)),
+                sats_per_plane=int(b.get("sats_per_plane", 8)),
+                phasing=int(b.get("phasing", 1)),
+                ltan_hours=float(b.get("ltan_hours",
+                                       constellations.LTAN_DUSK_H)),
+            )
+        else:
+            preset = constellations.make_custom_preset(
+                altitude_km=float(b.get("altitude_km", 550.0)),
+                eccentricity=float(b.get("eccentricity", 0.001)),
+                inclination_deg=float(b.get("inclination_deg", 53.0)),
+                raan_deg=float(b.get("raan_deg", 0.0)) % 360.0,
+                arg_perigee_deg=float(b.get("arg_perigee_deg", 0.0)) % 360.0,
+                mean_anomaly_deg=float(b.get("mean_anomaly_deg", 0.0)) % 360.0,
+                planes=int(b.get("planes", 3)),
+                sats_per_plane=int(b.get("sats_per_plane", 8)),
+                phasing=int(b.get("phasing", 1)),
+            )
+    except (TypeError, ValueError) as e:
+        timebase.set_mission(prev.epoch_utc, prev.start_utc, prev.end_utc)
         raise HTTPException(422, f"invalid orbit design: {e}") from e
-    engine.set_constellation(constellations.CUSTOM_ID)
+    # Both builders register under CUSTOM_ID; go through preset.id so the
+    # activation can never drift from what was just built.
+    engine.set_constellation(preset.id)
     await manager.broadcast(_envelope("state_update", engine.snapshot().model_dump()))
-    return {
-        "ok": True,
-        "active": preset.id,
-        "name": preset.name,
-        "elements": constellations.preset_elements(preset),
-        "walker": {"planes": preset.planes,
-                   "sats_per_plane": preset.sats_per_plane,
-                   "phasing": preset.phasing,
-                   "total_sats": preset.total_sats},
-    }
+    return {"ok": True, **_orbit_design_payload()}
 
 
 # --- Ground-station target + communication visibility ----------------------

@@ -40,6 +40,7 @@ from services import orbit_catalog
 from services import constellations as _consts
 from services import geodyn as _geodyn
 from services import elements as _elements
+from services import timebase as _timebase
 
 TICK_HZ = 1.0
 
@@ -270,12 +271,6 @@ def _peak_card_watts(groups: list[tuple[str, int]]) -> float:
     return sum(_GPU_TABLE.get(g, _GPU_TABLE["H100"])["tdp_w"] * n for g, n in groups)
 
 
-# Fixed inertial Sun direction (matches _set_tracked_kinematics + Kit lights).
-# The raw triple is not unit-length (|·| ≈ 0.999); _SUN_UNIT normalizes it so
-# a dead-on panel reads incidence exactly 1.0.
-_SUN_DIR_ECI = (0.648, -0.648, 0.398)
-
-
 def _unit(v: tuple[float, float, float]) -> tuple[float, float, float]:
     n = math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) or 1.0
     return (v[0] / n, v[1] / n, v[2] / n)
@@ -291,7 +286,14 @@ def _cross(a, b) -> tuple[float, float, float]:
             a[0] * b[1] - a[1] * b[0])
 
 
-_SUN_UNIT = _unit(_SUN_DIR_ECI)
+# Sun direction used ONLY before the first physics tick (the class-level
+# default of StateEngine._sun_unit_eci; every tick overwrites it with
+# geodyn's analytic Sun for that instant). It used to be the hard-coded
+# legacy triple (0.648, -0.648, 0.398) — a made-up sun 141° from the real
+# one at the demo epoch — which meant a snapshot read before the engine
+# started reported nonsense lighting. Read the real Sun at mission start
+# instead; there is no reason for a constant here.
+_SUN_UNIT = _consts.sun_unit_at(0.0)
 
 
 _SOLAR_CONSTANT_W_M2 = 1361.0
@@ -1223,12 +1225,10 @@ class StateEngine:
             self._sat.orbital_elements = None
 
         # Real Sun + conical Earth-shadow geometry (STK-benchmarked): analytic
-        # Sun at the absolute epoch (demo epoch + t × TIME_SCALE), visible
+        # Sun at the absolute epoch (mission start + t × TIME_SCALE), visible
         # solar-disc fraction through umbra/penumbra, and true solar
         # irradiance at the current Earth-Sun distance.
-        scaled_t = t * orbit_catalog.TIME_SCALE
-        jd = orbit_catalog.DEMO_JD0 + orbit_catalog.DEMO_FR0 + scaled_t / 86400.0
-        sun_km, r_au = _geodyn.sun_teme(jd)
+        sun_km, r_au = _geodyn.sun_teme(_timebase.jd_utc_at(t))
         sn = math.sqrt(sun_km[0] ** 2 + sun_km[1] ** 2 + sun_km[2] ** 2) or 1.0
         self._sun_unit_eci = (sun_km[0] / sn, sun_km[1] / sn, sun_km[2] / sn)
         self._solar_s_w_m2 = _SOLAR_CONSTANT_W_M2 / (r_au * r_au)
@@ -1405,6 +1405,40 @@ class StateEngine:
         # Tracked satellite's velocity (for the attitude/solar geometry).
         _p, self._tracked_vel_km_s = _consts.propagate_tracked_rv(preset, t)
         kpis = _consts.synthesize_kpis(preset, fleet_pos_km, t)
+
+        # Reference per-sat solar peak (sunlit-normal) — the constellation
+        # sats share the ACTIVE design's array characteristics. Feeds both the
+        # whole-fleet harvest below and the ground-target histogram.
+        s_mat = _SOLAR_MAT_TABLE.get(self._config.solar_material,
+                                     _SOLAR_MAT_TABLE["Si"])
+        solar_peak_w = (s_mat["efficiency"]
+                        * _solar_area_m2(self._twin_geometry)
+                        * _SOLAR_CONSTANT_W_M2)
+
+        # Whole-fleet instantaneous solar collection (the Overview energy
+        # chart). Independent of any ground target, and — unlike solar_hist
+        # — it INCLUDES eclipse: the visible fraction of the solar disc scales
+        # the geometric r̂·ŝ projection. One extra pass over positions we
+        # already propagated.
+        jd_utc = _timebase.jd_utc_at(t)
+        sun_km, _r_au = _geodyn.sun_teme(jd_utc)
+        sx, sy, sz = sun_km
+        s_norm = math.sqrt(sx * sx + sy * sy + sz * sz) or 1.0
+        sun_unit = (sx / s_norm, sy / s_norm, sz / s_norm)
+        solar_total_w = 0.0
+        solar_lit_sats = 0
+        for (px, py, pz) in fleet_pos_km:
+            if px == 0.0 and py == 0.0 and pz == 0.0:
+                continue                      # sgp4-error sentinel
+            illum = _geodyn.sun_visible_fraction((px, py, pz), sun_km)
+            if illum <= 0.0:
+                continue                      # full umbra — collects nothing
+            solar_lit_sats += 1
+            r_norm = math.sqrt(px * px + py * py + pz * pz) or 1.0
+            cos_a = (px * sun_unit[0] + py * sun_unit[1] + pz * sun_unit[2]) / r_norm
+            if cos_a > 0.0:
+                solar_total_w += illum * cos_a * solar_peak_w
+
         self._fleet_snapshot = FleetSnapshot(
             constellation_id=preset.id,
             name=preset.name,
@@ -1423,6 +1457,13 @@ class StateEngine:
             gsl_links=kpis["gsl_links"],
             agg_throughput_mbps=kpis["agg_throughput_mbps"],
             design_rev=getattr(preset, "revision", 0),
+            solar_total_w=round(solar_total_w, 1),
+            solar_lit_sats=solar_lit_sats,
+            # The sky frame for THIS tick: same instant (jd_utc), same frame
+            # (TEME) as fleet_pos_km above. Broadcast so no renderer has to
+            # invent a sun direction or start GMST at zero.
+            sun_unit_teme=sun_unit,
+            gmst_rad=_geodyn.gmst_rad(jd_utc),
         )
 
         # Cache per-sat lat/lon for mission cast picking (sensor = nearest AOI).
@@ -1437,19 +1478,13 @@ class StateEngine:
         # ride StatePacket.ground_target on the next snapshot.
         gt = self._ground_target
         if gt is not None and gt.enabled:
-            # Reference per-sat solar peak (sunlit-normal) for the histogram's
-            # collection axis — the constellation sats share the active
-            # design's array characteristics.
-            s_mat = _SOLAR_MAT_TABLE.get(self._config.solar_material,
-                                         _SOLAR_MAT_TABLE["Si"])
-            solar_peak_w = (s_mat["efficiency"]
-                            * _solar_area_m2(self._twin_geometry)
-                            * _SOLAR_CONSTANT_W_M2)
+            # `solar_peak_w` (computed above) is the histogram's collection
+            # axis; `sun_unit` is the same analytic Sun the harvest pass used.
             a = _consts.ground_analytics(
                 fleet_pos_km, fleet_lla, gt.lat, gt.lon,
                 gt.min_elevation_deg, gt.band_mbps_per_sat,
                 solar_peak_w, gt.solar_bin,
-                sun_unit=_consts.sun_unit_at(t),
+                sun_unit=sun_unit,
             )
             gt.visible_sats = a["visible_sats"]
             gt.best_elevation_deg = a["best_elevation_deg"]

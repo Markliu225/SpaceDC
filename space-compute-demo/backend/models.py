@@ -239,6 +239,24 @@ class FleetSnapshot(BaseModel):
     # constellation id ("custom_design") but bumps this, so id-keyed caches
     # (Kit ring rebuild, web ring detail) know to refetch. 0 for built-ins.
     design_rev: int = 0
+    # Whole-constellation solar harvest at this instant — sum over every sat
+    # of (visible solar-disc fraction) × max(0, r̂·ŝ) × the design's peak
+    # array power. Eclipse INCLUDED (unlike GroundTargetState.solar_hist), so
+    # the Overview energy chart shows the real day/night sawtooth.
+    solar_total_w: float = 0.0
+    solar_lit_sats: int = 0      # sats with sun_visible_fraction > 0
+    # --- the sky frame this packet's fleet ECI lives in ---------------------
+    # Unit Earth->Sun direction in TEME, evaluated at the SAME instant and in
+    # the SAME frame as the fleet ECI km this packet carries. This is the
+    # single authority for day/night lighting: every renderer (Overview globe,
+    # twin scene, Kit stage) must light its Earth from THIS vector rather than
+    # from a hard-coded constant, which is what makes "the orbit ring lies on
+    # the terminator" true by construction instead of by coincidence.
+    sun_unit_teme: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    # Greenwich mean sidereal time (rad) at that same instant. Rotate the
+    # Earth MESH by this about ECI +Z and leave the Sun inertial — the light
+    # must not be the thing that spins.
+    gmst_rad: float = 0.0
 
 
 class CompareMetrics(BaseModel):

@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useTelemetryStore } from '../store/useTelemetryStore'
+import { useSkyFrame, type SkyFrame } from './useSkyFrame'
 import type { ConstellationDetail } from '../types/messages'
 
 export interface FleetSatPosition {
@@ -13,16 +14,14 @@ export interface FleetSatPosition {
   lon: number
   /** Altitude above mean Earth radius, km. */
   altitudeKm: number
-  /** Sunlit / dark side flag — dot(pos_eci, sun_dir_eci) >= -0.05 ⇒ sunlit. */
+  /** Sunlit / dark side flag — dot(pos_eci, sun_unit_teme) >= -0.05 ⇒ sunlit,
+   *  against the sun direction BROADCAST for this tick. `true` while the sky
+   *  frame is unknown (offline): an unknown sun must not manufacture a
+   *  terminator. */
   sunlit: boolean
 }
 
 const EARTH_RADIUS_KM = 6378.137
-// Sidereal day — Earth rotates 360° relative to inertial space in 86164.0905s.
-const SIDEREAL_DAY_S = 86164.0905
-// Sun direction in ECI — same constant the backend constellation service
-// uses so eclipse counts match between Web and backend KPI synth.
-const SUN_DIR_ECI: [number, number, number] = [0.648, -0.648, 0.398]
 
 /** Linear interpolation between ring samples for a smooth ground track. */
 function sampleRing(
@@ -65,19 +64,20 @@ function rotZ(v: [number, number, number], a: number): [number, number, number] 
  *
  *   pos_eci(k,j) = RotZ(plane_angle) · ring[ wrap((sim_now + offset)/τ) ]
  *
- * ECEF correction: rotates ECI by -GMST about +Z so the ground track
- * sweeps west at Earth's sidereal rate; otherwise the constellation
- * would appear locked above the same longitude band forever.
+ * ECEF correction: rotates ECI by -GMST about +Z so the ground track sweeps
+ * west at Earth's sidereal rate; otherwise the constellation would appear
+ * locked above the same longitude band forever. GMST is the value BROADCAST
+ * with this tick (`sky.gmstRad`), not a ramp integrated from zero — the old
+ * `simNow/SIDEREAL_DAY_S·2π` started at 0 while true GMST at mission start is
+ * 151.287°, i.e. every sub-satellite longitude was off by a constant 151.29°.
  */
 function computeSatPosition(
-  detail: ConstellationDetail, simTimeS: number, idx: number,
+  detail: ConstellationDetail, simTimeS: number, idx: number, sky: SkyFrame,
 ): FleetSatPosition {
   const { ring_eci_km, planes, sats_per_plane, phasing, period_s, time_scale } = detail
   const T = planes * sats_per_plane
   const simNow = simTimeS * time_scale
-  // Earth's spin from sim epoch — same time_scale so the ground track
-  // animation rate matches the orbit rate.
-  const gmst = (simNow / SIDEREAL_DAY_S) * 2 * Math.PI
+  const gmst = sky.gmstRad
 
   const k = Math.floor(idx / sats_per_plane)
   const j = idx % sats_per_plane
@@ -94,11 +94,13 @@ function computeSatPosition(
   const lat = (Math.asin(ecef[2] / r) * 180) / Math.PI
   const lon = (Math.atan2(ecef[1], ecef[0]) * 180) / Math.PI
 
-  // Sunlit test stays in ECI (sun direction is inertial).
-  const sunDot = (eci[0] * SUN_DIR_ECI[0]
-                + eci[1] * SUN_DIR_ECI[1]
-                + eci[2] * SUN_DIR_ECI[2]) / r
-  const sunlit = sunDot >= -0.05
+  // Sunlit test stays in ECI — the sun direction is inertial, so it needs no
+  // GMST correction, but it DOES need to be the broadcast one (same frame and
+  // same instant as these ECI km) or the eclipse band sits on the wrong side
+  // of the planet. Sun unknown ⇒ report sunlit rather than invent a shadow.
+  const sun = sky.sunEci
+  const sunlit = sun === null
+    || (eci[0] * sun[0] + eci[1] * sun[1] + eci[2] * sun[2]) / r >= -0.05
 
   return {
     idx, planeIdx: k, slotIdx: j,
@@ -111,12 +113,13 @@ function computeSatPosition(
 export function useFleetPositions(): FleetSatPosition[] {
   const detail   = useTelemetryStore((s) => s.constellationDetail)
   const simTimeS = useTelemetryStore((s) => s.sim_time_s)
+  const sky      = useSkyFrame()
 
   return useMemo(() => {
     if (!detail || detail.ring_eci_km.length === 0) return []
     const total = detail.planes * detail.sats_per_plane
-    return Array.from({ length: total }, (_, i) => computeSatPosition(detail, simTimeS, i))
-  }, [detail, simTimeS])
+    return Array.from({ length: total }, (_, i) => computeSatPosition(detail, simTimeS, i, sky))
+  }, [detail, simTimeS, sky])
 }
 
 /**
@@ -128,10 +131,11 @@ export function useFleetPositions(): FleetSatPosition[] {
  */
 export function useSatPosition(idx: number, simTimeS: number): FleetSatPosition | null {
   const detail = useTelemetryStore((s) => s.constellationDetail)
+  const sky    = useSkyFrame()
   return useMemo(() => {
     if (!detail || detail.ring_eci_km.length === 0) return null
     const total = detail.planes * detail.sats_per_plane
     const clamped = Math.max(0, Math.min(total - 1, idx))
-    return computeSatPosition(detail, simTimeS, clamped)
-  }, [detail, simTimeS, idx])
+    return computeSatPosition(detail, simTimeS, clamped, sky)
+  }, [detail, simTimeS, idx, sky])
 }

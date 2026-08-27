@@ -17,7 +17,7 @@ export function Stars() {
     const seeds     = new Float32Array(STAR_COUNT)
     for (let i = 0; i < STAR_COUNT; i++) {
       // Uniform on a sphere via Marsaglia.
-      let x = 0, y = 0, z = 0, s2 = 2
+      let x = 0, y = 0, s2 = 2
       while (s2 >= 1) {
         x = Math.random() * 2 - 1
         y = Math.random() * 2 - 1
@@ -29,8 +29,6 @@ export function Stars() {
       positions[i * 3 + 1] = py * SHELL_RADIUS
       positions[i * 3 + 2] = pz * SHELL_RADIUS
       seeds[i] = Math.random()
-      // suppress unused-z complaint from older lints
-      z++
     }
     const g = new THREE.BufferGeometry()
     g.setAttribute('position', new THREE.BufferAttribute(positions, 3))

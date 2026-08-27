@@ -6,21 +6,28 @@ import { Earth } from './Earth'
 import { Atmosphere } from './Atmosphere'
 import { Stars } from './Stars'
 import { OrbitRibbons } from './OrbitRibbons'
-import { DawnDuskOrbit } from './DawnDuskOrbit'
+import { TerminatorRing } from './DawnDuskOrbit'
 import { Satellites } from './Satellites'
 import { colors } from '../../../design/tokens'
 
 /**
- * FallbackEarth — full Three.js scene rendered when the Omniverse stream
- * isn't available. Per design brief:
+ * FallbackEarth — the Overview page's local Three.js scene, rendered when the
+ * Omniverse stream isn't available. Every position in it is real:
  *
- *   - Procedural day/night Earth (shader; sun direction drifts)
- *   - Atmosphere Fresnel shell (additive, accent blue, intensity 1.1)
- *   - 24 colored orbit ribbons (TubeGeometry, normal-blended, steady opacity)
- *   - Satellite billboards (radial-gradient sprite, steady; selected one pulses)
- *   - 2000 star points (faint twinkle, additive)
- *   - Bloom (intensity 0.15, radius 0.3, threshold 0.95) — only the brightest cores bloom
- *   - Auto camera orbit (1 rev / 90s) until the user drags
+ *   - Day/night Earth. The MESH spins by the broadcast GMST about display +Y;
+ *     the sun is the broadcast `sun_unit_teme` and stays inertial.
+ *   - Terminator reference ring — a great circle whose normal is that same sun
+ *     vector, i.e. the day/night boundary of the globe you are looking at. The
+ *     ruler that shows whether the orbit planes really are dawn–dusk.
+ *   - Orbit ribbons from the active constellation's propagated ECI rings, one
+ *     per plane / SSO shell. No constellation loaded ⇒ no ribbons.
+ *   - Satellite billboards sampled from those same rings at their true phase.
+ *   - 2000 star points, atmosphere Fresnel shell, and a restrained bloom
+ *     (intensity 0.15, threshold 0.95) so only the sprite cores flare.
+ *   - Auto camera orbit (1 rev / 90 s) until the user drags.
+ *
+ * With no backend the scene degrades quietly: no ribbons, no sprites, and the
+ * sky frame holds its last known sun instead of snapping anywhere.
  */
 export function FallbackEarth() {
   return (
@@ -40,8 +47,8 @@ export function FallbackEarth() {
         <Stars />
         <Earth />
         <Atmosphere />
+        <TerminatorRing />
         <OrbitRibbons />
-        <DawnDuskOrbit />
         <Satellites />
       </Suspense>
       <OrbitControls
@@ -49,7 +56,7 @@ export function FallbackEarth() {
         autoRotateSpeed={0.4 /* ~ 1 rev / 90s at speed 0.4 */}
         enablePan={false}
         enableZoom
-        minDistance={2.2}
+        minDistance={1.6}
         maxDistance={6}
         rotateSpeed={0.6}
       />
