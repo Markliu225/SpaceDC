@@ -29,12 +29,12 @@ interface SeriesDef {
 }
 
 const SERIES: SeriesDef[] = [
-  { key: 'solar_w',    label: 'Solar Input', unit: 'W',  digits: 0, color: '#F59E0B' },
+  { key: 'solar_w',    label: 'Solar Input', unit: 'W',  digits: 0, color: colors.warn },
   { key: 'payload_w',  label: 'Payload',     unit: 'W',  digits: 0, color: colors.accent },
-  { key: 'battery_soc',label: 'Battery SOC', unit: '%',  digits: 0, color: '#22C55E',
+  { key: 'battery_soc',label: 'Battery SOC', unit: '%',  digits: 0, color: colors.ok,
     yMin: 0, yMax: 1, factor: 100 },
-  { key: 'temp_c',     label: 'Temperature', unit: '°C', digits: 1, color: '#EF4444' },
-  { key: 'gpu_util',   label: 'GPU Util',    unit: '%',  digits: 0, color: '#A78BFA',
+  { key: 'temp_c',     label: 'Temperature', unit: '°C', digits: 1, color: colors.err },
+  { key: 'gpu_util',   label: 'GPU Util',    unit: '%',  digits: 0, color: colors.ribbons[4],
     yMin: 0, yMax: 1, factor: 100 },
 ]
 
@@ -46,7 +46,7 @@ const HISTORY_S = 120
  *
  * Each chart shows:
  *  - title + current value + unit, top
- *  - filled area + 1.5 px stroke + drop shadow
+ *  - faint area fill + 2.2 px matte stroke (no glow)
  *  - 3 horizontal gridlines (25/50/75 % of range)
  *  - y-axis tick labels: max (top-right) + min (bottom-right) per panel
  *  - dashed vertical "scars" wherever the SatelliteConfig changed
@@ -229,10 +229,10 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
       </div>
       <div className="relative flex-1 min-h-0">
         {/* Right-edge y-axis tick labels. */}
-        <div className="pointer-events-none absolute right-0 top-0 z-10 text-[9px] tabular text-text-faint">
+        <div className="pointer-events-none absolute right-0 top-0 z-10 text-[9px] tabular text-text-lo">
           {fmt(yMax, def.digits, def.unit)}
         </div>
-        <div className="pointer-events-none absolute right-0 bottom-0 z-10 text-[9px] tabular text-text-faint">
+        <div className="pointer-events-none absolute right-0 bottom-0 z-10 text-[9px] tabular text-text-lo">
           {fmt(yMin, def.digits, def.unit)}
         </div>
 
@@ -245,7 +245,7 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
             {/* Very subtle fill — just a hint under the line so the curve
                 still feels weighted; primary visual is the stroke itself. */}
             <linearGradient id={gradId} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%"   stopColor={def.color} stopOpacity={0.18} />
+              <stop offset="0%"   stopColor={def.color} stopOpacity={0.14} />
               <stop offset="100%" stopColor={def.color} stopOpacity={0} />
             </linearGradient>
           </defs>
@@ -254,7 +254,7 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
           {[25, 50, 75].map((p) => (
             <line
               key={p} x1={0} x2={100} y1={p} y2={p}
-              stroke="#A6B0C4"
+              stroke={colors.text.md}
               strokeWidth={0.4}
               vectorEffect="non-scaling-stroke"
               opacity={0.18}
@@ -266,7 +266,7 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
           {[25, 50, 75].map((p) => (
             <line
               key={`v${p}`} x1={p} x2={p} y1={0} y2={100}
-              stroke="#A6B0C4"
+              stroke={colors.text.md}
               strokeWidth={0.4}
               vectorEffect="non-scaling-stroke"
               opacity={0.10}
@@ -274,7 +274,8 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
             />
           ))}
 
-          {/* Subtle area fill, then the prominent line stroke — hidden while
+          {/* Subtle area fill, then the prominent matte line stroke (no
+              glow — same treatment as the what-if overlays) — hidden while
               a comparison runs (the variants own the panel; one of them is
               usually the current value anyway). */}
           {!liveHidden && (
@@ -288,7 +289,6 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
                 strokeLinejoin="round"
                 strokeLinecap="round"
                 vectorEffect="non-scaling-stroke"
-                style={{ filter: `drop-shadow(0 0 2px ${def.color})` }}
               />
             </>
           )}
@@ -313,7 +313,8 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
             />
           ))}
 
-          {/* Bright dot at the latest sample so the eye locks onto "now". */}
+          {/* Dot at the latest sample so the eye locks onto "now" — the
+              bg-colored ring separates it from the line; no halo. */}
           {!liveHidden && data.length >= 2 && (() => {
             const lastIdx = data.length - 1
             const factor = def.factor ?? 1
@@ -325,10 +326,9 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
               <circle
                 cx={cx} cy={cy} r={2.4}
                 fill={def.color}
-                stroke="#0A0F1E"
+                stroke={colors.bg.inset}
                 strokeWidth={1.2}
                 vectorEffect="non-scaling-stroke"
-                style={{ filter: `drop-shadow(0 0 2px ${def.color})` }}
               />
             )
           })()}
@@ -340,7 +340,7 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
               <line
                 key={`${s.sim_time_s}-${s.index}`}
                 x1={x} x2={x} y1={0} y2={100}
-                stroke="#E8EEFB"
+                stroke={colors.text.hi}
                 strokeWidth={1.0}
                 strokeDasharray="3 3"
                 vectorEffect="non-scaling-stroke"
@@ -352,7 +352,7 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
       </div>
 
       {/* Per-panel time axis. */}
-      <div className="mt-0.5 flex justify-between text-[9px] tabular text-text-faint">
+      <div className="mt-0.5 flex justify-between text-[9px] tabular text-text-lo">
         <span>-{HISTORY_S}s</span>
         <span>-{Math.round(HISTORY_S / 2)}s</span>
         <span>now</span>

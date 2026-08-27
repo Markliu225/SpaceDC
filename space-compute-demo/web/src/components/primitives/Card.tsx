@@ -3,16 +3,16 @@ import type { ReactNode, HTMLAttributes } from 'react'
 /**
  * Card primitive — the single styled surface. Every panel composes itself
  * out of this; do NOT re-derive the card recipe in panel CSS. The recipe is:
- *   - vertical gradient fill (lighter top → darker bottom)
+ *   - flat surface fill (bg.card)
  *   - 1px subtle border (weak by default, med on hover)
- *   - inset top highlight + soft drop shadow
- *   - 10px radius, 16/18px padding
+ *   - soft drop shadow tinted to the background hue
+ *   - 8px radius, 16/18px padding
  *
- * Use `selected` to apply the cyan focused-card ring + glow.
+ * Use `selected` to apply the accent focus ring (1px, no halo).
  */
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children?: ReactNode
-  /** Apply selected glow (cyan ring + soft outer halo). */
+  /** Apply the selected ring (accent, 1px, no halo). */
   selected?: boolean
   /** Tighten padding for dense KPI tiles. */
   dense?: boolean
@@ -27,12 +27,12 @@ export function Card({
 }: CardProps) {
   const padding = dense ? 'px-4 py-3.5' : 'px-[18px] py-4'
   const ring = selected
-    ? 'border-border-glow shadow-card-glow'
+    ? 'border-border-focus shadow-card-focus'
     : 'border-border-weak shadow-card hover:border-border-med hover:shadow-card-hover'
   return (
     <div
       {...rest}
-      className={`relative rounded-[10px] border bg-card ${padding} transition-[border-color,box-shadow] duration-150 ${ring} ${className}`}
+      className={`relative rounded-lg border bg-card ${padding} transition-[border-color,box-shadow] duration-150 ${ring} ${className}`}
     >
       {children}
     </div>

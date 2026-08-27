@@ -51,7 +51,7 @@ export function StepWorkload({
               className={`flex flex-col gap-2 rounded-md border p-3.5 text-left transition-colors ${
                 p.id === selected
                   ? 'border-accent bg-bg-card-hi'
-                  : 'border-border-weak bg-bg-inset/40 hover:border-border-glow hover:bg-bg-card-hi'
+                  : 'border-border-weak bg-bg-inset/40 hover:border-border-med hover:bg-bg-card-hi'
               }`}
             >
               <span className="flex items-baseline justify-between gap-2">

@@ -35,8 +35,8 @@ function visibilityRadiusDeg(altKm: number): number {
  *
  * Replaces the legacy `CoverageMap` (which animated a single decorative
  * orbital swath). The radii are physical: each circle is the central-angle
- * footprint of a sat's visibility cone at 10° min-elevation. Online sats
- * draw bright cyan, eclipse sats dim blue, others faint gray — gives an
+ * footprint of a sat's visibility cone at 10° min-elevation. Sunlit sats
+ * draw in the online status hue, eclipse sats in the eclipse hue — gives an
  * instant read of "how much of the planet is currently usable".
  *
  * Implementation note: instead of projecting actual spherical caps (which
@@ -118,7 +118,7 @@ export function RealCoverageMap({ embedded = false }: { embedded?: boolean } = {
                 <Geography
                   key={geo.rsmKey}
                   geography={geo}
-                  fill="#1B233A"
+                  fill={colors.bg.cardHi}
                   stroke="transparent"
                   style={{
                     default: { outline: 'none' },
@@ -147,15 +147,13 @@ export function RealCoverageMap({ embedded = false }: { embedded?: boolean } = {
                 {/* Red contact ring — this sat currently sees the marked
                     ground station above the elevation mask. */}
                 {inContact && (
-                  <circle r={4.4} fill="none" stroke="#EF4444" strokeWidth={1.2}
-                          style={{ filter: 'drop-shadow(0 0 3px #EF4444)' }} />
+                  <circle r={4.4} fill="none" stroke={colors.err} strokeWidth={1.2} />
                 )}
                 <circle
                   r={selected ? 3 : 1.8}
                   fill={dotColor}
-                  stroke={selected ? '#FFFFFF' : 'none'}
-                  strokeWidth={selected ? 1 : 0}
-                  style={{ filter: `drop-shadow(0 0 4px ${dotColor})` }}
+                  stroke={selected ? colors.text.hi : colors.bg.inset}
+                  strokeWidth={selected ? 1 : 0.6}
                 />
               </Marker>
             )
@@ -165,12 +163,11 @@ export function RealCoverageMap({ embedded = false }: { embedded?: boolean } = {
           {groundTarget?.enabled && (
             <Marker coordinates={[groundTarget.lon, groundTarget.lat]}>
               <g data-testid="map-ground-target">
-                <circle r={7} fill="none" stroke="#EF4444" strokeWidth={1}
+                <circle r={7} fill="none" stroke={colors.err} strokeWidth={1}
                         opacity={0.55} />
-                <circle r={3} fill="#EF4444"
-                        style={{ filter: 'drop-shadow(0 0 5px #EF4444)' }} />
+                <circle r={3} fill={colors.err} />
                 <text y={-9} textAnchor="middle"
-                      style={{ fontSize: 9, fill: '#F87171', fontWeight: 600,
+                      style={{ fontSize: 9, fill: colors.err, fontWeight: 600,
                                letterSpacing: 0.5 }}>
                   {groundTarget.name.toUpperCase()}
                 </text>
@@ -185,13 +182,13 @@ export function RealCoverageMap({ embedded = false }: { embedded?: boolean } = {
       <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
         {STATUS_LEGEND.map((s) => (
           <div key={s.key} className="flex items-center gap-1.5 text-[11px]">
-            <Dot color={s.color} size={6} glow={4} />
+            <Dot color={s.color} size={6} />
             <span className="text-text-md">{s.label}</span>
           </div>
         ))}
         {groundTarget?.enabled && (
           <div className="col-span-2 flex items-center gap-1.5 text-[11px]">
-            <Dot color="#EF4444" size={6} glow={4} />
+            <Dot color={colors.err} size={6} />
             <span className="text-text-md">
               {groundTarget.name} · {groundTarget.visible_sats} in contact
             </span>

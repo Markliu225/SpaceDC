@@ -45,7 +45,7 @@ export function Configurator() {
         </span>
       </div>
 
-      <Section title="Compute" icon={<Cpu size={12} strokeWidth={1.8} className="text-accent" />}>
+      <Section title="Compute" icon={<Cpu size={12} strokeWidth={1.8} className="text-text-md" />}>
         <ConfigDropdown
           label="GPU"
           value={cfg.gpu}
@@ -63,7 +63,7 @@ export function Configurator() {
         <WorkloadPanel />
       </Section>
 
-      <Section title="Solar Array" icon={<Sun size={12} strokeWidth={1.8} className="text-accent" />}>
+      <Section title="Solar Array" icon={<Sun size={12} strokeWidth={1.8} className="text-text-md" />}>
         <ConfigDropdown
           label="Material"
           value={cfg.solar_material}
@@ -87,7 +87,7 @@ export function Configurator() {
         />
       </Section>
 
-      <Section title="Radiator" icon={<Snowflake size={12} strokeWidth={1.8} className="text-accent" />}>
+      <Section title="Radiator" icon={<Snowflake size={12} strokeWidth={1.8} className="text-text-md" />}>
         <ConfigDropdown
           label="Material"
           value={cfg.radiator_material}
@@ -111,7 +111,7 @@ export function Configurator() {
         />
       </Section>
 
-      <Section title="Battery" icon={<BatteryCharging size={12} strokeWidth={1.8} className="text-accent" />}>
+      <Section title="Battery" icon={<BatteryCharging size={12} strokeWidth={1.8} className="text-text-md" />}>
         <ConfigDropdown
           label="Chemistry"
           value={cfg.battery_material}
@@ -140,7 +140,7 @@ export function Configurator() {
 
       <GeometryControls />
 
-      <Section title="Attitude" icon={<Compass size={12} strokeWidth={1.8} className="text-accent" />}>
+      <Section title="Attitude" icon={<Compass size={12} strokeWidth={1.8} className="text-text-md" />}>
         <AttitudeControl />
       </Section>
 
@@ -191,7 +191,7 @@ function GeometryControls() {
   // stepper has nothing to resize there.
   const fixedWings = hasFixedWings(geom)
   return (
-    <Section title="Deployables" icon={<Maximize2 size={12} strokeWidth={1.8} className="text-accent" />}>
+    <Section title="Deployables" icon={<Maximize2 size={12} strokeWidth={1.8} className="text-text-md" />}>
       <Stepper
         label="Solar / side"
         value={fixedWings ? 'hull' : `${solar}×`}
@@ -258,7 +258,7 @@ function SolarDeployControl() {
         <button
           type="button"
           onClick={toggle}
-          className="rounded border border-border-weak px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-text-md hover:bg-bg-cardHi hover:text-text-hi"
+          className="rounded border border-border-weak px-2 py-0.5 text-[10px] uppercase tracking-[0.08em] text-text-md hover:bg-bg-card-hi hover:text-text-hi"
         >
           {deployed ? 'Retract' : 'Deploy'}
         </button>
@@ -329,7 +329,7 @@ function AttitudeControl() {
             className={`rounded border px-1 py-1 text-[10px] tracking-[0.04em] ${
               mode === m.id
                 ? 'border-accent/70 bg-accent/15 text-accent'
-                : 'border-border-weak text-text-md hover:bg-bg-cardHi hover:text-text-hi'
+                : 'border-border-weak text-text-md hover:bg-bg-card-hi hover:text-text-hi'
             }`}
           >
             {m.label}
@@ -353,7 +353,7 @@ function AttitudeControl() {
               className={`w-6 rounded border px-0 py-0.5 text-[10px] uppercase tracking-[0.08em] ${
                 rates[i] > 0
                   ? 'border-accent/70 bg-accent/15 text-accent'
-                  : 'border-border-weak text-text-md hover:bg-bg-cardHi hover:text-text-hi'
+                  : 'border-border-weak text-text-md hover:bg-bg-card-hi hover:text-text-hi'
               }`}
             >
               {ax.toUpperCase()}

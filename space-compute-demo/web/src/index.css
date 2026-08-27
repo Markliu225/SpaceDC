@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -17,10 +17,7 @@ html, body, #root { margin: 0; height: 100%; }
   .animate-live-pulse,
   .animate-spark-draw,
   .animate-event-fade-in,
-  .animate-coverage-drift,
-  .animate-float-y,
-  .animate-ribbon-breath,
-  .animate-twinkle {
+  .animate-coverage-drift {
     animation: none !important;
   }
 }

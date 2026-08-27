@@ -7,8 +7,8 @@ import { colors } from '../../../design/tokens'
 
 /**
  * 24 satellite billboards, each a radial-gradient sprite. Color matches the
- * ribbon hue; size pulses with a 1.4s sine (1.5x..2.5x). Selected sat gets
- * a 2px cyan ring + crosshair.
+ * ribbon hue; size is steady (1.9x) — only the selected sat pulses gently
+ * with a 1.4s sine and gets a 2px accent ring + crosshair.
  */
 export function Satellites() {
   const sats         = useTelemetryStore((s) => s.sats)
@@ -23,7 +23,7 @@ export function Satellites() {
   useFrame((state, dt) => {
     simRef.current = state.clock.elapsedTime
     if (!groupRef.current) return
-    const pulse = 1.5 + 0.5 * (1 + Math.sin(simRef.current * (Math.PI * 2 / 1.4)))
+    const pulse = 1.9 + 0.15 * Math.sin(simRef.current * (Math.PI * 2 / 1.4))
     groupRef.current.children.forEach((child, i) => {
       const sat = sats[i]
       if (!sat) return
@@ -31,7 +31,7 @@ export function Satellites() {
       child.position.copy(pos)
       // Constant world scale for billboards.
       const isSelected = sat.id === selectedId
-      const s = 0.045 * (isSelected ? pulse * 1.2 : pulse)
+      const s = 0.045 * (isSelected ? pulse * 1.2 : 1.9)
       child.scale.setScalar(s)
       // Cheap unused-var nudge to silence noUnusedParameters lints.
       void dt
@@ -55,7 +55,7 @@ export function Satellites() {
                 toneMapped={false}
               />
             </sprite>
-            {isSelected && <SelectionRing color="#3B9EFF" />}
+            {isSelected && <SelectionRing color={colors.accent} />}
           </group>
         )
       })}
@@ -63,16 +63,16 @@ export function Satellites() {
   )
 }
 
-/** A flat radial-gradient PNG, white core fading to transparent. */
+/** A flat radial-gradient PNG, white core with a tight corona fading to transparent. */
 function makeRadialGradientTexture(size: number): THREE.Texture {
   const canvas = document.createElement('canvas')
   canvas.width = canvas.height = size
   const ctx = canvas.getContext('2d')!
   const g = ctx.createRadialGradient(size / 2, size / 2, 1, size / 2, size / 2, size / 2)
-  g.addColorStop(0,   'rgba(255,255,255,1)')
-  g.addColorStop(0.3, 'rgba(255,255,255,0.85)')
-  g.addColorStop(0.7, 'rgba(255,255,255,0.15)')
-  g.addColorStop(1,   'rgba(255,255,255,0)')
+  g.addColorStop(0,    'rgba(255,255,255,1)')
+  g.addColorStop(0.25, 'rgba(255,255,255,0.9)')
+  g.addColorStop(0.45, 'rgba(255,255,255,0.12)')
+  g.addColorStop(1,    'rgba(255,255,255,0)')
   ctx.fillStyle = g
   ctx.fillRect(0, 0, size, size)
   const tex = new THREE.CanvasTexture(canvas)
@@ -80,13 +80,13 @@ function makeRadialGradientTexture(size: number): THREE.Texture {
   return tex
 }
 
-/** Thin cyan torus around the selected sat + axis-aligned crosshair lines. */
+/** Thin accent torus around the selected sat + axis-aligned crosshair lines. */
 function SelectionRing({ color }: { color: string }) {
   const ringGeom = useMemo(() => new THREE.TorusGeometry(1.5, 0.08, 4, 48), [])
   return (
     <group>
       <mesh geometry={ringGeom}>
-        <meshBasicMaterial color={color} transparent opacity={0.95} toneMapped={false} />
+        <meshBasicMaterial color={color} transparent opacity={0.85} toneMapped={false} />
       </mesh>
       {[
         [3, 0, 0],
@@ -96,7 +96,7 @@ function SelectionRing({ color }: { color: string }) {
       ].map((p, idx) => (
         <mesh key={idx} position={p as [number, number, number]} scale={[0.12, 0.12, 0.12]}>
           <boxGeometry />
-          <meshBasicMaterial color={color} transparent opacity={0.95} toneMapped={false} />
+          <meshBasicMaterial color={color} transparent opacity={0.85} toneMapped={false} />
         </mesh>
       ))}
     </group>

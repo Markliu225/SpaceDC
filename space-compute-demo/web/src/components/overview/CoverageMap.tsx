@@ -2,14 +2,15 @@ import { ComposableMap, Geographies, Geography } from 'react-simple-maps'
 import { Card } from '../primitives'
 import { useTelemetryStore } from '../../store/useTelemetryStore'
 import { useId, useMemo } from 'react'
+import { colors } from '../../design/tokens'
 
 /**
- * CoverageMap — flat world map with a drifting cyan orbital swath.
+ * CoverageMap — flat world map with a static accent-tinted orbital swath.
  *
- * - Continents fill #1B233A, no borders.
+ * - Continents fill bg.cardHi, no borders.
  * - Swath is a sinusoidal SVG path (amplitude ~30°, period 360°, inclination 50°),
- *   filled with a horizontal cyan gradient. Tiled 2x so we can translate by -50%
- *   over 60s for a seamless drift loop.
+ *   filled with a horizontal accent gradient (0.15 → 0.35 → 0.15). Tiled 2x
+ *   (the swath is synthetic, so it no longer drifts — that was decoration).
  * - Footer: 4px progress bar with coverage_pct.
  */
 const TOPO = 'https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-110m.json'
@@ -50,11 +51,11 @@ export function CoverageMap() {
                 <Geography
                   key={geo.rsmKey}
                   geography={geo}
-                  fill="#1B233A"
+                  fill={colors.bg.cardHi}
                   stroke="transparent"
                   style={{
                     default: { outline: 'none' },
-                    hover:   { outline: 'none', fill: '#23304E' },
+                    hover:   { outline: 'none', fill: colors.text.faint },
                     pressed: { outline: 'none' },
                   }}
                 />
@@ -62,15 +63,15 @@ export function CoverageMap() {
             }
           </Geographies>
 
-          {/* Coverage swath — absolute SVG group; translated by CSS animation. */}
+          {/* Coverage swath — absolute SVG group (static). */}
           <defs>
             <linearGradient id={gradId} x1="0%" x2="100%" y1="0%" y2="0%">
-              <stop offset="0%"   stopColor="#3B9EFF" stopOpacity="0.15" />
-              <stop offset="50%"  stopColor="#3B9EFF" stopOpacity="0.45" />
-              <stop offset="100%" stopColor="#3B9EFF" stopOpacity="0.15" />
+              <stop offset="0%"   stopColor={colors.accent} stopOpacity="0.15" />
+              <stop offset="50%"  stopColor={colors.accent} stopOpacity="0.35" />
+              <stop offset="100%" stopColor={colors.accent} stopOpacity="0.15" />
             </linearGradient>
           </defs>
-          <g className="animate-coverage-drift" style={{ transformOrigin: '0 0' }}>
+          <g>
             <path d={swathPath} fill={`url(#${gradId})`} />
           </g>
         </ComposableMap>
@@ -93,8 +94,7 @@ export function CoverageMap() {
             className="h-full rounded-full transition-[width] duration-500 ease-out"
             style={{
               width: `${coverage}%`,
-              background: 'linear-gradient(90deg, #3B9EFF 0%, #E8EEFB 100%)',
-              boxShadow: '0 0 8px rgba(59,158,255,0.4)',
+              background: colors.accent,
             }}
           />
         </div>

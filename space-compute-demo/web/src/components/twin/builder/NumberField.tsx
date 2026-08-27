@@ -90,7 +90,7 @@ export function NumberField({
         <button type="button" className={btn} aria-label={`increase ${label}`}
                 disabled={disabled || value >= max - 1e-9} onClick={() => nudge(1)}>+</button>
       </div>
-      <span className="flex items-baseline justify-between gap-2 text-[11px] text-text-faint">
+      <span className="flex items-baseline justify-between gap-2 text-[11px] text-text-lo">
         <span>{disabled ? '' : `${fmt(min)}–${fmt(max)}${unit ? ` ${unit}` : ''}`}</span>
         {hint && <span className="truncate font-mono text-text-lo">{hint}</span>}
       </span>

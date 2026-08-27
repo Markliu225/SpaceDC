@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react'
+import { colors } from '../../design/tokens'
 import { useDemoStore } from '../../store/demoStore'
 import { PopupChrome } from './panels/PopupPrimitives'
 import { GpuPanel } from './panels/GpuPanel'
@@ -107,10 +108,10 @@ function matchSelection(path: string | null, architecture?: string): Match | nul
 }
 
 const HEADER: Record<Kind, { title: string; swatch: string }> = {
-  server:    { title: 'Compute Server',  swatch: '#E8EEFB' },
-  solar:     { title: 'Solar Wing',      swatch: '#22D3EE' },
-  radiator:  { title: 'Radiator',        swatch: '#F59E0B' },
-  structure: { title: 'Structure',       swatch: '#B69755' },
+  server:    { title: 'Compute Server',  swatch: colors.text.hi },
+  solar:     { title: 'Solar Wing',      swatch: colors.accent },
+  radiator:  { title: 'Radiator',        swatch: colors.warn },
+  structure: { title: 'Structure',       swatch: colors.text.md },
 }
 
 export function TwinModulePopup() {

@@ -319,1013 +319,286 @@ def Xform "World"
             }
         }
 
-        def Xform "Backbone" (
-            prepend references = @./assets/SpaceDcBackbone.usdz@
+        def Xform "Hull" (
+            prepend references = @./assets/redwire_payload.usdz@
         )
         {
-            over "_materials"
-            {
-                over "tripo_part_0_material"
-                {
-                    over "Principled_BSDF"
-                    {
-                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
-                        color3f inputs:diffuseColor.connect = None
-                        float inputs:metallic = 0.95
-                        float inputs:metallic.connect = None
-                        float inputs:roughness = 0.18
-                        float inputs:roughness.connect = None
-                    }
-                }
-                over "tripo_part_1_material"
-                {
-                    over "Principled_BSDF"
-                    {
-                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
-                        color3f inputs:diffuseColor.connect = None
-                        float inputs:metallic = 0.95
-                        float inputs:metallic.connect = None
-                        float inputs:roughness = 0.18
-                        float inputs:roughness.connect = None
-                    }
-                }
-                over "tripo_part_2_material"
-                {
-                    over "Principled_BSDF"
-                    {
-                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
-                        color3f inputs:diffuseColor.connect = None
-                        float inputs:metallic = 0.95
-                        float inputs:metallic.connect = None
-                        float inputs:roughness = 0.18
-                        float inputs:roughness.connect = None
-                    }
-                }
-                over "tripo_part_3_material"
-                {
-                    over "Principled_BSDF"
-                    {
-                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
-                        color3f inputs:diffuseColor.connect = None
-                        float inputs:metallic = 0.95
-                        float inputs:metallic.connect = None
-                        float inputs:roughness = 0.18
-                        float inputs:roughness.connect = None
-                    }
-                }
-                over "tripo_part_4_material"
-                {
-                    over "Principled_BSDF"
-                    {
-                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
-                        color3f inputs:diffuseColor.connect = None
-                        float inputs:metallic = 0.95
-                        float inputs:metallic.connect = None
-                        float inputs:roughness = 0.18
-                        float inputs:roughness.connect = None
-                    }
-                }
-                over "tripo_part_5_material"
-                {
-                    over "Principled_BSDF"
-                    {
-                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
-                        color3f inputs:diffuseColor.connect = None
-                        float inputs:metallic = 0.95
-                        float inputs:metallic.connect = None
-                        float inputs:roughness = 0.18
-                        float inputs:roughness.connect = None
-                    }
-                }
-                over "tripo_part_6_material"
-                {
-                    over "Principled_BSDF"
-                    {
-                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
-                        color3f inputs:diffuseColor.connect = None
-                        float inputs:metallic = 0.95
-                        float inputs:metallic.connect = None
-                        float inputs:roughness = 0.18
-                        float inputs:roughness.connect = None
-                    }
-                }
-                over "tripo_part_7_material"
-                {
-                    over "Principled_BSDF"
-                    {
-                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
-                        color3f inputs:diffuseColor.connect = None
-                        float inputs:metallic = 0.95
-                        float inputs:metallic.connect = None
-                        float inputs:roughness = 0.18
-                        float inputs:roughness.connect = None
-                    }
-                }
-                over "tripo_part_8_material"
-                {
-                    over "Principled_BSDF"
-                    {
-                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
-                        color3f inputs:diffuseColor.connect = None
-                        float inputs:metallic = 0.95
-                        float inputs:metallic.connect = None
-                        float inputs:roughness = 0.18
-                        float inputs:roughness.connect = None
-                    }
-                }
-                over "tripo_part_new_0_material"
-                {
-                    over "Principled_BSDF"
-                    {
-                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
-                        color3f inputs:diffuseColor.connect = None
-                        float inputs:metallic = 0.95
-                        float inputs:metallic.connect = None
-                        float inputs:roughness = 0.18
-                        float inputs:roughness.connect = None
-                    }
-                }
-                over "tripo_part_new_1_material"
-                {
-                    over "Principled_BSDF"
-                    {
-                        color3f inputs:diffuseColor = (0.620, 0.635, 0.660)
-                        color3f inputs:diffuseColor.connect = None
-                        float inputs:metallic = 0.95
-                        float inputs:metallic.connect = None
-                        float inputs:roughness = 0.18
-                        float inputs:roughness.connect = None
-                    }
-                }
-            }
-        }
-
-        def Xform "Servers"
-        {
-            def Xform "Server_UpY_0" (
-                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
-                instanceable = true
-            )
-            {
-                matrix4d xformOp:transform = ((0.00000000, 0.00167549, 0.00000000, 0.00000000), (-0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (0.06497306, 0.20344395, 0.09929394, 1.00000000))
-                uniform token[] xformOpOrder = ["xformOp:transform"]
-            }
-            def Mesh "Server_UpY_0_Tag" (
-                prepend apiSchemas = ["MaterialBindingAPI"]
-            )
-            {
-                uniform bool doubleSided = 1
-                float3[] extent = [(-0.04030, 0.21350, 0.10100), (0.04030, 0.21750, 0.10600)]
-                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                point3f[] points = [(-0.04030, 0.21350, 0.10100), (0.04030, 0.21350, 0.10100), (0.04030, 0.21750, 0.10100), (-0.04030, 0.21750, 0.10100), (-0.04030, 0.21350, 0.10600), (0.04030, 0.21350, 0.10600), (0.04030, 0.21750, 0.10600), (-0.04030, 0.21750, 0.10600)]
-                uniform token subdivisionScheme = "none"
-                rel material:binding = </World/Looks/GpuTag_H100>
-            }
-            def Xform "Server_UpY_1" (
-                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
-                instanceable = true
-            )
-            {
-                matrix4d xformOp:transform = ((0.00000000, 0.00167549, 0.00000000, 0.00000000), (-0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (0.06497306, 0.20344395, 0.19029394, 1.00000000))
-                uniform token[] xformOpOrder = ["xformOp:transform"]
-            }
-            def Mesh "Server_UpY_1_Tag" (
-                prepend apiSchemas = ["MaterialBindingAPI"]
-            )
-            {
-                uniform bool doubleSided = 1
-                float3[] extent = [(-0.04030, 0.21350, 0.19200), (0.04030, 0.21750, 0.19700)]
-                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                point3f[] points = [(-0.04030, 0.21350, 0.19200), (0.04030, 0.21350, 0.19200), (0.04030, 0.21750, 0.19200), (-0.04030, 0.21750, 0.19200), (-0.04030, 0.21350, 0.19700), (0.04030, 0.21350, 0.19700), (0.04030, 0.21750, 0.19700), (-0.04030, 0.21750, 0.19700)]
-                uniform token subdivisionScheme = "none"
-                rel material:binding = </World/Looks/GpuTag_H100>
-            }
-            def Xform "Server_UpY_2" (
-                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
-                instanceable = true
-            )
-            {
-                matrix4d xformOp:transform = ((0.00000000, 0.00167549, 0.00000000, 0.00000000), (-0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (0.06497306, 0.20344395, 0.28079394, 1.00000000))
-                uniform token[] xformOpOrder = ["xformOp:transform"]
-            }
-            def Mesh "Server_UpY_2_Tag" (
-                prepend apiSchemas = ["MaterialBindingAPI"]
-            )
-            {
-                uniform bool doubleSided = 1
-                float3[] extent = [(-0.04030, 0.21350, 0.28250), (0.04030, 0.21750, 0.28750)]
-                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                point3f[] points = [(-0.04030, 0.21350, 0.28250), (0.04030, 0.21350, 0.28250), (0.04030, 0.21750, 0.28250), (-0.04030, 0.21750, 0.28250), (-0.04030, 0.21350, 0.28750), (0.04030, 0.21350, 0.28750), (0.04030, 0.21750, 0.28750), (-0.04030, 0.21750, 0.28750)]
-                uniform token subdivisionScheme = "none"
-                rel material:binding = </World/Looks/GpuTag_H100>
-            }
-            def Xform "Server_UnY_0" (
-                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
-                instanceable = true
-            )
-            {
-                matrix4d xformOp:transform = ((0.00000000, -0.00167549, 0.00000000, 0.00000000), (0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (-0.06497306, -0.20344395, 0.09929394, 1.00000000))
-                uniform token[] xformOpOrder = ["xformOp:transform"]
-            }
-            def Mesh "Server_UnY_0_Tag" (
-                prepend apiSchemas = ["MaterialBindingAPI"]
-            )
-            {
-                uniform bool doubleSided = 1
-                float3[] extent = [(-0.04030, -0.21750, 0.10100), (0.04030, -0.21350, 0.10600)]
-                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                point3f[] points = [(-0.04030, -0.21750, 0.10100), (0.04030, -0.21750, 0.10100), (0.04030, -0.21350, 0.10100), (-0.04030, -0.21350, 0.10100), (-0.04030, -0.21750, 0.10600), (0.04030, -0.21750, 0.10600), (0.04030, -0.21350, 0.10600), (-0.04030, -0.21350, 0.10600)]
-                uniform token subdivisionScheme = "none"
-                rel material:binding = </World/Looks/GpuTag_H100>
-            }
-            def Xform "Server_UnY_1" (
-                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
-                instanceable = true
-            )
-            {
-                matrix4d xformOp:transform = ((0.00000000, -0.00167549, 0.00000000, 0.00000000), (0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (-0.06497306, -0.20344395, 0.19029394, 1.00000000))
-                uniform token[] xformOpOrder = ["xformOp:transform"]
-            }
-            def Mesh "Server_UnY_1_Tag" (
-                prepend apiSchemas = ["MaterialBindingAPI"]
-            )
-            {
-                uniform bool doubleSided = 1
-                float3[] extent = [(-0.04030, -0.21750, 0.19200), (0.04030, -0.21350, 0.19700)]
-                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                point3f[] points = [(-0.04030, -0.21750, 0.19200), (0.04030, -0.21750, 0.19200), (0.04030, -0.21350, 0.19200), (-0.04030, -0.21350, 0.19200), (-0.04030, -0.21750, 0.19700), (0.04030, -0.21750, 0.19700), (0.04030, -0.21350, 0.19700), (-0.04030, -0.21350, 0.19700)]
-                uniform token subdivisionScheme = "none"
-                rel material:binding = </World/Looks/GpuTag_H100>
-            }
-            def Xform "Server_UnY_2" (
-                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
-                instanceable = true
-            )
-            {
-                matrix4d xformOp:transform = ((0.00000000, -0.00167549, 0.00000000, 0.00000000), (0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (-0.06497306, -0.20344395, 0.28079394, 1.00000000))
-                uniform token[] xformOpOrder = ["xformOp:transform"]
-            }
-            def Mesh "Server_UnY_2_Tag" (
-                prepend apiSchemas = ["MaterialBindingAPI"]
-            )
-            {
-                uniform bool doubleSided = 1
-                float3[] extent = [(-0.04030, -0.21750, 0.28250), (0.04030, -0.21350, 0.28750)]
-                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                point3f[] points = [(-0.04030, -0.21750, 0.28250), (0.04030, -0.21750, 0.28250), (0.04030, -0.21350, 0.28250), (-0.04030, -0.21350, 0.28250), (-0.04030, -0.21750, 0.28750), (0.04030, -0.21750, 0.28750), (0.04030, -0.21350, 0.28750), (-0.04030, -0.21350, 0.28750)]
-                uniform token subdivisionScheme = "none"
-                rel material:binding = </World/Looks/GpuTag_H100>
-            }
-            def Xform "Server_LpY_0" (
-                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
-                instanceable = true
-            )
-            {
-                matrix4d xformOp:transform = ((0.00000000, 0.00167549, 0.00000000, 0.00000000), (-0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (0.06497306, 0.20344395, -0.17940606, 1.00000000))
-                uniform token[] xformOpOrder = ["xformOp:transform"]
-            }
-            def Mesh "Server_LpY_0_Tag" (
-                prepend apiSchemas = ["MaterialBindingAPI"]
-            )
-            {
-                uniform bool doubleSided = 1
-                float3[] extent = [(-0.04030, 0.21350, -0.17770), (0.04030, 0.21750, -0.17270)]
-                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                point3f[] points = [(-0.04030, 0.21350, -0.17770), (0.04030, 0.21350, -0.17770), (0.04030, 0.21750, -0.17770), (-0.04030, 0.21750, -0.17770), (-0.04030, 0.21350, -0.17270), (0.04030, 0.21350, -0.17270), (0.04030, 0.21750, -0.17270), (-0.04030, 0.21750, -0.17270)]
-                uniform token subdivisionScheme = "none"
-                rel material:binding = </World/Looks/GpuTag_H100>
-            }
-            def Xform "Server_LpY_1" (
-                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
-                instanceable = true
-            )
-            {
-                matrix4d xformOp:transform = ((0.00000000, 0.00167549, 0.00000000, 0.00000000), (-0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (0.06497306, 0.20344395, -0.27060606, 1.00000000))
-                uniform token[] xformOpOrder = ["xformOp:transform"]
-            }
-            def Mesh "Server_LpY_1_Tag" (
-                prepend apiSchemas = ["MaterialBindingAPI"]
-            )
-            {
-                uniform bool doubleSided = 1
-                float3[] extent = [(-0.04030, 0.21350, -0.26890), (0.04030, 0.21750, -0.26390)]
-                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                point3f[] points = [(-0.04030, 0.21350, -0.26890), (0.04030, 0.21350, -0.26890), (0.04030, 0.21750, -0.26890), (-0.04030, 0.21750, -0.26890), (-0.04030, 0.21350, -0.26390), (0.04030, 0.21350, -0.26390), (0.04030, 0.21750, -0.26390), (-0.04030, 0.21750, -0.26390)]
-                uniform token subdivisionScheme = "none"
-                rel material:binding = </World/Looks/GpuTag_H100>
-            }
-            def Xform "Server_LpY_2" (
-                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
-                instanceable = true
-            )
-            {
-                matrix4d xformOp:transform = ((0.00000000, 0.00167549, 0.00000000, 0.00000000), (-0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (0.06497306, 0.20344395, -0.36180606, 1.00000000))
-                uniform token[] xformOpOrder = ["xformOp:transform"]
-            }
-            def Mesh "Server_LpY_2_Tag" (
-                prepend apiSchemas = ["MaterialBindingAPI"]
-            )
-            {
-                uniform bool doubleSided = 1
-                float3[] extent = [(-0.04030, 0.21350, -0.36010), (0.04030, 0.21750, -0.35510)]
-                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                point3f[] points = [(-0.04030, 0.21350, -0.36010), (0.04030, 0.21350, -0.36010), (0.04030, 0.21750, -0.36010), (-0.04030, 0.21750, -0.36010), (-0.04030, 0.21350, -0.35510), (0.04030, 0.21350, -0.35510), (0.04030, 0.21750, -0.35510), (-0.04030, 0.21750, -0.35510)]
-                uniform token subdivisionScheme = "none"
-                rel material:binding = </World/Looks/GpuTag_H100>
-            }
-            def Xform "Server_LnY_0" (
-                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
-                instanceable = true
-            )
-            {
-                matrix4d xformOp:transform = ((0.00000000, -0.00167549, 0.00000000, 0.00000000), (0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (-0.06497306, -0.20344395, -0.17940606, 1.00000000))
-                uniform token[] xformOpOrder = ["xformOp:transform"]
-            }
-            def Mesh "Server_LnY_0_Tag" (
-                prepend apiSchemas = ["MaterialBindingAPI"]
-            )
-            {
-                uniform bool doubleSided = 1
-                float3[] extent = [(-0.04030, -0.21750, -0.17770), (0.04030, -0.21350, -0.17270)]
-                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                point3f[] points = [(-0.04030, -0.21750, -0.17770), (0.04030, -0.21750, -0.17770), (0.04030, -0.21350, -0.17770), (-0.04030, -0.21350, -0.17770), (-0.04030, -0.21750, -0.17270), (0.04030, -0.21750, -0.17270), (0.04030, -0.21350, -0.17270), (-0.04030, -0.21350, -0.17270)]
-                uniform token subdivisionScheme = "none"
-                rel material:binding = </World/Looks/GpuTag_H100>
-            }
-            def Xform "Server_LnY_1" (
-                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
-                instanceable = true
-            )
-            {
-                matrix4d xformOp:transform = ((0.00000000, -0.00167549, 0.00000000, 0.00000000), (0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (-0.06497306, -0.20344395, -0.27060606, 1.00000000))
-                uniform token[] xformOpOrder = ["xformOp:transform"]
-            }
-            def Mesh "Server_LnY_1_Tag" (
-                prepend apiSchemas = ["MaterialBindingAPI"]
-            )
-            {
-                uniform bool doubleSided = 1
-                float3[] extent = [(-0.04030, -0.21750, -0.26890), (0.04030, -0.21350, -0.26390)]
-                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                point3f[] points = [(-0.04030, -0.21750, -0.26890), (0.04030, -0.21750, -0.26890), (0.04030, -0.21350, -0.26890), (-0.04030, -0.21350, -0.26890), (-0.04030, -0.21750, -0.26390), (0.04030, -0.21750, -0.26390), (0.04030, -0.21350, -0.26390), (-0.04030, -0.21350, -0.26390)]
-                uniform token subdivisionScheme = "none"
-                rel material:binding = </World/Looks/GpuTag_H100>
-            }
-            def Xform "Server_LnY_2" (
-                prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
-                instanceable = true
-            )
-            {
-                matrix4d xformOp:transform = ((0.00000000, -0.00167549, 0.00000000, 0.00000000), (0.00269374, 0.00000000, 0.00000000, 0.00000000), (0.00000000, 0.00000000, 0.00128788, 0.00000000), (-0.06497306, -0.20344395, -0.36180606, 1.00000000))
-                uniform token[] xformOpOrder = ["xformOp:transform"]
-            }
-            def Mesh "Server_LnY_2_Tag" (
-                prepend apiSchemas = ["MaterialBindingAPI"]
-            )
-            {
-                uniform bool doubleSided = 1
-                float3[] extent = [(-0.04030, -0.21750, -0.36010), (0.04030, -0.21350, -0.35510)]
-                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                point3f[] points = [(-0.04030, -0.21750, -0.36010), (0.04030, -0.21750, -0.36010), (0.04030, -0.21350, -0.36010), (-0.04030, -0.21350, -0.36010), (-0.04030, -0.21750, -0.35510), (0.04030, -0.21750, -0.35510), (0.04030, -0.21350, -0.35510), (-0.04030, -0.21350, -0.35510)]
-                uniform token subdivisionScheme = "none"
-                rel material:binding = </World/Looks/GpuTag_H100>
-            }
+            double3 xformOp:translate = (0.0000, -0.0000, 0.1655)
+            float xformOp:rotateZ = 90.0
+            double3 xformOp:scale = (0.750000, 0.750000, 0.750000)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateZ", "xformOp:scale"]
         }
 
         def Xform "SolarArray"
         {
             def Xform "WingPosY"
             {
-                def Mesh "YokeBracket" (
+                def Mesh "HingeA" (
                     prepend apiSchemas = ["MaterialBindingAPI"]
                 )
                 {
                     uniform bool doubleSided = 1
-                    float3[] extent = [(0.01700, 0.05500, -0.05000), (0.04300, 0.11500, 0.00200)]
+                    float3[] extent = [(-0.28600, 0.31300, 0.03200), (-0.21600, 0.40300, 0.05000)]
                     int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
                     int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.01700, 0.05500, -0.05000), (0.04300, 0.05500, -0.05000), (0.04300, 0.11500, -0.05000), (0.01700, 0.11500, -0.05000), (0.01700, 0.05500, 0.00200), (0.04300, 0.05500, 0.00200), (0.04300, 0.11500, 0.00200), (0.01700, 0.11500, 0.00200)]
+                    point3f[] points = [(-0.28600, 0.31300, 0.03200), (-0.21600, 0.31300, 0.03200), (-0.21600, 0.40300, 0.03200), (-0.28600, 0.40300, 0.03200), (-0.28600, 0.31300, 0.05000), (-0.21600, 0.31300, 0.05000), (-0.21600, 0.40300, 0.05000), (-0.28600, 0.40300, 0.05000)]
                     uniform token subdivisionScheme = "none"
                     rel material:binding = </World/Looks/SolarFrame>
                 }
-                def Mesh "HingeClevisA" (
+                def Mesh "HingeB" (
                     prepend apiSchemas = ["MaterialBindingAPI"]
                 )
                 {
                     uniform bool doubleSided = 1
-                    float3[] extent = [(0.02000, 0.11300, -0.01100), (0.04000, 0.14700, 0.00300)]
+                    float3[] extent = [(0.21000, 0.31300, 0.03200), (0.28000, 0.40300, 0.05000)]
                     int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
                     int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.02000, 0.11300, -0.01100), (0.04000, 0.11300, -0.01100), (0.04000, 0.14700, -0.01100), (0.02000, 0.14700, -0.01100), (0.02000, 0.11300, 0.00300), (0.04000, 0.11300, 0.00300), (0.04000, 0.14700, 0.00300), (0.02000, 0.14700, 0.00300)]
+                    point3f[] points = [(0.21000, 0.31300, 0.03200), (0.28000, 0.31300, 0.03200), (0.28000, 0.40300, 0.03200), (0.21000, 0.40300, 0.03200), (0.21000, 0.31300, 0.05000), (0.28000, 0.31300, 0.05000), (0.28000, 0.40300, 0.05000), (0.21000, 0.40300, 0.05000)]
                     uniform token subdivisionScheme = "none"
                     rel material:binding = </World/Looks/SolarFrame>
                 }
-                def Mesh "HingeClevisB" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.02000, 0.11300, -0.05100), (0.04000, 0.14700, -0.03700)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.02000, 0.11300, -0.05100), (0.04000, 0.11300, -0.05100), (0.04000, 0.14700, -0.05100), (0.02000, 0.14700, -0.05100), (0.02000, 0.11300, -0.03700), (0.04000, 0.11300, -0.03700), (0.04000, 0.14700, -0.03700), (0.02000, 0.14700, -0.03700)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/SolarFrame>
-                }
-                def Mesh "HingePin" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.02500, 0.12400, -0.05300), (0.03500, 0.13600, 0.00500)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.02500, 0.12400, -0.05300), (0.03500, 0.12400, -0.05300), (0.03500, 0.13600, -0.05300), (0.02500, 0.13600, -0.05300), (0.02500, 0.12400, 0.00500), (0.03500, 0.12400, 0.00500), (0.03500, 0.13600, 0.00500), (0.02500, 0.13600, 0.00500)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/HingePinMetal>
-                }
-                def Mesh "ArmSeg1" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.02100, 0.14700, -0.04100), (0.03900, 0.23300, -0.00700)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.02100, 0.14700, -0.04100), (0.03900, 0.14700, -0.04100), (0.03900, 0.23300, -0.04100), (0.02100, 0.23300, -0.04100), (0.02100, 0.14700, -0.00700), (0.03900, 0.14700, -0.00700), (0.03900, 0.23300, -0.00700), (0.02100, 0.23300, -0.00700)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/SolarFrame>
-                }
-                def Mesh "ArmSeg2" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.02300, 0.23300, -0.03700), (0.03700, 0.30700, -0.01100)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.02300, 0.23300, -0.03700), (0.03700, 0.23300, -0.03700), (0.03700, 0.30700, -0.03700), (0.02300, 0.30700, -0.03700), (0.02300, 0.23300, -0.01100), (0.03700, 0.23300, -0.01100), (0.03700, 0.30700, -0.01100), (0.02300, 0.30700, -0.01100)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/SolarFrame>
-                }
-                def Mesh "ArmSeg3" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.02500, 0.30700, -0.03300), (0.03500, 0.38700, -0.01500)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.02500, 0.30700, -0.03300), (0.03500, 0.30700, -0.03300), (0.03500, 0.38700, -0.03300), (0.02500, 0.38700, -0.03300), (0.02500, 0.30700, -0.01500), (0.03500, 0.30700, -0.01500), (0.03500, 0.38700, -0.01500), (0.02500, 0.38700, -0.01500)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/SolarFrame>
-                }
-                def Mesh "TipForkA" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.02400, 0.38500, -0.01700), (0.03600, 0.42500, -0.00700)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.02400, 0.38500, -0.01700), (0.03600, 0.38500, -0.01700), (0.03600, 0.42500, -0.01700), (0.02400, 0.42500, -0.01700), (0.02400, 0.38500, -0.00700), (0.03600, 0.38500, -0.00700), (0.03600, 0.42500, -0.00700), (0.02400, 0.42500, -0.00700)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/SolarFrame>
-                }
-                def Mesh "TipForkB" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.02400, 0.38500, -0.04100), (0.03600, 0.42500, -0.03100)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.02400, 0.38500, -0.04100), (0.03600, 0.38500, -0.04100), (0.03600, 0.42500, -0.04100), (0.02400, 0.42500, -0.04100), (0.02400, 0.38500, -0.03100), (0.03600, 0.38500, -0.03100), (0.03600, 0.42500, -0.03100), (0.02400, 0.42500, -0.03100)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/SolarFrame>
-                }
-                def Xform "Cluster0_00" (
+                def Xform "Cluster0_0" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, 0.6240, 0.3316)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, 0.5580, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster0_01" (
+                def Xform "Cluster0_1" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, 1.0319, 0.3316)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, 0.9659, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster0_10" (
+                def Xform "Cluster0_2" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, 0.6240, -0.3796)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, 1.3738, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster0_11" (
+                def Xform "Cluster0_3" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, 1.0319, -0.3796)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, 1.7817, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster1_00" (
+                def Xform "Cluster1_0" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, 1.4398, 0.3316)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, 2.1897, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster1_01" (
+                def Xform "Cluster1_1" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, 1.8477, 0.3316)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, 2.5976, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster1_10" (
+                def Xform "Cluster1_2" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, 1.4398, -0.3796)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, 3.0055, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster1_11" (
+                def Xform "Cluster1_3" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, 1.8477, -0.3796)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, 3.4134, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster2_00" (
+                def Xform "Cluster2_0" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, 2.2557, 0.3316)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, 3.8214, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster2_01" (
+                def Xform "Cluster2_1" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, 2.6636, 0.3316)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, 4.2293, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster2_10" (
+                def Xform "Cluster2_2" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, 2.2557, -0.3796)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, 4.6372, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster2_11" (
+                def Xform "Cluster2_3" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, 2.6636, -0.3796)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, 5.0451, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster3_00" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, 3.0715, 0.3316)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster3_01" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, 3.4794, 0.3316)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster3_10" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, 3.0715, -0.3796)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster3_11" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, 3.4794, -0.3796)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster4_00" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, 3.8874, 0.3316)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster4_01" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, 4.2953, 0.3316)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster4_10" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, 3.8874, -0.3796)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster4_11" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, 4.2953, -0.3796)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
             }
             def Xform "WingNegY"
             {
-                def Mesh "YokeBracket" (
+                def Mesh "HingeA" (
                     prepend apiSchemas = ["MaterialBindingAPI"]
                 )
                 {
                     uniform bool doubleSided = 1
-                    float3[] extent = [(0.01700, -0.11500, -0.05000), (0.04300, -0.05500, 0.00200)]
+                    float3[] extent = [(-0.28600, -0.40300, 0.03200), (-0.21600, -0.31300, 0.05000)]
                     int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
                     int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.01700, -0.11500, -0.05000), (0.04300, -0.11500, -0.05000), (0.04300, -0.05500, -0.05000), (0.01700, -0.05500, -0.05000), (0.01700, -0.11500, 0.00200), (0.04300, -0.11500, 0.00200), (0.04300, -0.05500, 0.00200), (0.01700, -0.05500, 0.00200)]
+                    point3f[] points = [(-0.28600, -0.40300, 0.03200), (-0.21600, -0.40300, 0.03200), (-0.21600, -0.31300, 0.03200), (-0.28600, -0.31300, 0.03200), (-0.28600, -0.40300, 0.05000), (-0.21600, -0.40300, 0.05000), (-0.21600, -0.31300, 0.05000), (-0.28600, -0.31300, 0.05000)]
                     uniform token subdivisionScheme = "none"
                     rel material:binding = </World/Looks/SolarFrame>
                 }
-                def Mesh "HingeClevisA" (
+                def Mesh "HingeB" (
                     prepend apiSchemas = ["MaterialBindingAPI"]
                 )
                 {
                     uniform bool doubleSided = 1
-                    float3[] extent = [(0.02000, -0.14700, -0.01100), (0.04000, -0.11300, 0.00300)]
+                    float3[] extent = [(0.21000, -0.40300, 0.03200), (0.28000, -0.31300, 0.05000)]
                     int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
                     int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.02000, -0.14700, -0.01100), (0.04000, -0.14700, -0.01100), (0.04000, -0.11300, -0.01100), (0.02000, -0.11300, -0.01100), (0.02000, -0.14700, 0.00300), (0.04000, -0.14700, 0.00300), (0.04000, -0.11300, 0.00300), (0.02000, -0.11300, 0.00300)]
+                    point3f[] points = [(0.21000, -0.40300, 0.03200), (0.28000, -0.40300, 0.03200), (0.28000, -0.31300, 0.03200), (0.21000, -0.31300, 0.03200), (0.21000, -0.40300, 0.05000), (0.28000, -0.40300, 0.05000), (0.28000, -0.31300, 0.05000), (0.21000, -0.31300, 0.05000)]
                     uniform token subdivisionScheme = "none"
                     rel material:binding = </World/Looks/SolarFrame>
                 }
-                def Mesh "HingeClevisB" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.02000, -0.14700, -0.05100), (0.04000, -0.11300, -0.03700)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.02000, -0.14700, -0.05100), (0.04000, -0.14700, -0.05100), (0.04000, -0.11300, -0.05100), (0.02000, -0.11300, -0.05100), (0.02000, -0.14700, -0.03700), (0.04000, -0.14700, -0.03700), (0.04000, -0.11300, -0.03700), (0.02000, -0.11300, -0.03700)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/SolarFrame>
-                }
-                def Mesh "HingePin" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.02500, -0.13600, -0.05300), (0.03500, -0.12400, 0.00500)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.02500, -0.13600, -0.05300), (0.03500, -0.13600, -0.05300), (0.03500, -0.12400, -0.05300), (0.02500, -0.12400, -0.05300), (0.02500, -0.13600, 0.00500), (0.03500, -0.13600, 0.00500), (0.03500, -0.12400, 0.00500), (0.02500, -0.12400, 0.00500)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/HingePinMetal>
-                }
-                def Mesh "ArmSeg1" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.02100, -0.23300, -0.04100), (0.03900, -0.14700, -0.00700)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.02100, -0.23300, -0.04100), (0.03900, -0.23300, -0.04100), (0.03900, -0.14700, -0.04100), (0.02100, -0.14700, -0.04100), (0.02100, -0.23300, -0.00700), (0.03900, -0.23300, -0.00700), (0.03900, -0.14700, -0.00700), (0.02100, -0.14700, -0.00700)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/SolarFrame>
-                }
-                def Mesh "ArmSeg2" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.02300, -0.30700, -0.03700), (0.03700, -0.23300, -0.01100)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.02300, -0.30700, -0.03700), (0.03700, -0.30700, -0.03700), (0.03700, -0.23300, -0.03700), (0.02300, -0.23300, -0.03700), (0.02300, -0.30700, -0.01100), (0.03700, -0.30700, -0.01100), (0.03700, -0.23300, -0.01100), (0.02300, -0.23300, -0.01100)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/SolarFrame>
-                }
-                def Mesh "ArmSeg3" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.02500, -0.38700, -0.03300), (0.03500, -0.30700, -0.01500)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.02500, -0.38700, -0.03300), (0.03500, -0.38700, -0.03300), (0.03500, -0.30700, -0.03300), (0.02500, -0.30700, -0.03300), (0.02500, -0.38700, -0.01500), (0.03500, -0.38700, -0.01500), (0.03500, -0.30700, -0.01500), (0.02500, -0.30700, -0.01500)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/SolarFrame>
-                }
-                def Mesh "TipForkA" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.02400, -0.42500, -0.01700), (0.03600, -0.38500, -0.00700)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.02400, -0.42500, -0.01700), (0.03600, -0.42500, -0.01700), (0.03600, -0.38500, -0.01700), (0.02400, -0.38500, -0.01700), (0.02400, -0.42500, -0.00700), (0.03600, -0.42500, -0.00700), (0.03600, -0.38500, -0.00700), (0.02400, -0.38500, -0.00700)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/SolarFrame>
-                }
-                def Mesh "TipForkB" (
-                    prepend apiSchemas = ["MaterialBindingAPI"]
-                )
-                {
-                    uniform bool doubleSided = 1
-                    float3[] extent = [(0.02400, -0.42500, -0.04100), (0.03600, -0.38500, -0.03100)]
-                    int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                    int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                    point3f[] points = [(0.02400, -0.42500, -0.04100), (0.03600, -0.42500, -0.04100), (0.03600, -0.38500, -0.04100), (0.02400, -0.38500, -0.04100), (0.02400, -0.42500, -0.03100), (0.03600, -0.42500, -0.03100), (0.03600, -0.38500, -0.03100), (0.02400, -0.38500, -0.03100)]
-                    uniform token subdivisionScheme = "none"
-                    rel material:binding = </World/Looks/SolarFrame>
-                }
-                def Xform "Cluster0_00" (
+                def Xform "Cluster0_0" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, -1.0319, 0.3316)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, -0.5580, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster0_01" (
+                def Xform "Cluster0_1" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, -0.6240, 0.3316)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, -0.9659, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster0_10" (
+                def Xform "Cluster0_2" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, -1.0319, -0.3796)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, -1.3738, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster0_11" (
+                def Xform "Cluster0_3" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, -0.6240, -0.3796)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, -1.7817, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster1_00" (
+                def Xform "Cluster1_0" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, -1.8477, 0.3316)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, -2.1897, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster1_01" (
+                def Xform "Cluster1_1" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, -1.4398, 0.3316)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, -2.5976, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster1_10" (
+                def Xform "Cluster1_2" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, -1.8477, -0.3796)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, -3.0055, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster1_11" (
+                def Xform "Cluster1_3" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, -1.4398, -0.3796)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, -3.4134, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster2_00" (
+                def Xform "Cluster2_0" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, -2.6636, 0.3316)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, -3.8214, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster2_01" (
+                def Xform "Cluster2_1" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, -2.2557, 0.3316)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, -4.2293, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster2_10" (
+                def Xform "Cluster2_2" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, -2.6636, -0.3796)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, -4.6372, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
-                def Xform "Cluster2_11" (
+                def Xform "Cluster2_3" (
                     instanceable = true
                     prepend references = </World/Satellite/_Protos/SolarTile>
                 )
                 {
-                    double3 xformOp:translate = (0.0300, -2.2557, -0.3796)
-                    float xformOp:rotateY = 90.0
+                    double3 xformOp:translate = (0.0000, -5.0451, 0.0410)
                     double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster3_00" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, -3.4794, 0.3316)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster3_01" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, -3.0715, 0.3316)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster3_10" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, -3.4794, -0.3796)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster3_11" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, -3.0715, -0.3796)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster4_00" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, -4.2953, 0.3316)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster4_01" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, -3.8874, 0.3316)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster4_10" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, -4.2953, -0.3796)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
-                }
-                def Xform "Cluster4_11" (
-                    instanceable = true
-                    prepend references = </World/Satellite/_Protos/SolarTile>
-                )
-                {
-                    double3 xformOp:translate = (0.0300, -3.8874, -0.3796)
-                    float xformOp:rotateY = 90.0
-                    double3 xformOp:scale = (0.7250, 0.5250, 0.4500)
-                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateY", "xformOp:scale"]
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
                 }
             }
         }
@@ -1337,10 +610,10 @@ def Xform "World"
             )
             {
                 uniform bool doubleSided = 1
-                float3[] extent = [(0.01900, -0.00700, 0.50000), (0.03300, 0.00700, 0.66000)]
+                float3[] extent = [(0.01900, -0.00700, 0.08600), (0.03300, 0.00700, 0.24600)]
                 int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
                 int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                point3f[] points = [(0.01900, -0.00700, 0.50000), (0.03300, -0.00700, 0.50000), (0.03300, 0.00700, 0.50000), (0.01900, 0.00700, 0.50000), (0.01900, -0.00700, 0.66000), (0.03300, -0.00700, 0.66000), (0.03300, 0.00700, 0.66000), (0.01900, 0.00700, 0.66000)]
+                point3f[] points = [(0.01900, -0.00700, 0.08600), (0.03300, -0.00700, 0.08600), (0.03300, 0.00700, 0.08600), (0.01900, 0.00700, 0.08600), (0.01900, -0.00700, 0.24600), (0.03300, -0.00700, 0.24600), (0.03300, 0.00700, 0.24600), (0.01900, 0.00700, 0.24600)]
                 uniform token subdivisionScheme = "none"
                 rel material:binding = </World/Looks/SolarFrame>
             }
@@ -1349,33 +622,10 @@ def Xform "World"
                 prepend references = </World/Satellite/_Protos/RadiatorPanel>
             )
             {
-                double3 xformOp:translate = (0.0260, 0.0000, 1.6100)
+                double3 xformOp:translate = (0.0260, 0.0000, 1.1460)
                 float xformOp:rotateX = 90
                 float xformOp:rotateZ = 90
-                double3 xformOp:scale = (1.9340, 1.1918, 1.0)
-                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:rotateZ", "xformOp:scale"]
-            }
-            def Mesh "RadBoomBot" (
-                prepend apiSchemas = ["MaterialBindingAPI"]
-            )
-            {
-                uniform bool doubleSided = 1
-                float3[] extent = [(0.01900, -0.00700, -0.66000), (0.03300, 0.00700, -0.50000)]
-                int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
-                int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
-                point3f[] points = [(0.01900, -0.00700, -0.66000), (0.03300, -0.00700, -0.66000), (0.03300, 0.00700, -0.66000), (0.01900, 0.00700, -0.66000), (0.01900, -0.00700, -0.50000), (0.03300, -0.00700, -0.50000), (0.03300, 0.00700, -0.50000), (0.01900, 0.00700, -0.50000)]
-                uniform token subdivisionScheme = "none"
-                rel material:binding = </World/Looks/SolarFrame>
-            }
-            def Xform "RadiatorBot" (
-                instanceable = true
-                prepend references = </World/Satellite/_Protos/RadiatorPanel>
-            )
-            {
-                double3 xformOp:translate = (0.0260, 0.0000, -1.6100)
-                float xformOp:rotateX = 90
-                float xformOp:rotateZ = 90
-                double3 xformOp:scale = (1.9340, 1.1918, 1.0)
+                double3 xformOp:scale = (1.8322, 2.1713, 1.0)
                 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:rotateZ", "xformOp:scale"]
             }
         }
@@ -1447,13 +697,13 @@ def Xform "World"
         def Camera "Closeup"
         {
             float focalLength = 22.0
-            float focusDistance = 4454
+            float focusDistance = 5197
             float2 clippingRange = (1, 90000)
             matrix4d xformOp:transform = (
                     (0.76822, 0.64018, -0.00000, 0.00000),
                     (-0.30320, 0.36384, 0.88073, 0.00000),
                     (0.56383, -0.67660, 0.47362, 0.00000),
-                    (2511.44442, -3013.73331, 2109.61332, 1.00000)
+                    (2930.00454, -3516.00545, 2461.20381, 1.00000)
             )
             uniform token[] xformOpOrder = ["xformOp:transform"]
         }

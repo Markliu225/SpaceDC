@@ -27,6 +27,8 @@
  * as the rendered previews, so the card row reads as one set.
  */
 
+import { colors } from '../../../design/tokens'
+
 const COS30 = 0.8660254
 
 type P3 = [number, number, number]
@@ -132,7 +134,7 @@ export function SophiaArt() {
         <polygon key={`c${a}${b}`}
                  points={poly([[cx0, cy0, 1.13], [cx0 + 0.3, cy0, 1.13],
                                [cx0 + 0.3, cy0 + 0.3, 1.13], [cx0, cy0 + 0.3, 1.13]], s, ox, oy)}
-                 fill="#22D3EE" opacity={0.85} />,
+                 fill={colors.ribbons[1]} opacity={0.85} />,
       )
     }
   }
@@ -140,12 +142,12 @@ export function SophiaArt() {
   return (
     <svg viewBox="0 0 400 400" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"
          role="img" aria-label="Sophia Space TILE array reference design">
-      <rect width="400" height="400" fill="#05070e" />
+      <rect width="400" height="400" fill={colors.bg.inset} />
       {/* Heat leaving the anti-sun face. */}
       <g opacity={0.30}>
         {[-1.0, -0.2, 0.6].map((d, i) => {
           const [x, y] = iso([d, d + 0.4, -0.05], s, ox, oy)
-          return <line key={i} x1={x} y1={y} x2={x} y2={y + 26} stroke="#F59E0B" strokeWidth={1.4}
+          return <line key={i} x1={x} y1={y} x2={x} y2={y + 26} stroke={colors.warn} strokeWidth={1.4}
                        strokeDasharray="3 4" />
         })}
       </g>
@@ -155,7 +157,7 @@ export function SophiaArt() {
       <Slab x0={ex0} y0={ey0} x1={ex1} y1={ey1} z={0.95} t={0.07} s={s} ox={ox} oy={oy}
             top={RAD_TOP} side={RAD_SIDE} opacity={0.95} />
       <Slab x0={ex0} y0={ey0} x1={ex1} y1={ey1} z={1.06} t={0.07} s={s} ox={ox} oy={oy}
-            top={COMPUTE} side="#0A0F1E" />
+            top={COMPUTE} side="#10141A" />
       {chips}
       <Slab x0={ex0} y0={ey0} x1={ex1} y1={ey1} z={1.17} t={0.07} s={s} ox={ox} oy={oy}
             top={SOLAR_TOP} side={SOLAR_SIDE} edge="#2B4EA8" />
@@ -163,7 +165,7 @@ export function SophiaArt() {
 
       {/* Leader from the exploded tile down into the array. */}
       <line {...leader(iso([ex0, ey1, 0.95], s, ox, oy), iso([0.6, -0.6, 0.1], s, ox, oy))}
-            stroke="#3B9EFF" strokeWidth={0.9} strokeDasharray="2 3" opacity={0.6} />
+            stroke={colors.accent} strokeWidth={0.9} strokeDasharray="2 3" opacity={0.6} />
     </svg>
   )
 }
@@ -214,7 +216,7 @@ export function AdaArt() {
   return (
     <svg viewBox="0 0 400 400" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"
          role="img" aria-label="Ada Space computing satellite reference design">
-      <rect width="400" height="400" fill="#05070e" />
+      <rect width="400" height="400" fill={colors.bg.inset} />
 
       {/* Far wing, body, near wing — painter's order. */}
       {wing(-1)}
@@ -232,15 +234,15 @@ export function AdaArt() {
                              [0.62, -0.22, bz], [0.22, -0.22, bz]], s, ox, oy)}
                fill="#39414f" />
       <circle cx={lx} cy={ly} r={7.5} fill="#1F2937" stroke="#98A2B5" strokeWidth={1.2} />
-      <circle cx={lx} cy={ly} r={3} fill="#3B9EFF" />
-      <line x1={lx} y1={ly} x2={lx + 68} y2={ly - 38} stroke="#3B9EFF" strokeWidth={1.4}
+      <circle cx={lx} cy={ly} r={3} fill={colors.accent} />
+      <line x1={lx} y1={ly} x2={lx + 68} y2={ly - 38} stroke={colors.accent} strokeWidth={1.4}
             strokeDasharray="5 4" opacity={0.75} />
-      <circle cx={lx + 68} cy={ly - 38} r={2.5} fill="#3B9EFF" opacity={0.8} />
+      <circle cx={lx + 68} cy={ly - 38} r={2.5} fill={colors.accent} opacity={0.8} />
 
       {/* Nadir payload aperture on the −X face. */}
       <polygon points={poly([[-bx, -0.34, 0.10], [-bx, 0.34, 0.10],
                              [-bx, 0.34, 0.40], [-bx, -0.34, 0.40]], s, ox, oy)}
-               fill="#0A0F1E" stroke="#39414f" strokeWidth={0.8} />
+               fill="#10141A" stroke="#39414f" strokeWidth={0.8} />
 
       {wing(1)}
     </svg>

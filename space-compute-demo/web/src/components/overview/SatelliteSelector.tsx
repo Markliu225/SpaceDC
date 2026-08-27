@@ -62,14 +62,14 @@ export function SatelliteSelector() {
       >
         <span className="tabular">{selected?.id ?? '—'}</span>
         {selected && (
-          <Dot color={colors.status[selected.status]} size={6} glow={4} />
+          <Dot color={colors.status[selected.status]} size={6} />
         )}
         <ChevronDown size={12} strokeWidth={1.5} className="text-text-md" />
       </button>
       {open && (
         <div
           role="listbox"
-          className="absolute right-0 top-full z-30 mt-1 w-[240px] rounded border border-border-med bg-card shadow-card"
+          className="absolute right-0 top-full z-30 mt-1 w-[240px] rounded border border-border-med bg-bg-card shadow-card"
         >
           <div className="border-b border-border-weak p-2">
             <input
@@ -87,8 +87,8 @@ export function SatelliteSelector() {
               if (rows.length === 0) return null
               return (
                 <div key={status} className="mb-1">
-                  <div className="sticky top-0 z-10 -mx-1 mb-0.5 flex items-center gap-2 bg-card/95 px-2 py-0.5 backdrop-blur text-[10px] uppercase tracking-[0.10em]">
-                    <Dot color={colors.status[status]} size={5} glow={3} />
+                  <div className="sticky top-0 z-10 -mx-1 mb-0.5 flex items-center gap-2 bg-bg-card/95 px-2 py-0.5 backdrop-blur text-[10px] uppercase tracking-[0.10em]">
+                    <Dot color={colors.status[status]} size={5} />
                     <span className="text-text-md">{STATUS_LABEL[status]}</span>
                     <span className="text-text-lo tabular">{rows.length}</span>
                   </div>
@@ -139,7 +139,7 @@ function Row({ sat, selected, onClick }: RowProps) {
         'grid w-full grid-cols-[1fr_auto] items-center gap-2 rounded px-2 py-1 text-left text-[12px] transition-colors',
         selected
           ? 'bg-accent/15 text-text-hi ring-1 ring-accent/40'
-          : 'hover:bg-bg-cardHi text-text-md',
+          : 'hover:bg-bg-card-hi text-text-md',
       ].join(' ')}
     >
       <span className="truncate tabular">{sat.id}</span>

@@ -94,7 +94,7 @@ export function SatelliteBuilder() {
       {/* Header — step rail. */}
       <div className="flex items-center gap-4 border-b border-border-weak px-4 py-3">
         <span className="flex items-center gap-2 text-[13px] uppercase tracking-[0.10em] text-text-md">
-          <Rocket size={16} strokeWidth={1.8} className="text-accent" />
+          <Rocket size={16} strokeWidth={1.8} className="text-text-md" />
           Satellite Builder
         </span>
         <div className="flex flex-1 items-center gap-2">
@@ -116,7 +116,7 @@ export function SatelliteBuilder() {
               }`}
             >
               <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${
-                i <= step ? 'bg-accent text-black' : 'bg-bg-card-hi text-text-lo'
+                i <= step ? 'bg-accent text-bg-app' : 'bg-bg-card-hi text-text-lo'
               }`}>
                 {i + 1}
               </span>
@@ -209,7 +209,7 @@ export function SatelliteBuilder() {
           <ChevronLeft size={14} strokeWidth={2} /> Back
         </button>
 
-        <span className="text-[12px] text-text-faint">
+        <span className={`text-[12px] ${step === 2 && fittedCount === 0 ? 'text-text-md' : 'text-text-lo'}`}>
           {step === 2 && fittedCount === 0
             ? 'Fit at least one card to continue.'
             : `Step ${step + 1} of ${STEPS.length} · nothing is applied until you press Run.`}

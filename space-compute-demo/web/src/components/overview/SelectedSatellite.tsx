@@ -2,6 +2,7 @@ import { useTelemetryStore } from '../../store/useTelemetryStore'
 import { Card, Num } from '../primitives'
 import { SatParamsGrid } from './SatParamsGrid'
 import { SatelliteIcon } from './SatelliteIcon'
+import { colors } from '../../design/tokens'
 
 interface Bar {
   label: string
@@ -30,7 +31,7 @@ export function SelectedSatellite() {
   ]
 
   return (
-    <Card selected className="h-full flex flex-col min-h-0">
+    <Card className="h-full flex flex-col min-h-0">
       <div className="flex items-baseline justify-between">
         <div className="text-[11px] uppercase tracking-[0.10em] text-text-md">
           Selected Satellite:{' '}
@@ -43,7 +44,7 @@ export function SelectedSatellite() {
 
       <div className="mt-1.5 grid flex-1 min-h-0 grid-cols-[72px_minmax(0,1fr)_220px] gap-4 items-center">
         <div className="flex items-center justify-center">
-          <div className="animate-float-y">
+          <div>
             <SatelliteIcon size={64} />
           </div>
         </div>
@@ -59,14 +60,11 @@ export function SelectedSatellite() {
 }
 
 function MetricBar({ bar }: { bar: Bar }) {
+  // Flat tone fill — no gradient-to-white, no glow.
   const fillBg =
-    bar.tone === 'err'  ? 'linear-gradient(90deg, #EF4444 0%, #FCA5A5 100%)' :
-    bar.tone === 'warn' ? 'linear-gradient(90deg, #F59E0B 0%, #FDE68A 100%)' :
-                          'linear-gradient(90deg, #3B9EFF 0%, #E0EEFF 100%)'
-  const shadow =
-    bar.tone === 'err'  ? '0 0 8px rgba(239,68,68,0.45)' :
-    bar.tone === 'warn' ? '0 0 8px rgba(245,158,11,0.45)' :
-                          '0 0 8px rgba(59,158,255,0.45)'
+    bar.tone === 'err'  ? colors.err :
+    bar.tone === 'warn' ? colors.warn :
+                          colors.accent
   return (
     <div>
       <div className="flex items-baseline justify-between">
@@ -79,7 +77,7 @@ function MetricBar({ bar }: { bar: Bar }) {
       <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-bg-inset">
         <div
           className="h-full rounded-full transition-[width] duration-500 ease-out"
-          style={{ width: `${Math.round(bar.pct * 100)}%`, background: fillBg, boxShadow: shadow }}
+          style={{ width: `${Math.round(bar.pct * 100)}%`, background: fillBg }}
         />
       </div>
     </div>

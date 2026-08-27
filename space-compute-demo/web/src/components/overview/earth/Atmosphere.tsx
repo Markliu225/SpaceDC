@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
 import { atmoFrag, atmoVert } from './shaders'
+import { colors } from '../../../design/tokens'
 
 /**
  * Atmosphere shell — bigger sphere rendered back-side, additive blend,
@@ -9,8 +10,8 @@ import { atmoFrag, atmoVert } from './shaders'
 export function Atmosphere() {
   const uniforms = useMemo(
     () => ({
-      uColor:     { value: new THREE.Color('#3B9EFF') },
-      uIntensity: { value: 1.5 },
+      uColor:     { value: new THREE.Color(colors.accent) },
+      uIntensity: { value: 1.1 },
     }),
     [],
   )

@@ -118,7 +118,7 @@ function AssetCard({
         'group flex flex-col overflow-hidden rounded-md border text-left transition-colors ' +
         (selected
           ? 'border-accent bg-bg-card-hi'
-          : 'border-border-weak bg-bg-inset/40 hover:border-border-glow hover:bg-bg-card-hi')
+          : 'border-border-weak bg-bg-inset/40 hover:border-border-med hover:bg-bg-card-hi')
       }
     >
       {/* Square, because the rendered previews are square — the drawn
@@ -127,7 +127,7 @@ function AssetCard({
           will fly; the rest are drawn from the vendor's published reference
           design (assetArt.tsx) rather than showing a stand-in hull that looks
           nothing like the real satellite. */}
-      <div className="relative aspect-square w-full bg-[#05070e]">
+      <div className="relative aspect-square w-full bg-bg-inset">
         {Art ? <Art /> : (
           <img
             src={assetPreviewSrc(a)}
@@ -140,12 +140,12 @@ function AssetCard({
         )}
         {selected && (
           <span className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded bg-accent px-2 py-1
-                           text-[11px] font-semibold uppercase tracking-[0.10em] text-black">
+                           text-[11px] font-semibold uppercase tracking-[0.10em] text-bg-app">
             <Check size={12} strokeWidth={2.5} /> Selected
           </span>
         )}
         {flying && !selected && (
-          <span className="absolute left-2.5 top-2.5 rounded border border-border-med bg-black/60 px-2 py-1
+          <span className="absolute left-2.5 top-2.5 rounded border border-border-med bg-bg-app/75 px-2 py-1
                            text-[11px] uppercase tracking-[0.10em] text-text-md">
             In orbit
           </span>
@@ -180,7 +180,7 @@ function AssetCard({
 function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <span className="flex items-center gap-2 text-[12px] text-text-md">
-      <span className="shrink-0 text-accent">{icon}</span>
+      <span className="shrink-0 text-text-lo">{icon}</span>
       <span className="shrink-0 uppercase tracking-[0.06em] text-text-lo">{label}</span>
       <span className="ml-auto truncate font-mono tabular-nums text-text-hi">{value}</span>
     </span>

@@ -2,6 +2,7 @@ import { useTelemetryStore } from '../../store/useTelemetryStore'
 import { Card, Num } from '../primitives'
 import { AreaChart, Area, ResponsiveContainer } from 'recharts'
 import { useId } from 'react'
+import { colors } from '../../design/tokens'
 
 /**
  * LinkAndTraffic — two stacked sparklines. Inside an explicit two-row
@@ -20,8 +21,8 @@ export function LinkAndTraffic() {
       <div className="mt-1 grid flex-1 min-h-0 gap-1.5"
         style={{ gridTemplateRows: 'minmax(0, 1fr) minmax(0, 1fr)' }}
       >
-        <MiniSpark title="Downlink" data={dl} color="#3B9EFF" />
-        <MiniSpark title="Uplink"   data={ul} color="#22D3EE" />
+        <MiniSpark title="Downlink" data={dl} color={colors.accent} />
+        <MiniSpark title="Uplink"   data={ul} color={colors.info} />
       </div>
     </Card>
   )
@@ -46,7 +47,7 @@ function MiniSpark({ title, data, color }: { title: string; data: number[]; colo
           <AreaChart data={chartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id={gradId} x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%"   stopColor={color} stopOpacity={0.55} />
+                <stop offset="0%"   stopColor={color} stopOpacity={0.18} />
                 <stop offset="100%" stopColor={color} stopOpacity={0} />
               </linearGradient>
             </defs>
@@ -58,7 +59,6 @@ function MiniSpark({ title, data, color }: { title: string; data: number[]; colo
               fill={`url(#${gradId})`}
               dot={false}
               isAnimationActive={false}
-              style={{ filter: `drop-shadow(0 0 4px ${color}66)` }}
             />
           </AreaChart>
         </ResponsiveContainer>

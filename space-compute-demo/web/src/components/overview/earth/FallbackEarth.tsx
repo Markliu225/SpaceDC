@@ -8,17 +8,18 @@ import { Stars } from './Stars'
 import { OrbitRibbons } from './OrbitRibbons'
 import { DawnDuskOrbit } from './DawnDuskOrbit'
 import { Satellites } from './Satellites'
+import { colors } from '../../../design/tokens'
 
 /**
  * FallbackEarth — full Three.js scene rendered when the Omniverse stream
  * isn't available. Per design brief:
  *
  *   - Procedural day/night Earth (shader; sun direction drifts)
- *   - Atmosphere Fresnel shell (additive, cyan, intensity 1.5)
- *   - 24 colored orbit ribbons (TubeGeometry, additive, breathing opacity)
- *   - Satellite billboards (radial-gradient sprite, 1.5–2.5x pulse)
- *   - 2000 star points (twinkle, additive)
- *   - UnrealBloom (strength 0.6, radius 0.4, threshold 0.85)
+ *   - Atmosphere Fresnel shell (additive, accent blue, intensity 1.1)
+ *   - 24 colored orbit ribbons (TubeGeometry, normal-blended, steady opacity)
+ *   - Satellite billboards (radial-gradient sprite, steady; selected one pulses)
+ *   - 2000 star points (faint twinkle, additive)
+ *   - Bloom (intensity 0.15, radius 0.3, threshold 0.95) — only the brightest cores bloom
  *   - Auto camera orbit (1 rev / 90s) until the user drags
  */
 export function FallbackEarth() {
@@ -30,8 +31,7 @@ export function FallbackEarth() {
       style={{
         position: 'absolute',
         inset: 0,
-        background:
-          'radial-gradient(ellipse at center, #0A1224 0%, #03060E 70%)',
+        background: colors.bg.inset,
       }}
     >
       <ClearColor />
@@ -54,15 +54,15 @@ export function FallbackEarth() {
         rotateSpeed={0.6}
       />
       <EffectComposer multisampling={0}>
-        <Bloom intensity={0.6} radius={0.4} luminanceThreshold={0.85} luminanceSmoothing={0.2} mipmapBlur />
+        <Bloom intensity={0.15} radius={0.3} luminanceThreshold={0.95} luminanceSmoothing={0.15} mipmapBlur />
       </EffectComposer>
     </Canvas>
   )
 }
 
-/** Set the GL clear color separately so it composites with the CSS gradient
- *  on the canvas's parent (we want a transparent canvas so the gradient
- *  shows around the corners). */
+/** Set the GL clear color separately so it composites with the flat inset
+ *  surface on the canvas's parent (we want a transparent canvas so the
+ *  surface shows around the corners). */
 function ClearColor() {
   const { gl } = useThree()
   useEffect(() => {

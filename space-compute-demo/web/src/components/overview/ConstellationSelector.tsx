@@ -52,7 +52,7 @@ export function ConstellationSelector() {
         {open && (
           <ul
             role="listbox"
-            className="absolute right-0 left-0 top-full z-20 mt-1 max-h-64 overflow-y-auto rounded border border-border-med bg-card shadow-card"
+            className="absolute right-0 left-0 top-full z-20 mt-1 max-h-64 overflow-y-auto rounded border border-border-med bg-bg-card shadow-card"
           >
             {presets.length === 0 && (
               <li className="px-3 py-2 text-[12px] italic text-text-lo">

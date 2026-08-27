@@ -85,7 +85,7 @@ export function ConfigDropdown<T extends string>({
       {open && (
         <ul
           role="listbox"
-          className="absolute left-0 right-0 top-full z-30 mt-1 max-h-72 overflow-y-auto rounded border border-border-med bg-card shadow-card"
+          className="absolute left-0 right-0 top-full z-30 mt-1 max-h-72 overflow-y-auto rounded border border-border-med bg-bg-card shadow-card"
         >
           {options.map((o) => (
             <li key={o.id}>

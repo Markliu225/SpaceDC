@@ -62,7 +62,6 @@ export function SatelliteStatus() {
                   <Cell
                     key={s.key}
                     fill={s.color}
-                    style={{ filter: `drop-shadow(0 0 6px ${s.color}55)` }}
                   />
                 ))}
               </Pie>
@@ -85,7 +84,7 @@ export function SatelliteStatus() {
             const pct = total > 0 ? (s.value / total) * 100 : 0
             return (
               <div key={s.key} className="grid grid-cols-[10px_1fr_auto_auto] items-center gap-2 text-[12px]">
-                <Dot color={s.color} size={7} glow={5} />
+                <Dot color={s.color} size={7} />
                 <span className="text-text-hi">{s.name}</span>
                 <Num value={s.value} animate={false} className="text-text-hi w-10 text-right" />
                 <Num value={pct} digits={0} animate={false} className="text-[11px] text-text-lo w-7 text-right" />

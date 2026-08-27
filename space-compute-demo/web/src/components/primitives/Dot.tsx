@@ -1,6 +1,7 @@
 /**
  * <Dot /> — every status indicator on the screen runs through here.
- * Glow MUST be a box-shadow tied to the color (per design brief).
+ * No glow by default: the indicator is a flat disc. A caller may still pass
+ * `glow` for a soft halo, but chrome should not (design rule: no outer glows).
  *
  * Used by: header LIVE pill, donut legend, event log rows, satellite
  * markers, system health rows.
@@ -9,7 +10,7 @@ export interface DotProps {
   color: string
   /** Diameter in px. Default 8. */
   size?: number
-  /** Glow radius in px. Default 6. */
+  /** Glow radius in px. Default 0 (no halo). */
   glow?: number
   /** Enable the live-pulse breathing animation. */
   pulse?: boolean
@@ -19,7 +20,7 @@ export interface DotProps {
 export function Dot({
   color,
   size = 8,
-  glow = 6,
+  glow = 0,
   pulse,
   className = '',
 }: DotProps) {
@@ -31,7 +32,7 @@ export function Dot({
         width: size,
         height: size,
         background: color,
-        boxShadow: `0 0 ${glow}px ${color}`,
+        boxShadow: glow > 0 ? `0 0 ${glow}px ${color}` : undefined,
       }}
     />
   )

@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import type { CommsBand, GroundTargetState } from '../../types/messages'
 import type { CoverageSample } from '../../hooks/useOrbitDesign'
 import { COMPARE_PALETTE } from '../twin/comparePalette'
+import { colors } from '../../design/tokens'
 
 /**
  * Ground-station analytics charts for the Overview panel, all driven by the
@@ -12,8 +13,10 @@ import { COMPARE_PALETTE } from '../twin/comparePalette'
  *                      comms band (the band tradeoff)
  */
 
-const SOLAR_HUE = '#F59E0B'
-const VISIBLE_HUE = '#22D3EE'
+// Series hues come from the token palette: solar = the desaturated amber
+// ribbon (data hue, not the warn status), visible-sat count = the app accent.
+const SOLAR_HUE = colors.ribbons[2]
+const VISIBLE_HUE = colors.accent
 
 function EmptyHint({ children }: { children: React.ReactNode }) {
   return (
@@ -85,11 +88,11 @@ function LineChart({ title, data, current, unit, color, digits }: {
         </span>
       </div>
       <div className="relative flex-1 min-h-0">
-        <div className="pointer-events-none absolute right-0 top-0 text-[8px] tabular text-text-faint">{hi.toFixed(0)}</div>
-        <div className="pointer-events-none absolute right-0 bottom-0 text-[8px] tabular text-text-faint">{lo.toFixed(0)}</div>
+        <div className="pointer-events-none absolute right-0 top-0 text-[8px] tabular text-text-lo">{hi.toFixed(0)}</div>
+        <div className="pointer-events-none absolute right-0 bottom-0 text-[8px] tabular text-text-lo">{lo.toFixed(0)}</div>
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
           {[25, 50, 75].map((p) => (
-            <line key={p} x1={0} x2={100} y1={p} y2={p} stroke="#A6B0C4" strokeWidth={0.4}
+            <line key={p} x1={0} x2={100} y1={p} y2={p} stroke={colors.text.md} strokeWidth={0.4}
                   vectorEffect="non-scaling-stroke" opacity={0.15} strokeDasharray="2 3" />
           ))}
           {path && (
@@ -98,7 +101,7 @@ function LineChart({ title, data, current, unit, color, digits }: {
           )}
         </svg>
       </div>
-      <div className="mt-0.5 flex justify-between text-[8px] tabular text-text-faint">
+      <div className="mt-0.5 flex justify-between text-[8px] tabular text-text-lo">
         <span>-{data.length}s</span><span>now</span>
       </div>
     </div>
@@ -144,7 +147,7 @@ export function SolarHistogram({ gt }: { gt: GroundTargetState | null }) {
                 title={`${b.lo}–${b.hi} intensity · ${b.sat_count} sats · ${Math.round(b.collection_w)} W`}
               />
               {b.sat_count > 0 && (
-                <span className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 text-[7px] tabular text-text-faint opacity-0 group-hover:opacity-100">
+                <span className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 text-[7px] tabular text-text-lo opacity-0 group-hover:opacity-100">
                   {b.sat_count}
                 </span>
               )}
@@ -152,7 +155,7 @@ export function SolarHistogram({ gt }: { gt: GroundTargetState | null }) {
           )
         })}
       </div>
-      <div className="mt-0.5 flex justify-between text-[8px] tabular text-text-faint">
+      <div className="mt-0.5 flex justify-between text-[8px] tabular text-text-lo">
         <span>0</span>
         <span>solar illumination intensity →</span>
         <span>100</span>
@@ -224,26 +227,25 @@ export function BandCurves({ gt, bands }: {
           Throughput vs elevation mask
         </span>
         {model.curves.map((c) => (
-          <span key={c.band.id} className="flex items-center gap-1 text-[9px]"
-                style={{ color: c.active ? '#E8EEFB' : undefined }}>
+          <span key={c.band.id} className="flex items-center gap-1 text-[9px]">
             <span className="inline-block h-[3px] w-3.5 rounded-full" style={{ background: c.color }} />
             <span className={c.active ? 'text-text-hi font-semibold' : 'text-text-md'}>{c.band.label}</span>
           </span>
         ))}
       </div>
       <div className="relative flex-1 min-h-0 rounded-md border border-border-weak bg-bg-inset/40">
-        <div className="pointer-events-none absolute left-1 top-0.5 text-[8px] tabular text-text-faint">
+        <div className="pointer-events-none absolute left-1 top-0.5 text-[8px] tabular text-text-lo">
           {(model.hi >= 1000 ? `${(model.hi / 1000).toFixed(0)}k` : model.hi.toFixed(0))} Mbps
         </div>
-        <div className="pointer-events-none absolute left-1 bottom-3 text-[8px] tabular text-text-faint">1 Mbps</div>
+        <div className="pointer-events-none absolute left-1 bottom-3 text-[8px] tabular text-text-lo">1 Mbps</div>
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
           {[25, 50, 75].map((p) => (
-            <line key={p} x1={0} x2={100} y1={p} y2={p} stroke="#A6B0C4" strokeWidth={0.4}
+            <line key={p} x1={0} x2={100} y1={p} y2={p} stroke={colors.text.md} strokeWidth={0.4}
                   vectorEffect="non-scaling-stroke" opacity={0.15} strokeDasharray="2 3" />
           ))}
           {/* Effective-mask marker. */}
           <line x1={model.xOf(gt.min_elevation_deg)} x2={model.xOf(gt.min_elevation_deg)}
-                y1={0} y2={100} stroke="#E8EEFB" strokeWidth={1} strokeDasharray="3 3"
+                y1={0} y2={100} stroke={colors.text.hi} strokeWidth={1} strokeDasharray="3 3"
                 vectorEffect="non-scaling-stroke" opacity={0.4} />
           {model.curves.map((c) => c.path && (
             <path key={c.band.id} d={c.path} fill="none" stroke={c.color}
@@ -253,11 +255,11 @@ export function BandCurves({ gt, bands }: {
           {/* Operating-point dots. */}
           {model.curves.map((c) => c.opMbps > 0 && (
             <circle key={c.band.id} cx={c.opX} cy={c.opY} r={c.active ? 2.6 : 1.8}
-                    fill={c.color} stroke="#0A0F1E" strokeWidth={1} vectorEffect="non-scaling-stroke" />
+                    fill={c.color} stroke={colors.bg.inset} strokeWidth={1} vectorEffect="non-scaling-stroke" />
           ))}
         </svg>
       </div>
-      <div className="mt-0.5 flex justify-between text-[8px] tabular text-text-faint">
+      <div className="mt-0.5 flex justify-between text-[8px] tabular text-text-lo">
         <span>0°</span>
         <span>elevation mask →</span>
         <span>{model.maxMask}°</span>

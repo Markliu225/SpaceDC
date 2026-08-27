@@ -9,12 +9,12 @@ import {
   ConstellationRings, DayNightEarth, GmstWireframe, SatReticle, SunMarker,
 } from './orbitScene'
 import {
-  EARTH_RADIUS_KM, HUD_CYAN_HOT, HUD_WARN, SIDEREAL_DAY_S, SUN_DIR_ECI,
+  EARTH_RADIUS_KM, SIDEREAL_DAY_S, SUN_DIR_ECI,
   eciToDisplay,
 } from './orbitMath'
 
 /**
- * MiniOrbitHud — sci-fi holographic HUD at the bottom-left of the Satellite
+ * MiniOrbitHud — compact orbit HUD at the bottom-left of the Satellite
  * Twin viewport. Shows the active constellation (every plane's orbit ring),
  * highlights the selected sat's plane, places the sat as a pulsing reticle,
  * a sun marker at SUN_DIR_ECI, and a solid day/night Earth sphere whose
@@ -25,7 +25,7 @@ import {
  */
 
 function Brackets() {
-  const base = 'absolute w-2.5 h-2.5 border-[#3B9EFF]'
+  const base = 'absolute w-2.5 h-2.5 border-accent/60'
   return (
     <>
       <div className={`${base} left-0 top-0 border-l border-t`} />
@@ -78,35 +78,34 @@ export function MiniOrbitHud() {
 
   return (
     <div className="absolute left-3 bottom-3 z-10 pointer-events-none">
-      <div className="pointer-events-auto relative h-[200px] w-[180px] bg-[#040912]/85 backdrop-blur-sm">
+      <div className="pointer-events-auto relative h-[200px] w-[180px] bg-bg-inset/85 backdrop-blur-sm">
         <div
           className="absolute inset-0 opacity-50"
           style={{
             backgroundImage:
-              'linear-gradient(rgba(59,158,255,0.06) 1px, transparent 1px),'
-              + 'linear-gradient(90deg, rgba(59,158,255,0.06) 1px, transparent 1px)',
+              'linear-gradient(rgba(230,233,239,0.04) 1px, transparent 1px),'
+              + 'linear-gradient(90deg, rgba(230,233,239,0.04) 1px, transparent 1px)',
             backgroundSize: '12px 12px',
           }}
         />
         <Brackets />
 
         <div className="absolute left-1.5 right-1.5 top-1.5 flex items-center justify-between">
-          <span className="text-[8px] uppercase tracking-[0.18em] text-[#3B9EFF] font-mono">
+          <span className="text-[8px] uppercase tracking-[0.18em] text-text-md font-mono">
             ▸ {constellationId}
           </span>
           <span
-            className="text-[8px] uppercase tracking-[0.16em] font-mono"
-            style={{ color: sat?.sunlit ? HUD_CYAN_HOT : HUD_WARN }}
+            className={`text-[8px] uppercase tracking-[0.16em] font-mono ${sat?.sunlit ? 'text-text-hi' : 'text-warn'}`}
           >
             {sat ? (sat.sunlit ? '◉ SUNLIT' : '○ ECLIPSE') : '— STDBY'}
           </span>
         </div>
 
         <div className="absolute left-1.5 right-1.5 top-[18px] flex items-center justify-between">
-          <span className="text-[7.5px] tracking-[0.16em] text-[#3B9EFF]/80 font-mono">
+          <span className="text-[7.5px] tracking-[0.16em] text-text-lo font-mono">
             SAT-{String(selected).padStart(3, '0')}
           </span>
-          <span className="text-[7.5px] tracking-[0.16em] text-[#3B9EFF]/80 font-mono">
+          <span className="text-[7.5px] tracking-[0.16em] text-text-lo font-mono">
             {detail ? `${detail.planes}P × ${detail.sats_per_plane}S` : ''}
           </span>
         </div>
@@ -128,21 +127,21 @@ export function MiniOrbitHud() {
         </div>
 
         <div className="absolute left-1.5 right-1.5 bottom-1.5 flex flex-col gap-[1px] text-[8px] font-mono leading-[1.25]">
-          <div className="flex justify-between text-[#3B9EFF]/85">
+          <div className="flex justify-between text-text-lo">
             <span>LAT</span>
-            <span className="text-[#E0F0FF]">
+            <span className="text-text-hi">
               {sat ? `${sat.lat >= 0 ? '+' : ''}${sat.lat.toFixed(1)}°` : '— —'}
             </span>
           </div>
-          <div className="flex justify-between text-[#3B9EFF]/85">
+          <div className="flex justify-between text-text-lo">
             <span>LON</span>
-            <span className="text-[#E0F0FF]">
+            <span className="text-text-hi">
               {sat ? `${sat.lon >= 0 ? '+' : ''}${sat.lon.toFixed(1)}°` : '— —'}
             </span>
           </div>
-          <div className="flex justify-between text-[#3B9EFF]/85">
+          <div className="flex justify-between text-text-lo">
             <span>ALT</span>
-            <span className="text-[#E0F0FF]">
+            <span className="text-text-hi">
               {sat ? `${Math.round(sat.altitudeKm)} KM` : '— —'}
             </span>
           </div>

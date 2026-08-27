@@ -7,6 +7,7 @@ import {
 } from 'three'
 import type { ConstellationDetail } from '../../types/messages'
 import { EARTH_RADIUS_KM, HUD_CYAN, HUD_CYAN_HOT, eciToDisplay } from './orbitMath'
+import { colors } from '../../design/tokens'
 
 /**
  * orbitScene — the shared Three.js building blocks for the REAL-orbit views:
@@ -110,7 +111,7 @@ export function GmstWireframe({ gmst }: { gmst: number }) {
     <group ref={ref}>
       <lineSegments>
         <primitive object={grid} attach="geometry" />
-        <lineBasicMaterial color="#4DB0FF" transparent opacity={0.45} />
+        <lineBasicMaterial color={colors.accent} transparent opacity={0.35} />
       </lineSegments>
     </group>
   )
@@ -152,9 +153,8 @@ export function ConstellationRings({
           <meshBasicMaterial
             color={isSel ? HUD_CYAN_HOT : HUD_CYAN}
             transparent
-            opacity={isSel ? 1.0 : 0.7}
+            opacity={isSel ? 0.9 : 0.45}
             depthWrite={false}
-            blending={AdditiveBlending}
           />
         </mesh>
       ))}
@@ -166,10 +166,10 @@ export function SatReticle({ pos, scale = 1 }: { pos: [number, number, number]; 
   const haloRef = useRef<Mesh>(null!)
   useFrame(({ clock }) => {
     if (!haloRef.current) return
-    const t = (clock.getElapsedTime() % 1.8) / 1.8
-    const s = 1 + t * 3.5
+    const t = (clock.getElapsedTime() % 2.6) / 2.6
+    const s = 1 + t * 2.0
     haloRef.current.scale.set(s, s, s)
-    ;(haloRef.current.material as MeshBasicMaterial).opacity = (1 - t) * 0.75
+    ;(haloRef.current.material as MeshBasicMaterial).opacity = (1 - t) * 0.45
   })
   return (
     <group position={pos} scale={scale}>
@@ -180,15 +180,15 @@ export function SatReticle({ pos, scale = 1 }: { pos: [number, number, number]; 
       <mesh>
         <sphereGeometry args={[0.085, 12, 12]} />
         <meshBasicMaterial
-          color={HUD_CYAN_HOT} transparent opacity={0.4}
-          depthWrite={false} blending={AdditiveBlending}
+          color={colors.accent} transparent opacity={0.25}
+          depthWrite={false}
         />
       </mesh>
       <mesh ref={haloRef}>
         <ringGeometry args={[0.05, 0.07, 32]} />
         <meshBasicMaterial
-          color={HUD_CYAN_HOT} transparent opacity={0.7}
-          side={DoubleSide} depthWrite={false} blending={AdditiveBlending}
+          color={colors.accent} transparent opacity={0.45}
+          side={DoubleSide} depthWrite={false}
         />
       </mesh>
     </group>

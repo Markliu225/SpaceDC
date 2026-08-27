@@ -112,14 +112,14 @@ export function ComparePanel() {
 
       {open && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 font-sans"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-bg-app/70 font-sans"
           onMouseDown={(e) => { if (e.target === e.currentTarget) close() }}
           role="dialog"
           aria-modal="true"
           aria-label="What-if comparison"
         >
           <div className="w-[720px] max-w-[94vw] max-h-[90vh] overflow-y-auto rounded-lg border
-                          border-border-med bg-bg-card p-4 shadow-2xl">
+                          border-border-med bg-bg-card p-4 shadow-modal">
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <GitCompare size={14} strokeWidth={1.8} className="text-accent" />
@@ -178,7 +178,7 @@ export function ComparePanel() {
                 </div>
                 <table className="w-full text-[10px]">
                   <thead>
-                    <tr className="text-left uppercase tracking-[0.08em] text-text-faint">
+                    <tr className="text-left uppercase tracking-[0.08em] text-text-lo">
                       <th className="pb-0.5 font-normal">Variant</th>
                       <th className="pb-0.5 font-normal">Temp</th>
                       <th className="pb-0.5 font-normal">SOC</th>
@@ -204,7 +204,7 @@ export function ComparePanel() {
                     ))}
                   </tbody>
                 </table>
-                <p className="mt-1 text-[10px] text-text-faint">
+                <p className="mt-1 text-[10px] text-text-lo">
                   The Live Telemetry strip now shows only the variant curves — the live
                   trace returns when you stop. Starting a new comparison below replaces
                   this one.
@@ -229,7 +229,7 @@ export function ComparePanel() {
                       }
                     >
                       <span>{d.label}</span>
-                      <span className="text-[9px] uppercase tracking-[0.08em] text-text-faint">{d.group}</span>
+                      <span className="text-[9px] uppercase tracking-[0.08em] text-text-lo">{d.group}</span>
                     </button>
                   ))}
                 </div>
@@ -271,7 +271,7 @@ export function ComparePanel() {
                     : <><Play size={13} strokeWidth={2} /> {active ? 'Restart with selection' : 'Start live comparison'}</>}
                 </button>
                 {picked.length < 2 && (
-                  <span className="text-[10px] text-text-faint">
+                  <span className="text-[10px] text-text-lo">
                     Select at least two values to compare.
                   </span>
                 )}
@@ -313,13 +313,13 @@ function ValueChip({
       className={
         'flex items-center gap-2 rounded border px-2 py-1.5 text-left text-[11px] transition-colors ' +
         (picked
-          ? 'border-border-glow bg-bg-card-hi text-text-hi'
+          ? 'border-border-focus bg-bg-card-hi text-text-hi'
           : 'border-border-weak bg-bg-inset/40 text-text-md hover:border-border-med') +
         (disabled ? ' cursor-not-allowed opacity-40' : '')
       }
     >
       <span
-        className="h-2.5 w-2.5 shrink-0 rounded-full border border-black/40"
+        className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-white/10"
         style={{ background: picked ? COMPARE_PALETTE[pickedIndex] : 'transparent' }}
       />
       <span className="min-w-0 flex-1 truncate">{choice.label}</span>

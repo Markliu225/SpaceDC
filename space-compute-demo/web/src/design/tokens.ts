@@ -1,61 +1,74 @@
 /**
  * Design tokens — the single source of truth for colors / typography / motion.
  *
- * Tailwind config mirrors these (see ../../tailwind.config.js). When you
- * change a value here, mirror it there — and vice versa. They co-exist so
- * SVG / Canvas / Three.js code that can't consume Tailwind classes still
- * reads the SAME palette.
+ * Tailwind config mirrors these (see ../../tailwind.config.js) and App.css
+ * :root mirrors the subset the legacy pages use. When you change a value
+ * here, mirror it there — and vice versa. They co-exist so SVG / Canvas /
+ * Three.js code that can't consume Tailwind classes still reads the SAME
+ * palette.
+ *
+ * Palette rules (one accent hue, chrome saturation < 80 %, no outer glows,
+ * off-black graphite surfaces, shadows tinted to the bg hue):
+ *   - `accent` is the ONLY brand hue. Status colors carry meaning, not brand.
+ *   - Nothing in chrome glows. Selection is a ring (`border.focus`), not a halo.
+ *   - Data-encoding colors (status / ribbons) are desaturated to sit with the
+ *     neutrals; they are not accents.
  */
 
 export const colors = {
   bg: {
-    app:      '#060912',
-    card:     '#0E1424',
-    cardHi:   '#131A2E',
-    inset:    '#0A0F1E',
+    app:      '#0E1116',
+    card:     '#151920',
+    cardHi:   '#1B2029',
+    inset:    '#10141A',
   },
   border: {
-    weak: 'rgba(255,255,255,0.06)',
-    med:  'rgba(255,255,255,0.10)',
-    glow: 'rgba(59,158,255,0.35)',
+    weak:  'rgba(255,255,255,0.07)',
+    med:   'rgba(255,255,255,0.12)',
+    /** Selection ring. Also exposed under the historical `glow` key. */
+    focus: 'rgba(92,155,214,0.55)',
+    glow:  'rgba(92,155,214,0.55)',
   },
   text: {
-    hi:    '#E8EEFB',
-    md:    '#A6B0C4',
-    lo:    '#6B7691',
-    faint: '#4A5470',
+    hi:    '#E6E9EF',
+    md:    '#A3AAB8',
+    lo:    '#6E7686',
+    faint: '#5A6272',
   },
-  accent:     '#3B9EFF',
-  accentGlow: '#3B9EFF44',
+  accent:     '#5C9BD6',
+  /** Accent-colored text on dark surfaces (AA-safe). */
+  accentText: '#8FBCE8',
+  /** Tinted fill for hover / selected surfaces. Historical name kept; not a glow. */
+  accentGlow: 'rgba(92,155,214,0.14)',
 
-  ok:   '#22C55E',
-  okGlow:   '#22C55E33',
-  info: '#3B82F6',
-  warn: '#F59E0B',
-  err:  '#EF4444',
+  ok:   '#3FB871',
+  okGlow:   'rgba(63,184,113,0.16)',
+  info: '#7A8CD8',
+  warn: '#E0A83A',
+  err:  '#E0564F',
 
   // Donut segment palette.
   status: {
-    online:  '#22C55E',
-    eclipse: '#3B82F6',
-    standby: '#F59E0B',
-    offline: '#EF4444',
+    online:  '#3FB871',
+    eclipse: '#7A8CD8',
+    standby: '#E0A83A',
+    offline: '#E0564F',
   },
 
-  // 6-hue ribbon palette for the orbit constellation.
+  // 6-hue ribbon palette for the orbit constellation (desaturated ~60 %).
   ribbons: [
-    '#E879F9', // magenta
-    '#22D3EE', // cyan
-    '#FBBF24', // amber
-    '#34D399', // emerald
-    '#A78BFA', // violet
-    '#FB7185', // rose
+    '#D57BC9', // magenta
+    '#5CC3CF', // cyan
+    '#E0B65A', // amber
+    '#5DBE8E', // emerald
+    '#9F8FD9', // violet
+    '#E07A88', // rose
   ] as const,
 } as const
 
 export const typography = {
-  sans: 'Inter, system-ui, sans-serif',
-  mono: '"JetBrains Mono", "Geist Mono", ui-monospace, monospace',
+  sans: 'Geist, system-ui, sans-serif',
+  mono: '"Geist Mono", "JetBrains Mono", ui-monospace, monospace',
 } as const
 
 export const motion = {
@@ -64,7 +77,6 @@ export const motion = {
   card:       160,
   eventFade:  240,
   livePulse:  1600,
-  ribbonBreath: 6000,
 } as const
 
 export type RibbonHue = (typeof colors.ribbons)[number]

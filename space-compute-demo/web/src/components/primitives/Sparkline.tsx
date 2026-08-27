@@ -1,11 +1,12 @@
 import { useId, useMemo } from 'react'
 import { AreaChart, Area, ResponsiveContainer } from 'recharts'
 import { Num } from './Num'
+import { colors } from '../../design/tokens'
 
 /**
  * <Sparkline /> — used by Link / Traffic panels. Recharts <AreaChart>
- * with a vertical gradient fill, a CSS drop-shadow on the stroke (for
- * the glow), and an on-mount stroke-dashoffset draw-in.
+ * with a quiet vertical under-tint (series color @ 0.18 → 0) under a
+ * plain 1.5px stroke; no glow.
  */
 export interface SparklineProps {
   title: string
@@ -17,7 +18,7 @@ export interface SparklineProps {
   unit?: string
   /** Decimal places for the current header value. */
   digits?: number
-  /** Hex color for stroke + gradient. Default cyan accent. */
+  /** Hex color for stroke + gradient. Default: accent token. */
   color?: string
   /** Bottom-row evenly spaced timestamps. */
   timestamps?: string[]
@@ -29,7 +30,7 @@ export function Sparkline({
   current,
   unit,
   digits = 0,
-  color = '#3B9EFF',
+  color = colors.accent,
   timestamps = [],
 }: SparklineProps) {
   const gid = useId().replace(/:/g, '') // useId returns ":r0:"-style; sanitize for SVG id.
@@ -63,7 +64,7 @@ export function Sparkline({
           <AreaChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id={gradId} x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor={color} stopOpacity={0.5} />
+                <stop offset="0%" stopColor={color} stopOpacity={0.18} />
                 <stop offset="100%" stopColor={color} stopOpacity={0} />
               </linearGradient>
             </defs>
@@ -75,14 +76,13 @@ export function Sparkline({
               fill={`url(#${gradId})`}
               dot={false}
               isAnimationActive={false}
-              style={{ filter: `drop-shadow(0 0 4px ${color}66)` }}
             />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
       {timestamps.length === 3 && (
-        <div className="flex justify-between text-[10px] tabular text-text-faint">
+        <div className="flex justify-between text-[10px] tabular text-text-lo">
           {timestamps.map((t, i) => (
             <span key={`${t}-${i}`}>{t}</span>
           ))}

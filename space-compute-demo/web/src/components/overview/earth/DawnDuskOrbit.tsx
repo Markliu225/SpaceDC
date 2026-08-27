@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { colors } from '../../../design/tokens'
 
 const RADIUS = 1.72      // just OUTSIDE the inclined-ribbon bouquet so it reads
 const THICK  = 0.032     // bold — clearly the special terminator orbit
@@ -10,8 +11,8 @@ const THICK  = 0.032     // bold — clearly the special terminator orbit
  * perpendicular to the Sun line, so the ring rides the day/night terminator
  * great circle and a satellite on it is always in sunlight. The Sun drifts with
  * the same omega as Earth.tsx; the ring re-orients every frame so its plane
- * normal stays locked to the Sun direction. Rendered gold + steady to stand
- * apart from the 24 cyan/blue inclined ribbons.
+ * normal stays locked to the Sun direction. Rendered amber (ribbon palette)
+ * + steady to stand apart from the 24 inclined ribbons.
  */
 export function DawnDuskOrbit() {
   const meshRef = useRef<THREE.Mesh>(null!)
@@ -44,10 +45,10 @@ export function DawnDuskOrbit() {
   return (
     <mesh ref={meshRef} geometry={geom}>
       <meshBasicMaterial
-        color={'#ffd24a'}
+        color={colors.ribbons[2]}
         transparent
-        opacity={0.95}
-        blending={THREE.AdditiveBlending}
+        opacity={0.8}
+        blending={THREE.NormalBlending}
         depthWrite={false}
         toneMapped={false}
       />

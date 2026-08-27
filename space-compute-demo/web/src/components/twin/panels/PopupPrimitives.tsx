@@ -23,7 +23,7 @@ export function Row({
   label: string
   value: string
   unit?: string
-  /** 'hot' subtly colours hot/warning values; 'accent' uses the HUD cyan. */
+  /** 'hot' subtly colours hot/warning values; 'accent' uses the accent blue (live values). */
   tone?: 'hot' | 'accent'
 }) {
   const valueClass =
@@ -58,7 +58,7 @@ export function PopupChrome({
   children: ReactNode
 }) {
   return (
-    <div className="pointer-events-auto w-[228px] rounded border border-border-med bg-card shadow-card">
+    <div className="pointer-events-auto w-[228px] rounded border border-border-med bg-bg-card shadow-card">
       <div className="flex items-center justify-between border-b border-border-weak px-3 py-2">
         <div className="flex items-center gap-2 min-w-0">
           {swatchColor ? (
@@ -73,7 +73,7 @@ export function PopupChrome({
               {title}
             </span>
             {subtitle ? (
-              <span className="text-[11px] uppercase tracking-[0.06em] text-accent font-mono truncate">
+              <span className="text-[11px] uppercase tracking-[0.06em] text-text-hi font-mono truncate">
                 {subtitle}
               </span>
             ) : null}
@@ -83,7 +83,7 @@ export function PopupChrome({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-text-lo hover:text-text-hi hover:bg-bg-cardHi"
+          className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-text-lo hover:text-text-hi hover:bg-bg-card-hi"
         >
           <span className="text-[13px] leading-none">×</span>
         </button>

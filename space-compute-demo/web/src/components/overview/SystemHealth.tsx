@@ -34,10 +34,9 @@ function HealthRow({ row, isLast }: { row: Row; isLast: boolean }) {
     <div className={`flex items-center gap-2 px-1.5 py-0.5 transition-colors duration-150 hover:bg-bg-card-hi ${isLast ? '' : 'border-b border-border-weak'}`}>
       <span
         aria-hidden="true"
-        className="grid place-items-center rounded-md"
-        style={{ width: 20, height: 20, background: 'rgba(59,158,255,0.10)' }}
+        className="grid h-5 w-5 place-items-center rounded"
       >
-        <Icon size={12} strokeWidth={1.5} className="text-accent" />
+        <Icon size={12} strokeWidth={1.5} className="text-text-md" />
       </span>
       <span className="text-[11px] text-text-hi">{row.name}</span>
       <span className="flex-1" />
@@ -51,10 +50,11 @@ function HealthRow({ row, isLast }: { row: Row; isLast: boolean }) {
   )
 }
 
+// Tinted fills = the ok / warn / err tokens at low alpha (see design/tokens).
 const STATUS_TONE = {
-  nominal: { text: 'text-ok',   bg: 'rgba(34,197,94,0.10)' },
-  warn:    { text: 'text-warn', bg: 'rgba(245,158,11,0.10)' },
-  fault:   { text: 'text-err',  bg: 'rgba(239,68,68,0.12)' },
+  nominal: { text: 'text-ok',   bg: 'rgba(63,184,113,0.12)' },
+  warn:    { text: 'text-warn', bg: 'rgba(224,168,58,0.12)' },
+  fault:   { text: 'text-err',  bg: 'rgba(224,86,79,0.12)' },
 } as const
 
 const STATUS_LABEL = {

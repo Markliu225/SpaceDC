@@ -35,9 +35,9 @@ export interface GpuOption {
 // mirrors backend state_engine._GPU_TABLE / ai_workloads.GPU_SPECS.
 export const GPU_OPTIONS: GpuOption[] = [
   { id: 'H100',   label: 'H100 SXM',        pflops_per_card: 1.98, tdp_w: 700,  cost_k: 30, tint: '#4A5568' },
-  { id: 'H200',   label: 'H200 SXM',        pflops_per_card: 1.98, tdp_w: 700,  cost_k: 40, tint: '#3B82F6' },
+  { id: 'H200',   label: 'H200 SXM',        pflops_per_card: 1.98, tdp_w: 700,  cost_k: 40, tint: '#7A8CD8' },
   { id: 'B200',   label: 'Blackwell B200',  pflops_per_card: 4.50, tdp_w: 1000, cost_k: 45, tint: '#0F172A' },
-  { id: 'MI300X', label: 'AMD MI300X',      pflops_per_card: 2.62, tdp_w: 750,  cost_k: 28, tint: '#DC2626' },
+  { id: 'MI300X', label: 'AMD MI300X',      pflops_per_card: 2.62, tdp_w: 750,  cost_k: 28, tint: '#C9443E' },
 ]
 
 export const GPU_CARDS_PER_SAT = 8
@@ -45,14 +45,14 @@ export const GPU_CARDS_PER_SAT = 8
 /**
  * Slot-marker palette — which colour means which card in the builder's bay
  * grid AND on the 3D model's blades. Mirrors gen_twin_satellite.GPU_TINTS
- * exactly; it is deliberately NOT `GpuOption.tint`, which carries the brand
+ * (keep the two in sync); it is deliberately NOT `GpuOption.tint`, which carries the brand
  * colours (B200's near-black reads fine as a 6 px dropdown swatch and
  * disappears as a status bar on a dark hull).
  */
 export const GPU_SLOT_TINT: Record<GpuType, string> = {
   H100:   '#6B7A94',
-  H200:   '#3B82F6',
-  B200:   '#8C5CFA',
+  H200:   '#7A8CD8',
+  B200:   '#8A66DC',
   MI300X: '#E64039',
 }
 
@@ -77,8 +77,8 @@ export interface SolarMaterialOption {
 
 export const SOLAR_MATERIAL_OPTIONS: SolarMaterialOption[] = [
   { id: 'Si',         label: 'Silicon',           short: 'Si',   efficiency: 0.22, density_kg_m2: 2.5, tint: '#1E3A8A' },
-  { id: 'GaAs',       label: 'Gallium Arsenide',  short: 'GaAs', efficiency: 0.32, density_kg_m2: 3.0, tint: '#4C1D95' },
-  { id: 'Perovskite', label: 'Perovskite Tandem', short: 'PvT',  efficiency: 0.38, density_kg_m2: 1.8, tint: '#7C3AED' },
+  { id: 'GaAs',       label: 'Gallium Arsenide',  short: 'GaAs', efficiency: 0.32, density_kg_m2: 3.0, tint: '#4E2A8E' },
+  { id: 'Perovskite', label: 'Perovskite Tandem', short: 'PvT',  efficiency: 0.38, density_kg_m2: 1.8, tint: '#7A5AD0' },
 ]
 
 export interface SolarSizeOption {
@@ -136,10 +136,10 @@ export interface BatteryMaterialOption {
 }
 
 export const BATTERY_MATERIAL_OPTIONS: BatteryMaterialOption[] = [
-  { id: 'LiIon',      label: 'Li-ion NMC',   density_wh_kg: 250, efficiency: 0.95, tint: '#2563EB' },
-  { id: 'LiFePO4',    label: 'LiFePO4',      density_wh_kg: 160, efficiency: 0.96, tint: '#059669' },
-  { id: 'LiS',        label: 'Lithium-Sulfur', density_wh_kg: 400, efficiency: 0.90, tint: '#7C3AED' },
-  { id: 'SolidState', label: 'Solid-State',  density_wh_kg: 350, efficiency: 0.97, tint: '#D97706' },
+  { id: 'LiIon',      label: 'Li-ion NMC',   density_wh_kg: 250, efficiency: 0.95, tint: '#3B6FD1' },
+  { id: 'LiFePO4',    label: 'LiFePO4',      density_wh_kg: 160, efficiency: 0.96, tint: '#2E9C74' },
+  { id: 'LiS',        label: 'Lithium-Sulfur', density_wh_kg: 400, efficiency: 0.90, tint: '#6D4FC2' },
+  { id: 'SolidState', label: 'Solid-State',  density_wh_kg: 350, efficiency: 0.97, tint: '#C98A3A' },
 ]
 
 /** Fixed attitude pointing modes (backend models.AttitudeMode minus 'free',

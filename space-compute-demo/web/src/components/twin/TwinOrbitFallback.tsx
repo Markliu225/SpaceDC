@@ -1,6 +1,7 @@
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Suspense, useMemo, useRef } from 'react'
 import { Vector3 } from 'three'
+import { colors } from '../../design/tokens'
 import { Stars } from '../overview/earth/Stars'
 import { useSatPosition } from '../../hooks/useFleetPositions'
 import { useSmoothSimTime } from '../../hooks/useSmoothSimTime'
@@ -49,7 +50,7 @@ export function TwinOrbitFallback() {
       style={{
         position: 'absolute',
         inset: 0,
-        background: 'radial-gradient(ellipse at center, #0A1224 0%, #03060E 70%)',
+        background: colors.bg.app,
       }}
     >
       <ambientLight intensity={0.25} />

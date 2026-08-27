@@ -22,7 +22,7 @@ export function BuilderChip() {
                  text-[11px] text-text-md hover:border-border-med hover:text-text-hi"
       title="Rebuild the satellite: platform, structure, payload slots, workload"
     >
-      <Rocket size={12} strokeWidth={1.8} className="text-accent" />
+      <Rocket size={12} strokeWidth={1.8} className="text-text-lo" />
       <span className="uppercase tracking-[0.10em]">Build</span>
       <span className="font-mono text-[10px] text-text-hi">{active?.vendor ?? '—'}</span>
     </button>

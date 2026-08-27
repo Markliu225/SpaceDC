@@ -47,7 +47,7 @@ export function EventLog() {
             className="animate-event-fade-in grid grid-cols-[58px_12px_minmax(0,1fr)_auto] items-center gap-2 px-2 h-6 hover:bg-bg-card-hi"
           >
             <span className="text-[10px] tabular font-mono text-text-md">{e.ts}</span>
-            <Dot color={KIND_COLOR[e.kind]} size={6} glow={4} />
+            <Dot color={KIND_COLOR[e.kind]} size={6} />
             <span className="text-[11px] text-text-hi truncate">{e.label}</span>
             <span className="text-[10px] tabular text-text-lo whitespace-nowrap">{e.entities}</span>
           </div>
@@ -89,7 +89,7 @@ function FilterDropdown({
       {open && (
         <ul
           role="listbox"
-          className="absolute right-0 top-full z-10 mt-1 w-32 overflow-hidden rounded border border-border-med bg-card shadow-card"
+          className="absolute right-0 top-full z-10 mt-1 w-32 overflow-hidden rounded border border-border-med bg-bg-card shadow-card"
         >
           {FILTER_OPTIONS.map((o) => (
             <li key={o.value}>

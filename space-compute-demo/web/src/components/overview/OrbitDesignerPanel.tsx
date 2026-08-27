@@ -141,7 +141,7 @@ function DesignerBody({ design }: { design: ReturnType<typeof useOrbitDesign> })
           <Elem k="ω" label="arg perigee" v={el ? `${el.arg_perigee_deg.toFixed(2)}°` : '—'} />
           <Elem k="M" label="mean anomaly" v={el ? `${el.mean_anomaly_deg.toFixed(2)}°` : '—'} />
         </div>
-        <div className="mt-1 text-[9px] text-text-faint tabular">
+        <div className="mt-1 text-[9px] text-text-lo tabular">
           period {el ? el.period_min.toFixed(1) : '—'} min · altitude {el ? el.altitude_km.toFixed(0) : '—'} km
         </div>
       </Section>
@@ -168,7 +168,7 @@ function DesignerBody({ design }: { design: ReturnType<typeof useOrbitDesign> })
                onChange={(v) => upd({ sats_per_plane: Math.round(v) })} />
         <Field label="Phasing f" unit="" value={draft.phasing} min={0} max={Math.max(0, draft.planes - 1)} step={1}
                onChange={(v) => upd({ phasing: Math.round(v) })} />
-        <div className="text-[9px] text-text-faint tabular">total {draft.planes * draft.sats_per_plane} satellites</div>
+        <div className="text-[9px] text-text-lo tabular">total {draft.planes * draft.sats_per_plane} satellites</div>
       </Section>
 
       <button
@@ -286,7 +286,7 @@ function GroundConfigSection({
         </div>
       </div>
       {gtOn && groundTarget && (
-        <div className="mt-0.5 text-[9px] text-text-faint tabular">
+        <div className="mt-0.5 text-[9px] text-text-lo tabular">
           {groundTarget.band_label} · {groundTarget.band_mbps_per_sat} Mbps/sat ·
           effective mask {groundTarget.min_elevation_deg.toFixed(0)}°
         </div>
@@ -365,7 +365,7 @@ function PassAnalysis({ v }: { v: ReturnType<typeof useOrbitDesign>['visibility'
                          width: `${Math.max(1, ((w.end_s - w.start_s) / v.duration_s) * 100)}%` }} />
         ))}
       </div>
-      <div className="mt-1 flex justify-between text-[9px] tabular text-text-faint">
+      <div className="mt-1 flex justify-between text-[9px] tabular text-text-lo">
         <span>now</span><span>+{(v.period_s_real / 60).toFixed(0)} min (1 orbit)</span>
       </div>
       <div className="mt-1 text-[10px] tabular text-text-md">
@@ -395,7 +395,7 @@ function Section({ icon, title, children }: {
 function Elem({ k, label, v }: { k: string; label: string; v: string }) {
   return (
     <div className="flex flex-col">
-      <span className="text-[9px] text-text-faint">{k} · {label}</span>
+      <span className="text-[9px] text-text-lo">{k} · {label}</span>
       <span className="text-[11px] font-semibold tabular text-text-hi">{v}</span>
     </div>
   )
@@ -411,7 +411,7 @@ function Field({ label, unit, value, min, max, step, digits = 0, onChange }: {
       <span className="w-[92px] shrink-0 text-[10px] text-text-md">{label}</span>
       <input type="range" min={min} max={max} step={step} value={value}
              onChange={(e) => onChange(Number(e.target.value))}
-             className="h-1 flex-1 accent-[#3B9EFF]" />
+             className="h-1 flex-1 accent-accent" />
       <span className="w-[64px] shrink-0 text-right text-[10px] tabular text-text-hi">
         {value.toFixed(digits)}{unit && <span className="text-text-lo"> {unit}</span>}
       </span>

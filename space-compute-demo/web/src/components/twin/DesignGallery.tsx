@@ -80,14 +80,14 @@ export function DesignGallery() {
 
       {open && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 font-sans"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-bg-app/70 font-sans"
           onMouseDown={(e) => { if (e.target === e.currentTarget) close() }}
           role="dialog"
           aria-modal="true"
           aria-label="Satellite design library"
         >
           <div className="w-[900px] max-w-[94vw] max-h-[88vh] overflow-y-auto rounded-lg border
-                          border-border-med bg-bg-card p-4 shadow-2xl">
+                          border-border-med bg-bg-card p-4 shadow-modal">
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Layers size={14} strokeWidth={1.8} className="text-accent" />
@@ -171,11 +171,11 @@ function DesignCard({
         'group relative flex flex-col overflow-hidden rounded-md border text-left transition-colors ' +
         (active
           ? 'border-accent bg-bg-card-hi cursor-default'
-          : 'border-border-weak bg-bg-inset/40 hover:border-border-glow hover:bg-bg-card-hi') +
+          : 'border-border-weak bg-bg-inset/40 hover:border-border-focus hover:bg-bg-card-hi') +
         (disabled && !active ? ' opacity-60' : '')
       }
     >
-      <div className="relative aspect-square w-full bg-[#05070e]">
+      <div className="relative aspect-square w-full bg-bg-inset">
         <img
           src={previewSrc(d)}
           alt={`${d.name} preview`}
@@ -185,13 +185,13 @@ function DesignCard({
           onLoad={(e) => { (e.target as HTMLImageElement).style.visibility = '' }}
         />
         {active && (
-          <span className="absolute left-2 top-2 flex items-center gap-1 rounded bg-accent px-1.5 py-0.5
-                           text-[9px] font-semibold uppercase tracking-[0.10em] text-black">
+          <span className="absolute left-2 top-2 flex items-center gap-1 rounded border border-accent/50 bg-accent/20 px-1.5 py-0.5
+                           text-[9px] font-medium uppercase tracking-[0.10em] text-accent-text">
             <Check size={10} strokeWidth={2.5} /> Active
           </span>
         )}
         {applying && (
-          <span className="absolute inset-0 flex items-center justify-center gap-2 bg-black/60
+          <span className="absolute inset-0 flex items-center justify-center gap-2 bg-bg-app/70
                            text-[11px] text-text-hi">
             <Loader2 size={14} className="animate-spin" /> Switching…
           </span>

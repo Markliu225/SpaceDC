@@ -72,7 +72,7 @@ export function StepStructure({
       <div className="grid min-h-0 flex-1 grid-cols-3 gap-4">
         <Column
           title="Power"
-          icon={<Sun size={15} strokeWidth={1.8} className="text-accent" />}
+          icon={<Sun size={15} strokeWidth={1.8} className="text-text-md" />}
           note="Cells, wing size, and the pack that carries the satellite through eclipse."
         >
           <ConfigDropdown
@@ -126,7 +126,7 @@ export function StepStructure({
 
         <Column
           title="Thermal"
-          icon={<Snowflake size={15} strokeWidth={1.8} className="text-accent" />}
+          icon={<Snowflake size={15} strokeWidth={1.8} className="text-text-md" />}
           note="Emissivity and radiator area set how much compute the satellite can sustain."
         >
           <ConfigDropdown
@@ -170,7 +170,7 @@ export function StepStructure({
 
         <Column
           title="Orbit & attitude"
-          icon={<Compass size={15} strokeWidth={1.8} className="text-accent" />}
+          icon={<Compass size={15} strokeWidth={1.8} className="text-text-md" />}
           note="Where the satellite flies, and how it holds itself there once commissioned."
         >
           <OrbitReadout />
@@ -189,7 +189,7 @@ export function StepStructure({
                   title={m.title}
                   className={`rounded border px-2 py-2.5 text-[13px] tracking-[0.02em] ${
                     attitude === m.id
-                      ? 'border-accent/70 bg-accent/15 text-accent'
+                      ? 'border-accent/70 bg-accent-soft text-text-hi'
                       : 'border-border-weak text-text-md hover:bg-bg-card-hi hover:text-text-hi'
                   }`}
                 >
@@ -198,7 +198,7 @@ export function StepStructure({
               ))}
             </div>
           </div>
-          <p className="text-[12px] leading-relaxed text-text-faint">
+          <p className="text-[12px] leading-relaxed text-text-md">
             Sun-pointing holds the array near full incidence; a nadir / ram / inertial body
             projects geometrically and can collect nothing even in daylight. Reaction wheels
             stay available in the Configurator after commissioning.
@@ -259,7 +259,7 @@ function Column({
         {icon}
         <span className="text-[13px] uppercase tracking-[0.12em] text-text-md">{title}</span>
       </div>
-      <p className="text-[12px] leading-snug text-text-faint">{note}</p>
+      <p className="text-[12px] leading-snug text-text-md">{note}</p>
       {children}
     </div>
   )

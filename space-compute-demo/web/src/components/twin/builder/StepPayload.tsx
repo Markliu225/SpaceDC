@@ -1,6 +1,7 @@
 import { Cpu, Eraser } from 'lucide-react'
 import { GPU_OPTIONS, GPU_SLOT_TINT, gpuOption, slotGroups } from '../../../data/satConfigOptions'
 import type { GpuType, SatelliteAssetInfo } from '../../../types/messages'
+import { colors } from '../../../design/tokens'
 
 /**
  * Step 3 — PAYLOAD DESIGN: which accelerator goes in which slot.
@@ -40,7 +41,7 @@ export function StepPayload({
   }
 
   const chip = 'flex items-center gap-2 rounded border px-3 py-2 text-[13px]'
-  const chipOn = 'border-accent bg-accent/15 text-text-hi'
+  const chipOn = 'border-accent/70 bg-accent-soft text-text-hi'
   const chipOff = 'border-border-weak bg-bg-inset/40 text-text-md hover:bg-bg-card-hi hover:text-text-hi'
 
   return (
@@ -105,7 +106,7 @@ export function StepPayload({
                       border border-border-weak bg-bg-inset/20 p-5">
         {rows.map((row, r) => (
           <div key={r} className="mx-auto flex w-fit items-center gap-4">
-            <span className="w-24 shrink-0 text-right text-[12px] uppercase tracking-[0.08em] text-text-faint">
+            <span className="w-24 shrink-0 text-right text-[12px] uppercase tracking-[0.08em] text-text-lo">
               {rows.length > 1 ? `${asset.slot_group_label} ${r + 1}` : asset.slot_group_label}
             </span>
             <div className="flex flex-1 flex-wrap gap-3">
@@ -132,7 +133,7 @@ export function StepPayload({
         <Tally k="Peak payload" v={`${(peakW / 1000).toFixed(2)} kW`} />
         <Tally k="Card CAPEX" v={`$${(capexK / 1000).toFixed(2)}M`} />
         {groups.length > 1 && (
-          <span className="text-text-faint">
+          <span className="text-text-lo">
             Mixed bay — each card model runs as its own tensor-parallel group.
           </span>
         )}
@@ -153,12 +154,12 @@ function Slot({
       title={`Slot ${label}${gpu ? ` — ${gpu}` : ' — empty'}`}
       className={`flex w-[124px] flex-col gap-1.5 rounded-md border px-2.5 py-2.5 text-left transition-colors ${
         gpu
-          ? 'border-border-med bg-bg-card-hi hover:border-border-glow'
+          ? 'border-border-med bg-bg-card-hi hover:border-text-faint'
           : 'border-dashed border-border-weak bg-bg-inset/30 hover:border-border-med'
       }`}
     >
       <span className="flex items-center justify-between">
-        <span className="text-[11px] uppercase tracking-[0.08em] text-text-faint">{label}</span>
+        <span className="text-[11px] uppercase tracking-[0.08em] text-text-lo">{label}</span>
         {gpu
           ? <Cpu size={13} strokeWidth={1.8} style={{ color: tint ?? undefined }} />
           : <span className="text-[11px] text-text-faint">—</span>}
@@ -167,7 +168,7 @@ function Slot({
         {gpu ?? 'empty'}
       </span>
       <span className="h-[4px] w-full rounded-sm"
-            style={{ background: tint ?? 'rgba(255,255,255,0.06)' }} />
+            style={{ background: tint ?? colors.border.weak }} />
     </button>
   )
 }

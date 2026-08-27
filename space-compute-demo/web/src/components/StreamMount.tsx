@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AppStreamer, StreamType } from '@nvidia/omniverse-webrtc-streaming-library';
 import type { StreamEvent } from '@nvidia/omniverse-webrtc-streaming-library';
 import StreamConfig from '../../stream.config.json';
+import { colors } from '../design/tokens';
 
 type Status = 'idle' | 'connecting' | 'ready' | 'failed';
 
@@ -90,7 +91,7 @@ export function StreamMount() {
     const update = () => {
       const slot = document.getElementById('scene-embed-slot');
       // Overlay the shared <video> only while the stream is actually LIVE.
-      // Its background is opaque black, so parking it over the slot during
+      // Its background is opaque, so parking it over the slot during
       // 'connecting'/'failed' completely hides the Three.js fallback scene
       // underneath (the viewport read as a dead black rectangle).
       if (slot && state.status === 'ready') {
@@ -121,7 +122,7 @@ export function StreamMount() {
       <video
         id="remote-video"
         style={{
-          width: '100%', height: '100%', display: 'block', background: '#000',
+          width: '100%', height: '100%', display: 'block', background: colors.bg.inset,
           // Video itself accepts pointer events so AppStreamer can forward them to Kit.
           pointerEvents: 'auto',
         }}

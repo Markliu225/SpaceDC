@@ -84,7 +84,7 @@ function Tile({ metric }: { metric: CostMetric }) {
   const Icon = metric.icon
   return (
     <div className="flex min-w-0 items-center gap-1.5 rounded bg-bg-inset px-2 py-1">
-      <Icon className="h-4 w-4 shrink-0 text-accent" strokeWidth={1.8} />
+      <Icon className="h-4 w-4 shrink-0 text-text-lo" strokeWidth={1.5} />
       <div className="min-w-0 flex-1">
         <div className="text-[9px] uppercase tracking-[0.10em] text-text-lo">
           {metric.label}
@@ -98,7 +98,7 @@ function Tile({ metric }: { metric: CostMetric }) {
           <span className="ml-1 text-[10px] text-text-lo">{metric.unit}</span>
         </div>
         {metric.sub && (
-          <div className="truncate text-[9px] text-text-faint tabular">{metric.sub}</div>
+          <div className="truncate text-[9px] text-text-lo tabular">{metric.sub}</div>
         )}
       </div>
     </div>

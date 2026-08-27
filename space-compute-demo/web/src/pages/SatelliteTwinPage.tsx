@@ -69,7 +69,7 @@ export function SatelliteTwinPage() {
       }}
     >
       {/* Row 1 — Header strip. */}
-      <div className="col-span-12 flex items-center justify-between rounded border border-border-weak bg-card px-3 min-h-0">
+      <div className="col-span-12 flex items-center justify-between rounded border border-border-weak bg-bg-card px-3 min-h-0">
         <div className="flex items-center gap-3">
           <span className="text-[11px] uppercase tracking-[0.10em] text-text-md">
             Satellite Twin

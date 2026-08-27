@@ -1,5 +1,4 @@
-import { useMemo, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useMemo } from 'react'
 import * as THREE from 'three'
 import { colors } from '../../../design/tokens'
 
@@ -11,12 +10,10 @@ const RING_RADIAL_THICKNESS = 0.012
  * 24 colored orbit ribbons. Each ribbon is a TubeGeometry around a
  * Catmull-Rom spline that traces a great-circle in a tilted plane.
  * Ribbon hue cycles through the 6-hue palette (4 ribbons per hue).
- * Material is additive + transparent with a per-ribbon opacity oscillation
- * (0.6 → 0.9 over 6s, phase-shifted per ribbon) for the "breathing" effect.
+ * Material is transparent, normal-blended at a steady 0.6 opacity so the
+ * bouquet reads as matte lines rather than additive neon tubing.
  */
 export function OrbitRibbons() {
-  const groupRef = useRef<THREE.Group>(null!)
-
   const ribbons = useMemo(() => {
     return Array.from({ length: RING_COUNT }, (_, i) => {
       const hueIdx = i % 6
@@ -48,34 +45,20 @@ export function OrbitRibbons() {
         color,
         geom,
         orient,
-        breathPhase: (i / RING_COUNT) * Math.PI * 2,
       }
     })
   }, [])
 
-  // Per-ribbon opacity oscillation.
-  useFrame((state) => {
-    if (!groupRef.current) return
-    const t = state.clock.elapsedTime
-    groupRef.current.children.forEach((child, i) => {
-      const mat = (child as THREE.Mesh).material as THREE.MeshBasicMaterial
-      if (!mat) return
-      const phase = ribbons[i]?.breathPhase ?? 0
-      mat.opacity = 0.6 + 0.3 * (0.5 + 0.5 * Math.sin(t / (6 / Math.PI) + phase))
-    })
-  })
-
   return (
-    <group ref={groupRef}>
+    <group>
       {ribbons.map((r) => (
         <mesh key={r.index} geometry={r.geom}>
           <meshBasicMaterial
             color={r.color}
             transparent
-            opacity={0.75}
-            blending={THREE.AdditiveBlending}
+            opacity={0.6}
+            blending={THREE.NormalBlending}
             depthWrite={false}
-            toneMapped={false}
           />
         </mesh>
       ))}

@@ -8,7 +8,7 @@
  *   - blend factor = smoothstep(dot(normal, sun))
  *
  * ATMOSPHERE — Fresnel emission. Bigger sphere, back-side rendered,
- * additive blend. Cyan tint, intensity 1.5 per brief.
+ * additive blend. Accent-blue tint, intensity 1.1.
  */
 
 export const earthVert = /* glsl */`
@@ -61,10 +61,10 @@ export const earthFrag = /* glsl */`
     dayCol = mix(dayCol, vec3(0.92, 0.95, 1.0),
                  smoothstep(0.85, 1.0, abs(lat - 0.5) * 2.0));
 
-    // Night side: faint city lights wherever landMask is high. Animate a
-    // tiny twinkle by modulating with uTime + position.
+    // Night side: faint city lights wherever landMask is high. A very small,
+    // slow twinkle (±6 %) keeps them from reading as a static decal.
     float lights = landMask * step(0.55, noise(vUv * vec2(40.0, 22.0)));
-    float twinkle = 0.6 + 0.4 * sin(uTime * 2.0 + (vUv.x + vUv.y) * 30.0);
+    float twinkle = 0.94 + 0.06 * sin(uTime * 1.0 + (vUv.x + vUv.y) * 30.0);
     vec3 nightCol = vec3(1.0, 0.78, 0.45) * lights * twinkle * 0.55
                   + vec3(0.01, 0.02, 0.05);
 
@@ -114,7 +114,7 @@ export const starsVert = /* glsl */`
   void main() {
     vSeed = aSeed;
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
-    float twinkle = 0.6 + 0.4 * sin(uTime * 1.5 + aSeed * 6.2831);
+    float twinkle = 0.92 + 0.08 * sin(uTime * 0.8 + aSeed * 6.2831);
     gl_PointSize = (1.5 + 1.5 * aSeed) * twinkle * (300.0 / -mv.z);
     gl_Position = projectionMatrix * mv;
   }
