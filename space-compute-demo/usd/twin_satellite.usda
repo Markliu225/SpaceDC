@@ -660,7 +660,7 @@ def Xform "World"
                 int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
                 point3f[] points = [(-0.04030, -0.21750, -0.17770), (0.04030, -0.21750, -0.17770), (0.04030, -0.21350, -0.17770), (-0.04030, -0.21350, -0.17770), (-0.04030, -0.21750, -0.17270), (0.04030, -0.21750, -0.17270), (0.04030, -0.21350, -0.17270), (-0.04030, -0.21350, -0.17270)]
                 uniform token subdivisionScheme = "none"
-                rel material:binding = </World/Looks/GpuTag_MI300X>
+                rel material:binding = </World/Looks/GpuTag_H100>
             }
             def Xform "Server_LnY_1" (
                 prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
@@ -680,7 +680,7 @@ def Xform "World"
                 int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
                 point3f[] points = [(-0.04030, -0.21750, -0.26890), (0.04030, -0.21750, -0.26890), (0.04030, -0.21350, -0.26890), (-0.04030, -0.21350, -0.26890), (-0.04030, -0.21750, -0.26390), (0.04030, -0.21750, -0.26390), (0.04030, -0.21350, -0.26390), (-0.04030, -0.21350, -0.26390)]
                 uniform token subdivisionScheme = "none"
-                rel material:binding = </World/Looks/GpuTag_MI300X>
+                rel material:binding = </World/Looks/GpuTag_H100>
             }
             def Xform "Server_LnY_2" (
                 prepend references = @@@C:/Users/markl/Downloads/Datacenter_NVD@10012/Assets/DigitalTwin/Assets/Datacenter/Server_Nodes/DGX/DGX_A100_01.usd@@@
@@ -700,7 +700,7 @@ def Xform "World"
                 int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 2, 3, 7, 6, 1, 2, 6, 5, 0, 4, 7, 3]
                 point3f[] points = [(-0.04030, -0.21750, -0.36010), (0.04030, -0.21750, -0.36010), (0.04030, -0.21350, -0.36010), (-0.04030, -0.21350, -0.36010), (-0.04030, -0.21750, -0.35510), (0.04030, -0.21750, -0.35510), (0.04030, -0.21350, -0.35510), (-0.04030, -0.21350, -0.35510)]
                 uniform token subdivisionScheme = "none"
-                rel material:binding = </World/Looks/GpuTag_MI300X>
+                rel material:binding = </World/Looks/GpuTag_H100>
             }
         }
 
@@ -1349,10 +1349,10 @@ def Xform "World"
                 prepend references = </World/Satellite/_Protos/RadiatorPanel>
             )
             {
-                double3 xformOp:translate = (0.0260, 0.0000, 1.7100)
+                double3 xformOp:translate = (0.0260, 0.0000, 1.6100)
                 float xformOp:rotateX = 90
                 float xformOp:rotateZ = 90
-                double3 xformOp:scale = (2.1376, 1.2666, 1.0)
+                double3 xformOp:scale = (1.9340, 1.1918, 1.0)
                 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:rotateZ", "xformOp:scale"]
             }
             def Mesh "RadBoomBot" (
@@ -1372,10 +1372,10 @@ def Xform "World"
                 prepend references = </World/Satellite/_Protos/RadiatorPanel>
             )
             {
-                double3 xformOp:translate = (0.0260, 0.0000, -1.7100)
+                double3 xformOp:translate = (0.0260, 0.0000, -1.6100)
                 float xformOp:rotateX = 90
                 float xformOp:rotateZ = 90
-                double3 xformOp:scale = (2.1376, 1.2666, 1.0)
+                double3 xformOp:scale = (1.9340, 1.1918, 1.0)
                 uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateX", "xformOp:rotateZ", "xformOp:scale"]
             }
         }
