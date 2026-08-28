@@ -31,11 +31,19 @@ import { eciToDisplay } from '../components/twin/orbitMath'
  *      an explicitly "sun unknown" state for a null sun — never substitute a
  *      constant, which is the bug this hook exists to kill.
  *
- * NOTE ON SMOOTHNESS: `gmstRad` steps at the 1 Hz broadcast rate rather than
- * gliding on the frame clock. At the demo's 60× time scale that is 0.25° per
- * step — below the perceptual floor on an untextured globe — and it is worth
- * far more to have the value be *true* than to have it be smooth. Do not
- * re-introduce a locally integrated clock here.
+ * NOTE ON SMOOTHNESS: `gmstRad` here is the RAW broadcast value and steps at
+ * the 1 Hz backend tick. That is exactly what a physics consumer wants — the
+ * ECI→ECEF rotation in `useFleetPositions` must use the angle that belongs to
+ * the ECI km in the same packet, not an extrapolated one — but it is wrong to
+ * drive a transform with: a mesh assigned this value stands still for ~60
+ * frames and then jumps 0.2507° (60 × 2π/86164.0905 rad per broadcast), which
+ * reads as a stutter, not a spin.
+ *
+ * Anything that ROTATES must therefore sample `hooks/gmstClock`'s `gmstNow()`
+ * per frame instead. That is not a locally integrated clock — it never invents
+ * an angle, it re-anchors on every broadcast and only fills the gaps between
+ * them at the true sidereal rate × the store's `time_scale`. Do not add such a
+ * clock to this hook; keep the raw value raw.
  */
 
 export interface SkyFrame {

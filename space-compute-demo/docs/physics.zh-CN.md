@@ -82,6 +82,16 @@ P_solar = η · A_solar · S · incidence
 
 `η` 取决于所选电池材料：**Si 0.22 · GaAs 0.32 · 钙钛矿 0.38**。
 
+**星座整体使用同一套翼面模型。** `FleetSnapshot.solar_total_w`（Overview 能量图）与地面目标的太阳直方图，对**每一颗**星都用上面同一个 `_panel_incidence`：星座飞的就是当前设计，因此共享它的姿态、电池片、面积、η(T) 与展开度（`_array_scale_w`）；直方图按同一个单星 `illum · incidence` 采集因子分箱，因此柱子总和就是聚合值：
+
+```
+solar_total_w = Σ_sats  illum_i · incidence_i · (η · A_solar · S₀/d² · η_T · deploy)
+```
+
+所以单星星座的 `solar_total_w` 就等于该星的 `solar_input_w`。ram / 轨道法向两种模式所需的速度直接来自星座传播（`propagate_fleet_rv` —— SGP4 一次调用同时返回 r 和 v）。
+
+（2026-08 之前，聚合值和直方图用的是 `max(0, r̂·ŝ)`——相当于所有设计都按 nadir 算——而单星卡片用的是上面的模型。**晨昏 SSO 恰好是该公式的最坏情况**：太阳垂直于轨道面，r̂ 就在轨道面内，整圈 r̂·ŝ ≈ 0。一个 24 星、LTAN 18:00、β ≈ 71° 的设计——全程光照、`eclipse = 0/24`——报出 3.9 kW 而不是 172 kW，偏低 44 倍，而旁边的卡片同时正确地显示 7.2 kW。现由 `tools/validate_fleet_solar.py` 回归验证。）
+
 ---
 
 ## 4. 算力功耗（负载 → 设备功率）

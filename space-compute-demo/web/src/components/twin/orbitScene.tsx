@@ -6,6 +6,7 @@ import {
   ShaderMaterial, TubeGeometry, Vector3,
 } from 'three'
 import type { ConstellationDetail } from '../../types/messages'
+import { gmstNow } from '../../hooks/gmstClock'
 import { EARTH_RADIUS_KM, HUD_CYAN, HUD_CYAN_HOT, eciToDisplay } from './orbitMath'
 import { colors } from '../../design/tokens'
 
@@ -24,6 +25,14 @@ import { colors } from '../../design/tokens'
  * the rendered terminator by construction rather than by coincidence. Neither
  * the sun direction nor GMST is synthesised here; when the sky frame is unknown
  * the Earth renders in an explicit no-terminator state instead of guessing.
+ *
+ * The spinning parts (`DayNightEarth`, `GmstWireframe`) take NO gmst prop: a
+ * prop is fixed for the whole render, and the backend broadcasts once a second,
+ * so a prop-driven spin freezes for ~60 frames and then steps 0.2507°. They
+ * sample `hooks/gmstClock`'s `gmstNow()` inside their own `useFrame` instead —
+ * still the broadcast angle, advanced to the frame being drawn. Both sample the
+ * same pure function in the same rAF, so the grid and the sphere under it can
+ * never disagree about where 0°E is.
  */
 
 // ---------------------------------------------------------------------------
@@ -36,6 +45,7 @@ import { colors } from '../../design/tokens'
 // untextured sphere that rotation is visually neutral, but it gives the surface
 // a defined longitude shared with GmstWireframe (which has always rotated), so
 // the grid and any future surface detail cannot disagree about where 0°E is.
+// GMST is sampled per frame (see the module header) so the spin glides.
 // ---------------------------------------------------------------------------
 const dayNightVert = /* glsl */`
   varying vec3 vNormalW;
@@ -73,9 +83,7 @@ const dayNightFrag = /* glsl */`
   }
 `
 
-export function DayNightEarth({
-  sunDir, gmst = 0,
-}: { sunDir: Vector3 | null; gmst?: number }) {
+export function DayNightEarth({ sunDir }: { sunDir: Vector3 | null }) {
   const ref = useRef<Group>(null!)
   // Built once: the sun moves by mutating the uniform, not by rebuilding the
   // material (which the old `[sunDir]` dep did on every packet, leaking one
@@ -90,7 +98,7 @@ export function DayNightEarth({
     const u = material.uniforms.uSunDir.value as Vector3
     if (sunDir) u.copy(sunDir)
     else u.set(0, 0, 0)
-    if (ref.current) ref.current.rotation.y = gmst
+    if (ref.current) ref.current.rotation.y = gmstNow()
   })
   return (
     <group ref={ref}>
@@ -104,8 +112,9 @@ export function DayNightEarth({
 
 // ---------------------------------------------------------------------------
 // Wireframe overlay — sparse lat/lon grid on top of the day/night sphere.
-// Rotates by the same broadcast GMST as the sphere beneath it, so the grid
-// marks real longitudes and the terminator drifts across it at the true rate.
+// Rotates by the same broadcast GMST as the sphere beneath it (same per-frame
+// sample), so the grid marks real longitudes and the terminator drifts across
+// it at the true rate: 0.2507°/s at time_scale 60, one revolution per 23.9 min.
 // ---------------------------------------------------------------------------
 function makeLatLonGrid(radius: number, parallels: number, meridians: number): BufferGeometry {
   const pts: number[] = []
@@ -137,10 +146,10 @@ function makeLatLonGrid(radius: number, parallels: number, meridians: number): B
   return g
 }
 
-export function GmstWireframe({ gmst }: { gmst: number }) {
+export function GmstWireframe() {
   const ref = useRef<Group>(null!)
   const grid = useMemo(() => makeLatLonGrid(1.0, 6, 8), [])
-  useFrame(() => { if (ref.current) ref.current.rotation.y = gmst })
+  useFrame(() => { if (ref.current) ref.current.rotation.y = gmstNow() })
   return (
     <group ref={ref}>
       <lineSegments>

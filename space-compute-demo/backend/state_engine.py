@@ -304,7 +304,68 @@ _SOLAR_CONSTANT_W_M2 = 1361.0
 # solar_input_w now use the SAME model, so the design-check margins match
 # what the simulation actually delivers.
 _POINTING_EFF    = 0.95
+#: How many per-sat ECI positions ride the 1 Hz broadcast (see
+#: FleetSnapshot.fleet_eci_km). 256 matches the web globe's sprite cap, so
+#: everything actually drawn is ground truth and only the undrawn tail is
+_FLEET_ECI_CAP   = 256
 _SUNLIT_FRACTION = 0.5
+
+
+def _panel_incidence(mode: str,
+                     r_km: tuple[float, float, float],
+                     v_km_s: tuple[float, float, float],
+                     sun_unit: tuple[float, float, float],
+                     dawn_dusk: bool = False) -> float:
+    """Panel-normal · Sun incidence 0..1 for ONE spacecraft flown in `mode` —
+    the physical coupling between where the body points and how much sunlight
+    the arrays actually collect:
+
+      sun-pointing   → 1                  (whole body slews at the Sun)
+      free (default) → |sin β| — array fixed on the orbit normal n̂ = r̂×v̂,
+                       so incidence is |n̂·ŝ|, the sine of the Sun's elevation
+                       above the orbit plane
+      nadir          → panels ride the local vertical r̂: max(0, r̂·ŝ)
+      velocity (ram) → panels along-track v̂:            max(0, v̂·ŝ)
+      inertial       → panels on the orbit normal r̂×v̂:  max(0, n̂·ŝ)
+
+    WHY 'free' is |sin β| and not a constant: a constant said every sunlit
+    satellite in a constellation collects identically, which collapsed the
+    solar histogram to two spikes (in shadow / full) and hid the geometry the
+    chart exists to show. Mounting the array on the orbit normal is also what
+    makes a dawn-dusk orbit power-optimal for real — there the Sun sits ~70°
+    above the orbit plane, so the array faces it for the whole revolution
+    (|sin 71°| = 0.95), while an i=53° Walker plane with the Sun near its
+    orbit plane sees the same array edge-on. That contrast IS the physics;
+    a constant erased it.
+
+    Note |·|: the array collects on whichever face the Sun is on, so a
+    negative β (Sun below the orbit plane) is as good as a positive one.
+
+    Every mode except 'sun' now reads geometry, so a fleet needs BOTH
+    position and velocity to be evaluated.
+
+    Eclipse is NOT applied here. Multiply by the visible solar-disc fraction
+    (geodyn.sun_visible_fraction) to get the collected fraction of peak.
+
+    This is THE array model: the tracked satellite (_solar_incidence), the
+    whole-fleet harvest (_tick_fleet) and the solar histogram all call it, so
+    the fleet can no longer fly a different array than the sat it reports."""
+    if mode == "sun":
+        return 1.0
+    if mode == "free":
+        # Array fixed normal to the orbit plane; |sin β|. `dawn_dusk` no longer
+        # forces 1.0 — a genuine dawn-dusk orbit earns ~0.95 from this geometry
+        # on its own, and forcing it made the one built-in preset (whose RAAN is
+        # hard-coded 6°, β = -34.8°, nowhere near the terminator) report a power
+        # it does not physically have.
+        return abs(_dot(_unit(_cross(r_km, v_km_s)), sun_unit))
+    if mode == "velocity":
+        n = _unit(v_km_s)
+    elif mode == "inertial":
+        n = _unit(_cross(r_km, v_km_s))
+    else:                       # 'nadir' — and any unknown mode falls back
+        n = _unit(r_km)         # to the local vertical, as before
+    return max(0.0, _dot(n, sun_unit))
 
 
 def _thermal_env_in_w(alpha: float, epsilon: float, area_m2: float,
@@ -539,6 +600,12 @@ class StateEngine:
         # ISS preset so behaviour matches the pre-constellation baseline.
         self._constellation_id: str = "single_iss"
         self._fleet_snapshot: FleetSnapshot = FleetSnapshot()
+        # Tick-owned whole-fleet solar GEOMETRY: Σ over sats of
+        # (visible solar-disc fraction × panel incidence), dimensionless
+        # "sats' worth of peak array". Watts = this × _array_scale_w(), so
+        # the fleet harvest can be re-scaled on every read without
+        # re-propagating the constellation.
+        self._fleet_solar_geom: float = 0.0
         # Reconfigurable hardware loadout — Twin page mutates via set_config.
         self._config: SatelliteConfig = SatelliteConfig()
         self._twin_geometry: TwinGeometry = TwinGeometry()
@@ -841,14 +908,20 @@ class StateEngine:
         total_dt = sum(d for _, d, _, _ in sched) or 1.0
         avg_util = sum(d * u for _, d, u, _ in sched) / total_dt
         peak_solar_w = s_mat["efficiency"] * _solar_area_m2(geom) * _SOLAR_CONSTANT_W_M2
-        supply_avg_w = peak_solar_w * _POINTING_EFF * _SUNLIT_FRACTION
+        supply_avg_w = peak_solar_w * self._orbit_avg_incidence() * _SUNLIT_FRACTION
 
         thermal_peak_w = (_peak_card_watts(groups) + platform_w) * 0.95
         # Same emission-ceiling model as the live design check: capacity at
         # +60 °C minus the worst-case environmental load (full sun, subsolar).
         SIGMA = 5.67e-8
         rad_area = _radiator_area_m2(geom)
-        r_km = (math.sqrt(sum(c * c for c in self._sat.sat_xyz_km))
+        # `or ()` so the fallback below actually fires: on the /satellite_build
+        # /preview DRY-RUN probe the engine is never ticked, so sat_xyz_km is
+        # None (not a zero vector) and `sum(c * c for c in None)` raised
+        # TypeError before the `or` could be reached — 500ing the endpoint that
+        # fills the builder's workload list, which the UI then reported as
+        # "backend offline".
+        r_km = (math.sqrt(sum(c * c for c in (self._sat.sat_xyz_km or ())))
                 or (_geodyn.WGS84_A_KM + 550.0))
         q_env_worst = _thermal_env_in_w(
             r_mat.get("absorptivity", 0.25), r_mat["emissivity"], rad_area,
@@ -1259,40 +1332,56 @@ class StateEngine:
         return cos_a
 
     def _solar_incidence(self) -> float:
-        """Panel-normal · Sun incidence 0..1 for the CURRENT attitude — the
-        physical coupling between where the body points and how much sunlight
-        the (body-fixed) arrays actually collect:
-
-          eclipse            → 0
-          sun-pointing       → 1 (SADA-perfect; dawn-dusk never eclipsed)
-          free (default)     → SADA sun-tracking, _POINTING_EFF (or 1 on SSO)
-          nadir              → panels ride the local vertical r̂: max(0, r̂·ŝ)
-          velocity (ram)     → panels along-track v̂:            max(0, v̂·ŝ)
-          inertial           → panels on the orbit normal (r̂×v̂), quasi-fixed
-                               in inertial space: max(0, n̂·ŝ)
-
-        So a nadir/ram/inertial body-fixed array projects geometrically and
-        can fall to 0 in full daylight, while sun-pointing holds ~1 — exactly
-        the attitude→power story the design lets you fly."""
+        """Panel-normal · Sun incidence 0..1 for the tracked satellite's
+        CURRENT attitude: the shared _panel_incidence model on this sat's live
+        geometry, hard-zeroed in eclipse (sunlit = majority of the solar disc
+        visible). Every fleet member is scored by the same function."""
         sat = self._sat
         if not sat.sunlit:
             return 0.0
-        mode = sat.attitude_mode
-        if mode == "sun":
-            return 1.0
-        if mode == "free":
-            return 1.0 if sat.is_dawn_dusk else _POINTING_EFF
-        r = _unit(sat.sat_xyz_km)
-        v = _unit(self._tracked_vel_km_s)
-        if mode == "nadir":
-            n = r
-        elif mode == "velocity":
-            n = v
-        elif mode == "inertial":
-            n = _unit(_cross(sat.sat_xyz_km, self._tracked_vel_km_s))
-        else:
-            n = r
-        return max(0.0, _dot(n, self._sun_unit_eci))
+        return _panel_incidence(sat.attitude_mode, sat.sat_xyz_km,
+                                self._tracked_vel_km_s, self._sun_unit_eci,
+                                sat.is_dawn_dusk)
+
+    def _orbit_avg_incidence(self) -> float:
+        """Orbit-averaged panel incidence for the CURRENT attitude, used by the
+        design check and the workload fit verdicts.
+
+        For 'free' (array on the orbit normal) and 'sun' the incidence does not
+        vary around the revolution, so the live value IS the orbit average. The
+        body-fixed modes sweep a cosine and average to 1/pi of their peak over
+        the sunlit arc; falling back to the live sample there would make the
+        verdict swing with where the satellite happens to be right now."""
+        mode = self._sat.attitude_mode
+        if mode in ("sun", "free"):
+            live = self._sat.solar_incidence
+            if live > 0.0:
+                return live
+            # Pre-first-tick (or eclipsed): recompute from geometry if we can.
+            pos, vel = self._sat.sat_xyz_km, self._tracked_vel_km_s
+            if mode == "sun":
+                return 1.0
+            if pos and vel:
+                return _panel_incidence("free", pos, vel, self._sun_unit_eci)
+            return _POINTING_EFF
+        return 1.0 / math.pi
+
+    def _array_scale_w(self) -> float:
+        """The NON-geometric half of the array chain, in watts of peak: cell
+        η × deployed area × true irradiance at the current Earth–Sun distance
+        × the η(T) datasheet derate at the structure temperature × the
+        roll-out deployment fraction.
+
+        Multiplied by (visible solar-disc fraction × _panel_incidence) it
+        gives collected watts. The tracked satellite and every fleet member
+        share it, because the constellation flies the ACTIVE design — so a
+        one-satellite fleet's solar_total_w is identically its solar_input_w."""
+        s_mat = _SOLAR_MAT_TABLE.get(self._config.solar_material,
+                                     _SOLAR_MAT_TABLE["Si"])
+        return (s_mat["efficiency"] * _solar_area_m2(self._twin_geometry)
+                * self._solar_s_w_m2
+                * _solar_temp_factor(s_mat, self._sat.temperature_c)
+                * self._sat.solar_deploy_frac)
 
     def _refresh_display_kinematics(self) -> None:
         """Refresh the tracked satellite's position-derived fields at the
@@ -1321,16 +1410,21 @@ class StateEngine:
         # (sunlit=False with panels still "producing"). Same formulas as the
         # tick — including the attitude incidence + deployment fraction —
         # reusing the tick-owned load.
-        s_mat = _SOLAR_MAT_TABLE.get(self._config.solar_material, _SOLAR_MAT_TABLE["Si"])
         incidence = self._solar_incidence()
         self._sat.solar_incidence = incidence
-        solar_w = (s_mat["efficiency"] * _solar_area_m2(self._twin_geometry)
-                   * self._solar_s_w_m2 * incidence * self._solar_illum
-                   * _solar_temp_factor(s_mat, self._sat.temperature_c)
-                   * self._sat.solar_deploy_frac)
+        scale_w = self._array_scale_w()
+        solar_w = scale_w * incidence * self._solar_illum
         self._sat.solar_input_w = solar_w
         self._sat.battery_charge_w = solar_w - (self._sat.payload_power_w
                                                 + self._sat.platform_power_w)
+        # Re-scale the fleet harvest onto the SAME array chain this read just
+        # used for the tracked sat. Fleet GEOMETRY stays tick-owned (1 Hz,
+        # Σ illum×incidence over the constellation); only the shared
+        # non-geometric scale is refreshed here, so the Overview energy chart
+        # and the satellite card can never disagree about irradiance,
+        # temperature or deployment.
+        self._fleet_snapshot.solar_total_w = round(
+            self._fleet_solar_geom * scale_w, 1)
 
     # ---- snapshot ----
     def snapshot(self) -> StatePacket:
@@ -1401,43 +1495,64 @@ class StateEngine:
         simulator (compare_sim._OfflineTwin) to propagate only the tracked
         sat on a private Satrec — the downstream physics is untouched."""
         preset = _consts.get_preset(self._constellation_id) or _consts.get_preset("single_iss")
-        fleet_pos_km = _consts.propagate_fleet(preset, t)
-        # Tracked satellite's velocity (for the attitude/solar geometry).
-        _p, self._tracked_vel_km_s = _consts.propagate_tracked_rv(preset, t)
+        # Position AND velocity per sat: the ram/orbit-normal panel modes
+        # project onto v̂ and r̂×v̂, so the fleet power model needs the
+        # velocities sgp4 already computes (propagate_fleet_rv). Fleet member 0
+        # IS the tracked satellite (zero Walker offsets), so its velocity comes
+        # from the same call instead of a second propagate_tracked_rv.
+        fleet_rv = _consts.propagate_fleet_rv(preset, t)
+        fleet_pos_km = [pos for (pos, _v) in fleet_rv]
+        self._tracked_vel_km_s = fleet_rv[0][1] if fleet_rv else (0.0, 0.0, 0.0)
         kpis = _consts.synthesize_kpis(preset, fleet_pos_km, t)
 
-        # Reference per-sat solar peak (sunlit-normal) — the constellation
-        # sats share the ACTIVE design's array characteristics. Feeds both the
-        # whole-fleet harvest below and the ground-target histogram.
-        s_mat = _SOLAR_MAT_TABLE.get(self._config.solar_material,
-                                     _SOLAR_MAT_TABLE["Si"])
-        solar_peak_w = (s_mat["efficiency"]
-                        * _solar_area_m2(self._twin_geometry)
-                        * _SOLAR_CONSTANT_W_M2)
-
         # Whole-fleet instantaneous solar collection (the Overview energy
-        # chart). Independent of any ground target, and — unlike solar_hist
-        # — it INCLUDES eclipse: the visible fraction of the solar disc scales
-        # the geometric r̂·ŝ projection. One extra pass over positions we
-        # already propagated.
+        # chart). Independent of any ground target, and it INCLUDES eclipse:
+        # the visible fraction of the solar disc scales the panel incidence.
+        # One extra pass over the state we already propagated — the same
+        # per-sat factors feed the ground-target histogram below.
+        #
+        # The constellation flies the ACTIVE design, so every member is scored
+        # by the SAME array model as the tracked satellite: _panel_incidence
+        # for the commanded attitude (sun/free are orientation-independent
+        # constants; nadir/velocity/inertial project r̂ / v̂ / r̂×v̂ onto ŝ)
+        # times _array_scale_w for the non-geometric chain. This loop used to
+        # hard-code max(0, r̂·ŝ) — a body-fixed NADIR array — no matter what
+        # the satellite was actually flying. In a dawn-dusk SSO the Sun is
+        # perpendicular to the orbit plane and r̂ lies in it, so r̂·ŝ ≈ 0 for
+        # the whole orbit: the fleet aggregate read ~2% of peak on the orbit
+        # that is in PERMANENT sunlight, while the sat card next to it
+        # correctly read full power.
         jd_utc = _timebase.jd_utc_at(t)
         sun_km, _r_au = _geodyn.sun_teme(jd_utc)
         sx, sy, sz = sun_km
         s_norm = math.sqrt(sx * sx + sy * sy + sz * sz) or 1.0
         sun_unit = (sx / s_norm, sy / s_norm, sz / s_norm)
-        solar_total_w = 0.0
+        mode = self._sat.attitude_mode
+        dawn_dusk = self._sat.is_dawn_dusk
+        fleet_geom = 0.0
         solar_lit_sats = 0
-        for (px, py, pz) in fleet_pos_km:
-            if px == 0.0 and py == 0.0 and pz == 0.0:
-                continue                      # sgp4-error sentinel
-            illum = _geodyn.sun_visible_fraction((px, py, pz), sun_km)
+        harvest_factors: list[float] = []
+        for (pos, vel) in fleet_rv:
+            if pos == (0.0, 0.0, 0.0):
+                harvest_factors.append(0.0)   # sgp4-error sentinel
+                continue
+            inc = _panel_incidence(mode, pos, vel, sun_unit, dawn_dusk)
+            illum = _geodyn.sun_visible_fraction(pos, sun_km)
+            # Eclipse-AWARE collection factor. The histogram bins and sums this
+            # same number, so an eclipsed sat lands in bin 0 collecting nothing
+            # and the histogram's total is identically solar_total_w. Binning
+            # the bare incidence instead would credit a satellite in full
+            # shadow with the power its panel would have made in daylight.
+            factor = illum * inc
+            harvest_factors.append(factor)
             if illum <= 0.0:
                 continue                      # full umbra — collects nothing
             solar_lit_sats += 1
-            r_norm = math.sqrt(px * px + py * py + pz * pz) or 1.0
-            cos_a = (px * sun_unit[0] + py * sun_unit[1] + pz * sun_unit[2]) / r_norm
-            if cos_a > 0.0:
-                solar_total_w += illum * cos_a * solar_peak_w
+            fleet_geom += factor
+        self._fleet_solar_geom = fleet_geom
+        # Watts now; /state reads re-scale this same geometry against the
+        # live array chain (_refresh_display_kinematics).
+        solar_total_w = fleet_geom * self._array_scale_w()
 
         self._fleet_snapshot = FleetSnapshot(
             constellation_id=preset.id,
@@ -1464,6 +1579,10 @@ class StateEngine:
             # invent a sun direction or start GMST at zero.
             sun_unit_teme=sun_unit,
             gmst_rad=_geodyn.gmst_rad(jd_utc),
+            # Truth for the map / selector / globe. 0.1 km is far finer than
+            # any display needs and keeps the packet small.
+            fleet_eci_km=[(round(x, 1), round(y, 1), round(z, 1))
+                          for (x, y, z) in fleet_pos_km[:_FLEET_ECI_CAP]],
         )
 
         # Cache per-sat lat/lon for mission cast picking (sensor = nearest AOI).
@@ -1478,13 +1597,13 @@ class StateEngine:
         # ride StatePacket.ground_target on the next snapshot.
         gt = self._ground_target
         if gt is not None and gt.enabled:
-            # `solar_peak_w` (computed above) is the histogram's collection
-            # axis; `sun_unit` is the same analytic Sun the harvest pass used.
+            # Same per-sat collection factors and array chain the harvest
+            # above used, so the histogram's bins and its collection axis are
+            # the physics — not a parallel visualisation model.
             a = _consts.ground_analytics(
                 fleet_pos_km, fleet_lla, gt.lat, gt.lon,
                 gt.min_elevation_deg, gt.band_mbps_per_sat,
-                solar_peak_w, gt.solar_bin,
-                sun_unit=sun_unit,
+                self._array_scale_w(), gt.solar_bin, harvest_factors,
             )
             gt.visible_sats = a["visible_sats"]
             gt.best_elevation_deg = a["best_elevation_deg"]
@@ -1540,11 +1659,11 @@ class StateEngine:
         # (single-node model: the panels share the bus temperature) — a hot
         # satellite now genuinely generates less, closing the thermal→power
         # loop alongside the thermal→compute one.
-        self._sat.solar_input_w = (
-            s_mat["efficiency"] * panel_area_m2 * self._solar_s_w_m2
-            * incidence * self._solar_illum
-            * _solar_temp_factor(s_mat, self._sat.temperature_c) * frac
-        )
+        # (_array_scale_w is exactly η · area · S(r) · η(T) · deployed fraction;
+        # `frac` was written back to the sat just above, so this is the same
+        # product as before — now shared verbatim with the fleet aggregate.)
+        self._sat.solar_input_w = (self._array_scale_w() * incidence
+                                   * self._solar_illum)
 
         # --- Workload-driven GPU utilization ----------------------------------
         # The active schedule block names a TYPED job (LLM train/infer, EO
@@ -1659,7 +1778,8 @@ class StateEngine:
         if is_dawn_dusk:
             solar_supply_avg_w = peak_solar_w
         else:
-            solar_supply_avg_w = peak_solar_w * _POINTING_EFF * _SUNLIT_FRACTION
+            solar_supply_avg_w = (peak_solar_w * self._orbit_avg_incidence()
+                                  * _SUNLIT_FRACTION)
 
         # Thermal peak demand: worst case is sustained 100 % workload.
         thermal_peak_demand_w = (_peak_card_watts(groups) + platform_w) * 0.95

@@ -85,6 +85,16 @@ P_solar = η · A_solar · (S₀/d_AU²) · incidence · illum · η_T
 
 `η` (at the 25 °C reference) and `k` come from the chosen cell material: **Si 0.22 / −0.45 %·K⁻¹ · GaAs 0.32 / −0.20 %·K⁻¹ · Perovskite 0.38 / −0.30 %·K⁻¹**. The steady-state design checks (§8) evaluate at the 25 °C reference (η_T = 1).
 
+**The whole fleet runs the same array.** `FleetSnapshot.solar_total_w` (the Overview energy chart) and the ground-target solar histogram score EVERY satellite with the same `_panel_incidence` above — the constellation flies the active design, so it shares the design's attitude, cells, area, η(T) and deployment fraction (`_array_scale_w`). The histogram bins the same per-sat `illum · incidence` collection factor, so its bars sum back to the aggregate:
+
+```
+solar_total_w = Σ_sats  illum_i · incidence_i · (η · A_solar · S₀/d² · η_T · deploy)
+```
+
+so a one-satellite fleet's `solar_total_w` is identically that satellite's `solar_input_w`. Velocity for the ram/orbit-normal modes comes from the fleet propagation itself (`propagate_fleet_rv` — SGP4 returns r and v from one call).
+
+(Until Aug 2026 the aggregate and the histogram used `max(0, r̂·ŝ)` — nadir for every design — while the satellite card ran the model above. **A dawn-dusk SSO is the worst case for that formula**: the Sun is perpendicular to the orbit plane, so r̂ lies in it and r̂·ŝ ≈ 0 all orbit long. A 24-sat LTAN-18 design at β ≈ 71° — permanently sunlit, `eclipse = 0/24` — reported 3.9 kW instead of 172 kW, 44× low, next to a satellite card correctly reading 7.2 kW. Regression-guarded by `tools/validate_fleet_solar.py`.)
+
 ---
 
 ## 4. Compute power (workload → device power)

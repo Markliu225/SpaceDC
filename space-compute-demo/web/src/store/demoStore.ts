@@ -4,7 +4,7 @@ import type {
   SatelliteConfig, StatePacket, TaskState,
 } from '../types/messages';
 
-const WS_URL = import.meta.env.VITE_BACKEND_WS ?? 'ws://localhost:8001/ws/state';
+const WS_URL = import.meta.env.VITE_BACKEND_WS ?? 'ws://127.0.0.1:8001/ws/state';
 
 interface DemoStore {
   // connection

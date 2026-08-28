@@ -8,7 +8,7 @@ import type {
 } from '../types/messages'
 
 const BACKEND_HTTP =
-  (import.meta.env.VITE_BACKEND_HTTP as string | undefined) ?? 'http://localhost:8001'
+  (import.meta.env.VITE_BACKEND_HTTP as string | undefined) ?? 'http://127.0.0.1:8001'
 
 /** Deployable-geometry knobs the structure step edits. */
 export interface BuildGeometry {
@@ -106,6 +106,11 @@ export function useSatelliteBuild(assets: SatelliteAssetInfo[]) {
   const [draft, setDraft] = useState<BuildDraft | null>(null)
   const [preview, setPreview] = useState<SatelliteBuildPreview | null>(null)
   const [previewing, setPreviewing] = useState(false)
+  /** Why the last dry-run produced no profiles. null = no failure (either it
+   *  succeeded, or the bay is empty and we never asked). Without this the UI
+   *  cannot tell a 500 from an unreachable backend and blamed "backend
+   *  offline" for both. */
+  const [previewError, setPreviewError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   const asset = useMemo(
@@ -160,7 +165,9 @@ export function useSatelliteBuild(assets: SatelliteAssetInfo[]) {
     const id = ++runId.current
     const t = setTimeout(async () => {
       // An empty bay has no physics to report and the backend would 422 it.
-      if (draft.slots.every((s) => !s)) { setPreview(null); return }
+      if (draft.slots.every((s) => !s)) {
+        setPreview(null); setPreviewError(null); return
+      }
       setPreviewing(true)
       try {
         const r = await fetch(`${BACKEND_HTTP}/satellite_build/preview`, {
@@ -168,10 +175,25 @@ export function useSatelliteBuild(assets: SatelliteAssetInfo[]) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(toRequest(draft)),
         })
-        const body = r.ok ? ((await r.json()) as SatelliteBuildPreview) : null
-        if (id === runId.current) setPreview(body)
+        if (r.ok) {
+          const body = (await r.json()) as SatelliteBuildPreview
+          if (id === runId.current) { setPreview(body); setPreviewError(null) }
+        } else {
+          // Report what the server actually said — a 422 is a bad draft, a 500
+          // is a backend defect, and neither means the backend is unreachable.
+          const detail = await r.json().catch(() => null) as { detail?: string } | null
+          if (id === runId.current) {
+            setPreview(null)
+            setPreviewError(detail?.detail
+              ? `Backend rejected this draft (${r.status}): ${detail.detail}`
+              : `Backend error while evaluating this draft (${r.status}).`)
+          }
+        }
       } catch {
-        if (id === runId.current) setPreview(null)
+        if (id === runId.current) {
+          setPreview(null)
+          setPreviewError('Backend unreachable — start the FastAPI server (port 8001).')
+        }
       } finally {
         if (id === runId.current) setPreviewing(false)
       }
@@ -199,7 +221,7 @@ export function useSatelliteBuild(assets: SatelliteAssetInfo[]) {
   }, [draft])
 
   return {
-    draft, asset, fittedCount, preview, previewing, submitting,
+    draft, asset, fittedCount, preview, previewing, previewError, submitting,
     selectAsset, patchConfig, patchGeometry, setSlot, fillSlots,
     setWorkload, setAttitude, submit,
   }

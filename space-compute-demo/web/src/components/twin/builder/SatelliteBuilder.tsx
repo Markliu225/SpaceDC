@@ -36,7 +36,7 @@ export function SatelliteBuilder() {
   const { assets, activeId, offline } = useSatelliteAssets()
   const build = useSatelliteBuild(assets)
   const {
-    draft, asset, fittedCount, preview, previewing, submitting,
+    draft, asset, fittedCount, preview, previewing, previewError, submitting,
     selectAsset, patchConfig, patchGeometry, setSlot, fillSlots,
     setWorkload, setAttitude, submit,
   } = build
@@ -184,6 +184,7 @@ export function SatelliteBuilder() {
               profiles={profiles}
               selected={draft.workload_profile}
               loading={previewing && profiles.length === 0}
+              error={previewError}
               onPick={setWorkload}
             />
           )}

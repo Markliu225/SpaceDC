@@ -3,7 +3,7 @@ import { useDemoStore } from '../store/demoStore'
 import type { SatelliteAssetInfo, SatelliteAssetsResponse } from '../types/messages'
 
 const BACKEND_HTTP =
-  (import.meta.env.VITE_BACKEND_HTTP as string | undefined) ?? 'http://localhost:8001'
+  (import.meta.env.VITE_BACKEND_HTTP as string | undefined) ?? 'http://127.0.0.1:8001'
 
 /** Absolute URL for a platform's software-rendered thumbnail. */
 export function assetPreviewSrc(asset: SatelliteAssetInfo): string {

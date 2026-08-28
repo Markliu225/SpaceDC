@@ -21,8 +21,9 @@ import { EARTH_RADIUS_KM, eciToDisplay } from './orbitMath'
  * instant, via `hooks/useSkyFrame`. The reticle animates on the
  * smoothly-extrapolated sim clock (useSmoothSimTime) so the orbital motion
  * glides at frame rate instead of jumping once per second; the Earth's spin
- * steps at the 1 Hz broadcast rate, which at 60x time scale is 0.25 degrees a
- * step — true beats smooth.
+ * glides the same way, sampled per frame from `hooks/gmstClock` inside
+ * DayNightEarth / GmstWireframe rather than passed down as a once-per-broadcast
+ * prop. Both stay anchored on the backend's values — extrapolated, not invented.
  */
 
 function Brackets() {
@@ -59,7 +60,7 @@ export function MiniOrbitHud() {
         altitudeKm: backendSat.altitude_km }
     : local
 
-  const { sunDisplay, gmstRad } = useSkyFrame()
+  const { sunDisplay } = useSkyFrame()
   const sunDir = useMemo(
     () => (sunDisplay ? new Vector3(...sunDisplay).normalize() : null),
     [sunDisplay],
@@ -113,8 +114,8 @@ export function MiniOrbitHud() {
             gl={{ antialias: true, alpha: true }}
           >
             <ambientLight intensity={0.3} />
-            <DayNightEarth sunDir={sunDir} gmst={gmstRad} />
-            <GmstWireframe gmst={gmstRad} />
+            <DayNightEarth sunDir={sunDir} />
+            <GmstWireframe />
             {detail && detail.ring_eci_km.length > 0 && sat && (
               <ConstellationRings detail={detail} selectedPlane={sat.planeIdx} />
             )}

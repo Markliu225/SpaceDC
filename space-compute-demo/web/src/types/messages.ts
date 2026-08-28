@@ -227,6 +227,10 @@ export interface FleetSnapshot {
   /** Greenwich mean sidereal time (radians) at this packet's instant. The
    *  Earth mesh is spun by this; the sun above stays inertial. */
   gmst_rad: number;
+  /** Per-sat TEME km as SGP4 actually propagated it this tick — same frame and
+   *  instant as `sun_unit_teme` / `gmst_rad`. Capped backend-side (256), so a
+   *  larger fleet's tail is absent and falls back to reconstruction. */
+  fleet_eci_km: [number, number, number][];
   /** Monotonic revision of the custom orbit design (bumps on each redesign
    *  even though the constellation id stays "custom_design"). 0 for built-ins. */
   design_rev?: number;

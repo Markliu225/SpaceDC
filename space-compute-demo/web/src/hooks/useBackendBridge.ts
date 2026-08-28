@@ -9,7 +9,7 @@ import type {
 } from '../types/messages'
 
 const BACKEND_HTTP = (import.meta.env.VITE_BACKEND_HTTP as string | undefined)
-  ?? 'http://localhost:8001'
+  ?? 'http://127.0.0.1:8001'
 
 interface ConstellationsListResponse {
   active: string

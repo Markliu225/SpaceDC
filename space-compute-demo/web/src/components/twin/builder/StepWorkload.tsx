@@ -19,11 +19,13 @@ const fitTone = (fit: string) =>
  * the live panels use. So a schedule marked "ok" here is still "ok" after Run.
  */
 export function StepWorkload({
-  profiles, selected, loading, onPick,
+  profiles, selected, loading, error, onPick,
 }: {
   profiles: WorkloadProfileInfo[]
   selected: string
   loading: boolean
+  /** Real reason the dry-run returned nothing, if it failed. */
+  error?: string | null
   onPick: (id: string) => void
 }) {
   return (
@@ -37,7 +39,8 @@ export function StepWorkload({
       {profiles.length === 0 ? (
         <div className="flex min-h-0 flex-1 items-center justify-center rounded-md border border-border-weak bg-bg-inset/30 px-3 text-center text-[13px] text-text-lo">
           {loading ? 'Evaluating schedules against this design…'
-                   : 'No schedules available — backend offline.'}
+           : error ? error
+           : 'Fit at least one GPU in the payload step to evaluate schedules.'}
         </div>
       ) : (
         <div className="grid min-h-0 flex-1 auto-rows-fr grid-cols-2 gap-3 overflow-y-auto pr-1">

@@ -71,27 +71,68 @@ function rotZ(v: [number, number, number], a: number): [number, number, number] 
  * `simNow/SIDEREAL_DAY_S·2π` started at 0 while true GMST at mission start is
  * 151.287°, i.e. every sub-satellite longitude was off by a constant 151.29°.
  */
+/** WGS-84 geodetic latitude (rad) of an ECEF point — Bowring's closed form,
+ *  the same ellipsoid services/geodyn.ecef_to_geodetic uses on the backend. */
+function geodeticLatRad([x, y, z]: [number, number, number]): number {
+  const A = 6378.137                    // semi-major, km
+  const F = 1 / 298.257223563
+  const B = A * (1 - F)
+  const E2 = F * (2 - F)                // first eccentricity²
+  const EP2 = E2 / (1 - E2)             // second eccentricity²
+  const p = Math.hypot(x, y)
+  if (p < 1e-9) return z >= 0 ? Math.PI / 2 : -Math.PI / 2
+  const th = Math.atan2(z * A, p * B)
+  return Math.atan2(z + EP2 * B * Math.sin(th) ** 3,
+                    p - E2 * A * Math.cos(th) ** 3)
+}
+
 function computeSatPosition(
   detail: ConstellationDetail, simTimeS: number, idx: number, sky: SkyFrame,
+  fleetEci: [number, number, number][] | null,
 ): FleetSatPosition {
-  const { ring_eci_km, planes, sats_per_plane, phasing, period_s, time_scale } = detail
+  const { ring_eci_km, rings_eci_km, planes, sats_per_plane, phasing,
+          period_s, time_scale } = detail
   const T = planes * sats_per_plane
   const simNow = simTimeS * time_scale
   const gmst = sky.gmstRad
 
   const k = Math.floor(idx / sats_per_plane)
   const j = idx % sats_per_plane
-  const planeAngle = (k * 2 * Math.PI) / planes
   const slotOffset = j * (period_s / sats_per_plane)
     + k * phasing * (period_s / T)
   const phase = ((simNow + slotOffset) / period_s) % 1
-  const ringPt = sampleRing(ring_eci_km, phase)
-  const eci = rotZ(ringPt, planeAngle)
+
+  // One ring PER PLANE when the backend serves them (it does since the
+  // dawn-dusk work), rotating a single ring only as a legacy fallback.
+  //
+  // The fallback is a WALKER construction: plane k = ring 0 turned by
+  // k·360/planes about +Z. That is right for Walker and catastrophically wrong
+  // for an SSO stack, whose shells SHARE one dawn-dusk RAAN and differ in
+  // altitude and inclination instead — measured against the backend's own SGP4
+  // it put satellites a median 5 941 km (max 13 053 km, near-antipodal) from
+  // where they really are. With rings_eci_km each shell is propagated from its
+  // own TLE, so there is nothing left to reconstruct.
+  // 1. The backend's OWN propagated position, when it sent one. Nothing to
+  //    reconstruct and nothing to drift: this is the same vector its eclipse,
+  //    power and ground-station maths ran on.
+  // 2. Else this plane's own ring (right shell, but the phase below still
+  //    assumes shell 0's period — off by up to 249 s on a 500-700 km stack).
+  // 3. Else the legacy Walker rotation of ring 0.
+  const truth = fleetEci?.[idx] ?? null
+  const ring = rings_eci_km?.[k] ?? null
+  const eci = truth
+    ?? (ring && ring.length
+      ? sampleRing(ring, phase)
+      : rotZ(sampleRing(ring_eci_km, phase), (k * 2 * Math.PI) / planes))
 
   // ECI → ECEF for the sub-sat point.
   const ecef = rotZ(eci, -gmst)
   const r = Math.hypot(ecef[0], ecef[1], ecef[2]) || 1
-  const lat = (Math.asin(ecef[2] / r) * 180) / Math.PI
+  // GEODETIC latitude (WGS-84, Bowring), not the geocentric asin(z/r) this
+  // used to report — they differ by up to ~0.19° ≈ 21 km at mid-latitudes,
+  // and the backend's own sub-points are geodetic, so the map disagreed with
+  // the ground-station visibility computed from those same positions.
+  const lat = (geodeticLatRad(ecef) * 180) / Math.PI
   const lon = (Math.atan2(ecef[1], ecef[0]) * 180) / Math.PI
 
   // Sunlit test stays in ECI — the sun direction is inertial, so it needs no
@@ -114,12 +155,14 @@ export function useFleetPositions(): FleetSatPosition[] {
   const detail   = useTelemetryStore((s) => s.constellationDetail)
   const simTimeS = useTelemetryStore((s) => s.sim_time_s)
   const sky      = useSkyFrame()
+  const fleetEci = useTelemetryStore((s) => s.fleet?.fleet_eci_km) ?? null
 
   return useMemo(() => {
     if (!detail || detail.ring_eci_km.length === 0) return []
     const total = detail.planes * detail.sats_per_plane
-    return Array.from({ length: total }, (_, i) => computeSatPosition(detail, simTimeS, i, sky))
-  }, [detail, simTimeS, sky])
+    return Array.from({ length: total },
+      (_, i) => computeSatPosition(detail, simTimeS, i, sky, fleetEci))
+  }, [detail, simTimeS, sky, fleetEci])
 }
 
 /**
@@ -132,10 +175,11 @@ export function useFleetPositions(): FleetSatPosition[] {
 export function useSatPosition(idx: number, simTimeS: number): FleetSatPosition | null {
   const detail = useTelemetryStore((s) => s.constellationDetail)
   const sky    = useSkyFrame()
+  const fleetEci = useTelemetryStore((s) => s.fleet?.fleet_eci_km) ?? null
   return useMemo(() => {
     if (!detail || detail.ring_eci_km.length === 0) return null
     const total = detail.planes * detail.sats_per_plane
     const clamped = Math.max(0, Math.min(total - 1, idx))
-    return computeSatPosition(detail, simTimeS, clamped, sky)
-  }, [detail, simTimeS, idx, sky])
+    return computeSatPosition(detail, simTimeS, clamped, sky, fleetEci)
+  }, [detail, simTimeS, idx, sky, fleetEci])
 }

@@ -21,6 +21,11 @@ import { EARTH_RADIUS_KM, eciToDisplay } from './orbitMath'
  * gliding along its SGP4-propagated position on the smoothly-extrapolated sim
  * clock — so the "satellite moving around the Earth" story survives Kit being
  * down. A chase camera keeps the satellite in frame the whole orbit.
+ *
+ * The Earth's spin is extrapolated the same way the satellite's position is:
+ * DayNightEarth / GmstWireframe sample `hooks/gmstClock` per frame, so the
+ * planet turns at a steady 0.2507°/s (time_scale 60) instead of standing still
+ * for a second and then stepping.
  */
 export function TwinOrbitFallback() {
   const simTime   = useSmoothSimTime()
@@ -30,7 +35,8 @@ export function TwinOrbitFallback() {
 
   // Sun + GMST come from the backend packet (hooks/useSkyFrame) — same frame
   // and same instant as the ECI km the rings and the reticle are drawn from.
-  const { sunDisplay, gmstRad } = useSkyFrame()
+  // The spin is read per frame inside the meshes; only the sun is needed here.
+  const { sunDisplay } = useSkyFrame()
   const sunDir = useMemo(
     () => (sunDisplay ? new Vector3(...sunDisplay).normalize() : null),
     [sunDisplay],
@@ -57,8 +63,8 @@ export function TwinOrbitFallback() {
       <Suspense fallback={null}>
         <Stars />
       </Suspense>
-      <DayNightEarth sunDir={sunDir} gmst={gmstRad} />
-      <GmstWireframe gmst={gmstRad} />
+      <DayNightEarth sunDir={sunDir} />
+      <GmstWireframe />
       {detail && detail.ring_eci_km.length > 0 && sat && (
         <ConstellationRings detail={detail} selectedPlane={sat.planeIdx} />
       )}

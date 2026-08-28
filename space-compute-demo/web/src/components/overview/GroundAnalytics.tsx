@@ -7,6 +7,7 @@ import {
   type CoverageSample, type EnergySample, type GroundConfig, type useOrbitDesign,
 } from '../../hooks/useOrbitDesign'
 import { colors } from '../../design/tokens'
+import { useTelemetryStore } from '../../store/useTelemetryStore'
 
 /**
  * Ground-station analytics for the Overview panel.
@@ -14,7 +15,7 @@ import { colors } from '../../design/tokens'
  * Charts driven by the live StatePacket:
  *   - CoverageCharts     — visible-sat count + aggregate bandwidth over time
  *                          (StatePacket.ground_target)
- *   - SolarHistogram     — solar collection per illumination-intensity bin
+ *   - SolarHistogram     — solar collection per collection-factor bin
  *                          (StatePacket.ground_target)
  *   - EnergyHarvestChart — whole-constellation solar harvest over the rolling
  *                          window (StatePacket.constellation — no ground
@@ -52,11 +53,14 @@ const VISIBLE_HUE = colors.accent
 
 /**
  * Real seconds represented by one telemetry sample. State is broadcast once per
- * sim second and the sim runs at `time_scale` (backend timebase.TIME_SCALE =
- * 60x); the sample stream carries no per-sample dt, so the demo scale is the
- * best source available to this component.
+ * sim second and the sim runs at `time_scale`, so one sample covers
+ * `time_scale` real seconds of collection. The live value is served on the
+ * constellation detail and is what `hooks/gmstClock.ts` spins the Earth by —
+ * read it rather than assuming, so raising the backend's TIME_SCALE cannot
+ * silently leave the kWh figure scaled by the old rate. The constant is only
+ * the pre-first-fetch fallback and matches the backend's current default.
  */
-const SAMPLE_REAL_S = 60
+const FALLBACK_SAMPLE_REAL_S = 60
 
 /**
  * Box height (px) below which a chart switches to dense chrome. Sized so the
@@ -138,7 +142,7 @@ export function CoverageCharts({ history, gt }: {
   )
 }
 
-function LineChart({ title, short, data, current, unit, color, digits, sub, foot, axisDigits = 0 }: {
+function LineChart({ title, short, data, current, unit, color, digits, sub, foot, axisDigits = 0, zeroBased = false }: {
   title: string; data: number[]; current: number
   unit: string; color: string; digits: number
   /** Shorter title, used when the box is too short for the full one. */
@@ -149,6 +153,9 @@ function LineChart({ title, short, data, current, unit, color, digits, sub, foot
   foot?: string
   /** Decimals on the min/max axis labels. */
   axisDigits?: number
+  /** Scale from 0 instead of the data's own min — for magnitude series where
+   *  "how close to full" is the question and a constant must read as flat. */
+  zeroBased?: boolean
 }) {
   const [boxRef, dense] = useDenseBox<HTMLDivElement>()
   const { path, lo, hi } = useMemo(() => {
@@ -156,16 +163,34 @@ function LineChart({ title, short, data, current, unit, color, digits, sub, foot
     if (n < 2) return { path: '', lo: 0, hi: 1 }
     let mn = Infinity, mx = -Infinity
     for (const v of data) { if (v < mn) mn = v; if (v > mx) mx = v }
-    if (mn === mx) { mn -= 1; mx += 1 }
-    const pad = (mx - mn) * 0.1
-    mn = Math.max(0, mn - pad); mx += pad
+    if (zeroBased) {
+      // Magnitude series (power, bandwidth, counts): the question is "how much
+      // of the maximum are we getting", so the floor is 0 and a steady value
+      // reads as a flat line high in the box. Auto-scaling these to their own
+      // min/max is what turned a 0.001 % ripple on a CONSTANT 171.9 kW fleet
+      // harvest into a dramatic climb across the whole plot.
+      mn = 0
+      mx = Math.max(mx, 1e-9) * 1.08
+    } else {
+      if (mn === mx) { mn -= 1; mx += 1 }
+      // Floor the window at 2 % of full scale so sensor noise on a flat series
+      // cannot be magnified to fill the box. Without this the y-axis silently
+      // becomes a microscope and every constant reads as a trend.
+      const minSpan = Math.max(Math.abs(mx) * 0.02, 1e-9)
+      if (mx - mn < minSpan) {
+        const mid = (mx + mn) / 2
+        mn = mid - minSpan / 2; mx = mid + minSpan / 2
+      }
+      const pad = (mx - mn) * 0.1
+      mn = Math.max(0, mn - pad); mx += pad
+    }
     const pts = data.map((v, i) => {
       const x = (i / (n - 1)) * 100
       const y = 100 - ((v - mn) / (mx - mn)) * 100
       return `${x.toFixed(2)},${y.toFixed(2)}`
     })
     return { path: `M ${pts.join(' L ')}`, lo: mn, hi: mx }
-  }, [data])
+  }, [data, zeroBased])
 
   return (
     <div
@@ -218,7 +243,10 @@ function LineChart({ title, short, data, current, unit, color, digits, sub, foot
 }
 
 // ---------------------------------------------------------------------------
-// Solar histogram — collection (W) per illumination-intensity bin. Header and
+// Solar histogram — collection (W) per collection-factor bin, the factor
+// being eclipse fraction × attitude-dependent panel incidence: exactly the
+// per-satellite term the fleet power model sums, so a dawn-dusk fleet reads
+// full instead of empty and an eclipsed sat sits in bin 0. Header and
 // axis row never shrink, the bar area absorbs whatever height is left and
 // imposes no minimum of its own; under DENSE_H the axis row folds away so the
 // bars keep a usable share of a starved slot.
@@ -264,7 +292,7 @@ export function SolarHistogram({ gt }: { gt: GroundTargetState | null }) {
                       background: SOLAR_HUE,
                       opacity: 0.35 + 0.65 * (b.lo / 100),
                     }}
-                    title={`${b.lo}–${b.hi} intensity · ${b.sat_count} sats · ${Math.round(b.collection_w)} W`}
+                    title={`${b.lo}–${b.hi} collection · ${b.sat_count} sats · ${Math.round(b.collection_w)} W`}
                   />
                   {b.sat_count > 0 && !dense && (
                     <span className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 text-[7px] tabular text-text-lo opacity-0 group-hover:opacity-100">
@@ -278,7 +306,7 @@ export function SolarHistogram({ gt }: { gt: GroundTargetState | null }) {
           {!dense && (
             <div className="mt-0.5 flex shrink-0 justify-between text-[8px] tabular text-text-lo">
               <span>0</span>
-              <span>solar illumination intensity →</span>
+              <span>collection factor (attitude × sun × eclipse) →</span>
               <span>100</span>
             </div>
           )}
@@ -295,11 +323,16 @@ export function SolarHistogram({ gt }: { gt: GroundTargetState | null }) {
 // Solar tab and it simply fills the box.
 // ---------------------------------------------------------------------------
 export function EnergyHarvestChart({ history }: { history: EnergySample[] }) {
-  // Cumulative energy: one sample = one sim second = SAMPLE_REAL_S real
+  // Cumulative energy: one sample = one sim second = `sampleRealS` real
   // seconds of collection. W·s → kWh.
+  const timeScale = useTelemetryStore((st) => st.constellationDetail?.time_scale)
+  const sampleRealS =
+    typeof timeScale === 'number' && Number.isFinite(timeScale) && timeScale > 0
+      ? timeScale
+      : FALLBACK_SAMPLE_REAL_S
   const kwh = useMemo(
-    () => (history.reduce((a, s) => a + s.w, 0) * SAMPLE_REAL_S) / 3_600_000,
-    [history],
+    () => (history.reduce((a, s) => a + s.w, 0) * sampleRealS) / 3_600_000,
+    [history, sampleRealS],
   )
   const series = useMemo(() => history.map((s) => s.w / 1000), [history])
   const last = history.length ? history[history.length - 1] : null
@@ -319,6 +352,7 @@ export function EnergyHarvestChart({ history }: { history: EnergySample[] }) {
           color={colors.ok}
           digits={2}
           axisDigits={1}
+          zeroBased
           sub={`${kwh.toFixed(2)} kWh`}
           foot={`${last.lit} lit`}
         />

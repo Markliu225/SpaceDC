@@ -3,7 +3,7 @@ import { useDemoStore } from '../store/demoStore'
 import type { DesignPresetInfo, DesignsResponse } from '../types/messages'
 
 const BACKEND_HTTP =
-  (import.meta.env.VITE_BACKEND_HTTP as string | undefined) ?? 'http://localhost:8001'
+  (import.meta.env.VITE_BACKEND_HTTP as string | undefined) ?? 'http://127.0.0.1:8001'
 
 /** Absolute URL for a design's preview thumbnail (backend-relative path). */
 export function previewSrc(design: DesignPresetInfo): string {

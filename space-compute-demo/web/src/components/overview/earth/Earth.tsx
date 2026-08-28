@@ -15,6 +15,13 @@ import { useSunDisplay } from './sky'
  * the same vector the terminator reference ring and the orbit rings are drawn
  * against.
  *
+ * The spin is sampled with `gmstNow()` INSIDE this useFrame, not read off a
+ * render-time prop: the backend broadcasts at 1 Hz, so the raw value holds
+ * still for ~60 frames and then steps 0.2507° — visible as a stutter, not a
+ * rotation. `hooks/gmstClock` anchors on each broadcast and fills the gap at
+ * the true sidereal rate, and because it is sampled in the render loop rather
+ * than through React state, the smoothing costs this tree zero re-renders.
+ *
  * Before the first broadcast the sky frame is UNKNOWN, and `uSunKnown = 0`
  * shows the globe evenly lit rather than drawing a made-up terminator.
  *
@@ -24,7 +31,7 @@ import { useSunDisplay } from './sky'
 export function Earth() {
   const matRef  = useRef<THREE.ShaderMaterial>(null!)
   const meshRef = useRef<THREE.Mesh>(null!)
-  const { sun, gmstRad, live } = useSunDisplay()
+  const { sun, gmstNow, live } = useSunDisplay()
 
   const uniforms = useMemo(
     () => ({
@@ -46,7 +53,7 @@ export function Earth() {
       mat.uniforms.uSunKnown.value = live ? 1 : 0
       ;(mat.uniforms.uSunDir.value as THREE.Vector3).copy(sun)
     }
-    if (meshRef.current) meshRef.current.rotation.y = gmstRad
+    if (meshRef.current) meshRef.current.rotation.y = gmstNow()
   })
 
   return (

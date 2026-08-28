@@ -222,7 +222,7 @@ function GeometryControls() {
 }
 
 const BACKEND_HTTP =
-  (import.meta.env.VITE_BACKEND_HTTP as string | undefined) ?? 'http://localhost:8001'
+  (import.meta.env.VITE_BACKEND_HTTP as string | undefined) ?? 'http://127.0.0.1:8001'
 
 /** Roll-out array control (redwire only): the flexible blanket wings reel
  * out of / into the bay edges. POST /solar_deploy animates the fraction on

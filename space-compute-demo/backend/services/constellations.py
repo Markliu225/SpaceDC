@@ -909,22 +909,37 @@ def ground_analytics(
     gs_lat: float, gs_lon: float,
     effective_mask_deg: float,
     per_sat_mbps: float,
-    solar_peak_w: float,
+    array_scale_w: float,
     solar_bin: int,
-    sun_unit: tuple[float, float, float] | None = None,
+    harvest_factors: list[float],
 ) -> dict:
     """Per-tick ground-station analytics over the whole fleet (positions +
     sub-points already computed by the caller). Returns visibility, aggregate
     bandwidth for the active band, an elevation CDF (for the band-comparison
     curves) and a solar-intensity histogram (per-bin sat count + collection).
 
-    Solar intensity is the illumination geometry factor 0..100 =
-    100·max(0, r̂·ŝ) — a satellite at the subsolar point reads 100, at the
-    terminator/night 0 — a visualization metric independent of the physics
-    array model. Binned by `solar_bin` (5 or 10). `sun_unit` should be the
-    real Sun direction for the current tick (sun_unit_at); the fixed scene
-    light remains only as a fallback."""
-    sx, sy, sz = sun_unit if sun_unit is not None else SUN_DIR_ECI
+    Solar intensity 0..100 is 100 × `harvest_factors[i]`, the caller's PHYSICS
+    collection factor for that satellite: visible solar-disc fraction × the
+    attitude-dependent panel incidence (state_engine._panel_incidence), i.e.
+    exactly the per-sat term the whole-fleet harvest and the tracked
+    satellite's own solar_input_w are built on. Because the eclipse fraction
+    is folded in, a satellite in shadow lands in bin 0 collecting nothing and
+    Σ collection_w is identically FleetSnapshot.solar_total_w. It used to be
+    the bare incidence, which credited eclipsed satellites with the power
+    their panels would have made in daylight; before that it was an independent
+    visualisation metric, 100·max(0, r̂·ŝ) — a nadir-array approximation that
+    read ~0 for an ENTIRE dawn-dusk orbit, where the Sun is perpendicular to
+    the orbit plane and r̂ lies in it, and so told the operator of the
+    best-case power orbit that the fleet was collecting nothing. This is now
+    the same number the power model uses; `array_scale_w` is the shared
+    non-geometric array chain (state_engine._array_scale_w), so a bin's
+    collection_w is directly comparable to FleetSnapshot.solar_total_w.
+
+    The histogram is scaled once per tick while solar_total_w is re-scaled on
+    every read, so the two agree to within one tick of η(T) drift (~1% during
+    a thermal transient, well under 0.1% once the structure temperature
+    settles) — everything else about them is the same computation. Binned by
+    `solar_bin` (5 or 10)."""
     cdf = [0] * len(_CDF_MASKS)
     visible: list[int] = []
     best = -90.0
@@ -933,7 +948,7 @@ def ground_analytics(
     bin_count = [0] * nbins
     bin_coll = [0.0] * nbins
 
-    for i, ((x, y, z), (la, lo, al)) in enumerate(zip(fleet_pos_km, fleet_lla)):
+    for i, (_pos, (la, lo, al)) in enumerate(zip(fleet_pos_km, fleet_lla)):
         if al <= 0.0:  # (0,0,0) sgp4-error sentinel — skip dead sats
             continue
         e = elevation_deg(la, lo, al, gs_lat, gs_lon)
@@ -944,11 +959,10 @@ def ground_analytics(
                 cdf[mi] += 1
         if e >= effective_mask_deg:
             visible.append(i)
-        r = math.sqrt(x * x + y * y + z * z) or 1.0
-        intensity = max(0.0, (x * sx + y * sy + z * sz) / r) * 100.0
-        bi = min(nbins - 1, int(intensity // solar_bin))
+        inc = harvest_factors[i] if i < len(harvest_factors) else 0.0
+        bi = min(nbins - 1, int((inc * 100.0) // solar_bin))
         bin_count[bi] += 1
-        bin_coll[bi] += (intensity / 100.0) * solar_peak_w
+        bin_coll[bi] += inc * array_scale_w
 
     solar_hist = [
         {"lo": b * solar_bin, "hi": (b + 1) * solar_bin,
@@ -1095,18 +1109,36 @@ def propagate_tracked_rv(
     return (float(r[0]), float(r[1]), float(r[2])), (float(v[0]), float(v[1]), float(v[2]))
 
 
-def propagate_fleet(preset: ConstellationPreset, sim_t_s: float) -> list[tuple[float, float, float]]:
-    """Return ECI km positions for every sat in the preset at sim_t."""
+def propagate_fleet_rv(
+    preset: ConstellationPreset, sim_t_s: float,
+) -> list[tuple[tuple[float, float, float], tuple[float, float, float]]]:
+    """ECI km position AND km/s velocity for every sat in the preset at sim_t.
+
+    Satrec.sgp4() returns r and v from the same call, so velocity costs
+    nothing extra — and the fleet power model needs it: the ram and
+    orbit-normal panel modes project onto v̂ and r̂×v̂ (state_engine.
+    _panel_incidence). It used to be discarded, which is why the whole-fleet
+    harvest could only ever model a nadir-riding array.
+
+    A failed sat yields the ((0,0,0), (0,0,0)) sentinel, position-identical to
+    the one propagate_fleet has always emitted."""
     fleet = preset.build_fleet()
     jd, fr = timebase.jd_at(sim_t_s)
-    pts: list[tuple[float, float, float]] = []
+    out: list[tuple[tuple[float, float, float], tuple[float, float, float]]] = []
     for sat in fleet:
-        e, r, _v = sat.sgp4(jd, fr)
+        e, r, v = sat.sgp4(jd, fr)
         if e:
-            pts.append((0.0, 0.0, 0.0))
+            out.append(((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)))
         else:
-            pts.append((float(r[0]), float(r[1]), float(r[2])))
-    return pts
+            out.append(((float(r[0]), float(r[1]), float(r[2])),
+                        (float(v[0]), float(v[1]), float(v[2]))))
+    return out
+
+
+def propagate_fleet(preset: ConstellationPreset, sim_t_s: float) -> list[tuple[float, float, float]]:
+    """Return ECI km positions for every sat in the preset at sim_t —
+    propagate_fleet_rv with the velocities dropped."""
+    return [pos for (pos, _v) in propagate_fleet_rv(preset, sim_t_s)]
 
 
 def count_eclipse(positions_km: list[tuple[float, float, float]],

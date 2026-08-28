@@ -240,9 +240,15 @@ class FleetSnapshot(BaseModel):
     # (Kit ring rebuild, web ring detail) know to refetch. 0 for built-ins.
     design_rev: int = 0
     # Whole-constellation solar harvest at this instant — sum over every sat
-    # of (visible solar-disc fraction) × max(0, r̂·ŝ) × the design's peak
-    # array power. Eclipse INCLUDED (unlike GroundTargetState.solar_hist), so
-    # the Overview energy chart shows the real day/night sawtooth.
+    # of (visible solar-disc fraction) × (panel incidence for the commanded
+    # attitude) × the active design's array chain. SAME array model as the
+    # tracked satellite's solar_input_w (state_engine._panel_incidence /
+    # _array_scale_w), so a one-satellite fleet reads exactly its
+    # solar_input_w; it is NOT the old max(0, r̂·ŝ) nadir approximation, which
+    # collapsed to ~0 across a dawn-dusk orbit that is in permanent sunlight.
+    # Eclipse INCLUDED, so the Overview energy chart shows the real day/night
+    # sawtooth; GroundTargetState.solar_hist bins the same per-sat collection
+    # factor, so its bars sum back to this number.
     solar_total_w: float = 0.0
     solar_lit_sats: int = 0      # sats with sun_visible_fraction > 0
     # --- the sky frame this packet's fleet ECI lives in ---------------------
@@ -257,6 +263,15 @@ class FleetSnapshot(BaseModel):
     # Earth MESH by this about ECI +Z and leave the Sun inertial — the light
     # must not be the thing that spins.
     gmst_rad: float = 0.0
+    #: Per-satellite TEME position, km, SAME frame and instant as sun_unit_teme
+    #: and gmst_rad above — the fleet exactly as SGP4 propagated it this tick.
+    #: Capped at FLEET_ECI_CAP entries so a 1584-sat preset cannot bloat the
+    #: 1 Hz broadcast; clients past the cap fall back to reconstructing.
+    #: Sent because clients CANNOT rebuild these: a client reconstructing from
+    #: one ring plus a Walker phase was a median 50 km out on a Walker and
+    #: 4 459 km out on an SSO stack, whose shells share a RAAN and each have
+    #: their own altitude, inclination AND orbital period.
+    fleet_eci_km: list[tuple[float, float, float]] = Field(default_factory=list)
 
 
 class CompareMetrics(BaseModel):
@@ -281,7 +296,15 @@ class CompareLiveVariant(BaseModel):
 
 
 class SolarHistBin(BaseModel):
-    """One bar of the solar-intensity histogram (Overview Solar tab)."""
+    """One bar of the solar-intensity histogram (Overview Solar tab).
+
+    Intensity is 100 × the PHYSICS collection factor for that satellite:
+    visible solar-disc fraction × the panel incidence for the commanded
+    attitude (state_engine._panel_incidence) — the same per-sat term
+    FleetSnapshot.solar_total_w is built from, not a separate visualisation
+    metric. An eclipsed sat therefore lands in bin 0, and Σ collection_w sums
+    back to solar_total_w (to within one tick of η(T) drift: the bars are
+    scaled per tick, the aggregate on every read)."""
     lo: int            # intensity lower bound (inclusive), 0..100
     hi: int            # upper bound (exclusive)
     sat_count: int

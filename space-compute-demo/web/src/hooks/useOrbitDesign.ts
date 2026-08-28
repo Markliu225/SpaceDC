@@ -7,7 +7,7 @@ import type {
 } from '../types/messages'
 
 const BACKEND_HTTP =
-  (import.meta.env.VITE_BACKEND_HTTP as string | undefined) ?? 'http://localhost:8001'
+  (import.meta.env.VITE_BACKEND_HTTP as string | undefined) ?? 'http://127.0.0.1:8001'
 
 /** Constellation pattern. `custom` (TLE import) is UI-only — it is never
  *  POSTed, because the backend answers it with a 422. */

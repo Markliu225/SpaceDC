@@ -3,7 +3,7 @@ import { useDemoStore } from '../store/demoStore'
 import type { WorkloadProfileInfo } from '../types/messages'
 
 const BACKEND_HTTP =
-  (import.meta.env.VITE_BACKEND_HTTP as string | undefined) ?? 'http://localhost:8001'
+  (import.meta.env.VITE_BACKEND_HTTP as string | undefined) ?? 'http://127.0.0.1:8001'
 
 /**
  * useWorkloadProfiles — the workload selector's data source. `refresh()`
