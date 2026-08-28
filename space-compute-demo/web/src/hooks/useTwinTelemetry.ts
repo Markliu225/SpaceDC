@@ -22,6 +22,9 @@ export interface TwinSeries {
   battery_soc: number[]
   temp_c: number[]
   gpu_util: number[]
+  /** Hottest GPU die in the bay (T_plate + draw x R_th). Falls back to the
+   *  plate temperature when no analytic job is running. */
+  die_temp_c: number[]
 }
 
 export interface TwinScar {
@@ -41,6 +44,13 @@ export interface CompareOverlayVariant {
   value: string | number
   label: string
   series: TwinSeries
+  /** Plate temperature at which THIS variant's card starts throttling on the
+   *  current job - constant per variant, drawn as a reference line on the
+   *  Temperature chart so the reader sees WHICH card gives out first and
+   *  WHEN the plate curve crosses it. 0 when the variant has no thermal model. */
+  throttle_onset_c: number
+  /** Latest sample: is this variant thermally limited right now. */
+  throttling: boolean
 }
 
 export interface CompareOverlay {
@@ -58,6 +68,7 @@ export interface TwinTelemetrySnapshot {
     battery_soc: number
     temp_c: number
     gpu_util: number
+    die_temp_c: number
     sunlit: boolean
   }
   /** Rolling buffers, 0..HISTORY_LEN-1, newest at end. */
@@ -186,6 +197,7 @@ function backendSample(sat: SatelliteState): TwinTelemetrySnapshot['current'] {
     battery_soc: sat.battery_soc,
     temp_c:      sat.temperature_c,
     gpu_util:    sat.gpu_utilization,
+    die_temp_c:  sat.workload_detail?.gpu_die_temp_c ?? sat.temperature_c,
     sunlit:      sat.sunlit,
   }
 }
@@ -199,6 +211,7 @@ function flatSeries(s: TwinTelemetrySnapshot['current']): TwinSeries {
     battery_soc: new Array<number>(HISTORY_LEN).fill(s.battery_soc),
     temp_c:      new Array<number>(HISTORY_LEN).fill(s.temp_c),
     gpu_util:    new Array<number>(HISTORY_LEN).fill(s.gpu_util),
+    die_temp_c:  new Array<number>(HISTORY_LEN).fill(s.die_temp_c),
   }
 }
 
@@ -221,6 +234,7 @@ function backfillSeries(
   const battery_soc = new Array<number>(HISTORY_LEN)
   const temp_c      = new Array<number>(HISTORY_LEN)
   const gpu_util    = new Array<number>(HISTORY_LEN)
+  const die_temp_c  = new Array<number>(HISTORY_LEN)
   for (let i = 0; i < HISTORY_LEN; i++) {
     const ageS = HISTORY_LEN - 1 - i
     if (ageS === 0) {
@@ -229,6 +243,7 @@ function backfillSeries(
       battery_soc[i] = liveSeed.battery_soc
       temp_c[i]      = liveSeed.temp_c
       gpu_util[i]    = liveSeed.gpu_util
+      die_temp_c[i]  = liveSeed.die_temp_c
     } else {
       const s = sample(Math.max(0, simT - ageS))
       solar_w[i]     = s.solar_w
@@ -236,9 +251,10 @@ function backfillSeries(
       battery_soc[i] = s.battery_soc
       temp_c[i]      = s.temp_c
       gpu_util[i]    = s.gpu_util
+      die_temp_c[i]  = s.die_temp_c
     }
   }
-  return { solar_w, payload_w, battery_soc, temp_c, gpu_util }
+  return { solar_w, payload_w, battery_soc, temp_c, gpu_util, die_temp_c }
 }
 
 /** Append one new sample to each buffer + age scars (shift their index).
@@ -264,6 +280,7 @@ function advance(
     battery_soc: push(prev.series.battery_soc, sample.battery_soc),
     temp_c:      push(prev.series.temp_c,      sample.temp_c),
     gpu_util:    push(prev.series.gpu_util,    sample.gpu_util),
+    die_temp_c:  push(prev.series.die_temp_c,  sample.die_temp_c),
   }
 
   // Each scar's index shifts left by 1 (the buffer scrolled). Drop scars
@@ -306,7 +323,11 @@ function advance(
             battery_soc: growInto(base?.battery_soc ?? [], v.battery_soc),
             temp_c:      growInto(base?.temp_c ?? [],      v.temperature_c),
             gpu_util:    growInto(base?.gpu_util ?? [],    v.gpu_utilization),
+            die_temp_c:  growInto(base?.die_temp_c ?? [],
+                                  v.gpu_die_temp_c > 0 ? v.gpu_die_temp_c : v.temperature_c),
           },
+          throttle_onset_c: v.throttle_onset_c,
+          throttling: v.thermal_throttled > 0,
         }
       }),
     }
@@ -360,5 +381,6 @@ function deriveSample(cfg: SatelliteConfig, simT: number) {
     Math.min(1, 0.78 + 0.18 * Math.sin(simT / 90) + drift * 5),
   )
 
-  return { solar_w, payload_w, battery_soc, temp_c, gpu_util, sunlit }
+  // No die model offline - the plate temperature stands in.
+  return { solar_w, payload_w, battery_soc, temp_c, gpu_util, die_temp_c: temp_c, sunlit }
 }

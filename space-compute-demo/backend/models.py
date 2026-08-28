@@ -6,7 +6,7 @@ from typing import Any, Literal, Optional
 from pydantic import BaseModel, Field
 
 OrbitType = Literal["LEO", "SSO", "MEO", "GEO"]
-GpuType = Literal["H100", "H200", "B200", "MI300X"]
+GpuType = Literal["V100", "A100", "H200", "B200"]
 AttitudeMode = Literal["free", "sun", "nadir", "velocity", "inertial"]
 Mode = Literal["on_orbit", "ground_only"]
 TaskPhase = Literal[
@@ -27,6 +27,20 @@ class GpuMixItem(BaseModel):
     tflops_per_gpu: float = 0.0
     throughput_per_gpu: float = 0.0
     throughput_total: float = 0.0
+    #: Junction temperature of THIS card type: T_struct + draw × R_th. Cards
+    #: share a cold plate but not a die temperature.
+    gpu_die_temp_c: float = 0.0
+    #: Clock fraction this group is actually holding (1.0 = unthrottled).
+    freq_frac: float = 1.0
+    #: True while this group's own thermal ceiling is cutting its draw.
+    thermal_throttled: bool = False
+    thermal_runaway: bool = False
+    #: Structure temperature at which THIS card type starts throttling on the
+    #: CURRENT job: T_throttle − (unthrottled draw) × R_th. Different power and
+    #: different R_th per card type means these differ, so a mixed bay throttles
+    #: in a definite ORDER as the plate warms — the whole point of the readout.
+    #: 0.0 when the group cannot throttle on this job (no thermal model).
+    throttle_onset_c: float = 0.0
 
 
 class GpuJobDetail(BaseModel):
@@ -139,7 +153,7 @@ class SatelliteState(BaseModel):
     solar_incidence: float = 0.0
     payload_power_w: float = 0.0
     platform_power_w: float = 0.0
-    gpu_type: GpuType = "H100"
+    gpu_type: GpuType = "H200"
     gpu_utilization: float = 0.0
     temperature_c: float = 25.0
     # Battery: SOC (0..1), total capacity (Wh), and instantaneous net power
@@ -293,6 +307,20 @@ class CompareLiveVariant(BaseModel):
     temperature_c: float = 0.0
     gpu_utilization: float = 0.0
     tokens_per_s: float = 0.0
+    radiator_power_w: float = 0.0
+    battery_charge_w: float = 0.0
+    #: Hottest die in this variant's bay (T_plate + draw x R_th).
+    gpu_die_temp_c: float = 0.0
+    #: Clock fraction the bay is holding (1.0 = unthrottled).
+    freq_frac: float = 1.0
+    #: 1.0 while this variant is thermally limited, else 0.0. A float so the
+    #: comparison can chart it as a step alongside the continuous metrics.
+    thermal_throttled: float = 0.0
+    #: Plate temperature at which THIS variant's card starts throttling on the
+    #: current job. Constant per variant, so on a GPU comparison it draws four
+    #: flat lines whose ORDER is the answer to "which card gives out first" —
+    #: and the die-temp curves crossing them show WHEN each one does.
+    throttle_onset_c: float = 0.0
 
 
 class SolarHistBin(BaseModel):
@@ -403,7 +431,7 @@ class SatelliteConfig(BaseModel):
     """Reconfigurable hardware loadout for the tracked satellite. Drives
     both backend physics (solar / payload / thermal recompute) and
     Omniverse VariantSet selection on the Kit side."""
-    gpu: GpuType = "H100"
+    gpu: GpuType = "H200"
     solar_material: SolarMaterial = "Si"
     solar_size: SolarSize = "M"
     radiator_material: RadiatorMaterial = "Aluminum"

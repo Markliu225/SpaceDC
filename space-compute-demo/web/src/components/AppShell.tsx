@@ -28,7 +28,7 @@ export function AppShell() {
   return (
     <div className="shell">
       <header className="shell__header">
-        <div className="shell__brand">SDCTwin</div>
+        <div className="shell__brand">OrbitWiz</div>
         <nav className="shell__nav">
           <NavLink to="/" end>Overview</NavLink>
           <NavLink to="/satellite">Satellite Twin</NavLink>

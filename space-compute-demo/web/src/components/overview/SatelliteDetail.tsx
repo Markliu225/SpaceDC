@@ -62,7 +62,7 @@ interface Bar {
   tone?: 'ok' | 'warn' | 'err'
 }
 
-const GPU_CYCLE = ['H100', 'H200', 'B200', 'MI300X'] as const
+const GPU_CYCLE = ['V100', 'A100', 'H200', 'B200'] as const
 const TASK_PHASES = ['idle', 'created', 'capturing', 'inferencing', 'packaging', 'downlink', 'delivered'] as const
 
 /** Derive the per-sat virtual telemetry from the live fleet sat + sim time.

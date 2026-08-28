@@ -48,7 +48,7 @@ export function SatelliteBuilder() {
   // render where the brush belongs to the previous platform.
   const [brush, setBrush] = useState<GpuType | null | undefined>(undefined)
   const [error, setError] = useState<string | null>(null)
-  const activeBrush = brush === undefined ? (asset?.default_gpu ?? 'H100') : brush
+  const activeBrush = brush === undefined ? (asset?.default_gpu ?? 'H200') : brush
 
   // Open on whatever the satellite is already flying — and when that IS one
   // of the catalogued platforms, seed the whole draft from the live loadout so

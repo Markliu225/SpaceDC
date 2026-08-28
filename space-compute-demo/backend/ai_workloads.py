@@ -57,14 +57,17 @@ from models import GpuJobDetail
 
 # --- GPU datasheet table (dense tensor TFLOPS) ------------------------------
 GPU_SPECS: dict[str, dict[str, float]] = {
-    "H100":   {"bf16_tflops": 989.0,  "fp8_tflops": 1979.0, "hbm_gb": 80.0,
-               "hbm_tbps": 3.35, "tdp_w": 700.0},
-    "H200":   {"bf16_tflops": 989.0,  "fp8_tflops": 1979.0, "hbm_gb": 141.0,
-               "hbm_tbps": 4.80, "tdp_w": 700.0},
-    "B200":   {"bf16_tflops": 2250.0, "fp8_tflops": 4500.0, "hbm_gb": 192.0,
-               "hbm_tbps": 8.00, "tdp_w": 1000.0},
-    "MI300X": {"bf16_tflops": 1307.0, "fp8_tflops": 2615.0, "hbm_gb": 192.0,
-               "hbm_tbps": 5.30, "tdp_w": 750.0},
+    # Four generations on purpose: the bay can mix them, and because power,
+    # R_th and T_throttle all differ, they cross their thermal ceilings in a
+    # definite ORDER as the cold plate warms.
+    "V100":  {"bf16_tflops": 125.0,  "fp8_tflops": 125.0,  "hbm_gb": 32.0,
+              "hbm_tbps": 0.90, "tdp_w": 250.0},
+    "A100":  {"bf16_tflops": 312.0,  "fp8_tflops": 312.0,  "hbm_gb": 80.0,
+              "hbm_tbps": 2.039, "tdp_w": 400.0},
+    "H200":  {"bf16_tflops": 989.0,  "fp8_tflops": 1979.0, "hbm_gb": 141.0,
+              "hbm_tbps": 4.80, "tdp_w": 700.0},
+    "B200":  {"bf16_tflops": 2250.0, "fp8_tflops": 4500.0, "hbm_gb": 192.0,
+              "hbm_tbps": 8.00, "tdp_w": 1000.0},
 }
 
 # --- Model catalog -----------------------------------------------------------

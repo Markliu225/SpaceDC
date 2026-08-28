@@ -97,6 +97,15 @@ def _restore_geometry_from_disk() -> None:
         slots = params.get("gpu_slots")
         if isinstance(slots, list) and any(slots):
             engine.set_config({"gpu_slots": slots}, mark_custom=False)
+            migrated = engine.satellite_config.gpu_slots
+            if migrated and list(migrated) != list(slots):
+                # set_config re-mapped retired card ids; write the current
+                # catalog's names back so the next boot does not re-migrate.
+                params["gpu_slots"] = list(migrated)
+                _TWIN_PARAMS.write_text(json.dumps(params, indent=2),
+                                        encoding="utf-8")
+                log.info("twin loadout migrated on disk: %s -> %s",
+                         slots, list(migrated))
         log.info("twin geometry restored from disk: %s (slots=%s)",
                  engine.twin_geometry.model_dump(),
                  engine.satellite_config.gpu_slots or "uniform")

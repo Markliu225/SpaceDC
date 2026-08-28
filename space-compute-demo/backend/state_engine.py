@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import math
+from functools import lru_cache as _lru_cache
 import time
 from typing import Any, Callable, Optional, get_args
 
@@ -39,6 +40,7 @@ import satellite_assets as _assets
 from services import orbit_catalog
 from services import constellations as _consts
 from services import geodyn as _geodyn
+import llm_perf as _perf
 from services import elements as _elements
 from services import timebase as _timebase
 
@@ -90,11 +92,23 @@ def _ang_dist(lat_a: float, lon_a: float, lat_b: float, lon_b: float) -> float:
 # consistently against the workload panel's effective-TFLOPS numbers.
 # (H200 shares the GH100 compute die with H100 — it differs in HBM, not PF.)
 _GPU_TABLE: dict[str, dict[str, float]] = {
-    "H100":   {"pflops": 1.98, "tdp_w": 700.0,  "cost_k": 30.0},
-    "H200":   {"pflops": 1.98, "tdp_w": 700.0,  "cost_k": 40.0},
-    "B200":   {"pflops": 4.50, "tdp_w": 1000.0, "cost_k": 45.0},
-    "MI300X": {"pflops": 2.62, "tdp_w": 750.0,  "cost_k": 28.0},
+    "V100":  {"pflops": 0.13, "tdp_w": 250.0,  "cost_k":  8.0},
+    "A100":  {"pflops": 0.31, "tdp_w": 400.0,  "cost_k": 15.0},
+    "H200":  {"pflops": 1.98, "tdp_w": 700.0,  "cost_k": 40.0},
+    "B200":  {"pflops": 4.50, "tdp_w": 1000.0, "cost_k": 45.0},
 }
+#: Fallback card when a saved config names a type no longer offered.
+_DEFAULT_GPU = "H200"
+#: Retired catalog ids -> the current part they map onto. Anything else that
+#: is not in _GPU_TABLE falls back to _DEFAULT_GPU.
+_LEGACY_GPU_IDS = {"H100": "H200", "MI300X": "B200"}
+
+
+def _migrate_gpu_id(gpu_id: object) -> str:
+    g = str(gpu_id)
+    if g in _GPU_TABLE:
+        return g
+    return _LEGACY_GPU_IDS.get(g, _DEFAULT_GPU)
 _GPU_CARDS_PER_SAT = 8
 # Payload-bay ceiling — the biggest hull in the catalog (twin_truss) carries
 # 24 rack slots; anything beyond that is a malformed request, not a design.
@@ -114,6 +128,35 @@ _SOLAR_MAT_TABLE = {
     "Perovskite": {"efficiency": 0.38, "temp_coeff_per_k": -0.0030, "density_kg_m2": 1.8},
 }
 _SOLAR_TEMP_REF_C = 25.0
+
+
+def _array_temp_c(illum: float, incidence: float, s_w_m2: float,
+                  r_km: float) -> float:
+    """Equilibrium temperature (°C) of the DEPLOYED solar array.
+
+    The array is a thin blanket on a boom: it is thermally decoupled from the
+    bus, radiates from BOTH faces, and settles wherever its own balance puts
+    it. It does NOT sit at the bus structure temperature, which is what this
+    model used to assume — and since the structure is heated by GPU waste
+    heat, swapping a GPU moved the array's eta(T) derate by up to 31 % and so
+    changed "solar input" in a COMPUTE comparison. That coupling is not real.
+
+        (alpha - eta_elec) * S * incidence * illum + q_earth
+            = (eps_front + eps_back) * sigma * T^4
+
+    The electrical term is subtracted because converted power leaves as
+    electricity, not heat. In eclipse only the Earth IR term remains, so the
+    blanket runs cold — which is the real reason a dawn-dusk orbit's array
+    sits at a steady warm temperature instead of thermal-cycling."""
+    ALPHA = 0.80          # solar absorptance of a cell stack under coverglass
+    ETA_ELEC = 0.20       # fraction leaving as electricity, not heat
+    EPS_TOT = 1.70        # front + back IR emittance (0.85 each)
+    EARTH_IR_W_M2 = 237.0
+    vf = _geodyn.earth_view_factor(max(r_km, _geodyn.WGS84_A_KM + 1.0))
+    q_in = ((ALPHA - ETA_ELEC) * s_w_m2 * max(0.0, incidence) * max(0.0, illum)
+            + ALPHA * EARTH_IR_W_M2 * vf)
+    t_k = (q_in / (EPS_TOT * 5.67e-8)) ** 0.25 if q_in > 0.0 else 3.0
+    return t_k - 273.15
 
 
 def _solar_temp_factor(s_mat: dict, temp_c: float) -> float:
@@ -192,19 +235,53 @@ def _slot_groups(cfg: SatelliteConfig, fallback_gpu: str,
     return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
 
 
+_COLD_REF_C = -50.0   # far below any T_onset, so nothing throttles there
+
+
+@_lru_cache(maxsize=512)
+def _unthrottled_draw_w(gpu_id: str, job_key: str, util_q: int, n: int) -> float:
+    """Draw per card with the thermal ceiling lifted, at the same operating
+    point. Solved once per (card, job, quantised util, count) and cached — the
+    onset temperature needs the draw the job WOULD pull, which is not
+    recoverable from a throttled sample (there, draw == the ceiling)."""
+    util = util_q / 100.0
+    _d, w = _group_operating_point(gpu_id, job_key, util, n, _COLD_REF_C)
+    return w
+
+
+def _throttle_onset_c(gpu_id: str, job_key: str, util: float, n: int) -> float:
+    """Structure temperature at which this card type begins to throttle."""
+    g = _perf.GPU_PERF.get(gpu_id)
+    if g is None:
+        return 0.0
+    draw = _unthrottled_draw_w(gpu_id, job_key, int(round(util * 100)), n)
+    return g.t_throttle_c - draw * g.r_th_k_per_w
+
+
 def _group_operating_point(gpu_id: str, job_key: str, util: float, n: int,
                            t_struct_c: Optional[float]):
     """(typed-job detail, realized watts per card) for ONE homogeneous group.
 
     The single place the EPS budget curve lives, so the live tick, the design
     check and workload_adaptation can never drift apart."""
-    gpu = _GPU_TABLE.get(gpu_id, _GPU_TABLE["H100"])
+    gpu = _GPU_TABLE.get(gpu_id, _GPU_TABLE[_DEFAULT_GPU])
     cap_w = gpu["tdp_w"] * (_IDLE_FRAC + (1.0 - _IDLE_FRAC) * util)
     det = _ai.job_detail(gpu_id, job_key, util, cap_w, n, t_struct_c=t_struct_c)
     # LLM blocks come back with the REALIZED draw (decode sits below the cap on
     # the bandwidth plateau); everything else spends its budget.
-    card_w = (det.power_w_per_gpu
-              if det is not None and det.engine == "analytic" else cap_w)
+    if det is not None and det.engine == "analytic":
+        return det, det.power_w_per_gpu
+    # MFU path (vision / idle / any job llm_perf cannot solve). It used to take
+    # `cap_w` verbatim, so those jobs NEVER throttled: a bay could sit at 8 967 W
+    # with the structure at 90 °C, where the thermal limit is already NEGATIVE.
+    # Silicon does not care which model is running — apply the same
+    # (T_throttle - T_struct)/R_th ceiling here, floored at the idle draw.
+    card_w = cap_w
+    if t_struct_c is not None:
+        g = _perf.GPU_PERF.get(gpu_id)
+        if g is not None:
+            card_w = max(g.p_static_w * 1.02,
+                         min(cap_w, _perf.thermal_power_limit_w(g, t_struct_c)))
     return det, card_w
 
 
@@ -221,16 +298,41 @@ def _bay_job_detail(groups: list[tuple[str, int]], job_key: str, util: float,
     Returns (merged detail or None, total payload watts)."""
     per_group: list[tuple[str, int, Any]] = []
     payload_w = 0.0
+    cap_total_w = 0.0
     for gpu_id, n in groups:
         det, card_w = _group_operating_point(gpu_id, job_key, util, n, t_struct_c)
         payload_w += card_w * n
+        gpu = _GPU_TABLE.get(gpu_id, _GPU_TABLE[_DEFAULT_GPU])
+        cap_total_w += gpu["tdp_w"] * (_IDLE_FRAC + (1.0 - _IDLE_FRAC) * util) * n
         per_group.append((gpu_id, n, det))
+    # How much of the power the schedule ASKED for the bay actually got. 1.0
+    # when nothing is throttling; below 1.0 exactly when some group's thermal
+    # ceiling cut it — and since each card type has its own T_throttle and
+    # R_th, groups cross that ceiling at DIFFERENT structure temperatures, so
+    # this ramps down in steps rather than all at once.
+    _bay_job_detail.last_realized_frac = (payload_w / cap_total_w
+                                          if cap_total_w > 0.0 else 1.0)
     # An unknown job key resolves to None for every group alike (the job table
     # is GPU-independent) — report no detail, exactly as the single-GPU path.
     if not per_group or any(d is None for _, _, d in per_group):
         return None, payload_w
     if len(per_group) == 1:
-        return per_group[0][2], payload_w
+        # Homogeneous bay: the group IS the satellite, but still publish a
+        # one-entry mix so the per-card thermal readout (die temp, clock
+        # fraction, and above all the throttle ONSET) exists in every
+        # configuration instead of appearing only once a bay is mixed.
+        g, n, d = per_group[0]
+        return d.model_copy(update={"mix": [GpuMixItem(
+            gpu=g, count=n,
+            power_w_per_gpu=d.power_w_per_gpu, heat_w_per_gpu=d.heat_w_per_gpu,
+            tflops_per_gpu=d.tflops_per_gpu,
+            throughput_per_gpu=d.throughput_per_gpu,
+            throughput_total=d.throughput_total,
+            gpu_die_temp_c=d.gpu_die_temp_c, freq_frac=d.freq_frac,
+            thermal_throttled=d.thermal_throttled,
+            thermal_runaway=d.thermal_runaway,
+            throttle_onset_c=round(_throttle_onset_c(g, job_key, util, n), 1),
+        )]}), payload_w
 
     total = sum(n for _, n, _ in per_group)
 
@@ -261,14 +363,20 @@ def _bay_job_detail(groups: list[tuple[str, int]], job_key: str, util: float,
                            heat_w_per_gpu=d.heat_w_per_gpu,
                            tflops_per_gpu=d.tflops_per_gpu,
                            throughput_per_gpu=d.throughput_per_gpu,
-                           throughput_total=d.throughput_total)
+                           throughput_total=d.throughput_total,
+                           gpu_die_temp_c=d.gpu_die_temp_c,
+                           freq_frac=d.freq_frac,
+                           thermal_throttled=d.thermal_throttled,
+                           thermal_runaway=d.thermal_runaway,
+                           throttle_onset_c=round(
+                               _throttle_onset_c(g, job_key, util, n), 1))
                 for g, n, d in per_group],
     }), payload_w
 
 
 def _peak_card_watts(groups: list[tuple[str, int]]) -> float:
     """Worst-case payload draw: every fitted card at 100 % duty."""
-    return sum(_GPU_TABLE.get(g, _GPU_TABLE["H100"])["tdp_w"] * n for g, n in groups)
+    return sum(_GPU_TABLE.get(g, _GPU_TABLE[_DEFAULT_GPU])["tdp_w"] * n for g, n in groups)
 
 
 def _unit(v: tuple[float, float, float]) -> tuple[float, float, float]:
@@ -704,6 +812,18 @@ class StateEngine:
         the new full config so the handler can echo it back. Unknown keys
         are ignored; bad values raise the underlying Pydantic ValidationError."""
         cleaned = {k: v for k, v in patch.items() if v is not None}
+        # Card ids that no longer exist in the catalog (the bay used to offer
+        # H100 / MI300X; it now offers V100 / A100 / H200 / B200). A saved
+        # loadout naming one of them would otherwise slip through as an
+        # unknown string: _GPU_TABLE.get(...) hands it the default TDP, but
+        # ai_workloads.GPU_SPECS / llm_perf.GPU_PERF have no row for it, so the
+        # analytic engine returns None, the panels show dashes and the card
+        # NEVER throttles. Map them onto the nearest current part instead.
+        if "gpu" in cleaned:
+            cleaned["gpu"] = _migrate_gpu_id(cleaned["gpu"])
+        if "gpu_slots" in cleaned and isinstance(cleaned["gpu_slots"], list):
+            cleaned["gpu_slots"] = [
+                _migrate_gpu_id(s) if s else s for s in cleaned["gpu_slots"]]
         if "gpu_slots" in cleaned:
             # [] clears the per-slot loadout back to "uniform `gpu` × count" —
             # that is what every design preset's config carries.
@@ -1380,7 +1500,23 @@ class StateEngine:
                                      _SOLAR_MAT_TABLE["Si"])
         return (s_mat["efficiency"] * _solar_area_m2(self._twin_geometry)
                 * self._solar_s_w_m2
-                * _solar_temp_factor(s_mat, self._sat.temperature_c)
+                # The ARRAY's own temperature, not the bus structure's.
+                # The array's THERMAL DESIGN POINT: its own sun-facing
+                # equilibrium, driven by solar flux and Earth IR alone.
+                #
+                # Deliberately NOT the bus structure temperature (the bug this
+                # replaced: GPU waste heat moved eta(T) by up to 31 %, so
+                # swapping a card changed "solar input" in a COMPUTE
+                # comparison), and deliberately NOT re-using illum/incidence
+                # either — this scale is already multiplied by the per-sat
+                # (illum x incidence) downstream, so letting the temperature
+                # track them too would count attitude twice and, at grazing
+                # incidence, park the array near -117 C where the linear
+                # datasheet derate is pure extrapolation into its 1.25 ceiling.
+                * _solar_temp_factor(s_mat, _array_temp_c(
+                    1.0, 1.0, self._solar_s_w_m2,
+                    math.sqrt(sum(c * c for c in (self._sat.sat_xyz_km or ())))
+                    or (_geodyn.WGS84_A_KM + 550.0)))
                 * self._sat.solar_deploy_frac)
 
     def _refresh_display_kinematics(self) -> None:
@@ -1689,7 +1825,14 @@ class StateEngine:
                                             self._sat.temperature_c)
         self._sat.workload_detail = detail
         platform_w = self._platform_power_w
-        self._sat.gpu_utilization = workload
+        # REALIZED utilisation. This used to publish `workload` — the value the
+        # SCHEDULE commanded — so a thermally throttled bay still reported 100 %
+        # busy, and the only thing that ever moved "GPU util" was a schedule
+        # block boundary, which by construction happens at the same instant for
+        # every card. Derating by the realised/asked power ratio makes the
+        # per-card-type throttle onsets visible where they actually occur.
+        realized = getattr(_bay_job_detail, "last_realized_frac", 1.0)
+        self._sat.gpu_utilization = workload * max(0.0, min(1.0, realized))
         self._sat.payload_power_w = payload_w
         self._sat.platform_power_w = platform_w
         self._sat.gpu_count = gpu_count

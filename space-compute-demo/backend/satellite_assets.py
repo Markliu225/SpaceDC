@@ -99,12 +99,12 @@ ASSETS: dict[str, SatelliteAsset] = {a.id: a for a in [
         slot_count=12, slot_group_size=3, slot_group_label="Rack",
         slot_labels=_rack_labels(),
         config=SatelliteConfig(
-            gpu="H100", solar_material="Si", solar_size="M",
+            gpu="H200", solar_material="Si", solar_size="M",
             radiator_material="WhitePaint", radiator_size="Standard",
             battery_material="LiIon", battery_size="L"),
         solar_clusters_per_side=5, radiator_long=1.9, radiator_ratio=2.5,
         workload_profile="chat_serving",
-        default_gpu="H100", default_gpu_count=8,
+        default_gpu="H200", default_gpu_count=8,
         platform_power_w=600.0,
     ),
     SatelliteAsset(
@@ -147,12 +147,12 @@ ASSETS: dict[str, SatelliteAsset] = {a.id: a for a in [
         slot_count=6, slot_group_size=3, slot_group_label="Tile row",
         slot_labels=[f"T{i + 1}" for i in range(6)],
         config=SatelliteConfig(
-            gpu="H100", solar_material="Perovskite", solar_size="S",
+            gpu="H200", solar_material="Perovskite", solar_size="S",
             radiator_material="WhitePaint", radiator_size="Compact",
             battery_material="LiFePO4", battery_size="M"),
         solar_clusters_per_side=2, radiator_long=1.75, radiator_ratio=3.0,
         workload_profile="low_duty",
-        default_gpu="H100", default_gpu_count=4,
+        default_gpu="H200", default_gpu_count=4,
         platform_power_w=450.0,
     ),
     SatelliteAsset(

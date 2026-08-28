@@ -25,7 +25,7 @@ import { useBuilderStore } from '../store/useBuilderStore'
  *  │ Omniverse viewport (col-9)            1fr      │ Configurator col-3│
  *  │                                                │   3 sections + Δ  │
  *  ├────────────────────────────────────────────────┴───────────────────┤
- *  │ TimeSeriesStrip · 5 charts · 120 s            col-12 · 224 px      │
+ *  │ TimeSeriesStrip · 6 charts · 120 s            col-12 · 224 px      │
  *  └────────────────────────────────────────────────────────────────────┘
  *
  * Tracks: 56 / 1fr / 224. The viewport keeps a satellite-preset camera;

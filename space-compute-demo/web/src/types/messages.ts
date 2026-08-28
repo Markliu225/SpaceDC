@@ -1,7 +1,7 @@
 // Mirrors backend/models.py. Keep in sync with docs/api_spec.md.
 
 export type OrbitType = 'LEO' | 'SSO' | 'MEO' | 'GEO';
-export type GpuType = 'H100' | 'H200' | 'B200' | 'MI300X';
+export type GpuType = 'V100' | 'A100' | 'H200' | 'B200';
 export type Mode = 'on_orbit' | 'ground_only';
 export type TaskPhase =
   | 'idle' | 'created' | 'capturing' | 'inferencing'
@@ -17,6 +17,18 @@ export interface GpuMixItem {
   tflops_per_gpu: number;
   throughput_per_gpu: number;
   throughput_total: number;
+  /** Junction temp of THIS card type (T_struct + draw × R_th). Cards share a
+   *  cold plate, not a die temperature. */
+  gpu_die_temp_c: number;
+  /** Clock fraction this group holds (1.0 = unthrottled). */
+  freq_frac: number;
+  /** This group's OWN thermal state — not the bay-wide `any()`. */
+  thermal_throttled: boolean;
+  thermal_runaway: boolean;
+  /** Structure temperature at which this card type starts throttling on the
+   *  current job: T_throttle − (unthrottled draw) × R_th. Different draw and
+   *  R_th per card type ⇒ a mixed bay throttles in a definite ORDER. */
+  throttle_onset_c: number;
 }
 
 /** What the payload GPUs are ACTUALLY running this tick — the typed job from
@@ -494,6 +506,18 @@ export interface CompareLiveVariant {
   temperature_c: number;
   gpu_utilization: number;
   tokens_per_s: number;
+  radiator_power_w: number;
+  battery_charge_w: number;
+  /** Hottest die in this variant's bay (T_plate + draw x R_th). */
+  gpu_die_temp_c: number;
+  /** Clock fraction the bay holds (1.0 = unthrottled). */
+  freq_frac: number;
+  /** 1 while thermally limited, 0 otherwise — charted as a step. */
+  thermal_throttled: number;
+  /** Plate temperature at which THIS variant's card starts throttling. Flat
+   *  per variant, so a GPU comparison draws four lines whose order answers
+   *  "which card gives out first". */
+  throttle_onset_c: number;
 }
 
 /** Live what-if comparison riding StatePacket.compare_live — 2–4 variant

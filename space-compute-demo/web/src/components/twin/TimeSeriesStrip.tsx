@@ -8,6 +8,11 @@ import { COMPARE_PALETTE } from './comparePalette'
 interface OverlayLine {
   color: string
   data: number[]
+  /** Horizontal reference in data units (e.g. a variant's throttle onset
+   *  on the Temperature chart), dashed in the variant's colour. */
+  refY?: number
+  /** Variant is thermally limited right now - flagged in the header. */
+  throttling?: boolean
 }
 
 /** Nested stroke widths by variant index (draw order = pick order): the
@@ -36,9 +41,16 @@ const SERIES: SeriesDef[] = [
   { key: 'temp_c',     label: 'Temperature', unit: '°C', digits: 1, color: colors.err },
   { key: 'gpu_util',   label: 'GPU Util',    unit: '%',  digits: 0, color: colors.ribbons[4],
     yMin: 0, yMax: 1, factor: 100 },
+  // Junction temperature. In a GPU comparison each card's die climbs at its
+  // own slope (draw x R_th) and then PINS at its own throttle target - the
+  // flattening points are the throttle order, read directly off the chart.
+  { key: 'die_temp_c', label: 'GPU Die',     unit: '°C', digits: 1, color: colors.ribbons[5] },
 ]
 
 const HISTORY_S = 120
+
+/** Panels on which a variant's throttle state is worth colouring. */
+const THERMAL_KEYS = new Set<SeriesDef['key']>(['payload_w', 'temp_c', 'gpu_util', 'die_temp_c'])
 
 /**
  * TimeSeriesStrip — five stacked time-series charts (one per metric)
@@ -87,7 +99,7 @@ export function TimeSeriesStrip() {
         )}
       </div>
 
-      <div className="mt-1.5 grid flex-1 min-h-0 grid-cols-5 gap-2.5">
+      <div className="mt-1.5 grid flex-1 min-h-0 grid-cols-6 gap-2">
         {SERIES.map((def) => (
           <Mini
             key={def.key}
@@ -98,6 +110,14 @@ export function TimeSeriesStrip() {
             overlays={compare?.variants.map((v, i) => ({
               color: COMPARE_PALETTE[i],
               data: v.series[def.key],
+              // The onset is a PLATE temperature, so its reference line
+              // belongs on the structure-temperature chart: where the plate
+              // curve crosses a variant's dashed line, that variant throttles.
+              refY: def.key === 'temp_c' && v.throttle_onset_c > 0
+                ? v.throttle_onset_c : undefined,
+              // Throttle colouring only where heat is the story; a red
+              // "0 W" on the solar chart would read as an alarm it is not.
+              throttling: v.throttling && THERMAL_KEYS.has(def.key),
             }))}
             // While a comparison runs the live trace yields the stage: one
             // variant is usually the current value anyway, so keeping the
@@ -125,9 +145,9 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
   const gid     = useId().replace(/:/g, '')
   const gradId  = `tw-grad-${gid}`
 
-  const { path, areaPath, yMin, yMax, overlayPaths } = useMemo(() => {
+  const { path, areaPath, yMin, yMax, overlayPaths, refLines } = useMemo(() => {
     const n = data.length
-    if (n < 2) return { path: '', areaPath: '', yMin: 0, yMax: 1, overlayPaths: [] as { color: string; d: string }[] }
+    if (n < 2) return { path: '', areaPath: '', yMin: 0, yMax: 1, overlayPaths: [] as { color: string; d: string }[], refLines: [] as { color: string; y: number }[] }
     const factor = def.factor ?? 1
     let lo = def.yMin !== undefined ? def.yMin * factor : Infinity
     let hi = def.yMax !== undefined ? def.yMax * factor : -Infinity
@@ -150,6 +170,11 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
       for (const ov of overlays ?? []) {
         for (const v of ov.data) {
           const u = v * factor
+          if (def.yMin === undefined && u < lo) lo = u
+          if (def.yMax === undefined && u > hi) hi = u
+        }
+        if (ov.refY !== undefined) {
+          const u = ov.refY * factor
           if (def.yMin === undefined && u < lo) lo = u
           if (def.yMax === undefined && u > hi) hi = u
         }
@@ -187,7 +212,12 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
       }
       overlayPaths.push({ color: ov.color, d: `M ${parts.join(' L ')}` })
     }
-    return { path: pathStr, areaPath: area, yMin: lo, yMax: hi, overlayPaths }
+    const refLines: { color: string; y: number }[] = []
+    for (const ov of overlays ?? []) {
+      if (ov.refY === undefined) continue
+      refLines.push({ color: ov.color, y: h - ((ov.refY * factor - lo) / (hi - lo)) * h })
+    }
+    return { path: pathStr, areaPath: area, yMin: lo, yMax: hi, overlayPaths, refLines }
   }, [data, def, overlays, liveHidden])
 
   const factor = def.factor ?? 1
@@ -204,21 +234,26 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
           // Comparison running: the live number matches no visible curve, so
           // show each VARIANT's current value instead (dot carries the hue,
           // the number stays in ink) — read a curve straight off its color.
-          <span className="flex items-baseline gap-1.5">
+          // Four variants have to fit a ~200 px header, so the throttle state
+          // is carried by the value's COLOUR (err red = thermally limited),
+          // not by an extra badge that would push the row into the next panel.
+          <span className="flex min-w-0 items-baseline gap-1 overflow-hidden">
             {overlays.map((ov, i) => (
-              <span key={i} className="flex items-center gap-0.5">
+              <span key={i} className="flex shrink-0 items-center gap-0.5"
+                    title={ov.throttling ? 'thermally throttled' : undefined}>
                 <span
                   className="h-1.5 w-1.5 rounded-full"
                   style={{ background: ov.color }}
                 />
-                <span className="text-[11px] font-semibold tabular text-text-hi">
+                <span className={'text-[10px] font-semibold tabular '
+                  + (ov.throttling ? 'text-err' : 'text-text-hi')}>
                   {ov.data.length > 0
                     ? fmt(ov.data[ov.data.length - 1] * factor, def.digits, '')
                     : '—'}
                 </span>
               </span>
             ))}
-            <span className="ml-0.5 text-[10px] text-text-lo">{def.unit}</span>
+            <span className="ml-0.5 shrink-0 text-[9px] text-text-lo">{def.unit}</span>
           </span>
         ) : (
           <span className="flex items-baseline">
@@ -299,6 +334,18 @@ function Mini({ def, data, currentValue, scars, overlays, liveHidden }: MiniProp
               move a metric — every variant still shows as a visible edge
               around the narrower ones on top, instead of the last-drawn
               color swallowing the rest. */}
+          {refLines.map((rl, i) => (
+            <line
+              key={`ref-${i}`}
+              data-testid="compare-ref"
+              x1={0} x2={100} y1={rl.y} y2={rl.y}
+              stroke={rl.color}
+              strokeWidth={1}
+              strokeDasharray="3 2"
+              vectorEffect="non-scaling-stroke"
+              opacity={0.7}
+            />
+          ))}
           {overlayPaths.map((op, i) => (
             <path
               key={i}

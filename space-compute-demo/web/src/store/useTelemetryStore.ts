@@ -10,7 +10,7 @@ import type {
  *  delta chips. Kept as a module-level constant so any component can import
  *  it without round-tripping through the store. */
 export const SAT_CONFIG_BASELINE: SatelliteConfig = {
-  gpu: 'H100',
+  gpu: 'H200',
   solar_material: 'Si',
   solar_size: 'M',
   radiator_material: 'Aluminum',
@@ -36,7 +36,7 @@ export interface Satellite {
   solar_input_w: number
   payload_power_w: number
   platform_power_w: number
-  gpu_type: 'H100' | 'H200' | 'B200' | 'MI300X'
+  gpu_type: 'V100' | 'A100' | 'H200' | 'B200'
   gpu_utilization: number   // 0..1
   temperature_c: number
   battery_soc: number       // 0..1
@@ -151,7 +151,7 @@ function makeSats(): Satellite[] {
       solar_input_w: status === 'online' ? 4200 : status === 'eclipse' ? 0 : 1200,
       payload_power_w: status === 'online' ? 1800 : 0,
       platform_power_w: 600,
-      gpu_type: (['H100', 'H200', 'B200', 'MI300X'] as const)[i % 4],
+      gpu_type: (['V100', 'A100', 'H200', 'B200'] as const)[i % 4],
       gpu_utilization: status === 'online' ? 0.5 : 0,
       temperature_c: status === 'online' ? 58 + (i % 5) * 2 : 22,
       battery_soc: status === 'offline' ? 0.06 : 0.78 - (i % 6) * 0.05,

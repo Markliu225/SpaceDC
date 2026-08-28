@@ -281,6 +281,10 @@ METRICS: list[dict[str, Any]] = [
     {"key": "battery_charge_w","label": "Net Power",      "unit": "W",     "digits": 0},
     {"key": "tokens_per_s",    "label": "LLM Throughput", "unit": "tok/s", "digits": 0},
     {"key": "gpu_die_temp_c",  "label": "GPU Die Temp",   "unit": "°C",    "digits": 1},
+    {"key": "throttle_onset_c","label": "Throttle Onset", "unit": "°C",    "digits": 1},
+    {"key": "thermal_throttled","label": "Throttling",    "unit": "",      "digits": 0},
+    {"key": "freq_frac",       "label": "Clock Fraction", "unit": "",      "digits": 2},
+    {"key": "gpu_utilization", "label": "GPU Utilisation","unit": "%",     "digits": 0, "factor": 100},
 ]
 
 
@@ -409,6 +413,27 @@ class LiveCompareSession:
                 tokens_per_s=(round(det.throughput_total, 1)
                               if det is not None
                               and det.throughput_unit == "tok/s" else 0.0),
+                radiator_power_w=round(sat.radiator_power_w, 1),
+                battery_charge_w=round(sat.battery_charge_w, 1),
+                # Thermal state. METRICS has advertised "GPU Die Temp" since
+                # the comparison shipped, but the sample never carried it, so
+                # picking that metric charted nothing. The three below are what
+                # make a GPU comparison show its point: different cards draw
+                # different power, run at different junction resistances, and
+                # therefore hit their ceilings at different plate temperatures.
+                # No analytic detail this tick (job change, MFU-path job,
+                # pre-first-step sample): the die is at least at the plate.
+                # Reporting 0.0 here put a false -8 C floor on the die chart.
+                gpu_die_temp_c=round(det.gpu_die_temp_c, 2)
+                               if det and det.gpu_die_temp_c > 0
+                               else round(sat.temperature_c, 2),
+                freq_frac=round(det.freq_frac, 3) if det else 1.0,
+                thermal_throttled=(1.0 if det is not None
+                                   and (det.thermal_throttled
+                                        or det.thermal_runaway) else 0.0),
+                throttle_onset_c=round(
+                    max((m.throttle_onset_c for m in (det.mix or [])),
+                        default=0.0), 1) if det else 0.0,
             ))
         return CompareLiveState(
             active=True,

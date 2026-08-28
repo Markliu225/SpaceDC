@@ -61,14 +61,14 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
     DesignPreset(
         id="baseline",
         name="Balanced LEO-DC",
-        tagline="H100 · 5-cluster wings · white-paint radiators",
+        tagline="H200 · 5-cluster wings · white-paint radiators",
         description=(
-            "The reference orbital data-center loadout: eight H100s on "
+            "The reference orbital data-center loadout: eight H200s on "
             "five-cluster silicon wings (+24 % power margin) with white-paint "
             "radiators sized for the mixed inference/training duty cycle."
         ),
         config=SatelliteConfig(
-            gpu="H100", solar_material="Si", solar_size="M",
+            gpu="H200", solar_material="Si", solar_size="M",
             radiator_material="WhitePaint", radiator_size="Standard",
             battery_material="LiIon", battery_size="L",),
         architecture="truss",
@@ -118,14 +118,14 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
     DesignPreset(
         id="eco_light",
         name="Eco Light",
-        tagline="4x H100 · LUMID smallsat hull · integrated cross panels",
+        tagline="4x H200 · LUMID smallsat hull · integrated cross panels",
         description=(
             "Minimum launch mass and CAPEX on the LUMID smallsat bus: four "
             "integrated perovskite cross panels and slim radiators, flying a "
             "low-duty housekeeping workload with occasional batch jobs."
         ),
         config=SatelliteConfig(
-            gpu="H100", solar_material="Perovskite", solar_size="S",
+            gpu="H200", solar_material="Perovskite", solar_size="S",
             radiator_material="WhitePaint", radiator_size="Compact",
             battery_material="LiFePO4", battery_size="M",),
         architecture="lumid",
@@ -155,14 +155,14 @@ PRESETS: dict[str, DesignPreset] = {p.id: p for p in [
     DesignPreset(
         id="wide_wing",
         name="Wide Wing",
-        tagline="MI300X · ISS-style ribbon wings · standard radiators",
+        tagline="B200 · ISS-style ribbon wings · standard radiators",
         description=(
             "Power-rich survey platform: two 24 m single-row blanket wings "
-            "harvest enough for continuous MI300X inference plus battery "
+            "harvest enough for continuous B200 inference plus battery "
             "margin for long eclipse seasons."
         ),
         config=SatelliteConfig(
-            gpu="MI300X", solar_material="Perovskite", solar_size="XL",
+            gpu="B200", solar_material="Perovskite", solar_size="XL",
             radiator_material="OSR", radiator_size="Standard",
             battery_material="SolidState", battery_size="M",),
         architecture="blanket",

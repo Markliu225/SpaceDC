@@ -38,12 +38,21 @@ export function GpuPanel({ cardIdx }: { cardIdx: number }) {
   const wdGroup = slotGpu
     ? wdSat?.mix?.find((m) => m.gpu === slotGpu)
     : undefined
+  // Thermal state comes from THIS group too. The satellite-level detail is a
+  // merge — its die temp is the HOTTEST group's and its throttle flag is
+  // `any(...)` — so reading it here made every slot light up the moment the
+  // first card type hit its ceiling, hiding exactly the staggered onset the
+  // mixed bay is supposed to show.
   const wd = wdSat && wdGroup
     ? { ...wdSat,
         power_w_per_gpu: wdGroup.power_w_per_gpu,
         heat_w_per_gpu: wdGroup.heat_w_per_gpu,
         tflops_per_gpu: wdGroup.tflops_per_gpu,
-        throughput_total: wdGroup.throughput_total }
+        throughput_total: wdGroup.throughput_total,
+        gpu_die_temp_c: wdGroup.gpu_die_temp_c,
+        freq_frac: wdGroup.freq_frac,
+        thermal_throttled: wdGroup.thermal_throttled,
+        thermal_runaway: wdGroup.thermal_runaway }
     : wdSat
   const analytic = wd?.engine === 'analytic'
   // Junction temp exists only on the analytic path (die = struct + P·R_th);
@@ -73,6 +82,17 @@ export function GpuPanel({ cardIdx }: { cardIdx: number }) {
         <Row label="TDP"      value={perSatTdpKw.toFixed(1)}  unit="kW" />
       </Section>
       <Section title="Running now">
+        {/* The number that makes the ordering explicit: this card type's own
+            throttle threshold on the current job. In a mixed bay the values
+            differ, so the reader can see WHICH card gives out first and by
+            how much margin — not just that "something" is throttling. */}
+        {wdGroup && wdGroup.throttle_onset_c > 0 && (
+          <Row label="Throttles at"
+               value={wdGroup.throttle_onset_c.toFixed(1)}
+               unit="°C plate"
+               tone={(sat?.temperature_c ?? 0) >= wdGroup.throttle_onset_c
+                 ? 'hot' : undefined} />
+        )}
         <Row label="Job"   value={wd?.job_label ?? '— —'} />
         <Row label="Model" value={wd?.model ?? '— —'} />
         <Row

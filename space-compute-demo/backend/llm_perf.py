@@ -106,13 +106,16 @@ GPU_PERF: dict[str, GpuPerfSpec] = {
         bw_frac=0.207,            # 186 GB/s effective (eager HF stack)
         r_th_k_per_w=0.12, t_throttle_c=83.0,
     ),
-    "H100": GpuPerfSpec(
-        name="H100 SXM", tdp_w=700.0, f_max_mhz=1980.0,
-        ops_fp16_tflops=989.0, ops_fp8_tflops=1979.0, bw_peak_tbps=3.35,
-        p_static_w=140.0, chi_w=560.0, theta=2.4,
-        p_prefill=1.0, p_decode=2.6,
-        eff_prefill=0.50, eff_decode=0.35, bw_frac=0.60,
-        r_th_k_per_w=0.060, t_throttle_c=85.0,
+    "A100": GpuPerfSpec(
+        name="A100 SXM4-80GB", tdp_w=400.0, f_max_mhz=1410.0,
+        ops_fp16_tflops=312.0, ops_fp8_tflops=312.0,   # no fp8 on Ampere
+        bw_peak_tbps=2.039,
+        p_static_w=80.0, chi_w=320.0, theta=2.3,
+        p_prefill=1.0, p_decode=2.5,
+        eff_prefill=0.48, eff_decode=0.30, bw_frac=0.55,
+        # 400 W package, larger junction-to-plate resistance than Hopper's
+        # 700 W stack and smaller than Volta's 250 W one.
+        r_th_k_per_w=0.085, t_throttle_c=85.0,
     ),
     "H200": GpuPerfSpec(
         name="H200 SXM", tdp_w=700.0, f_max_mhz=1980.0,
@@ -129,14 +132,6 @@ GPU_PERF: dict[str, GpuPerfSpec] = {
         p_prefill=1.0, p_decode=2.6,
         eff_prefill=0.50, eff_decode=0.35, bw_frac=0.60,
         r_th_k_per_w=0.045, t_throttle_c=85.0,
-    ),
-    "MI300X": GpuPerfSpec(
-        name="MI300X", tdp_w=750.0, f_max_mhz=2100.0,
-        ops_fp16_tflops=1307.0, ops_fp8_tflops=2615.0, bw_peak_tbps=5.30,
-        p_static_w=160.0, chi_w=590.0, theta=2.4,
-        p_prefill=1.0, p_decode=2.6,
-        eff_prefill=0.45, eff_decode=0.32, bw_frac=0.55,
-        r_th_k_per_w=0.055, t_throttle_c=87.0,
     ),
 }
 

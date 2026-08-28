@@ -34,10 +34,13 @@ export interface GpuOption {
 // pflops_per_card = peak dense FP8 tensor PFLOPS (datasheet, no sparsity) —
 // mirrors backend state_engine._GPU_TABLE / ai_workloads.GPU_SPECS.
 export const GPU_OPTIONS: GpuOption[] = [
-  { id: 'H100',   label: 'H100 SXM',        pflops_per_card: 1.98, tdp_w: 700,  cost_k: 30, tint: '#4A5568' },
+  // Four generations on purpose. Power, junction-to-plate R_th and the
+  // throttle target all differ, so a mixed bay crosses its thermal ceilings in
+  // a definite ORDER as the plate warms — B200 first, V100 last.
+  { id: 'V100',   label: 'V100 SXM2',       pflops_per_card: 0.13, tdp_w: 250,  cost_k:  8, tint: '#6B7A8F' },
+  { id: 'A100',   label: 'A100 SXM4',       pflops_per_card: 0.31, tdp_w: 400,  cost_k: 15, tint: '#5D8A72' },
   { id: 'H200',   label: 'H200 SXM',        pflops_per_card: 1.98, tdp_w: 700,  cost_k: 40, tint: '#7A8CD8' },
   { id: 'B200',   label: 'Blackwell B200',  pflops_per_card: 4.50, tdp_w: 1000, cost_k: 45, tint: '#0F172A' },
-  { id: 'MI300X', label: 'AMD MI300X',      pflops_per_card: 2.62, tdp_w: 750,  cost_k: 28, tint: '#C9443E' },
 ]
 
 export const GPU_CARDS_PER_SAT = 8
@@ -50,10 +53,10 @@ export const GPU_CARDS_PER_SAT = 8
  * disappears as a status bar on a dark hull).
  */
 export const GPU_SLOT_TINT: Record<GpuType, string> = {
-  H100:   '#6B7A94',
-  H200:   '#7A8CD8',
-  B200:   '#8A66DC',
-  MI300X: '#E64039',
+  V100:  '#6B7A94',
+  A100:  '#5DBE8E',
+  H200:  '#7A8CD8',
+  B200:  '#8A66DC',
 }
 
 /** Fitted slots collapsed to (card, count) groups, largest first — mirrors

@@ -1,0 +1,23 @@
+{
+  "epoch_utc": "2024-08-22T12:00:00Z",
+  "frame": "TEME (treat as ECI/J2000 for COMSOL; difference < 0.02 deg)",
+  "semi_major_axis_km": 6801.358604207639,
+  "eccentricity": 0.0016865369840093059,
+  "inclination_deg": 51.65994401477053,
+  "raan_deg": 99.99985115839074,
+  "arg_periapsis_deg": 59.92104789470376,
+  "true_anomaly_deg": 299.9113767513094,
+  "altitude_km_mean": 423.22160420763885,
+  "period_s": 5582.188416108647,
+  "position_teme_km_at_epoch": [
+    -1167.8833413413272,
+    6694.498647778502,
+    -15.589141617047412
+  ],
+  "velocity_teme_km_s_at_epoch": [
+    -4.6826334692177,
+    -0.8142713475333242,
+    6.009560614036895
+  ],
+  "note": "osculating elements from SGP4 at epoch; a two-body/J2 propagator drifts from SGP4 by tens of seconds in eclipse timing over 24 h, compare by sunlit/eclipse segment means"
+}
