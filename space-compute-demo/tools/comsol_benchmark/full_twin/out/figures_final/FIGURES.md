@@ -100,7 +100,26 @@ COMSOL-native renders (`*_cm_*`, via render_comsol.py: PlotGroup3D + Image expor
 - ![D04_caseB_die_orbits2-3.png](D04_caseB_die_orbits2-3.png)
   **D04_caseB_die_orbits2-3.png** - Case B: die vs the 85 C line - OrbitWiz regulated at 85 C (dips at eclipse exit / low-load block), COMSOL die-equivalent 97-101 C throughout (no un-throttle events).
 
-- *(missing)* `D05_caseA_overlay_orbits4-5.png` - Case A, extended run (orbits 4-5, initialised from the orbit-3 state): the periodic-steady-state comparison once the frozen-start transient has decayed.
-- *(missing)* `D06_caseA_die_orbits4-5.png` - Case A, orbits 4-5: die-equivalent vs OrbitWiz die.
-- *(missing)* `D07_caseB_overlay_orbits4-5.png` - Case B, extended run (orbits 4-5) overlay.
-- *(missing)* `D08_caseB_die_orbits4-5.png` - Case B, orbits 4-5: die temperature and 85 C crossings.
+- ![D05_caseA_overlay_orbits4-5.png](D05_caseA_overlay_orbits4-5.png)
+  **D05_caseA_overlay_orbits4-5.png** - Case A, extended run (orbits 4-5, true continuation of orbit 3 via extend_orbits.py): the closest-to-cyclic-steady-state comparison, after the warm-up from the uniform 50.4 C start has decayed (per-orbit diagnostics in REPORT.md 7.7).
+
+- ![D06_caseA_die_orbits4-5.png](D06_caseA_die_orbits4-5.png)
+  **D06_caseA_die_orbits4-5.png** - Case A, orbits 4-5: die-equivalent vs OrbitWiz die.
+
+- ![D07_caseB_overlay_orbits4-5.png](D07_caseB_overlay_orbits4-5.png)
+  **D07_caseB_overlay_orbits4-5.png** - Case B, extended run (orbits 4-5) overlay.
+
+- ![D08_caseB_die_orbits4-5.png](D08_caseB_die_orbits4-5.png)
+  **D08_caseB_die_orbits4-5.png** - Case B, orbits 4-5: die temperature and 85 C crossings.
+
+- ![D09_caseA_overlay_orbits2-5.png](D09_caseA_overlay_orbits2-5.png)
+  **D09_caseA_overlay_orbits2-5.png** - Case A, whole run (orbits 2-5 = one full 21 600-s workload cycle): shows that the orbit-to-orbit variation is workload-driven in both models, not a residual initial transient.
+
+- ![D10_caseB_overlay_orbits2-5.png](D10_caseB_overlay_orbits2-5.png)
+  **D10_caseB_overlay_orbits2-5.png** - Case B, whole run (orbits 2-5).
+
+- ![D11_caseA_die_orbits2-5.png](D11_caseA_die_orbits2-5.png)
+  **D11_caseA_die_orbits2-5.png** - Case A, orbits 2-5: die-equivalent vs OrbitWiz die, 83 C line.
+
+- ![D12_caseB_die_orbits2-5.png](D12_caseB_die_orbits2-5.png)
+  **D12_caseB_die_orbits2-5.png** - Case B, orbits 2-5: die temperature vs the 85 C line.

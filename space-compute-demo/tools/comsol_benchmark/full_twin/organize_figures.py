@@ -47,7 +47,7 @@ ITEMS = [
  (CMP, "caseA_die_o23.png",     "D02_caseA_die_orbits2-3.png",     "Case A: GPU die - OrbitWiz die (T_struct + P.R_th) vs COMSOL die-equivalent (baseplate max + P.R_th) against the 83 C V100 throttle line: COMSOL crosses at tau = 10 920 s and 14 880 s, OrbitWiz never."),
  (CMP, "caseB_overlay_o23.png", "D03_caseB_overlay_orbits2-3.png", "Case B (A100, throttled in OrbitWiz): overlay over orbits 2-3. Max |dev| 16.1 / 10.5 / 13.8 / 20.4 C."),
  (CMP, "caseB_die_o23.png",     "D04_caseB_die_orbits2-3.png",     "Case B: die vs the 85 C line - OrbitWiz regulated at 85 C (dips at eclipse exit / low-load block), COMSOL die-equivalent 97-101 C throughout (no un-throttle events)."),
- (CMP, "caseA_overlay_o45.png", "D05_caseA_overlay_orbits4-5.png", "Case A, extended run (orbits 4-5, initialised from the orbit-3 state): the periodic-steady-state comparison once the frozen-start transient has decayed."),
+ (CMP, "caseA_overlay_o45.png", "D05_caseA_overlay_orbits4-5.png", "Case A, extended run (orbits 4-5, true continuation of orbit 3 via extend_orbits.py): the closest-to-cyclic-steady-state comparison, after the warm-up from the uniform 50.4 C start has decayed (per-orbit diagnostics in REPORT.md 7.7)."),
  (CMP, "caseA_die_o45.png",     "D06_caseA_die_orbits4-5.png",     "Case A, orbits 4-5: die-equivalent vs OrbitWiz die."),
  (CMP, "caseB_overlay_o45.png", "D07_caseB_overlay_orbits4-5.png", "Case B, extended run (orbits 4-5) overlay."),
  (CMP, "caseB_die_o45.png",     "D08_caseB_die_orbits4-5.png",     "Case B, orbits 4-5: die temperature and 85 C crossings."),

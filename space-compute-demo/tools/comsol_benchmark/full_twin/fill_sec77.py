@@ -25,6 +25,37 @@ def crossings(case, thr, lo, hi):
     return out
 
 
+def periodicity_diag(case):
+    """Per-orbit means, orbit-to-orbit variation of the reference and of COMSOL, and the
+    same-workload-phase check one workload cycle (21 600 s) apart."""
+    rows = list(csv.DictReader(open(os.path.join(CMP, f"{case}_aligned.csv"), encoding="utf-8")))
+    t = np.array([float(r['tau_s']) for r in rows]); col = lambda k: np.array([float(r[k]) for r in rows])
+    rad, bp, bus, ow, pw = col('comsol_rad_mean_C'), col('comsol_baseplate_mean_C'), col('comsol_bus_mean_C'), col('orbitwiz_T_struct_C'), col('orbitwiz_payload_W')
+    n_orb = int(round(t.max() / P))          # last orbit ends within one output step of 5P
+    L = ["| Orbit | mean payload (W) | OrbitWiz node mean (°C) | COMSOL radiator mean | COMSOL baseplate mean | COMSOL bus mean | bus − node | radiator − node |", "|---|---|---|---|---|---|---|---|"]
+    for k in range(n_orb):
+        m = (t >= k * P) & (t < (k + 1) * P + 1.0)
+        L.append(f"| {k+1} | {pw[m].mean():.0f} | {ow[m].mean():.1f} | {rad[m].mean():.1f} | {bp[m].mean():.1f} | {bus[m].mean():.1f} | {bus[m].mean()-ow[m].mean():+.1f} | {rad[m].mean()-ow[m].mean():+.1f} |")
+
+    def per(x, k):
+        m1 = (t >= (k - 1) * P) & (t <= k * P); m2 = (t >= k * P) & (t <= (k + 1) * P)
+        return float(np.max(np.abs(np.interp(t[m1] + P, t[m2], x[m2]) - x[m1])))
+    L += ["", "| Orbit pair | OrbitWiz node max \\|ΔT\\| (°C) | COMSOL radiator | COMSOL baseplate | COMSOL bus |", "|---|---|---|---|---|"]
+    for k in range(1, n_orb):
+        L.append(f"| {k} vs {k+1} | {per(ow, k):.2f} | {per(rad, k):.2f} | {per(bp, k):.2f} | {per(bus, k):.2f} |")
+    W = 21600.0; m = (t >= P) & (t + W <= t.max())
+    L.append("")
+    if m.sum() >= 3:
+        parts = []
+        for name, x in (("OrbitWiz node", ow), ("COMSOL radiator mean", rad), ("COMSOL baseplate mean", bp), ("COMSOL bus mean", bus)):
+            d = np.interp(t[m] + W, t, x) - x[m]
+            parts.append(f"{name} mean {d.mean():+.2f} / max \\|Δ\\| {np.abs(d).max():.2f} °C")
+        L.append(f"Same-workload-phase check, T(τ + 21 600 s) − T(τ) for τ ∈ [{P:.0f}, {t[m].max():.0f}] s ({m.sum()} samples at identical payload; the orbit phase is shifted by 21 600 − 3.875·5574 ≈ −697 s, i.e. eclipse timing differs by 12 % of an orbit, which the thin radiator feels and the bus does not): " + "; ".join(parts) + ".")
+    else:
+        L.append("Same-workload-phase check not possible (run shorter than one workload cycle + one orbit).")
+    return L
+
+
 def main():
     L = ["### 7.7 Orbits 4–5 (extended run, initialised from the orbit-3 state)\n",
          "Same definitions as §7.3–7.6; window 3P ≤ τ ≤ 5P (`out/compare/*_stats_o45.json`, `SUMMARY_o45.md`, overlays `*_overlay_o45.png`, `*_die_o45.png`). "
@@ -57,6 +88,14 @@ def main():
             d = w[tag]
             L.append(f"- {tag}: first ≥ threshold — OrbitWiz {d['orbitwiz_die_first_ge_thr_s']} s, COMSOL die-equiv {d['comsol_die_equiv_max_first_ge_thr_s']} s, difference {d['difference_s']} s")
         L.append("")
+        p25 = os.path.join(CMP, f"{case}_stats_o25.json")
+        if os.path.exists(p25):
+            s25 = json.load(open(p25))
+            L.append(f"Whole-run window, orbits 2–5 (`{case}_stats_o25.json`, `{case}_overlay_o25.png`): max \\|dev\\| " + ", ".join(f"{NAMES.get(k, k)} **{v['max_abs_dev_C']:.1f} °C** (mean {v['mean_dev_C']:+.1f})" for k, v in s25['probes'].items())
+                     + f"; radiator gradient mean {s25['radiator_gradient_C']['mean']:.2f} / max {s25['radiator_gradient_C']['max']:.2f} °C.")
+            L.append("")
+        L.append("Periodicity diagnostics — per-orbit means, orbit-to-orbit variation of the *reference itself* and of COMSOL, and the same-workload-phase check:\n")
+        L += periodicity_diag(case); L.append("")
     text = "\n".join(L) + "\n"
     rp = os.path.join(HERE, "REPORT.md"); r = open(rp, encoding="utf-8").read()
     a = r.index("### 7.7"); b = r.index("## 8. Things I am unsure about")

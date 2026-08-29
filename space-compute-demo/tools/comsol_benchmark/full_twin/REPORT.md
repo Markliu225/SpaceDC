@@ -1,6 +1,28 @@
 # OrbitWiz lumped thermal model vs COMSOL finite-element reference — written summary
 
-*Status: production solves (3 orbits) complete for both cases; §7.1–7.6 final; §7.7 (orbits 4–5 extension for the periodicity check) filled in when that run finishes. Figure index: `out/figures_final/FIGURES.md`.*
+*Status: final (2026-08-30). Both cases solved for 5 orbits (3 + a verified 2-orbit continuation); §7.8 gives the numbers to quote; a Chinese executive summary follows. Figure index: `out/figures_final/FIGURES.md`.*
+
+## 摘要（中文）
+
+**做了什么。** 把 OrbitWiz（`space-compute-demo`）的单节点集总热模型与 COMSOL 6.3 有限元整星模型（固体传热 + 面对面辐射 + 轨道热载荷，半立方体 128，双波段光学，2.7 K 深空，OrbitWiz 自己的 SGP4 轨道与太阳矢量，每个 GPU 封装独立热源，TIM 薄阻层，热管网络为外部设计）做开环对比：冻结热点稳态 + 5 圈轨道瞬态（前 3 圈 + 真正续算 2 圈，严格 BDF-1，Δt = 120 s），两个算例：A = 12×V100（OrbitWiz 中永不降频），B = 12×A100（OrbitWiz 中降频）。全部参数按硬规则溯源到 file:line（`PHASE1_PARAMETERS.md`）；外部来源的材料/热管/TIM 单独标注（`PHASE1_ADDENDUM_materials.md`）。
+
+**主要结果（第 4–5 圈，周期均值；括号内为最大绝对偏差）。**
+
+| 量 | Case A（V100） | Case B（A100） |
+|---|---|---|
+| 散热板均温：COMSOL vs OrbitWiz 单节点 | 40.2 vs 46.8 °C → **−6.6**（10.6） | 53.9 vs 63.2 °C → **−9.3**（12.9） |
+| GPU 基板 vs 单节点 | 59.2 vs 46.8 → **+12.5**（14.0） | 78.3 vs 63.2 → **+15.1**（16.4） |
+| 机身 vs 单节点 | 66.2 vs 46.8 → **+19.4**（22.5） | 84.7 vs 63.2 → **+21.5**（25.1） |
+| 散热板面内梯度（max − 面积加权均值）均值 / 最大 | 4.0 / 4.8 °C | 5.2 / 5.8 °C |
+| 降频线 | COMSOL die 等效在每个高负载块末尾越过 83 °C（占窗口 36 %，最高 86.7 °C）；OrbitWiz 永不（最高 72.7） | OrbitWiz 有 36 % 时间脱离降频；COMSOL die 等效 90.5–103.7 °C，从不脱离 |
+
+**结论。** 单节点落在 COMSOL 的散热板与电子设备之间：比散热板表面高 7–9 °C，比 GPU 基板低 12–15 °C，比机身低 19–22 °C。根源是结构性的——单节点没有机身→散热板的导热通路，无法表示热管/TIM/机身在 2.4–3.1 kW 下产生的 25–30 °C 温降；调 C 或 ε 都救不了，加一个"电子设备"节点并与散热板节点之间加一个热导才行。降频预测因此在"状态"上不同：V100 案例集总模型说永不降频，有限元说每个高负载块末尾降频约 35 分钟；A100 案例集总模型说周期性脱离降频，有限元说从不脱离。动态上，160 kJ/K 的单节点几乎感受不到地影，有限元散热板每次地影摆动 6–12 °C。
+
+**检查结果。** 能量平衡：冻结态吸收 39.7 / 40.1 kW vs 发射 41.1 / 41.7 kW，残差 3.6 / 3.9 %（略超 3 % 目标；残差等于 COMSOL 本版本无法求值的互辐射红外项 Gm2，如实标注而非宣称闭合）。辐射面积 6.273 m² = 两块板双面，精确。温度量级 305–336 K，在 250–350 K 内。**周期性判据（逐圈 ≤ 0.5 °C）对本工况不可能成立**：`inference` 工况周期 21 600 s = 3.875 圈，OrbitWiz 参考曲线自己逐圈就差 5–8 °C；改用"同工况相位、隔一个工况周期"的比较界定残余初始瞬态，并给出逐圈均值与逐圈变化表（§7.7）。第 3 圈起 COMSOL 的逐圈变化（1.5–5.8 °C）已低于或相当于参考自身（4.7–7.6 °C）。
+
+**必须如实交代的两件事。** (1) 轨道瞬态实际从均匀初温（50.4 / 66.6 °C = OrbitWiz t₀ 时的 T_struct）起算，而不是冻结稳态——研究步上的"以 A 解为初值"设置没有传到求解器（`useinitsol` 未开）；第 1 圈按任务丢弃，吸收了大部分升温，但第 2–3 圈仍低估机身/基板偏差约 4–6 °C，所以引用第 4–5 圈。续算第一次也重启了（两步 OTL 研究有两个解存储，取到了载荷存储），已用 `withsol` 预检 + 两步连续性自检（首点差 0.00 °C）修正后重跑。(2) 整条热传输路径（热管数量/间距/k_eff、TIM）是外部设计，机身→散热板温降的大小取决于它；但任何现实的被动设计都不可能把电子设备降到散热板温度。
+
+**交付物。** `caseA.mph` / `caseB.mph`（已求解 A + B + B2，未入库，各 1 GB）；可重跑脚本 `build_comsol.py`、`solve_and_probe.py`、`extend_orbits.py`、`probe_offline.py`、`compare_report.py`、`render_comsol.py`、`fill_sec77.py`、`organize_figures.py`；探针 CSV `out/comsol/*_probes.csv`；对比图与统计 `out/compare/`；40 张编号图与图注索引 `out/figures_final/FIGURES.md`（A 建模 / B 冻结稳态 / C 轨道温度场 / D 对比曲线）。
 
 ## 1. What was asked and what was delivered
 
@@ -67,7 +89,7 @@ All COMSOL numbers below come from `out/comsol/<case>_probes.csv` (120-s output 
 | Frozen steady state (study A, 60 000 s slow-motion transient, 31 outputs) | 533 s (A) / 542 s (B) wall, 5 cores each, both cases in parallel |
 | Loads-only studies LA / LB (13-point planet, 128 hemicube) | 85 s / 1091 s |
 | Orbital transient (study B, 3 orbits from uniform 50.4 °C, strict BDF-1, Δt = 120 s, 140 steps) | 6050 s (A) / 6035 s (B) ≈ 43 s per step |
-| Extension B2 (2 more orbits, true continuation, same stepping) | ≈ 4050 s per case (first, invalid attempt); rerun timing in §7.7 |
+| Extension B2 (2 more orbits, verified continuation of study B, same stepping) | 2485 s (A) / 2474 s (B); an earlier attempt that restarted from the uniform initial value took ≈ 4050 s and was discarded |
 | Planet discretisation check (13 vs 51 point sources, frozen instant) | absorbed Earth-IR 7918 vs 8037 W (**−1.5 %**); solar-band ∫Gext1 41 330 vs 41 304 W (+0.06 %) |
 
 ### 7.2 Frozen hot-instant steady state (study A) and energy balance (Check 1)
@@ -145,20 +167,101 @@ Same definitions as §7.3–7.6; window 3P ≤ τ ≤ 5P (`out/compare/*_stats_o
 
 | Probe | COMSOL min / max / cyclic mean (°C) | OrbitWiz min / max / mean (°C) | **max \|dev\|** (°C) | mean dev (°C) |
 |---|---|---|---|---|
-| Radiator, area-weighted mean | 27.8 / 45.3 / 35.9 | 42.8 / 51.5 / 46.8 | **15.0** | -10.9 |
-| Radiator, max | 32.0 / 46.9 / 39.7 | 42.8 / 51.5 / 46.8 | **10.8** | -7.1 |
-| GPU baseplate, mean of 12 TIM faces | 47.2 / 58.5 / 53.3 | 42.8 / 51.5 / 46.8 | **11.2** | +6.5 |
-| Bus, volume mean | 51.2 / 62.9 / 58.7 | 42.8 / 51.5 / 46.8 | **18.4** | +11.9 |
+| Radiator, area-weighted mean | 34.0 / 45.9 / 40.2 | 42.8 / 51.5 / 46.8 | **10.6** | -6.6 |
+| Radiator, max | 38.5 / 49.7 / 44.2 | 42.8 / 51.5 / 46.8 | **5.9** | -2.6 |
+| GPU baseplate, mean of 12 TIM faces | 55.6 / 63.8 / 59.2 | 42.8 / 51.5 / 46.8 | **14.0** | +12.5 |
+| Bus, volume mean | 63.2 / 68.7 / 66.2 | 42.8 / 51.5 / 46.8 | **22.5** | +19.4 |
 
-Radiator in-plane gradient (max − area-weighted mean): mean **3.76 °C**, max **4.59 °C**; max − min over the faces mean 6.9 °C.
-**Periodicity, orbit 4 vs orbit 5** (max |T(τ+P) − T(τ)|): radiator mean 6.89 °C, baseplate 9.93 °C, bus 10.34 °C → **FAIL** against the 0.5 °C criterion.
-Radiated power through the radiator faces, mean: COMSOL 2761 W vs OrbitWiz Q_out 3169 W.
-Throttle line 83 °C: OrbitWiz die max 72.7 °C (≥ threshold 0 % of the window; upward crossings at τ = — s, downward at — s); COMSOL die-equivalent 61.1–81.2 °C (≥ threshold 0 %; upward crossings at τ = — s, downward at — s).
-- all: first ≥ threshold — OrbitWiz None s, COMSOL die-equiv 10920.000000000195 s, difference None s
-- orbit4: first ≥ threshold — OrbitWiz None s, COMSOL die-equiv None s, difference None s
-- orbit5: first ≥ threshold — OrbitWiz None s, COMSOL die-equiv None s, difference None s
+Radiator in-plane gradient (max − area-weighted mean): mean **4.03 °C**, max **4.75 °C**; max − min over the faces mean 7.4 °C.
+**Periodicity, orbit 4 vs orbit 5** (max |T(τ+P) − T(τ)|): radiator mean 3.77 °C, baseplate 5.79 °C, bus 3.60 °C → **FAIL** against the 0.5 °C criterion.
+Radiated power through the radiator faces, mean: COMSOL 2916 W vs OrbitWiz Q_out 3169 W.
+Throttle line 83 °C: OrbitWiz die max 72.7 °C (≥ threshold 0 % of the window; upward crossings at τ = — s, downward at — s); COMSOL die-equivalent 70.4–86.7 °C (≥ threshold 36 %; upward crossings at τ = [20803] s, downward at [24814] s).
+- all: first ≥ threshold — OrbitWiz None s, COMSOL die-equiv 10919.999999999878 s, difference None s
+- orbit4: first ≥ threshold — OrbitWiz None s, COMSOL die-equiv 20802.59999999811 s, difference None s
+- orbit5: first ≥ threshold — OrbitWiz None s, COMSOL die-equiv 22362.599999999646 s, difference None s
 
-*caseB: orbits 4–5 statistics not available (extension did not complete).*
+Whole-run window, orbits 2–5 (`caseA_stats_o25.json`, `caseA_overlay_o25.png`): max \|dev\| Radiator, area-weighted mean **12.0 °C** (mean -7.8), Radiator, max **7.6 °C** (mean -3.8), GPU baseplate, mean of 12 TIM faces **14.0 °C** (mean +11.1), Bus, volume mean **22.5 °C** (mean +17.4); radiator gradient mean 4.01 / max 4.75 °C.
+
+Periodicity diagnostics — per-orbit means, orbit-to-orbit variation of the *reference itself* and of COMSOL, and the same-workload-phase check:
+
+| Orbit | mean payload (W) | OrbitWiz node mean (°C) | COMSOL radiator mean | COMSOL baseplate mean | COMSOL bus mean | bus − node | radiator − node |
+|---|---|---|---|---|---|---|---|
+| 1 | 1764 | 47.9 | 35.8 | 52.2 | 56.7 | +8.8 | -12.2 |
+| 2 | 2111 | 46.2 | 36.8 | 55.3 | 60.7 | +14.6 | -9.3 |
+| 3 | 1981 | 49.1 | 40.3 | 59.5 | 65.5 | +16.3 | -8.9 |
+| 4 | 1866 | 46.3 | 39.7 | 58.7 | 65.5 | +19.2 | -6.6 |
+| 5 | 1721 | 47.2 | 40.7 | 59.8 | 66.9 | +19.6 | -6.5 |
+
+| Orbit pair | OrbitWiz node max \|ΔT\| (°C) | COMSOL radiator | COMSOL baseplate | COMSOL bus |
+|---|---|---|---|---|
+| 1 vs 2 | 7.58 | 12.65 | 8.47 | 8.58 |
+| 2 vs 3 | 7.28 | 5.86 | 7.69 | 6.31 |
+| 3 vs 4 | 4.73 | 1.47 | 2.38 | 2.85 |
+| 4 vs 5 | 6.80 | 3.77 | 5.79 | 3.60 |
+
+Same-workload-phase check, T(τ + 21 600 s) − T(τ) for τ ∈ [5574, 6120] s (7 samples at identical payload; the orbit phase is shifted by 21 600 − 3.875·5574 ≈ −697 s, i.e. eclipse timing differs by 12 % of an orbit, which the thin radiator feels and the bus does not): OrbitWiz node mean -0.36 / max \|Δ\| 0.61 °C; COMSOL radiator mean mean +2.97 / max \|Δ\| 5.12 °C; COMSOL baseplate mean mean +4.30 / max \|Δ\| 4.39 °C; COMSOL bus mean mean +5.55 / max \|Δ\| 5.80 °C.
+
+**caseB — A100, throttled in OrbitWiz**
+
+| Probe | COMSOL min / max / cyclic mean (°C) | OrbitWiz min / max / mean (°C) | **max \|dev\|** (°C) | mean dev (°C) |
+|---|---|---|---|---|
+| Radiator, area-weighted mean | 48.5 / 58.8 / 53.9 | 58.1 / 66.8 / 63.2 | **12.9** | -9.3 |
+| Radiator, max | 54.1 / 63.6 / 59.1 | 58.1 / 66.8 / 63.2 | **7.1** | -4.2 |
+| GPU baseplate, mean of 12 TIM faces | 74.1 / 81.6 / 78.3 | 58.1 / 66.8 / 63.2 | **16.4** | +15.1 |
+| Bus, volume mean | 82.4 / 87.1 / 84.7 | 58.1 / 66.8 / 63.2 | **25.1** | +21.5 |
+
+Radiator in-plane gradient (max − area-weighted mean): mean **5.16 °C**, max **5.82 °C**; max − min over the faces mean 9.4 °C.
+**Periodicity, orbit 4 vs orbit 5** (max |T(τ+P) − T(τ)|): radiator mean 3.47 °C, baseplate 5.64 °C, bus 3.10 °C → **FAIL** against the 0.5 °C criterion.
+Radiated power through the radiator faces, mean: COMSOL 3461 W vs OrbitWiz Q_out 3871 W.
+Throttle line 85 °C: OrbitWiz die max 85.0 °C (≥ threshold 64 % of the window; upward crossings at τ = [18283, 27283] s, downward at [24814] s); COMSOL die-equivalent 90.5–103.7 °C (≥ threshold 100 %; upward crossings at τ = — s, downward at — s).
+- all: first ≥ threshold — OrbitWiz 0.0 s, COMSOL die-equiv 0.0 s, difference 0.0 s
+- orbit4: first ≥ threshold — OrbitWiz 18282.59999999949 s, COMSOL die-equiv 16842.599999999795 s, difference -1439.9999999996944 s
+- orbit5: first ≥ threshold — OrbitWiz 22362.599999999646 s, COMSOL die-equiv 22362.599999999646 s, difference 0.0 s
+
+Whole-run window, orbits 2–5 (`caseB_stats_o25.json`, `caseB_overlay_o25.png`): max \|dev\| Radiator, area-weighted mean **16.1 °C** (mean -10.7), Radiator, max **10.5 °C** (mean -5.6), GPU baseplate, mean of 12 TIM faces **16.4 °C** (mean +13.6), Bus, volume mean **25.1 °C** (mean +19.4); radiator gradient mean 5.15 / max 5.82 °C.
+
+Periodicity diagnostics — per-orbit means, orbit-to-orbit variation of the *reference itself* and of COMSOL, and the same-workload-phase check:
+
+| Orbit | mean payload (W) | OrbitWiz node mean (°C) | COMSOL radiator mean | COMSOL baseplate mean | COMSOL bus mean | bus − node | radiator − node |
+|---|---|---|---|---|---|---|---|
+| 1 | 2486 | 63.9 | 48.8 | 69.8 | 73.6 | +9.7 | -15.1 |
+| 2 | 2921 | 64.3 | 51.4 | 75.3 | 79.9 | +15.6 | -12.9 |
+| 3 | 2714 | 65.5 | 54.1 | 78.7 | 84.3 | +18.9 | -11.3 |
+| 4 | 2673 | 63.5 | 53.8 | 78.3 | 84.4 | +20.9 | -9.7 |
+| 5 | 2478 | 62.9 | 54.0 | 78.3 | 85.0 | +22.1 | -8.9 |
+
+| Orbit pair | OrbitWiz node max \|ΔT\| (°C) | COMSOL radiator | COMSOL baseplate | COMSOL bus |
+|---|---|---|---|---|
+| 1 vs 2 | 6.82 | 15.44 | 8.64 | 10.14 |
+| 2 vs 3 | 6.35 | 5.82 | 7.54 | 7.28 |
+| 3 vs 4 | 6.23 | 1.98 | 3.62 | 2.07 |
+| 4 vs 5 | 7.58 | 3.47 | 5.64 | 3.10 |
+
+Same-workload-phase check, T(τ + 21 600 s) − T(τ) for τ ∈ [5574, 6120] s (7 samples at identical payload; the orbit phase is shifted by 21 600 − 3.875·5574 ≈ −697 s, i.e. eclipse timing differs by 12 % of an orbit, which the thin radiator feels and the bus does not): OrbitWiz node mean -0.37 / max \|Δ\| 0.73 °C; COMSOL radiator mean mean +3.10 / max \|Δ\| 5.22 °C; COMSOL baseplate mean mean +4.58 / max \|Δ\| 4.67 °C; COMSOL bus mean mean +5.97 / max \|Δ\| 6.25 °C.
+
+### 7.8 Bottom line — which numbers to quote, and what they mean
+
+**Which window.** The orbits 2–3 window (§7.3–7.5, as specified) still contains the tail of the warm-up from the uniform 50.4 / 66.6 °C start: the same-workload-phase check (§7.7) shows the COMSOL bus 5.6 °C (A) / 6.0 °C (B) hotter one workload cycle after the start of orbit 2, while the reference moves by −0.4 °C over the same interval; the per-orbit bus means converge from orbit 3 on (65.5 → 65.5 → 66.9 °C A; 84.3 → 84.4 → 85.0 °C B), and from orbit 3 onward COMSOL's orbit-to-orbit variation (1.5–5.8 °C) is at or below the reference's own (4.7–7.6 °C), i.e. what remains is the workload forcing, not a transient. **Orbits 4–5 are therefore the numbers to quote**; orbits 2–3 understate the bus and baseplate offsets by ≈ 4–6 °C and overstate the radiator offset by ≈ 2–3 °C.
+
+| Quantity (orbits 4–5, cyclic mean; max \|dev\| in brackets) | Case A — V100 | Case B — A100 |
+|---|---|---|
+| Radiator mean: COMSOL vs OrbitWiz node | 40.2 vs 46.8 °C → **−6.6** (10.6) | 53.9 vs 63.2 °C → **−9.3** (12.9) |
+| Radiator max vs node | 44.2 vs 46.8 → −2.6 (5.9) | 59.1 vs 63.2 → −4.2 (7.1) |
+| GPU baseplate vs node | 59.2 vs 46.8 → **+12.5** (14.0) | 78.3 vs 63.2 → **+15.1** (16.4) |
+| Bus vs node | 66.2 vs 46.8 → **+19.4** (22.5) | 84.7 vs 63.2 → **+21.5** (25.1) |
+| Radiator in-plane gradient, mean / max | 4.0 / 4.8 °C | 5.2 / 5.8 °C |
+| Radiated through radiator faces (COMSOL vs Q_out) | 2916 vs 3169 W | 3461 vs 3871 W |
+| Throttle line | COMSOL die-equiv ≥ 83 °C for 36 % of the window (τ = 20 803–24 814 s, max 86.7 °C); OrbitWiz never (max 72.7 °C) | OrbitWiz at 85 °C 64 % of the window, un-throttled τ < 18 283 s and 24 814–27 283 s; COMSOL die-equiv 90.5–103.7 °C, never below the line |
+
+**What it means for the lumped model.**
+
+1. *Structure, not tuning.* The single OrbitWiz node sits between COMSOL's radiator and COMSOL's electronics: 7–9 °C above the radiator surface, 12–15 °C below the GPU baseplate, 19–22 °C below the bus. The model has no bus→radiator conduction path, so it cannot represent the ≈ 25–30 °C drop that the heat-pipe network, TIM, and bus skin impose at 2.4–3.1 kW; changing C or ε cannot fix this — a second node (electronics) with a conductance to the radiator node can.
+2. *Throttle predictions differ in kind.* For the V100 case the lumped model predicts "never throttles"; the FE model predicts throttling for ~35 min of every high-load block. For the A100 case the lumped model predicts periodic un-throttling (eclipse exit / low-load block); the FE model says the die never leaves the throttled state. The difference is the same ≈ 12–15 °C baseplate offset propagated to the die; the crossing-time question ("how many seconds apart") has no answer because the two models disagree on the *state*, not the timing.
+3. *Dynamics.* The 160 kJ/K node barely responds to eclipse; the FE radiator (1.63-mm equivalent skin) swings 6–12 °C per eclipse (max − min over the faces 7–9 °C), and the FE bus lags the payload by about half an orbit. The lumped radiator temperature is therefore too smooth by ~±5 °C even where its mean is right.
+4. *Radiator gradient.* 4–6 °C max − mean (7–10 °C max − min) with 8 spreaders per face at 0.1016 m pitch — an isothermal-panel assumption is worth ≈ 5 °C at the radiator, small compared with the conduction-path error, but it grows with rejected power.
+5. *Energy.* COMSOL rejects 8–11 % less power through the radiator panels than the lumped `Q_out` because 390–430 W leave through the ε = 0.10 bus skin (which OrbitWiz treats as non-radiating) and because the panels run colder.
+
+**Honest limits of these numbers.** The whole heat-transport path (heat-pipe count, pitch, k_eff, TIM) is an external design (§5), so the *size* of the bus→radiator drop is a property of that design; a better-coupled design would shrink the offsets, a worse one enlarge them — but no realistic passive design brings the electronics down to the radiator temperature. Residual uncertainties of a few °C remain from the 120-s strict steps at eclipse edges, the 13-point planet disc (−1.5 % Earth IR), the 3.6–3.9 % energy-balance residual (un-evaluable mutual-IR term), the uniform-start warm-up (bounded above), and the algebraic die-equivalent (P·R_th with OrbitWiz's own R_th).
 
 ## 8. Things I am unsure about or had to judge
 

@@ -6,18 +6,18 @@
  "probes": {
   "radiator_mean_C": {
    "comsol": {
-    "min": 31.893618366295016,
-    "max": 45.074055864158424,
-    "mean": 38.580212065891864
+    "min": 31.893618366291037,
+    "max": 45.07405586415342,
+    "mean": 38.580212065887864
    },
    "orbitwiz": {
-    "min": 43.76346849122771,
-    "max": 52.28953079463017,
-    "mean": 47.669183648509424
+    "min": 43.763468491227705,
+    "max": 52.28953079462947,
+    "mean": 47.66918364850939
    },
-   "max_abs_dev_C": 11.983894577504259,
-   "mean_dev_C": -9.088971582617564,
-   "t_of_max_abs_dev_s": 8088.825151149661
+   "max_abs_dev_C": 11.983894577508536,
+   "mean_dev_C": -9.088971582621536,
+   "t_of_max_abs_dev_s": 8088.825151149767
   },
   "radiator_max_C": {
    "comsol": {
@@ -26,28 +26,28 @@
     "mean": 42.56841922957274
    },
    "orbitwiz": {
-    "min": 43.76346849122771,
-    "max": 52.28953079463017,
-    "mean": 47.669183648509424
+    "min": 43.763468491227705,
+    "max": 52.28953079462947,
+    "mean": 47.66918364850939
    },
-   "max_abs_dev_C": 7.595545068056083,
-   "mean_dev_C": -5.1007644189366985,
-   "t_of_max_abs_dev_s": 8088.825151149661
+   "max_abs_dev_C": 7.595545068056381,
+   "mean_dev_C": -5.100764418936668,
+   "t_of_max_abs_dev_s": 8088.825151149767
   },
   "baseplate_mean_C": {
    "comsol": {
-    "min": 52.46160206025053,
-    "max": 62.611707007849475,
-    "mean": 57.39910731981696
+    "min": 52.4616020602507,
+    "max": 62.61170700784942,
+    "mean": 57.39910731981702
    },
    "orbitwiz": {
-    "min": 43.76346849122771,
-    "max": 52.28953079463017,
-    "mean": 47.669183648509424
+    "min": 43.763468491227705,
+    "max": 52.28953079462947,
+    "mean": 47.66918364850939
    },
-   "max_abs_dev_C": 10.980415067595281,
-   "mean_dev_C": 9.72992367130753,
-   "t_of_max_abs_dev_s": 14879.999999999522
+   "max_abs_dev_C": 10.980415067595288,
+   "mean_dev_C": 9.729923671307619,
+   "t_of_max_abs_dev_s": 14879.999999999518
   },
   "bus_mean_C": {
    "comsol": {
@@ -56,19 +56,19 @@
     "mean": 63.124645907454436
    },
    "orbitwiz": {
-    "min": 43.76346849122771,
-    "max": 52.28953079463017,
-    "mean": 47.669183648509424
+    "min": 43.763468491227705,
+    "max": 52.28953079462947,
+    "mean": 47.66918364850939
    },
-   "max_abs_dev_C": 17.460158957789744,
-   "mean_dev_C": 15.455462258944994,
-   "t_of_max_abs_dev_s": 13079.99999999963
+   "max_abs_dev_C": 17.460158957789254,
+   "mean_dev_C": 15.45546225894502,
+   "t_of_max_abs_dev_s": 13079.99999999921
   }
  },
  "radiator_gradient_C": {
-  "max": 4.604306713292885,
-  "mean": 3.9882071636808636,
-  "min": 3.211120197903881
+  "max": 4.604306713297149,
+  "mean": 3.9882071636848675,
+  "min": 3.2111201979087127
  },
  "radiator_max_minus_min_C": {
   "max": 8.516192713731584,
@@ -93,9 +93,9 @@
   }
  },
  "periodicity_orbit2_vs_3_max_abs_C": {
-  "rad_mean_K": 5.856584651298029,
-  "baseplate_mean_K": 7.692945212430438,
-  "bus_mean_K": 6.307737001282206
+  "rad_mean_K": 5.856584651298746,
+  "baseplate_mean_K": 7.692945212430445,
+  "bus_mean_K": 6.3077370012830585
  },
  "throttle_crossing": {
   "threshold_C": 83.0,
@@ -103,22 +103,22 @@
   "windows": {
    "orbit2": {
     "orbitwiz_die_first_ge_thr_s": null,
-    "comsol_die_equiv_max_first_ge_thr_s": 10920.000000000195,
+    "comsol_die_equiv_max_first_ge_thr_s": 10919.999999999878,
     "comsol_die_equiv_mean_first_ge_thr_s": null,
     "comsol_baseplate_max_first_ge_thr_s": null,
     "difference_s": null
    },
    "orbit3": {
     "orbitwiz_die_first_ge_thr_s": null,
-    "comsol_die_equiv_max_first_ge_thr_s": 14879.999999999522,
-    "comsol_die_equiv_mean_first_ge_thr_s": 15960.000000000036,
+    "comsol_die_equiv_max_first_ge_thr_s": 14879.999999999518,
+    "comsol_die_equiv_mean_first_ge_thr_s": 15959.99999999896,
     "comsol_baseplate_max_first_ge_thr_s": null,
     "difference_s": null
    },
    "all": {
     "orbitwiz_die_first_ge_thr_s": null,
-    "comsol_die_equiv_max_first_ge_thr_s": 10920.000000000195,
-    "comsol_die_equiv_mean_first_ge_thr_s": 15960.000000000036,
+    "comsol_die_equiv_max_first_ge_thr_s": 10919.999999999878,
+    "comsol_die_equiv_mean_first_ge_thr_s": 15959.99999999896,
     "comsol_baseplate_max_first_ge_thr_s": null,
     "difference_s": null
    }
@@ -129,13 +129,13 @@
  },
  "radiated_power_W": {
   "comsol_radiator_faces": {
-   "min": 2618.059473173742,
-   "max": 3100.5697271949552,
-   "mean": 2857.652708292913
+   "min": 2618.059473173744,
+   "max": 3100.5697271949616,
+   "mean": 2857.6527082929124
   },
   "orbitwiz_q_out": {
-   "min": 3049.291090079248,
-   "max": 3390.987253888644,
+   "min": 3049.2910900792476,
+   "max": 3390.9872538886148,
    "mean": 3203.8065315631666
   }
  }
