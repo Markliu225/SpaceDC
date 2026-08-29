@@ -1,0 +1,63 @@
+{
+ "case": "caseA",
+ "tag": "caseA_lite_copy",
+ "datasets": {
+  "stdLA": "dset1",
+  "stdA": "dset2"
+ },
+ "A_times_s": [
+  0.0,
+  1000.0000000003334,
+  2000.000000000667,
+  3000.0000000009313,
+  4000.000000001334,
+  5000.000000001424,
+  6000.000000001863
+ ],
+ "A_rad_mean_K_series": [
+  323.59000000001316,
+  331.0136581501101,
+  340.31901027362534,
+  349.6474544015067,
+  358.90221553545734,
+  368.1071560047354,
+  377.3057231612674
+ ],
+ "A_rad_mean_K": 377.3057231612674,
+ "A_rad_drift_last_interval_K": 9.198567156532022,
+ "A_rad_max_K": 377.9133586628162,
+ "A_rad_min_K": 376.8868852055915,
+ "A_baseplate_mean_K": 380.80784737534947,
+ "A_pkg_max_K": 381.57971492826573,
+ "A_bus_mean_K": 376.784302428545,
+ "A_blades_mean_K": 380.2775900324068,
+ "A_wing_mean_K": 323.59000000000464,
+ "energy_balance_A": {
+  "P_sources_W": 2583.24,
+  "absorbed_solar_albedo_ext_W": 30673.12843020405,
+  "absorbed_planet_IR_ext_W": 7923.85823908694,
+  "absorbed_mutual_solar_band_W": 455.74161441208634,
+  "emitted_gross_W": 80673.82990811385,
+  "emitted_gross_series_W": [
+   73936.7318696704,
+   74757.24651596557,
+   75765.73620448675,
+   76860.36162988824,
+   78039.0496219657,
+   79307.49283838022,
+   80673.82990811385
+  ],
+  "absorbed_total_W": 41635.96828370308,
+  "residual_W_(mutual_IR_absorbed+error)": 39037.861624410776,
+  "closure_pct_gross": 93.75994658851434,
+  "emitted_rad_faces_W": 6127.103789135851,
+  "emitted_wings_W": 65454.94672443343,
+  "absorbed_solar_wings_W": 29390.946067606783,
+  "absorbed_IR_wings_W": 7097.143628437994,
+  "absorbed_solar_rad_faces_W": 790.4906157198707,
+  "absorbed_IR_rad_faces_W": 364.4999873177817,
+  "area_rad_faces_m2": 6.272639999998312,
+  "area_all_exterior_m2": 118.92361224119747,
+  "area_wings_m2": 105.28108912440041
+ }
+}

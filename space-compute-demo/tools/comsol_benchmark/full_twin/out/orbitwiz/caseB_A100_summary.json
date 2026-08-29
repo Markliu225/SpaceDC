@@ -1,0 +1,20 @@
+{
+  "T_struct_min_c": 58.09678517031921,
+  "T_struct_max_c": 66.87924577355113,
+  "T_struct_mean_c": 64.33062217406619,
+  "die_min_c": 71.9,
+  "die_max_c": 85.0,
+  "throttled_frac": 0.8263710917478216,
+  "payload_min_w": 1944.0,
+  "payload_max_w": 3798.0,
+  "payload_mean_w": 2695.026089185001,
+  "heat_total_mean_w": 3130.274784725445,
+  "sunlit_frac": 0.6318298308559713,
+  "gpu": "A100",
+  "label": "caseB",
+  "rows": 39020,
+  "spin_orbits": 8.0,
+  "period_s": 5574.193548387097,
+  "t_phys_start_s": 44580.0,
+  "wall_s": 5.2
+}

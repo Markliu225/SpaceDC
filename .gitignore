@@ -15,3 +15,7 @@ space-compute-demo/assets_usd/DigitalTwin/
 
 # Native debug symbols and large standalone runtime binaries.
 *.pdb
+
+# COMSOL model files (~1 GB each; regenerable with build_comsol.py + solve_and_probe.py + extend_orbits.py)
+space-compute-demo/tools/comsol_benchmark/full_twin/out/comsol/*.mph
+space-compute-demo/tools/comsol_benchmark/full_twin/out/comsol/*.mph.lock
