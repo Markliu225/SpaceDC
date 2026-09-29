@@ -99,7 +99,12 @@ def geometry_figures(j, stem, classes):
         pg = plot_group(j, 'pg_geom_' + view, 'dmesh', f'ISS thermal FE model: geometry by thermal class ({view})', view)
         for c in classes:
             sel = f'geom1_csel_{c}_bnd'
-            m = pg.create('m_' + c, 'Mesh'); m.selection().named(sel)
+            dsn = 'dm_' + c
+            try: r.dataset().remove(dsn)
+            except Exception: pass
+            dsc = r.dataset().create(dsn, 'Mesh'); dsc.set('mesh', 'mesh1')
+            dsc.selection().geom('geom1', 2); dsc.selection().named(sel)
+            m = pg.create('m_' + c, 'Mesh'); m.set('data', dsn)
             for k, v in (('elemcolor', 'custom'), ('customelemcolor', [str(x) for x in CLASS_COLORS.get(c, (0.7, 0.7, 0.7))]), ('meshdomain', 'surface'),
                          ('wireframecolor', 'custom'), ('customwireframecolor', ['0.2', '0.2', '0.2']), ('elemscale', '1'), ('wireframe', 'off')):
                 try: m.set(k, v)

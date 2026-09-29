@@ -62,23 +62,26 @@ PARAMS = {
     'g_pvr':    ('120[W/(m^2*K)]', 'NH3 to PVR panel conductance per unit panel area (D)'),
     'tau_Q':    ('20[s]', 'lag of the collected-heat state (numerical, D)'),
     'C_f':      ('1[kJ/K]', 'NH3 node heat capacity per radiator panel: 22 tubes x 2.7 m of liquid NH3 plus tube wall (D)'),
-    'k_c':      ('600[K*s]', 'mixing-valve integral gain: 10 K supply error changes the radiator fraction by 1/60 per s (D)'),
+    'k_c':      ('3000[K*s]', 'mixing-valve integral gain: closed-loop time constant k_c/|dTmix/df| ~ 3000/25 = 120 s, below the 16 min panel time constant (D)'),
+    'f_min':    ('0.02', 'lower bound of the radiator flow fraction, valve fully on bypass (D)'),
+    's_f':      ('0.01', 'smoothing width of the flow-fraction bound (numerical, D)'),
+    'k_aw':     ('50[K]', 'anti-windup gain of the valve integrator below f_min (numerical, D)'),
     'T_init_solid': ('273.15[K]', 'initial temperature, solids'),
     'T_init_shell': ('263.15[K]', 'initial temperature, shells'),
 }
 
 # initial temperatures by class (K): rough orbit-average expectations to shorten the spin-up (D)
 T_INIT = dict(rack=298.0, box=283.0, payload=283.0, truss=253.0, skin_usos=268.0, skin_rus=268.0,
-              hrs=255.0, pvr=260.0, saw=290.0, rsa=290.0)
+              hrs=262.0, pvr=262.0, saw=290.0, rsa=290.0)
 
 # ======================================================================= optics (alpha solar, eps IR)
 OPTICS = {   # docs/ISS_OPTICS_MATERIALS.md item numbers in brackets
     'z93':       dict(alpha=0.20, eps=0.91),   # nominal aged Z-93/Z-93P: BOL 0.15/0.91 [2.1, 2.2], contaminated + VUV 0.21-0.24 [2.11]
     'skin_usos': dict(alpha=0.30, eps=0.45),   # chromic-anodized Al 6061 MMOD bumper [5.9-5.11]
-    'skin_rus':  dict(alpha=0.31, eps=0.90),   # no public value [10.4]; aluminized beta cloth taken (D) [5.15]
+    'skin_rus':  dict(alpha=0.36, eps=0.87),   # no public value [10.4]; ISS-batch aluminized beta cloth BOL taken (optics verification)
     'truss':     dict(alpha=0.49, eps=0.85),   # sulfuric anodize [6.1, 6.2]
-    'box':       dict(alpha=0.31, eps=0.90),   # ORU MLI outer layer, aluminized beta cloth [5.15, 6.4]
-    'payload':   dict(alpha=0.31, eps=0.90),   # same outer layer (D)
+    'box':       dict(alpha=0.36, eps=0.87),   # ORU MLI outer layer, ISS-batch aluminized beta cloth BOL (optics verification; 0.41-0.42 after MISSE-6)
+    'payload':   dict(alpha=0.36, eps=0.87),   # same outer layer (D)
     # US solar array: no public alpha/eps [10.2]; cell side 0.72 typical Si cell + coverglass (D) minus the
     # blanket-average electrical conversion 31 kW / (309 m2 x 1371 W/m2) = 0.073 [4.11] (derived)
     'saw_cells': dict(alpha=0.72 - 0.073, eps=0.82),
@@ -116,23 +119,23 @@ MODULES = [  # name, label, axis, centre, length, diameter, class
     # hull length / diameter: Reference Guide to the ISS 2010 (RG), ESA and JAXA fact sheets (research
     # "modules_layout"); centres: G3D, consistent with the JSC 26557 Rev AB mass-property centres within
     # 0.5 m; attached modules re-seated 5 cm from the parent hull so that no hulls intersect
-    ('destiny', 'Destiny US Lab', 'x', (2.120, 0.0, Z_USOS), 8.50, 4.30, 'skin_usos'),          # RG p49
-    ('unity', 'Unity Node 1', 'x', (-5.023, 0.0, Z_USOS), 5.50, 4.30, 'skin_usos'),            # RG p53
+    ('destiny', 'Destiny US Lab', 'x', (2.120, 0.0, Z_USOS), 8.50, 4.45, 'skin_usos'),          # RG p49; MMOD envelope 4.45 (IGOAL, data book)
+    ('unity', 'Unity Node 1', 'x', (-5.023, 0.0, Z_USOS), 5.50, 4.45, 'skin_usos'),            # RG p53; envelope R2223 mm (JSC 26557)
     ('harmony', 'Harmony Node 2', 'x', (9.773, 0.0, Z_USOS), 6.706, 4.48, 'skin_usos'),        # ESA
-    ('tranquility', 'Tranquility Node 3', 'y', (-5.023, -5.553, Z_USOS), 6.706, 4.48, 'skin_usos'),   # ESA factsheet
+    ('tranquility', 'Tranquility Node 3', 'y', (-5.023, -5.628, Z_USOS), 6.706, 4.48, 'skin_usos'),   # ESA factsheet
     ('columbus', 'Columbus', 'y', (10.855, 5.726, Z_USOS), 6.871, 4.477, 'skin_usos'),         # ESA
     ('kibo', 'Kibo JEM PM', 'y', (10.957, -7.890, Z_USOS), 11.20, 4.40, 'skin_usos'),          # JAXA Kibo Handbook T3.1-1
     ('elm', 'Kibo JEM ELM-PS', 'z', (11.093, -10.173, 0.500), 4.20, 4.40, 'skin_usos'),        # JAXA
-    ('quest', 'Quest airlock', 'y', (-5.023, 4.950, Z_USOS), 5.50, 4.00, 'skin_usos'),         # RG p56
-    ('pmm', 'Leonardo PMM', 'x', (0.602, -6.681, Z_USOS), 6.67, 4.57, 'skin_usos'),           # RG p58
-    ('beam', 'BEAM', 'x', (-9.319, -6.681, Z_USOS), 4.011, 3.23, 'skin_usos'),                 # NASA facts
-    ('cupola', 'Cupola', 'z', (-5.023, -6.733, 7.890), 1.50, 2.955, 'skin_usos'),              # ESA
+    ('quest', 'Quest airlock', 'y', (-5.023, 5.025, Z_USOS), 5.50, 4.00, 'skin_usos'),         # RG p56
+    ('pmm', 'Leonardo PMM', 'x', (0.602, -6.756, Z_USOS), 6.67, 4.57, 'skin_usos'),           # RG p58
+    ('beam', 'BEAM', 'x', (-9.319, -6.756, Z_USOS), 4.011, 3.23, 'skin_usos'),                 # NASA facts
+    ('cupola', 'Cupola', 'z', (-5.023, -6.808, 7.890), 1.50, 2.955, 'skin_usos'),              # ESA
     ('pma1', 'PMA-1', 'x', (-8.734, 0.0, 4.702), 1.82, 1.90, 'skin_usos'),                     # RG p64 (1.86 m, fitted in the 1.92 m gap)
     ('pma2', 'PMA-2', 'x', (14.106, 0.0, Z_USOS), 1.86, 1.90, 'skin_usos'),
     ('pma3', 'PMA-3', 'z', (11.211, 0.0, 1.630), 1.86, 1.90, 'skin_usos'),
     ('zarya', 'Zarya FGB', 'x', (-16.189, 0.0, 4.071), 12.99, 4.10, 'skin_rus'),              # RG p59
     ('zvezda_f', 'Zvezda SM small-diameter section', 'x', (-26.184, 0.0, 4.264), 6.90, 2.90, 'skin_rus'),   # RG p63: 13.1 m, 4.2 m max
-    ('zvezda_a', 'Zvezda SM large-diameter section', 'x', (-32.759, 0.0, 4.264), 6.15, 4.20, 'skin_rus'),
+    ('zvezda_a', 'Zvezda SM large-diameter section', 'x', (-32.759, 0.0, 4.264), 6.15, 4.25, 'skin_rus'),   # R2125 mm (JSC 26557)
     ('poisk', 'Poisk MRM-2', 'z', (-24.100, 0.0, 0.314), 4.90, 2.55, 'skin_rus'),             # RG p61
     ('pirs', 'Pirs DC-1', 'z', (-24.100, 0.0, 8.214), 4.90, 2.55, 'skin_rus'),                # RG p60
     ('rassvet', 'Rassvet MRM-1', 'z', (-11.141, 0.0, 9.171), 6.00, 2.35, 'skin_rus'),          # RG p62
@@ -230,8 +233,9 @@ MODULE_LOOPS = {
 # ======================================================================= loops
 LOOPS = dict(
     loops={
-        'A': dict(mdot='mdot_A', T_set='T_setA', g='g_hrs', orus=['S1-1', 'S1-2', 'S1-3'], f_init=0.3),
-        'B': dict(mdot='mdot_B', T_set='T_setB', g='g_hrs', orus=['P1-1', 'P1-2', 'P1-3'], f_init=0.3),
+        # f_init: steady-state estimate f = (Tret - Tset)/(Tret - Tout) with a 5 K loop rise and a ~30 K radiator drop
+        'A': dict(mdot='mdot_A', T_set='T_setA', g='g_hrs', orus=['S1-1', 'S1-2', 'S1-3'], f_init=0.2),
+        'B': dict(mdot='mdot_B', T_set='T_setB', g='g_hrs', orus=['P1-1', 'P1-2', 'P1-3'], f_init=0.2),
     },
     other_loads={'A': '410[W]', 'B': '410[W]'},     # crew metabolic heat, 6 crew x 136.8 W (R L85-L86), split between loops
 )
@@ -244,7 +248,7 @@ PARAMS.update({
     'T_set_pv': ('(37-32)/1.8[K]+273.15[K]', 'PVTCS supply set point, taken equal to EATCS (PROVISIONAL, R)'),
 })
 for _m in PV_LOOPS:
-    LOOPS['loops']['PV' + _m] = dict(mdot='mdot_pv', T_set='T_set_pv', g='g_pvr', orus=['PVR_' + _m], f_init=0.5)
+    LOOPS['loops']['PV' + _m] = dict(mdot='mdot_pv', T_set='T_set_pv', g='g_pvr', orus=['PVR_' + _m], f_init=0.3)
 
 
 # ======================================================================= layout

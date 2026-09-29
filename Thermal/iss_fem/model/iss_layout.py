@@ -45,10 +45,10 @@ def optics_by_group(case=None):
     for k, v in S.OPTICS_BY_CASE.get(case, {}).items():
         O[k] = dict(v)
     return {
-        'body': [dict(name='skin_usos', classes=['skin_usos'], label='USOS module MMOD shield (outside only)', two_sided=True,
-                      up=_opt(O['skin_usos']), down=['0', '0']),
-                 dict(name='skin_rus', classes=['skin_rus'], label='Russian module thermal blanket (outside only)', two_sided=True,
-                      up=_opt(O['skin_rus']), down=['0', '0']),
+        'body': [dict(name='skin_usos', classes=['skin_usos'], label='USOS module MMOD shield (outward side only)', direction='RadiationDirectionPlus',
+                      both=_opt(O['skin_usos'])),
+                 dict(name='skin_rus', classes=['skin_rus'], label='Russian module outer surface (outward side only)', direction='RadiationDirectionPlus',
+                      both=_opt(O['skin_rus'])),
                  dict(name='truss', classes=['truss'], label='truss envelope', both=_opt(O['truss'])),
                  dict(name='box', classes=['box'], label='external ORU boxes (MLI + beta cloth)', both=_opt(O['box'])),
                  dict(name='payload', classes=['payload'], label='external payload blocks', both=_opt(O['payload']))],
@@ -191,14 +191,18 @@ def _loops(lay):
                 i = p['fluid']['idx']; tf = f"Tf_{L}_{k+1}_{i}"
                 p['fluid']['qexpr'] = f"{d['g']}*(0.5*({prev}+{tf})-T2)"
                 p['fluid']['t_name'] = 't_' + p['cls']
-                eq = f"C_f*{tf}t-((f_{L}*{mdot}/{len(d['orus'])})*{cp}*({prev}-{tf})-ip_{p['name']}({p['fluid']['qexpr']}))"
+                eq = f"C_f*{tf}t-((feff_{L}*{mdot}/{len(d['orus'])})*{cp}*({prev}-{tf})-ip_{p['name']}({p['fluid']['qexpr']}))"
                 rows.append((tf, eq, d.get('Tf_init', f'{Tset}-10[K]'), f'{L} ORU {oru} panel {i} NH3 outlet T', 'T'))
                 prev = tf
             outs.append(prev)
         gv[f'Tout_{L}'] = '(' + '+'.join(outs) + f')/{len(outs)}'
-        gv[f'Tmix_{L}'] = f"f_{L}*Tout_{L}+(1-f_{L})*Tret_{L}"
-        rows.insert(0, (f'f_{L}', f"k_c*f_{L}t-(Tmix_{L}-{Tset})", str(d.get('f_init', 0.3)), f'{L}: radiator flow fraction, integral control of the mixed supply temperature', 'f'))
-        gv[f'Qrad_{L}'] = f"f_{L}*{mdot}*{cp}*(Tret_{L}-Tout_{L})"
+        # radiator flow fraction: valve travel bounded below by f_min (fully bypassed valve) with a smooth
+        # softplus; anti-windup pulls the integrator back when it runs below f_min (low loop load)
+        gv[f'feff_{L}'] = f"f_min+s_f*log(1+exp((f_{L}-f_min)/s_f))"
+        gv[f'Tmix_{L}'] = f"feff_{L}*Tout_{L}+(1-feff_{L})*Tret_{L}"
+        rows.insert(0, (f'f_{L}', f"k_c*f_{L}t-(Tmix_{L}-{Tset})+k_aw*s_f*log(1+exp((f_min-f_{L})/s_f))", str(d.get('f_init', 0.3)),
+                        f'{L}: radiator flow fraction, integral control of the mixed supply temperature', 'f'))
+        gv[f'Qrad_{L}'] = f"feff_{L}*{mdot}*{cp}*(Tret_{L}-Tout_{L})"
     lay['int_ops_spec'] = ops
     lay['global_vars'] = gv
     lay['ge_rows'] = qrows + rows

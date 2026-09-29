@@ -62,11 +62,16 @@ class Builder:
 
     def geometry(self):
         g = self.geom; lay = self.lay
+        # module skins: solid cylinders converted to CLOSED surfaces (a surface-type Cylinder has no end caps)
+        by_cls = {}
         for c in lay['cylinders']:
             f = g.feature().create('cy_' + c['name'], 'Cylinder')
-            f.set('type', 'surface'); f.set('r', str(c['R'])); f.set('h', str(c['L']))
-            f.set('pos', [float(v) for v in c['p0']]); f.set('axistype', c['axis'])
-            f.set('contributeto', self._csel(c['cls'])); f.label(c['label'])
+            f.set('r', str(c['R'])); f.set('h', str(c['L']))
+            f.set('pos', [float(v) for v in c['p0']]); f.set('axistype', c['axis']); f.label(c['label'])
+            by_cls.setdefault(c['cls'], []).append('cy_' + c['name'])
+        for cls, objs in by_cls.items():
+            cv = g.feature().create('cv_' + cls, 'ConvertToSurface'); cv.selection('input').set(objs)
+            cv.set('contributeto', self._csel(cls)); cv.label('closed skins ' + cls)
         for b in lay['blocks']:
             f = g.feature().create('bk_' + b['name'], 'Block')
             f.set('base', 'center'); f.set('pos', [float(v) for v in b['center']]); f.set('size', [float(v) for v in b['size']])
@@ -280,7 +285,12 @@ class Builder:
                 if not sels: continue
                 d = o.create(f"ds_{oc['name']}", 'DiffuseSurface', 2); d.selection().named(self.union(f"so_{gname}_{oc['name']}", 2, sels))
                 d.set('Tamb', 'T_space'); d.label(oc['label'])
-                if oc.get('two_sided'):
+                if oc.get('direction'):
+                    # radiate from one side only (module skins: outward normal = RadiationDirectionPlus, checked
+                    # in smoke s10c); no radiosity unknowns inside the closed skin, no singular reflecting enclosure
+                    d.set('radDirectionTypeSolAmb', oc['direction'])
+                    d.set('epsilon_radSolAmb_mat', 'userdefBand'); d.set('epsilon_rad_bandSolAmb', oc['both'])
+                elif oc.get('two_sided'):
                     d.set('defineSurfaceEmissivityOnEachSide', '1')
                     d.set('epsilon_raduSolAmb_mat', 'userdefBand'); d.set('epsilon_raddSolAmb_mat', 'userdefBand')
                     d.set('epsilon_radu_bandSolAmb', oc['up']); d.set('epsilon_radd_bandSolAmb', oc['down'])
@@ -364,7 +374,14 @@ class Builder:
                             c.set('scalemethod', 'manual'); c.set('scaleval', val)
                         except Exception as e:
                             log('scale', tag, str(e)[:120])
-                log('scaling', str(sol.tag()), str(f.tag()), [(str(c.tag()), str(c.getString('scalemethod'))) for c in f.feature()][:12])
+            # time stepping: strict steps no longer than the output interval, BDF order 1 (backward Euler).
+            # The OTL loads change piecewise (view-factor updates, eclipse) and a free BDF stepper crawls
+            # through those kinks (lite model: 264 s of orbit in 10 min with 41 nonlinear failures).
+            for f in sol.feature():
+                if str(f.getType()) != 'Time': continue
+                # fixed backward-Euler steps (manual): error-controlled stepping stalls on the sampled OTL loads
+                for k, v in (('tstepsbdf', 'manual'), ('timestepbdf', str(self.a.dt_out)), ('maxorder', '1')):
+                    tryset(f, k, v, f'{sol.tag()}/{f.tag()}')
 
     def save(self, path):
         if os.path.exists(path):

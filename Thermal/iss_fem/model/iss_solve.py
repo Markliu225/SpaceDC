@@ -111,7 +111,7 @@ def probe(b, a, tag, outdir, summ, study='stdO'):
     # loop globals
     gnames = []
     for L in S.LOOPS['loops']:
-        gnames += [f'f_{L}', f'Q_{L}', f'Qrad_{L}', f'Tret_{L}-273.15', f'Tout_{L}-273.15']
+        gnames += [f'f_{L}', f'feff_{L}', f'Q_{L}', f'Qrad_{L}', f'Tret_{L}-273.15', f'Tout_{L}-273.15', f'Tmix_{L}-273.15']
     g = ev_global(model, gnames, None)
     # MPh evaluate with dataset=None uses the default (latest) dataset; redo on the temperature dataset label
     try:
