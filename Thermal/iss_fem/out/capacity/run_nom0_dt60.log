@@ -1,0 +1,5 @@
+07:21:24 capacity case nom0 Qd [35.0]
+07:21:29 geometry: 0 domains, 48 boundaries, 192 edges (0s)
+07:21:31 selections: shells 48 bnds; solids -1 doms; hrs=48
+07:21:45 global equations: 48 unknowns
+07:21:50 mesh 0s {'tri': 1056, 'tet': 0}

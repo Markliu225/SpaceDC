@@ -1,0 +1,5 @@
+07:13:49 capacity case hot75 Qd [35.0, 60.0, 85.0]
+07:13:58 geometry: 0 domains, 48 boundaries, 192 edges (1s)
+07:14:02 selections: shells 48 bnds; solids -1 doms; hrs=48
+07:14:28 global equations: 48 unknowns
+07:14:39 mesh 1s {'tri': 1056, 'tet': 0}

@@ -3,3 +3,11 @@
 06:18:07 selections: shells 48 bnds; solids -1 doms; hrs=48
 06:18:31 global equations: 48 unknowns
 06:18:38 mesh 1s {'tri': 1056, 'tet': 0}
+06:52:19 nom0 Qd 35 kW loop A: outlet mean -36.44 C, min -39.37, max -33.59, orbit-to-orbit drift -0.345 K (1966 s)
+06:52:20 nom0 Qd 35 kW loop B: outlet mean -37.84 C, min -39.33, max -36.58, orbit-to-orbit drift -0.383 K (1966 s)
+07:03:32 nom0 Qd 85 kW loop A: outlet mean -5.91 C, min -8.50, max -3.47, orbit-to-orbit drift 0.030 K (671 s)
+07:03:32 nom0 Qd 85 kW loop B: outlet mean -6.40 C, min -7.91, max -5.37, orbit-to-orbit drift 0.032 K (671 s)
+07:15:02 nom0 Qd 135 kW loop A: outlet mean 15.57 C, min 13.23, max 17.65, orbit-to-orbit drift 0.022 K (688 s)
+07:15:03 nom0 Qd 135 kW loop B: outlet mean 15.69 C, min 14.22, max 16.65, orbit-to-orbit drift 0.023 K (688 s)
+07:15:06 saved C:\Workspace\SpaceDC\Thermal\iss_fem\out\comsol\cap_nom0.mph
+07:15:07 nom0 capacity {'A': {'Q_at_mean_setpoint_kW': 105.22699228361488, 'Q_at_max_setpoint_kW': 99.79192231196231}, 'B': {'Q_at_mean_setpoint_kW': 105.77244585571654, 'Q_at_max_setpoint_kW': 103.50461537530231}}

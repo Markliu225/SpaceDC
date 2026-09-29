@@ -18,12 +18,23 @@ def load_case(tag):
     t = s['t_s']
     last = t >= t[-1] - per + 1e-6
     prev = (t >= t[-1] - 2 * per + 1e-6) & ~last
-    return dict(tag=tag, s=s, items=items, summ=summ, per=per, last=last, prev=prev, t=t)
+    # exact one-period windows for time-weighted means (sample-count differences between windows otherwise
+    # bias the orbit mean of fast components such as the solar arrays by about 1 K)
+    win = (t[-1] - per, t[-1]); win_prev = (t[-1] - 2 * per, t[-1] - per)
+    return dict(tag=tag, s=s, items=items, summ=summ, per=per, last=last, prev=prev, t=t, win=win, win_prev=win_prev)
+
+
+def twmean(t, y, a, b):
+    """Time-weighted mean of y over [a, b], linear interpolation between samples."""
+    tt = np.concatenate(([a], t[(t > a) & (t < b)], [b]))
+    yy = np.interp(tt, t, y)
+    return float(np.sum((yy[1:] + yy[:-1]) * np.diff(tt)) / 2.0 / (b - a))
 
 
 def stat(c, key, where='last'):
     v = c['s'][key][c[where]]
-    return dict(mean=float(v.mean()), min=float(v.min()), max=float(v.max()))
+    a, b = c['win'] if where == 'last' else c['win_prev']
+    return dict(mean=twmean(c['t'], c['s'][key], a, b), min=float(v.min()), max=float(v.max()))
 
 
 def loop_table(c, loops=('A', 'B')):
@@ -43,7 +54,7 @@ def class_table(c, classes=('hrs', 'pvr', 'saw', 'rsa', 'skin_usos', 'skin_rus',
     out = {}
     for k in classes:
         if f'{k}_Tmean_C' in c['s']:
-            out[k] = dict(mean=float(c['s'][f'{k}_Tmean_C'][c['last']].mean()),
+            out[k] = dict(mean=twmean(c['t'], c['s'][f'{k}_Tmean_C'], *c['win']),
                           min=float(c['s'][f'{k}_Tmin_C'][c['last']].min()),
                           max=float(c['s'][f'{k}_Tmax_C'][c['last']].max()))
     return out
@@ -54,12 +65,14 @@ def periodicity(c):
     out = {}
     if not c['prev'].any():
         return out
+    t = c['t']
     for k, v in c['s'].items():
         if k.endswith('_Tmean_C'):
-            out[k[:-len('_Tmean_C')]] = float(v[c['last']].mean() - v[c['prev']].mean())
+            out[k[:-len('_Tmean_C')]] = twmean(t, v, *c['win']) - twmean(t, v, *c['win_prev'])
     for L in ('A', 'B'):
         if f'Q_{L}' in c['s']:
-            out['Q_' + L + '_kW'] = float((c['s'][f'Q_{L}'][c['last']].mean() - c['s'][f'Q_{L}'][c['prev']].mean()) / 1e3)
+            q = c['s'][f'Q_{L}']
+            out['Q_' + L + '_kW'] = (twmean(t, q, *c['win']) - twmean(t, q, *c['win_prev'])) / 1e3
     return out
 
 

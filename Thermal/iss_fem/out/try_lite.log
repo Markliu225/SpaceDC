@@ -1,0 +1,65 @@
+02:09:46 layout: {'cylinders': 4, 'blocks': 70, 'panels': 94, 'sun_rays_ecs': 3, 'int_ops_spec': 51, 'ge_rows': 82}
+02:09:58 geometry: 70 domains, 530 boundaries, 1264 edges (1s)
+02:10:00 selections: shells 110 bnds; solids 70 doms; body=244 hrs=48 sarj=30 saw=16
+02:10:44 global equations: 82 unknowns
+02:11:04 mesh 1s {'tri': 4772, 'tet': 3644}
+02:11:41 saved C:\Workspace\SpaceDC\Thermal\iss_fem\out\comsol\iss_beta0_lite_try.mph
+02:11:41 solving stdO
+02:14:28 stdO FAILED Exception: 	com.comsol.util.exceptions.FlException: 以下特征遇到问题： Messages: 	以下特征遇到问题： 	- 特征: 瞬态求解器 2 (sol1/t2)  	找不到一致的初始值。  	辐射度 (2)  	除零错误。  	函数: /  	无法计算积分算子的上限。  	Operator: integrate  	无法计算表达式。  	Expression: integrate((comp1.otl2.zeta^3)/(1-exp(comp1.otl2.zeta)),comp1.otl2.zeta,eps,(h const*c const)/(comp1.otl2.Tu band1*(comp1.otl2.lambdar*k B const)),1.0E-6)  	无法计算变量。  	Variable: comp1.otl2.fepu1, Defined as: ((integrate((comp1.otl2.zeta^3)/(1-exp(comp1.otl2.zeta)),comp1.otl2.zeta,eps,(h const*c const)/(comp1.otl2.Tu band1*(comp1.otl2.lambdar*k B const)),1.0E-6)*15)/(pi^4))+1  	无法计算变量。  	Variable: comp1.otl2.ebu1, Defined as: (((comp1.otl2.nS2S^2)*sigma const)*(comp1.otl2.Tu band1^4))*comp1.otl2.fepu1  	无法计算表达式。  	Expression: dvol spatial*((comp1.otl2.epsilonu band1*comp1.otl2.ebu1)-comp1.otl2.Ju band1)  	无法计算表达式的雅可比矩阵。  	Expression: ((comp1.otl2.epsilonu band1*comp1.otl2.ebu1-comp1.otl2.Ju band1)*test(comp1.otl2.Ju band1))*(dvol spatial)  	最后一个时步不收敛。 
+02:14:29 saved C:\Workspace\SpaceDC\Thermal\iss_fem\out\comsol\iss_beta0_lite_try_failed.mph
+Traceback (most recent call last):
+  File "java.lang.Thread.java", line 0, in java.lang.Thread.run
+Exception: Java Exception
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Workspace\SpaceDC\Thermal\iss_fem\model\iss_build.py", line 361, in <module>
+    if a.no_solve:
+    ^^^^^^
+  File "C:\Workspace\SpaceDC\Thermal\iss_fem\model\iss_build.py", line 357, in main
+    tag = a.tag or (a.case + ('_lite' if a.lite else ''))
+    ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Workspace\SpaceDC\Thermal\iss_fem\model\iss_solve.py", line 93, in run
+    j.study(st).run(); summ[f'{st}_wall_s'] = round(time.time() - t0, 1); log(st, 'done %.0f s' % (time.time() - t0))
+    ^^^^^^^^^^^^^^^^^
+com.comsol.util.exceptions.com.comsol.util.exceptions.FlException: Exception:
+	com.comsol.util.exceptions.FlException: 以下特征遇到问题：
+Messages:
+	以下特征遇到问题：
+	- 特征: 瞬态求解器 2 (sol1/t2)
+
+	找不到一致的初始值。
+
+	辐射度 (2)
+
+	除零错误。
+
+	函数: /
+
+	无法计算积分算子的上限。
+
+	Operator: integrate
+
+	无法计算表达式。
+
+	Expression: integrate((comp1.otl2.zeta^3)/(1-exp(comp1.otl2.zeta)),comp1.otl2.zeta,eps,(h const*c const)/(comp1.otl2.Tu band1*(comp1.otl2.lambdar*k B const)),1.0E-6)
+
+	无法计算变量。
+
+	Variable: comp1.otl2.fepu1, Defined as: ((integrate((comp1.otl2.zeta^3)/(1-exp(comp1.otl2.zeta)),comp1.otl2.zeta,eps,(h const*c const)/(comp1.otl2.Tu band1*(comp1.otl2.lambdar*k B const)),1.0E-6)*15)/(pi^4))+1
+
+	无法计算变量。
+
+	Variable: comp1.otl2.ebu1, Defined as: (((comp1.otl2.nS2S^2)*sigma const)*(comp1.otl2.Tu band1^4))*comp1.otl2.fepu1
+
+	无法计算表达式。
+
+	Expression: dvol spatial*((comp1.otl2.epsilonu band1*comp1.otl2.ebu1)-comp1.otl2.Ju band1)
+
+	无法计算表达式的雅可比矩阵。
+
+	Expression: ((comp1.otl2.epsilonu band1*comp1.otl2.ebu1-comp1.otl2.Ju band1)*test(comp1.otl2.Ju band1))*(dvol spatial)
+
+	最后一个时步不收敛。
+

@@ -1,0 +1,6 @@
+07:28:08 probe-only: loading C:\Workspace\SpaceDC\Thermal\iss_fem\out\comsol\iss_hot75_2404.mph
+07:28:30 temperature dataset dset4 of [('dset4', 'sol4'), ('dset5', 'sol5')]
+07:28:31 MPh dataset for globals: O: orbital transient, 3.0 orbits//解 4
+07:28:52 series.csv 139 rows 84 columns
+07:30:14 loop_breakdown.csv 28 rows
+07:30:14 probes written to C:\Workspace\SpaceDC\Thermal\iss_fem\out\hot75

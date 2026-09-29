@@ -321,7 +321,9 @@ def build(cases):
         ('11．', '附着舱段按母舱外壳半径加 5 cm 就位，Tranquility、Cupola、Columbus、Kibo、BEAM、Poisk、Pirs 与 Rassvet 等舱段中心与 IGOAL 模型或 JSC 26557 接口坐标相差 0.2 m 至 1.1 m；'
                  'MBSU、DDCU 与 IEA 的位置为模型取定。'),
         ('12．', '核验建议中没有采用的条目：铬酸阳极化铝的实测值 0.32 与 0.49、多层隔热有效发射率 0.05、文献 D18 的太阳翼电池面光学性质、上条所列舱段位置修正。'),
-        ('13．', '文献 B 第 8 页至第 11 页记载，P1-3 散热器第 2 流路于 2017 年 5 月隔离并排空，翻修件 2019 年 4 月才上行，2019 年构型中回路 B 实际只有五条散热器流路工作；'
+        ('13．', '舱外设备与 IEA 外表面按多层隔热有效光学性质处理，吸收率 0.012、发射率 0.03，这一处理用于表示设备内部经多层隔热的散热，在相互辐射中却使设备外表面接近全反射面，'
+                 '会把阳光反射到邻近部件表面。'),
+        ('14．', '文献 B 第 8 页至第 11 页记载，P1-3 散热器第 2 流路于 2017 年 5 月隔离并排空，翻修件 2019 年 4 月才上行，2019 年构型中回路 B 实际只有五条散热器流路工作；'
                  '本模型六个散热器 ORU 的两条流路全部工作。'),
     ])
 
@@ -359,6 +361,18 @@ def build(cases):
         '再运行 post_all.py nom0，完成探针取值并生成时程图与温度云图，post_all.py 同时列出三个工况时生成本报告。几何与网格图由 iss_render.py 以 --what geom 生成，'
         '色标由 iss_plots.py --legend 加注。散热器排热能力子模型由 iss_capacity.py hot75 --q 35,60,85,110,135 计算，另两个工况把 hot75 换为 nom0 与 cold0，'
         '排热能力图由 iss_plots.py --capacity 生成；离散误差检验运行 iss_capacity.py hot75 --q 35 --dt 60 --suffix _dt60 与 iss_capacity.py hot75 --q 35 --hmax 0.8 --suffix _h08。')
+    import json
+    rb = {}
+    for c in cases:
+        p = os.path.join(ROOT, 'out', tagmap.get(c, c), 'readback.json')
+        if os.path.exists(p):
+            rb[c] = json.load(open(p, encoding='utf-8'))
+    if rb:
+        bad = {c: len(v['mismatches']) for c, v in rb.items()}
+        D.p('生产模型在最后几项参数修改之前建立，求解前由 iss_run.py 的参数覆盖功能写入当前取值。为确认求解所用的设置，iss_readback.py 从求解后的模型文件读回全部全局参数、'
+            '材料热物性、各辐射面光学性质与冷板开关状态，并与 model/iss_spec.py 逐项比较：'
+            + '；'.join(f"{CASE_LABEL[c]}模型 {rb[c]['file']} 不一致项 {bad[c]} 个" for c in rb) + '。'
+            + ('求解所用设置与报告所列取值一致。' if not any(bad.values()) else '不一致项列于各工况目录的 readback.json。'))
     return D
 
 
@@ -395,12 +409,20 @@ def conclusions(C, LT, CT, PER):
         add(f'{ncase(C)}第三圈，回路 A 收集热量平均 {X.rng(min(qa), max(qa))} kW，回路 B 为 {X.rng(min(qb), max(qb))} kW；'
             f'散热器分流比平均 {X.rng(min(fm), max(fm), 2)}，最大 {X.num(fx, 2)}；混合供液温度保持在 {X.rngu(min(x["min"] for x in tm), max(x["max"] for x in tm))}，'
             f'散热器出口氨温度在 {X.rngu(min(x["min"] for x in to), max(x["max"] for x in to))} 之间。')
+    fr = [(c, min(CT[c]['hrs']['min'], min(v['Tout']['min'] for v in LT[c].values()))) for c in C if LT[c] and CT[c].get('hrs')]
+    if fr:
+        c0, tl = min(fr, key=lambda x: x[1])
+        if tl < -72.0:
+            add(f'当前热负荷下 EATCS 散热器分流比很小，流经散热器的氨接近面板辐射平衡温度，{CASE_LABEL[c0]}散热器氨温度最低 {X.num(tl)} °C，'
+                + ('低于' if tl < -77.0 else '接近') + ' −77 °C 的冰点。模型采用理想指向规律且散热器排热偏多，实际运行由 RGAC 调整散热器转角防冻，'
+                '文献 D16 的在轨最低读数约为 −54 °C。')
     rk = {c: X.rack_stats(C[c]) for c in C}
     tmax = max((v['Tmax'] for c in C for v in rk[c].values()), default=float('nan'))
     rmean = [float(np.mean([v['Tmean'] for v in rk[c].values()])) for c in C if rk[c]]
     if rmean:
         add(f'舱内机柜、MBSU、DDCU 与 IEA 等接冷板的方块，温度约等于冷却液温度加上功率与冷板换热系数之比，由取定的冷板参数决定，'
-            f'{ncase(C)}的机柜平均温度相差 {X.num(max(rmean) - min(rmean), 2)} K，机柜最高温度 {X.num(tmax)} °C。模型用这些方块把热量按设定路径送入回路，'
+            + (f'{ncase(C)}的机柜温度相同' if max(rmean) - min(rmean) < 0.05 else f'{ncase(C)}的机柜平均温度相差 {X.num(max(rmean) - min(rmean), 2)} K')
+            + f'，机柜最高温度 {X.num(tmax)} °C。模型用这些方块把热量按设定路径送入回路，'
             '方块温度不用于判断机柜是否满足文献 D13 前面板 37 °C 的限值。')
     ps = {c: [r['Tmean'] for r in X.payload_stats(C[c]).values()] for c in C}
     if ps.get('cold0') and ps.get('hot75'):
@@ -580,6 +602,11 @@ def results_section(D, cases, C, LT, CT, PER, IT):
         txt = '；'.join(parts) + '。'
         if 'hot75' in cases and 'cold0' in cases and all(CT['hot75'][k]['mean'] > CT['cold0'][k]['mean'] for k in ('skin_usos', 'skin_rus', 'truss') if k in CT['hot75'] and k in CT['cold0']):
             txt += '设计热工况 β 为 75°，全程受晒，环境热流也取上限，舱体与桁架的平均温度都高于设计冷工况。'
+        tmx = max((CT[c]['truss']['max'], c) for c in cases if 'truss' in CT[c]) if any('truss' in CT[c] for c in cases) else None
+        if tmx and tmx[0] > 90.0:
+            txt += (f'{CASE_LABEL[tmx[1]]}桁架包络最高 {X.num(tmx[0])} °C，出现在 S0 桁架段左舷端面、P1 段后向面与左舷氨罐组件围成的凹角处，该处在 β 为 75° 时正对太阳。舱外设备外表面按多层隔热有效发射率 0.03 与吸收率 0.012 处理，'
+                    '在相互辐射中接近全反射面，射入凹角的阳光经设备表面反射后集中到桁架表面，形成局部高温；实际多层隔热外层为 beta 布，吸收率约 0.36，不会形成这种反射。'
+                    '桁架包络的这一局部最高温度偏高，只出现在设备附近的凹角与缝隙处。')
         D.p(txt)
     for c in cases:
         D.figure(os.path.join(FIG, f'{c}_classes.png'), f'{CASE_LABEL[c]}各类部件温度时程', 15.5)
@@ -616,8 +643,9 @@ def results_section(D, cases, C, LT, CT, PER, IT):
     ps = {c: [r['Tmean'] for r in X.payload_stats(C[c]).values()] for c in cases}
     txt = ''
     if rk_mean and lt_gap:
-        txt += (f'舱内机柜温度由冷板水温、机柜功率与冷板换热系数决定，{ncase(C)}的机柜平均温度相差 {X.num(max(rk_mean.values()) - min(rk_mean.values()), 2)} K；'
-                f'接低温水回路的机柜比接中温水回路的机柜平均低 {X.num(float(np.mean(lt_gap)))} K，'
+        dd = max(rk_mean.values()) - min(rk_mean.values())
+        txt += ('舱内机柜温度由冷板水温、机柜功率与冷板换热系数决定，' + (f'{ncase(C)}的机柜温度相同；' if dd < 0.05 else f'{ncase(C)}的机柜平均温度相差 {X.num(dd, 2)} K；')
+                + f'接低温水回路的机柜比接中温水回路的机柜平均低 {X.num(float(np.mean(lt_gap)))} K，'
                 + ('与两个水回路 13 K 的温差一致。' if abs(float(np.mean(lt_gap)) - 13.0) < 0.5 else
                    ('小于两个水回路 13 K 的温差，原因是机柜其余表面与 22 °C 舱内空气换热，接低温水回路的机柜受舱内空气加热更多。' if float(np.mean(lt_gap)) < 13.0
                     else '大于两个水回路 13 K 的温差。')))
@@ -670,6 +698,19 @@ def results_section(D, cases, C, LT, CT, PER, IT):
     if rows:
         D.table('EATCS 与 PVTCS 温度限值核对', ['工况', '限值项目', '限值', '计算结果', '余量'], rows, widths=[2.6, 2.6, 4.2, 4.4, 2.0])
         D.p('冷板一侧的冷却液温度在模型中取固定值，混合供液温度偏低时界面换热器的保护动作与舱内回路的响应不在模型范围内，上表只核对氨温度本身。')
+        frz = []
+        for c in cases:
+            lt = LT[c]
+            if not lt or not CT[c].get('hrs'): continue
+            frz.append((c, min(CT[c]['hrs']['min'], min(v['Tout']['min'] for v in lt.values())), max(v['f']['mean'] for v in lt.values())))
+        low = [x for x in frz if x[1] < -77.0 + 5.0]
+        if low:
+            c0, tl, f0 = min(low, key=lambda x: x[1])
+            D.p(f'{CASE_LABEL[c0]}的散热器氨温度最低 {X.num(tl)} °C，' + ('低于' if tl < -77.0 else '接近') + ' −77 °C 的冰点。'
+                f'该工况回路收集的热量远低于设计值，散热器分流比平均只有 {X.num(f0, 2)}，流经散热器的少量氨在面板内冷却到接近面板的辐射平衡温度；'
+                '模型采用理想的侧边对日与正面对地指向，散热器排热又因理想化处理偏多。文献 A 第 16 页说明，RGAC 的作用之一就是使散热器足够暖以防止氨冻结，'
+                '实际运行中散热器转角会偏离理想规律，文献 D16 图 4 的在轨最低读数约为 −54 °C。模型中液氨物性按液态取值，没有模拟冻结，'
+                '该结果说明低负荷与冷环境下散热器必须依靠转角调节防冻。')
 
     capacity_section(D, cases, LT)
 

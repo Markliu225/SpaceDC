@@ -1,0 +1,10 @@
+05:00:22 cold plate switched off: cp_JEMEF
+05:00:22 overrides applied: k_c 3000[K*s] f_init A 0.2 T_init hrs 262.0 LT racks 22
+05:00:22 case cold0 tag cold0 period 5553.6 s tlist range(0,120.0,16660.9)
+05:00:22 solving stdO
+07:10:28 stdO done 7805 s
+07:10:32 saved C:\Workspace\SpaceDC\Thermal\iss_fem\out\comsol\iss_cold0_34584.mph
+07:10:33 temperature dataset dset4 of [('dset4', 'sol4'), ('dset5', 'sol5')]
+07:10:34 MPh dataset for globals: O: orbital transient, 3.0 orbits//解 4
+07:10:58 series.csv 151 rows 84 columns
+07:12:46 probes written to C:\Workspace\SpaceDC\Thermal\iss_fem\out\cold0
