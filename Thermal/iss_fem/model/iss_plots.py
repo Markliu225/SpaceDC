@@ -32,7 +32,9 @@ def shade_eclipse(ax, d, summ):
     t = d['t_s']; n = int(np.ceil(t[-1] / per)) + 1
     for k in range(n):
         a = (k + 0.5) * per - ecl / 360 * per / 2; b = (k + 0.5) * per + ecl / 360 * per / 2
-        ax.axvspan(a / per, b / per, color='0.88', lw=0)
+        a, b = max(a, t[0]), min(b, t[-1])
+        if b > a: ax.axvspan(a / per, b / per, color='0.88', lw=0)
+    ax.set_xlim(t[0] / per, t[-1] / per)
 
 
 def fig_loops(tag, d, summ):

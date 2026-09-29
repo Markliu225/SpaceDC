@@ -55,7 +55,7 @@ PARAMS = {
     'T_LTL':    ('4[degC]', 'IATCS low temperature loop (A p2)'),
     'T_cab':    ('22[degC]', 'cabin air temperature (R)'),
     'h_air':    ('2[W/(m^2*K)]', 'rack surface to cabin air; racks reject almost all heat to water, sensible air share limited to 250-500 W per module (R L61; D)'),
-    'h_mli':    ('0.22[W/(m^2*K)]', 'MLI e* = 0.05 [optics 5.13] linearised: 4*e*sigma*Tm^3 at Tm 270 K (derived)'),
+    'h_mli':    ('0.08[W/(m^2*K)]', 'MLI conductance from the Node 3 shell leak: -720 W over 126 m2 at ~70 K cabin-to-shield difference (loads doc, Wise & Holt 2001; derived)'),
     'h_cp_rack': ('40[W/(m^2*K)]', 'rack cold-plate face conductance: 600 W over 1.8 m2 at about 8 K above the coolant (D)'),
     'h_cp_oru':  ('60[W/(m^2*K)]', 'ORU base to finned NH3 cold plate, radiant fins (A p9; D)'),
     'g_hrs':    ('120[W/(m^2*K)]', 'NH3 to radiator panel conductance per unit panel area (D)'),
@@ -71,7 +71,9 @@ PARAMS = {
 }
 
 # initial temperatures by class (K): rough orbit-average expectations to shorten the spin-up (D)
-T_INIT = dict(rack=298.0, box=283.0, payload=283.0, truss=253.0, skin_usos=268.0, skin_rus=268.0,
+# racks: T_MTL + Q/(h_cp*A) = 290.15 + 500/(40*1.8) ~ 297.5 K; LT racks start at 284 K (T_INIT_RACK_LT)
+T_INIT_RACK_LT = 284.0
+T_INIT = dict(rack=297.5, box=285.0, payload=255.0, truss=253.0, skin_usos=268.0, skin_rus=268.0,
               hrs=262.0, pvr=262.0, saw=290.0, rsa=290.0)
 
 # ======================================================================= optics (alpha solar, eps IR)
@@ -80,7 +82,9 @@ OPTICS = {   # docs/ISS_OPTICS_MATERIALS.md item numbers in brackets
     'skin_usos': dict(alpha=0.30, eps=0.45),   # chromic-anodized Al 6061 MMOD bumper [5.9-5.11]
     'skin_rus':  dict(alpha=0.36, eps=0.87),   # no public value [10.4]; ISS-batch aluminized beta cloth BOL taken (optics verification)
     'truss':     dict(alpha=0.49, eps=0.85),   # sulfuric anodize [6.1, 6.2]
-    'box':       dict(alpha=0.36, eps=0.87),   # ORU MLI outer layer, ISS-batch aluminized beta cloth BOL (optics verification; 0.41-0.42 after MISSE-6)
+    # ORUs and IEAs are wrapped in MLI [optics 6.4]: the block stands for the electronics BEHIND the blanket, so its
+    # surface exchanges radiation through the MLI: eps* 0.03 (42-layer class), alpha = eps* x (beta cloth 0.36/0.87) (derived)
+    'box':       dict(alpha=0.012, eps=0.03),
     'payload':   dict(alpha=0.36, eps=0.87),   # same outer layer (D)
     # US solar array: no public alpha/eps [10.2]; cell side 0.72 typical Si cell + coverglass (D) minus the
     # blanket-average electrical conversion 31 kW / (309 m2 x 1371 W/m2) = 0.073 [4.11] (derived)
@@ -107,9 +111,10 @@ MATERIALS = {   # docs/ISS_OPTICS_MATERIALS.md items in brackets; shells: rho*cp
     # truss envelope: open lattice -> low k; rho = structure mass left after arrays, PVRs, radiators and IEAs are
     # removed (111 t segment masses, truss doc 2, minus 52 t) over the 1609 m3 of modelled boxes = 37 kg/m3 (derived)
     'truss_eq': dict(kind='solid', classes=['truss'], label='truss envelope, equivalent solid', k=1.0, rho=37.0, cp=850.0),
-    'oru_eq':   dict(kind='solid', classes=['box'], label='external ORU / IEA, equivalent solid (IEA 7.7 t in 21.6 m3)', k=10.0, rho=300.0, cp=900.0),
+    # electronics sit on Al base plates bolted to the cold plates: nearly isothermal box, k 150 (D)
+    'oru_eq':   dict(kind='solid', classes=['box'], label='external ORU / IEA, equivalent solid (IEA 7.7 t in 21.6 m3)', k=150.0, rho=300.0, cp=900.0),
     'pl_eq':    dict(kind='solid', classes=['payload'], label='external payload carrier, equivalent solid', k=10.0, rho=150.0, cp=900.0),
-    'rack_eq':  dict(kind='solid', classes=['rack'], label='payload / system rack, equivalent solid', k=10.0, rho=400.0, cp=900.0),
+    'rack_eq':  dict(kind='solid', classes=['rack'], label='payload / system rack, equivalent solid', k=50.0, rho=400.0, cp=900.0),
 }
 
 # ======================================================================= geometry (G3D unless noted)
@@ -209,7 +214,8 @@ PAYLOADS = [   # name, centre, size, Q (W), cooling
     ('ELC3', (-0.863, -24.043, -4.627), (4.3, 1.7, 2.6), 1000.0, None),
     ('ELC4', (-0.858, 21.147, 4.632), (4.3, 2.0, 2.6), 1000.0, None),
     ('AMS02', (-0.864, 21.319, -4.10), (4.9, 3.2, 3.16), 2500.0, None),
-    ('JEMEF', (11.962, -16.340, 7.150), (5.0, 5.6, 3.5), 3000.0, ('B', 'T_MTL', '-z')),
+    ('JEMEF', (11.962, -16.340, 7.150), (5.0, 5.6, 3.5), 3000.0, None),   # passive like the ELCs: a cold plate at 17 C on a
+    #                                                                          freely radiating block turned it into a 7 kW sink of loop B
 ]
 
 # internal racks: per module, bays along the axis, 4 walls; rack block 1.0 (axial) x 0.85 (radial) x 1.8 (tangential)

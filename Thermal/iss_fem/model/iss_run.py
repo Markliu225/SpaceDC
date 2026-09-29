@@ -82,13 +82,49 @@ def apply_overrides(j, lay):
         for i, n in enumerate(names):
             if n in rows:
                 g.setIndex('initialValueU', rows[n][2], i)
+                g.setIndex('equation', rows[n][1], i)
+    for k, v in lay['global_vars'].items():
+        comp.variable('var_loops').set(k, v)
+    # optics of every class-specific diffuse surface, from the current spec
+    for gname, ocs in lay['optics_by_group'].items():
+        try: o = comp.physics('otl_' + gname)
+        except Exception: continue
+        for oc in ocs:
+            try: d = o.feature('ds_' + oc['name'])
+            except Exception: continue
+            if oc.get('two_sided'):
+                d.set('epsilon_radu_bandSolAmb', oc['up']); d.set('epsilon_radd_bandSolAmb', oc['down'])
+            else:
+                d.set('epsilon_rad_bandSolAmb', oc['both'])
     for cls, T0 in S.T_INIT.items():
         for iface in ('ht', 'htlsh'):
             try:
                 comp.physics(iface).feature('init_' + cls).set('Tinit', f'{T0}[K]')
             except Exception:
                 pass
-    SOL.log('overrides applied: k_c', S.PARAMS['k_c'][0], 'f_init A', rows['f_A'][2], 'T_init hrs', S.T_INIT['hrs'])
+    # materials (thermal conductivity etc.) from the spec
+    for mname, mm in S.MATERIALS.items():
+        try:
+            pg = comp.material('mat_' + mname).propertyGroup('def')
+            pg.set('thermalconductivity', [str(mm['k'])]); pg.set('density', str(mm['rho'])); pg.set('heatcapacity', str(mm['cp']))
+        except Exception:
+            pass
+    # cold plates that the current layout no longer has (JEM-EF) are switched off
+    cooled = set(b['name'] for b in lay['blocks'] if b.get('cool'))
+    ht = comp.physics('ht')
+    for f in ht.feature():
+        tg = str(f.tag())
+        if tg.startswith('cp_') and tg[3:] not in cooled:
+            f.active(False); SOL.log('cold plate switched off:', tg)
+    # LT racks get their own initial temperature
+    lt = [b['name'] for b in lay['blocks'] if b['cls'] == 'rack' and b['cool']['T'] == 'T_LTL']
+    if lt:
+        try: f = ht.feature('init_rack_lt')
+        except Exception:
+            u = comp.selection().create('sel_rack_lt', 'Union'); u.set('entitydim', '3'); u.set('input', ['sd_' + n for n in lt])
+            f = ht.create('init_rack_lt', 'init', 3); f.selection().named('sel_rack_lt')
+        f.set('Tinit', f'{S.T_INIT_RACK_LT}[K]')
+    SOL.log('overrides applied: k_c', S.PARAMS['k_c'][0], 'f_init A', rows['f_A'][2], 'T_init hrs', S.T_INIT['hrs'], 'LT racks', len(lt))
 
 
 def main():
@@ -96,6 +132,7 @@ def main():
     ap.add_argument('case'); ap.add_argument('--tag', default=None); ap.add_argument('--orbits', type=float, default=3.0)
     ap.add_argument('--dt', type=float, default=60.0); ap.add_argument('--cores', type=int, default=3)
     ap.add_argument('--t-end', dest='t_end', type=float, default=None); ap.add_argument('--lite', action='store_true')
+    ap.add_argument('--probe-only', dest='probe_only', action='store_true', help='load the solved model and only write probes')
     a = ap.parse_args()
     a.tag = a.tag or a.case
     lay = LAY.build(a.case, lite=a.lite)
@@ -103,6 +140,17 @@ def main():
     t_end = a.t_end if a.t_end else a.orbits * per
     outdir = os.path.join(OUT, a.tag); os.makedirs(outdir, exist_ok=True)
     client = mph.start(cores=a.cores)
+    if a.probe_only:
+        import glob
+        cands = sorted(glob.glob(os.path.join(OUT, 'comsol', f'iss_{a.tag}_*.mph')) + [os.path.join(OUT, 'comsol', f'iss_{a.tag}.mph')],
+                       key=os.path.getmtime)
+        cands = [c_ for c_ in cands if not c_.endswith('_failed.mph') and os.path.getsize(c_) > 50e6] or cands
+        SOL.log('probe-only: loading', cands[-1])
+        model = client.load(cands[-1])
+        b = Proxy(model, lay, a)
+        summ = dict(tag=a.tag, case=a.case, mesh=b.mesh_stats, orbit=lay['orbit_info'], probe_only=True)
+        SOL.probe(b, a, a.tag, outdir, summ)
+        return
     jpype.JClass('com.comsol.model.util.ModelUtil').showProgress(os.path.join(outdir, 'progress.log'))
     model = client.load(os.path.join(OUT, 'comsol', f'iss_{a.tag}.mph'))
     j = model.java

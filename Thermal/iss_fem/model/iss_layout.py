@@ -198,9 +198,10 @@ def _loops(lay):
         gv[f'Tout_{L}'] = '(' + '+'.join(outs) + f')/{len(outs)}'
         # radiator flow fraction: valve travel bounded below by f_min (fully bypassed valve) with a smooth
         # softplus; anti-windup pulls the integrator back when it runs below f_min (low loop load)
-        gv[f'feff_{L}'] = f"f_min+s_f*log(1+exp((f_{L}-f_min)/s_f))"
+        # overflow-safe softplus: sp(x) = max(x,0) + s*log(1+exp(-|x|/s))
+        gv[f'feff_{L}'] = f"f_min+max(f_{L}-f_min,0)+s_f*log(1+exp(-abs(f_{L}-f_min)/s_f))"
         gv[f'Tmix_{L}'] = f"feff_{L}*Tout_{L}+(1-feff_{L})*Tret_{L}"
-        rows.insert(0, (f'f_{L}', f"k_c*f_{L}t-(Tmix_{L}-{Tset})+k_aw*s_f*log(1+exp((f_min-f_{L})/s_f))", str(d.get('f_init', 0.3)),
+        rows.insert(0, (f'f_{L}', f"k_c*f_{L}t-(Tmix_{L}-{Tset})-k_aw*(max(f_min-f_{L},0)+s_f*log(1+exp(-abs(f_min-f_{L})/s_f)))", str(d.get('f_init', 0.3)),
                         f'{L}: radiator flow fraction, integral control of the mixed supply temperature', 'f'))
         gv[f'Qrad_{L}'] = f"feff_{L}*{mdot}*{cp}*(Tret_{L}-Tout_{L})"
     lay['int_ops_spec'] = ops

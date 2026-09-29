@@ -112,13 +112,11 @@ def probe(b, a, tag, outdir, summ, study='stdO'):
     gnames = []
     for L in S.LOOPS['loops']:
         gnames += [f'f_{L}', f'feff_{L}', f'Q_{L}', f'Qrad_{L}', f'Tret_{L}-273.15', f'Tout_{L}-273.15', f'Tmix_{L}-273.15']
-    g = ev_global(model, gnames, None)
-    # MPh evaluate with dataset=None uses the default (latest) dataset; redo on the temperature dataset label
-    try:
-        label = str(j.result().dataset(ds).label())
-        g = ev_global(model, gnames, label)
-    except Exception as e:
-        log('global on labelled dataset failed', str(e)[:120])
+    # MPh names datasets '<study label>//<solution label>'; find the one whose tag is ds
+    sol_label = str(j.sol(str(j.result().dataset(ds).getString('solution'))).label())
+    mname = next((n for n in model.datasets() if n.endswith('//' + sol_label)), None)
+    log('MPh dataset for globals:', mname)
+    g = ev_global(model, gnames, mname)
     for k, v in g.items():
         if v is not None and len(v) == len(t): cols[k.replace('-273.15', '_C')] = v
     # class statistics

@@ -67,8 +67,11 @@ def plot_group(j, tag, ds, title, view, looplevel=None):
     return pg
 
 
-def surface(pg, tag, expr, sel=None, colortable='HeatCameraLight', rng=None, uniform=None, dataset=None):
+def surface(pg, tag, expr, sel=None, colortable='HeatCameraLight', rng=None, uniform=None, dataset=None, legend=True):
     s = pg.create(tag, 'Surface'); s.set('expr', expr)
+    if not legend:
+        try: s.set('colorlegend', 'off')
+        except Exception: pass
     if uniform is not None:
         s.set('coloring', 'uniform'); s.set('color', 'custom'); s.set('customcolor', [str(c) for c in uniform])
     else:
@@ -126,14 +129,16 @@ def temperature_figures(j, stem, ds, times, period, rng=None):
         t = [float(v) for v in n.getReal()[0]]; j.result().numerical().remove('evt')
     except Exception:
         pass
+    rng = rng or (-80.0, 80.0)
     for want in times:
         k = int(np.argmin(np.abs(np.array(t) - want))) if t else -1
         lvl = k + 1 if k >= 0 else None
         tt = t[k] if t else want
-        for view in ('iso', 'core', 'hrs'):
-            pg = plot_group(j, f'pg_T_{view}_{int(want)}', ds, f'Surface temperature (degC), t = {tt:.0f} s, orbit angle {360*(tt % period)/period:.0f} deg', view, lvl)
+        for view in ('iso', 'core', 'hrs', 'top'):
+            title = f'表面温度 °C，t = {tt:.0f} s，第 {int(tt // period) + 1} 圈，轨道角 {360*(tt % period)/period:.0f}°'
+            pg = plot_group(j, f'pg_T_{view}_{int(want)}', ds, title, view, lvl)
             surface(pg, 's_shell', 'T2-273.15', sel='sel_shells', rng=rng)
-            surface(pg, 's_solid', 'T-273.15', sel='sel_ext_solid', rng=rng)
+            surface(pg, 's_solid', 'T-273.15', sel='sel_ext_solid', rng=rng, legend=False)
             pg.run(); export_image(j, pg.tag(), os.path.join(FIG, f'{stem}_T_{view}_{int(want)}.png'))
 
 
