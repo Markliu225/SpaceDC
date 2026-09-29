@@ -1,0 +1,48 @@
+geom: 3 domains 18 boundaries
+RotatingDomain created under common
+PROPS rot1 ['analysisCaseDeactivated', 'analysisCaseEdited', 'deformingFrame', 'rotationType', 'rotationAngle', 'rotationalVelocityExpression', 'angularVelocity', 'initialAngle', 'revolutionsPerTime', 'appliedMoment', 'momentOfInertia', 'initialAngularVelocity', 'rotationAxisBasePoint', 'rotationAxis']
+      analysisCaseDeactivated = off
+      analysisCaseEdited = off
+      deformingFrame = spatial
+      rotationType = userDefined
+      rotationAngle = 0
+      rotationalVelocityExpression = constantAngularVelocity
+      angularVelocity = 0
+      initialAngle = 0
+      revolutionsPerTime = 0
+      appliedMoment = 0
+      momentOfInertia = 0
+      initialAngularVelocity = 0
+      rotationAxisBasePoint = 0, 0, 0
+      rotationAxis = 0, 0, 1
+PROPS rot1 after set ['analysisCaseDeactivated', 'analysisCaseEdited', 'deformingFrame', 'rotationType', 'rotationAngle', 'rotationalVelocityExpression', 'angularVelocity', 'initialAngle', 'revolutionsPerTime', 'appliedMoment', 'momentOfInertia', 'initialAngularVelocity', 'rotationAxisBasePoint', 'rotationAxis']
+      analysisCaseDeactivated = off
+      analysisCaseEdited = off
+      deformingFrame = spatial
+      rotationType = userDefined
+      rotationAngle = w_orb*t
+      rotationalVelocityExpression = constantAngularVelocity
+      angularVelocity = 0
+      initialAngle = 0
+      revolutionsPerTime = 0
+      appliedMoment = 0
+      momentOfInertia = 0
+      initialAngularVelocity = 0
+      rotationAxisBasePoint = -4, 0, 0
+      rotationAxis = 0, 1, 0
+mesh 0.6s
+SOLVE FAIL 7.4s Exception: 	com.comsol.util.exceptions.FlException: 以下特征遇到问题： Messages: 	以下特征遇到问题： 	- 特征: 瞬态求解器 1 (sol1/t1)  	无法计算变量。 	- 变量: comp1.otl.dXdt_ECS 	- 定义为: ((d(comp1.otl.X_ECS,TIME)-(d(comp1.otl.X_ECS,x)*d(x,TIME)))-(d(comp1.otl.X_ECS,y)*d(y,TIME)))-(d(comp1.otl.X_ECS,z)*d(z,TIME))  	无法计算变量。 	- 变量: comp1.otl.V_orbit 	- 定义为: sqrt(((comp1.otl.dXdt_ECS^2)+(comp1.otl.dYdt_ECS^2))+(comp1.otl.dZdt_ECS^2))  	无法计算算子的雅可比矩阵。 	- 算子: if 	- 变元: comp1.otl.V_orbit<eps  	无法计算表达式的雅可比矩阵。 	- 表达式: if(comp1.otl.V_orbit<eps,test(error('$base64:6Iiq5aSp5Zmo6YCf5bqm5Li66Zu277yM6K+35qOA5p+l5Zyo4oCcb3RsL+i9qOmBk+WPguaVsCAx4oCd5Lit6YCJ5oup55qE6L2o6L+544CCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==')),0) 
+dset1 selA_top otl.Gext1: [0.0]
+dset1 selB_top otl.Gext1: [0.0]
+dset1 selA_top otl.G1: ERR Exception: 	com.comsol.util.exceptions.FlException: 无法计算表达式。 Messages: 	未定义变量。 	- 变量: otl.G1 	- 几何: geom1 	- 边界: 15  	无法计算表达式。 	- 表达式: otl.G1 	- 特征: 表
+dset1 selB_top otl.G1: ERR Exception: 	com.comsol.util.exceptions.FlException: 无法计算表达式。 Messages: 	未定义变量。 	- 变量: otl.G1 	- 几何: geom1 	- 边界: 3  	无法计算表达式。 	- 表达式: otl.G1 	- 特征: 表面
+dset1 selA_top T: [280.0]
+dset1 selB_top T: [280.0]
+dset2 selA_top otl.Gext1: ERR array index out of bounds
+dset2 selB_top otl.Gext1: ERR array index out of bounds
+dset2 selA_top otl.G1: ERR array index out of bounds
+dset2 selB_top otl.G1: ERR array index out of bounds
+dset2 selA_top T: ERR array index out of bounds
+dset2 selB_top T: ERR array index out of bounds
+expected plate-A solar-band flux ~1361*max(0,cos(u)) at u = 2*pi*t/T; u(t=0,300,..)= [0, 19, 39, 58, 78, 97, 117, 136, 156, 175]
+total 27s
