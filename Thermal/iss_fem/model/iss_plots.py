@@ -16,6 +16,7 @@ FIG = os.path.join(OUT, 'figures'); os.makedirs(FIG, exist_ok=True)
 plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'DejaVu Sans']
 plt.rcParams['axes.unicode_minus'] = False
 C = ['#1f77b4', '#d62728', '#2ca02c', '#ff7f0e', '#9467bd', '#8c564b', '#17becf', '#7f7f7f']
+CASE_CN = {'cold0': '设计冷工况', 'hot75': '设计热工况', 'nom0': '平均环境工况'}
 
 
 def load(tag):
@@ -52,7 +53,7 @@ def fig_loops(tag, d, summ):
     axs[2].axhline(2.8, color='k', lw=0.8, ls=':'); axs[2].axhline(-40, color='k', lw=0.8, ls='-.')
     axs[2].set_xlabel('轨道圈数')
     for ax in axs: ax.grid(alpha=0.3); ax.legend(fontsize=8, ncol=2)
-    fig.suptitle(f'{tag} EATCS 回路时程，灰色为地影区')
+    fig.suptitle(f'{CASE_CN.get(tag, tag)} EATCS 回路时程，灰色为地影区')
     fig.tight_layout(); p = os.path.join(FIG, f'{tag}_loops.png'); fig.savefig(p, dpi=150); plt.close(fig); print('wrote', p)
 
 
@@ -67,7 +68,7 @@ def fig_pv(tag, d, summ):
         axs[1].plot(x, d[f'Tout_{L}_C'], color=C[i], label=f'{L} PVR 出口')
     axs[0].set_ylabel('PVR 分流比'); axs[1].set_ylabel('氨温度 °C'); axs[1].set_xlabel('轨道圈数')
     for ax in axs: ax.grid(alpha=0.3); ax.legend(fontsize=8, ncol=4)
-    fig.suptitle(f'{tag} 光伏热控回路时程')
+    fig.suptitle(f'{CASE_CN.get(tag, tag)} 光伏热控回路时程')
     fig.tight_layout(); p = os.path.join(FIG, f'{tag}_pvtcs.png'); fig.savefig(p, dpi=150); plt.close(fig); print('wrote', p)
 
 
@@ -86,7 +87,7 @@ def fig_classes(tag, d, summ):
         ax.plot(x, d[f'{c}_Tmean_C'], color=C[0]); ax.set_title(LABELS[c] + ' 平均与极值 °C', fontsize=10); ax.grid(alpha=0.3)
     for ax in axs[n:]: ax.axis('off')
     for ax in axs[-cols:]: ax.set_xlabel('轨道圈数')
-    fig.suptitle(f'{tag} 各类部件温度时程')
+    fig.suptitle(f'{CASE_CN.get(tag, tag)} 各类部件温度时程')
     fig.tight_layout(); p = os.path.join(FIG, f'{tag}_classes.png'); fig.savefig(p, dpi=150); plt.close(fig); print('wrote', p)
 
 
@@ -97,11 +98,59 @@ def fig_orus(tag, d, summ):
     for i, k in enumerate(sorted(keys)):
         ax.plot(x, d[k], color=C[i % len(C)], label=k.split('_')[1])
     ax.set_ylabel('散热器 ORU 面板平均温度 °C'); ax.set_xlabel('轨道圈数'); ax.grid(alpha=0.3); ax.legend(ncol=3, fontsize=8)
-    fig.suptitle(f'{tag} 六个 EATCS 散热器 ORU 的平均温度')
+    fig.suptitle(f'{CASE_CN.get(tag, tag)} 六个 EATCS 散热器 ORU 的平均温度')
     fig.tight_layout(); p = os.path.join(FIG, f'{tag}_orus.png'); fig.savefig(p, dpi=150); plt.close(fig); print('wrote', p)
 
 
+CLASS_COLORS = {   # same palette as iss_render.CLASS_COLORS
+    'skin_usos': (0.80, 0.80, 0.78), 'skin_rus': (0.62, 0.70, 0.62), 'truss': (0.55, 0.55, 0.60),
+    'box': (0.85, 0.62, 0.30), 'payload': (0.85, 0.35, 0.25),
+    'hrs': (0.95, 0.95, 0.97), 'pvr': (0.88, 0.92, 0.98), 'saw': (0.25, 0.35, 0.65), 'rsa': (0.30, 0.45, 0.60),
+}
+CLASS_CN = {'skin_usos': '美国段舱体', 'skin_rus': '俄罗斯段舱体', 'truss': '桁架', 'box': '舱外设备与 IEA', 'payload': '舱外载荷',
+            'hrs': 'EATCS 散热器', 'pvr': 'PVR', 'saw': '美国太阳翼', 'rsa': '服务舱太阳翼'}
+
+
+def add_class_legend(path):
+    """Append the thermal-class colour key below a COMSOL geometry render; writes <stem>_legend.png."""
+    from matplotlib.patches import Patch
+    img = plt.imread(path); h, w = img.shape[:2]
+    fig = plt.figure(figsize=(w / 150, h / 150 + 0.55), dpi=150)
+    ax = fig.add_axes([0, 0.55 / (h / 150 + 0.55), 1, 1 - 0.55 / (h / 150 + 0.55)]); ax.imshow(img); ax.axis('off')
+    handles = [Patch(facecolor=CLASS_COLORS[c], edgecolor='0.3', label=CLASS_CN[c]) for c in CLASS_COLORS]
+    fig.legend(handles=handles, loc='lower center', ncol=len(handles), fontsize=8, frameon=False, handlelength=1.4, columnspacing=1.0)
+    out = path.replace('.png', '_legend.png'); fig.savefig(out, dpi=150); plt.close(fig); print('wrote', out)
+
+
+def fig_capacity(cases=('hot75', 'nom0', 'cold0')):
+    """Radiator outlet temperature against loop heat, all flow through the radiators (out/capacity)."""
+    fig, ax = plt.subplots(figsize=(9, 5.2)); k = 0
+    for c in cases:
+        p = os.path.join(OUT, 'capacity', f'capacity_{c}.csv')
+        if not os.path.exists(p): continue
+        rows = list(csv.DictReader(open(p, encoding='utf-8')))
+        for L, ls in (('A', '-'), ('B', '--')):
+            rr = sorted([r for r in rows if r['loop'] == L], key=lambda r: float(r['Qd_kW']))
+            if not rr: continue
+            q = np.array([float(r['Qd_kW']) for r in rr]); m = np.array([float(r['Tout_mean_C']) for r in rr])
+            lo = np.array([float(r['Tout_min_C']) for r in rr]); hi = np.array([float(r['Tout_max_C']) for r in rr])
+            ax.plot(q, m, ls, marker='o', color=C[k], label=f'{CASE_CN.get(c, c)} 回路 {L} 轨道平均')
+            ax.fill_between(q, lo, hi, color=C[k], alpha=0.12, lw=0)
+        k += 1
+    ax.axhline(2.8, color='k', lw=0.9, ls=':'); ax.text(ax.get_xlim()[0], 3.4, ' 供液设定点 2.8 °C', fontsize=9)
+    ax.axvline(35, color='0.4', lw=0.9, ls='-.'); ax.text(35.5, ax.get_ylim()[0] + 2, '单回路设计值 35 kW', fontsize=9, color='0.3')
+    ax.set_xlabel('单回路排热量 kW'); ax.set_ylabel('散热器出口氨温度 °C'); ax.grid(alpha=0.3); ax.legend(fontsize=8, ncol=2)
+    fig.suptitle('散热器全流量时出口温度与排热量的关系，色带为轨道内最低至最高')
+    fig.tight_layout(); p = os.path.join(FIG, 'capacity_outlet.png'); fig.savefig(p, dpi=150); plt.close(fig); print('wrote', p)
+
+
 if __name__ == '__main__':
+    if sys.argv[1:] == ['--capacity']:
+        fig_capacity(); sys.exit(0)
+    if sys.argv[1:2] == ['--legend']:
+        for p in sys.argv[2:]:
+            add_class_legend(p)
+        sys.exit(0)
     for tag in sys.argv[1:]:
         d, summ = load(tag)
         fig_loops(tag, d, summ); fig_pv(tag, d, summ); fig_classes(tag, d, summ); fig_orus(tag, d, summ)

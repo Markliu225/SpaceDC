@@ -21,7 +21,7 @@ VIEWS = {
     'top':   ((-5.0, 0.0, -170.0), (-5.0, 0.0, 0.0), (1, 0, 0)),       # from zenith, fwd up
     'front': ((160.0, 0.0, 0.0), (0.0, 0.0, 3.0), (0, 0, -1)),        # from ahead
     'core':  ((38.0, 42.0, -30.0), (-4.0, 0.0, 4.0), (0, 0, -1)),      # modules + S0/S1/P1
-    'hrs':   ((40.0, 45.0, 30.0), (-2.0, 0.0, 12.0), (0, 0, -1)),      # EATCS radiators from below
+    'hrs':   ((-12.0, 72.0, -14.0), (-12.0, 14.68, 0.0), (0, 0, -1)),  # starboard EATCS radiator wing face-on, zenith up
 }
 
 
@@ -99,7 +99,7 @@ def geometry_figures(j, stem, classes):
     except Exception: pass
     ds = r.dataset().create('dmesh', 'Mesh'); ds.set('mesh', 'mesh1')
     for view in ('iso', 'iso2', 'top', 'front', 'core', 'hrs'):
-        pg = plot_group(j, 'pg_geom_' + view, 'dmesh', f'ISS thermal FE model: geometry by thermal class ({view})', view)
+        pg = plot_group(j, 'pg_geom_' + view, 'dmesh', '国际空间站热有限元模型几何，按热分类着色', view)
         for c in classes:
             sel = f'geom1_csel_{c}_bnd'
             dsn = 'dm_' + c
@@ -114,7 +114,7 @@ def geometry_figures(j, stem, classes):
                 except Exception: pass
         pg.run(); export_image(j, 'pg_geom_' + view, os.path.join(FIG, f'{stem}_geom_{view}.png'))
     for view in ('iso', 'core'):
-        pg = plot_group(j, 'pg_mesh_' + view, 'dmesh', f'ISS thermal FE model: surface mesh ({view})', view)
+        pg = plot_group(j, 'pg_mesh_' + view, 'dmesh', '国际空间站热有限元模型表面网格', view)
         m = pg.create('m1', 'Mesh')
         for k, v in (('elemcolor', 'custom'), ('customelemcolor', ['0.78', '0.84', '0.92']), ('wireframe', 'on'), ('wireframecolor', 'custom'), ('customwireframecolor', ['0.15', '0.15', '0.2'])):
             try: m.set(k, v)
@@ -130,24 +130,26 @@ def temperature_figures(j, stem, ds, times, period, rng=None):
     except Exception:
         pass
     rng = rng or (-80.0, 80.0)
-    for want in times:
+    for item in times:
+        name, want = item if isinstance(item, tuple) else (str(int(item)), item)
         k = int(np.argmin(np.abs(np.array(t) - want))) if t else -1
         lvl = k + 1 if k >= 0 else None
         tt = t[k] if t else want
         for view in ('iso', 'core', 'hrs', 'top'):
             title = f'表面温度 °C，t = {tt:.0f} s，第 {int(tt // period) + 1} 圈，轨道角 {360*(tt % period)/period:.0f}°'
-            pg = plot_group(j, f'pg_T_{view}_{int(want)}', ds, title, view, lvl)
+            pg = plot_group(j, f'pg_T_{view}_{name}', ds, title, view, lvl)
             surface(pg, 's_shell', 'T2-273.15', sel='sel_shells', rng=rng)
             surface(pg, 's_solid', 'T-273.15', sel='sel_ext_solid', rng=rng, legend=False)
-            pg.run(); export_image(j, pg.tag(), os.path.join(FIG, f'{stem}_T_{view}_{int(want)}.png'))
+            pg.run(); export_image(j, pg.tag(), os.path.join(FIG, f'{stem}_T_{view}_{name}.png'))
 
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('mph'); ap.add_argument('--what', default='geom')
     ap.add_argument('--times', default=''); ap.add_argument('--cores', type=int, default=2); ap.add_argument('--dataset', default=None)
     ap.add_argument('--period', type=float, default=5554.0); ap.add_argument('--range', default='')
+    ap.add_argument('--prefix', default=None, help='file-name stem of the figures (default: model file stem)')
     a = ap.parse_args()
-    stem = os.path.splitext(os.path.basename(a.mph))[0]
+    stem = a.prefix or os.path.splitext(os.path.basename(a.mph))[0]
     client = mph.start(cores=a.cores); model = client.load(a.mph); j = model.java
     make_views(j)
     classes = [c for c in CLASS_COLORS if c != 'rack']
@@ -160,9 +162,20 @@ def main():
     if 'geom' in a.what:
         geometry_figures(j, stem, [c for c in classes if c in have])
     if 'temp' in a.what:
-        times = [float(x) for x in a.times.split(',') if x]
+        times = []
+        for x in a.times.split(','):
+            if not x: continue
+            if ':' in x:
+                nm, v = x.split(':'); times.append((nm, float(v)))
+            else:
+                times.append((str(int(float(x))), float(x)))
         rng = [float(x) for x in a.range.split(',')] if a.range else None
-        temperature_figures(j, stem, a.dataset, times, a.period, rng)
+        ds = a.dataset
+        if not ds:
+            import iss_solve as SOL
+            ds, _ = SOL.pick_temperature_dataset(j, 'stdO', 'sel_grp_hrs', 'T2')
+            log('temperature dataset', ds)
+        temperature_figures(j, stem, ds, times, a.period, rng)
 
 
 if __name__ == '__main__':

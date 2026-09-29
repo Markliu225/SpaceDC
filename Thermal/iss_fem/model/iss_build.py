@@ -45,9 +45,9 @@ def tryset(obj, name, val, label=''):
 
 
 class Builder:
-    def __init__(self, args, lay):
+    def __init__(self, args, lay, client=None):
         self.a = args; self.lay = lay
-        self.client = mph.start(cores=args.cores)
+        self.client = client or mph.start(cores=args.cores)
         self.model = self.client.create('iss_' + args.case)
         self.j = self.model.java
         self.comp = self.j.component().create('comp1', True)
@@ -136,13 +136,14 @@ class Builder:
         self.ext_solid_bnd = self.adj('sel_ext_solid', [self.cs[c]['dom'] for c in solid_ext]) if solid_ext else None
         self.grp = {}
         body_in = [self.cs[c]['bnd'] for c in cls_used if c in LAY.SHELL_BODY_CLASSES] + ([self.ext_solid_bnd] if self.ext_solid_bnd else [])
-        self.grp['body'] = self.union('sel_grp_body', 2, body_in)
+        if body_in:
+            self.grp['body'] = self.union('sel_grp_body', 2, body_in)
         for gname, classes in LAY.GROUP_CLASSES.items():
             ins = [self.cs[c]['bnd'] for c in classes if c in self.cs]
             if ins: self.grp[gname] = self.union('sel_grp_' + gname, 2, ins)
         shells = [self.cs[c]['bnd'] for c in cls_used if c in LAY.SHELL_CLASSES]
         solids = [self.cs[c]['dom'] for c in cls_used if c in LAY.SOLID_CLASSES]
-        self.sel_shell = self.union('sel_shells', 2, shells); self.sel_solid = self.union('sel_solids', 3, solids)
+        self.sel_shell = self.union('sel_shells', 2, shells); self.sel_solid = self.union('sel_solids', 3, solids) if solids else None
         log('selections: shells', self.n_ent('sel_shells', 2), 'bnds; solids', self.n_ent('sel_solids', 3), 'doms;',
             ' '.join(f"{k}={self.n_ent(v, 2)}" for k, v in self.grp.items()))
         bad = [k for k, v in self.panel_sel.items() if self.n_ent(v, 2) != 1]
@@ -176,10 +177,15 @@ class Builder:
             fa = j.func().create(nm, 'Analytic'); fa.set('expr', expr); fa.set('args', ['t']); fa.set('argunit', 's'); fa.set('fununit', 'm')
 
         # --- heat transfer in solids
-        ht = comp.physics().create('ht', 'HeatTransfer', 'geom1'); ht.selection().named(self.sel_solid); ht.label('Heat Transfer in Solids: truss, boxes, payloads, racks')
-        ht.feature('init1').set('Tinit', 'T_init_solid')
+        ht = None
+        if self.sel_solid:
+            ht = comp.physics().create('ht', 'HeatTransfer', 'geom1'); ht.selection().named(self.sel_solid); ht.label('Heat Transfer in Solids: truss, boxes, payloads, racks')
+            ht.feature('init1').set('Tinit', 'T_init_solid')
         # --- heat transfer in shells
         sh = comp.physics().create('htlsh', 'HeatTransferInShellsLM', 'geom1'); sh.selection().named(self.sel_shell); sh.label('Heat Transfer in Shells: skins, radiators, PVRs, arrays')
+        if ht is None:
+            # without a solid interface the shell temperature would be named T; the loop equations use T2
+            sh.field('temperature').field('T2')
         sh.feature('init1').set('Tinit', 'T_init_shell')
         self.ht, self.sh = ht, sh
         for cls, T0 in S.T_INIT.items():
@@ -215,8 +221,10 @@ class Builder:
             hf = ht.create('air_' + mod, 'HeatFluxBoundary', 2); hf.selection().named(u)
             hf.set('HeatFluxType', 'ConvectiveHeatFlux'); hf.set('h', 'h_air'); hf.set('Text', 'T_cab'); hf.label(f'{mod}: rack faces to cabin air')
         # module skins: MLI leak from the cabin (all modules pressurised at T_cab)
-        hfm = sh.create('mli', 'HeatFluxInterface', 2); hfm.selection().named(self.union('sel_skins', 2, [self.cs[c]['bnd'] for c in self.cs if c.startswith('skin')]))
-        hfm.set('HeatFluxType', 'ConvectiveHeatFlux'); hfm.set('h', 'h_mli'); hfm.set('Text', 'T_cab'); hfm.label('MLI blanket: cabin -> MMOD shield')
+        skins = [self.cs[c]['bnd'] for c in self.cs if c.startswith('skin')]
+        if skins:
+            hfm = sh.create('mli', 'HeatFluxInterface', 2); hfm.selection().named(self.union('sel_skins', 2, skins))
+            hfm.set('HeatFluxType', 'ConvectiveHeatFlux'); hfm.set('h', 'h_mli'); hfm.set('Text', 'T_cab'); hfm.label('MLI blanket: cabin -> MMOD shield')
         # radiator / PVR fluid exchange: one surface source per panel, q = g*(Tf_mean - T2)
         for p in lay['panels']:
             if not p.get('fluid'): continue
@@ -238,9 +246,11 @@ class Builder:
         # one Global Equations feature per physical kind: each becomes its own solver field with its own scale
         kinds = {'Q': ('power', 'power', 'collected heat Qc (W)'), 'T': ('temperature', 'power', 'NH3 panel outlet temperatures (K)'),
                  'f': ('dimensionless', 'temperature', 'radiator flow fractions')}
-        self.ge_fields = {}
-        for ki, (kind, (dq, sq, lbl)) in enumerate(kinds.items()):
+        self.ge_fields = {}; self.ge_kinds = []
+        for kind, (dq, sq, lbl) in kinds.items():
             rows = [r for r in lay['ge_rows'] if r[4] == kind]
+            if not rows: continue
+            ki = len(self.ge_kinds); self.ge_kinds.append(kind)
             g1 = ge.feature('ge1') if ki == 0 else ge.create(f'ge{ki + 1}', 'GlobalEquations', -1)
             g1.label(lbl)
             for i, (name, eq, init, descr, _k) in enumerate(rows):
@@ -315,7 +325,8 @@ class Builder:
             s = m.create('sz_' + cls, 'Size'); s.selection().geom('geom1', dim); s.selection().named(self.cs[cls]['bnd' if dim == 2 else 'dom'])
             s.set('custom', True); s.set('hmaxactive', True); s.set('hmax', str(h)); s.set('hminactive', True); s.set('hmin', str(min(h / 4, 0.05)))
         ft = m.create('ftri', 'FreeTri'); ft.selection().geom('geom1', 2); ft.selection().named(self.sel_shell)
-        tt = m.create('ftet', 'FreeTet'); tt.selection().geom('geom1', 3); tt.selection().named(self.sel_solid)
+        if self.sel_solid:
+            tt = m.create('ftet', 'FreeTet'); tt.selection().geom('geom1', 3); tt.selection().named(self.sel_solid)
         t0 = time.time(); m.run()
         stats = {}
         for et in ('tri', 'tet'):
@@ -368,7 +379,8 @@ class Builder:
                         try: descr = str(c.getString('fieldname')) if 'fieldname' in [str(x) for x in c.properties()] else ''
                         except Exception: descr = ''
                         idx = int(tag.replace('comp1_ODE', '') or '1')
-                        val = {1: '2e4', 2: '300', 3: '1'}.get(idx)
+                        kinds = getattr(self, 'ge_kinds', ['Q', 'T', 'f'])
+                        val = {'Q': '2e4', 'T': '300', 'f': '1'}.get(kinds[idx - 1]) if idx <= len(kinds) else None
                     if val:
                         try:
                             c.set('scalemethod', 'manual'); c.set('scaleval', val)

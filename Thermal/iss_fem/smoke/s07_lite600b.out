@@ -1,0 +1,7 @@
+progress log -> C:\Workspace\SpaceDC\Thermal\iss_fem\smoke\s07_lite600b_progress.log
+FAILED 182 s Exception: 	com.comsol.util.exceptions.FlException: 以下特征遇到问题： Messages: 	以下特征遇到问题： 	- 特征: 瞬态求解器 2 (sol4/t2)  	找不到一致的初始值。  	辐射度 (2)  	除零错误。  	函数: /  	无法计算积分算子的上限。  	Operator: integrate  	无法计算表达式。  	Expression: integrate((comp1.otl2.zeta^3)/(1-exp(comp1.otl2.zeta)),comp1.otl2.zeta,eps,(h const*c const)/(comp1.otl2.Tu band1*(comp1.otl2.lambdar*k B const)),1.0E-6)  	无法计算变量。  	Variable: comp1.otl2.fepu1, Defined as: ((integrate((comp1.otl2.zeta^3)/(1-exp(comp1.otl2.zeta)),comp1.otl2.zeta,eps,(h const*c const)/(comp1.otl2.Tu band1*(comp1.otl2.lambdar*k B const)),1.0E-6)*15)/(pi^4))+1  	无法计算变量。  	Variable: comp1.otl2.ebu1, Defined as: (((comp1.otl2.nS2S^2)*sigma const)*(comp1.otl2.Tu band1^4))*comp1.otl2.fepu1  	无法计算表达式。  	Expression: ((comp1.otl2.epsilonu band1*comp1.otl2.ebu1)-comp1.otl2.Ju band1)*dvol spatial  	无法计算表达式的雅可比矩阵。  	Expression: ((comp1.otl2.epsilonu band1*comp1.otl2.ebu1-comp1.otl2.Ju band1)*test(comp1.otl2.Ju band1))*(dvol spatial)  	最后一个时步不收敛。 
+solver sol1 t1 rtol 0.01
+solver sol2 t1 rtol 0.01
+solver sol2 t2 rtol 0.01
+solver sol4 t1 rtol 0.01
+solver sol4 t2 rtol 0.01

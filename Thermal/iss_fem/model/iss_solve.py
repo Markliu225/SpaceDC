@@ -170,6 +170,20 @@ def probe(b, a, tag, outdir, summ, study='stdO'):
         add(cls, grp_name, 'AvSurface', 'MinSurface', 'MaxSurface', 'T2', u)
     with open(os.path.join(outdir, 'items.csv'), 'w', newline='', encoding='utf-8') as fh:
         w = csv.DictWriter(fh, fieldnames=['kind', 'name', 'Tmin_C', 'Tmean_C', 'Tmax_C']); w.writeheader(); w.writerows(rows)
+    # loop heat pick-up by source over the last orbit (the terms of the Qc equations, grouped in iss_layout)
+    brows = []
+    for L, groups in (lay.get('pick_groups') or {}).items():
+        for grp, terms in groups.items():
+            try:
+                v = np.atleast_1d(np.asarray(model.evaluate(' + '.join(terms), dataset=mname), dtype=float))
+                if v.size == 1: v = np.full(len(t_arr), float(v[0]))
+                brows.append(dict(loop=L, source=grp, W_mean=float(v[last].mean()), W_min=float(v[last].min()), W_max=float(v[last].max())))
+            except Exception as e:
+                log('breakdown failed', L, grp, str(e).replace(chr(10), ' ')[:160])
+    if brows:
+        with open(os.path.join(outdir, 'loop_breakdown.csv'), 'w', newline='', encoding='utf-8') as fh:
+            w = csv.DictWriter(fh, fieldnames=list(brows[0].keys())); w.writeheader(); w.writerows(brows)
+        log('loop_breakdown.csv', len(brows), 'rows')
     # loop energy closure and periodicity
     closure = {}
     for L in S.LOOPS['loops']:

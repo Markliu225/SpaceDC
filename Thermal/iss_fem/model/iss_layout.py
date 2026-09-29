@@ -113,8 +113,16 @@ def orbit(case):
 
 
 # ----------------------------------------------------------------- build
-def build(case, lite=False):
+def build(case, lite=False, capacity=False):
     lay = S.layout(case, lite=lite)          # cylinders, blocks, panels, loops ... (station-specific)
+    if capacity:
+        # radiator-only model for the EATCS heat-rejection capacity: the radiator OTL group radiates only
+        # with itself, so its panels see the same environment here as in the full model
+        lay['cylinders'], lay['blocks'] = [], []
+        lay['panels'] = [p for p in lay['panels'] if p['cls'] == 'hrs']
+        lay['panel_groups'] = {k: v for k, v in lay['panel_groups'].items() if k.startswith('HRS_')}
+        lay['panel_by_name'] = {p['name']: p for p in lay['panels']}
+    lay['capacity'] = capacity
     ob = orbit(case)
     lay['period'] = ob['period']; lay['orbit_funcs'] = ob['funcs']; lay['sun_rays_ecs'] = ob['rays']
     lay['orbit_info'] = ob
@@ -126,6 +134,9 @@ def build(case, lite=False):
         't0_frozen': (f"{C.get('t0_frozen', 0.0)}[s]", 'orbit time frozen in study F'),
         'Q_scale': (str(C.get('Q_scale', 1.0)), 'multiplier on internal payload/rack power'),
     }
+    if capacity:
+        for L in ('A', 'B'):
+            lay['params'][f'Qd_{L}'] = ('35[kW]', f'loop {L} heat carried to the radiators (capacity model)')
     lay['block_by_name'] = {b['name']: b for b in lay['blocks']}
     groups = {k: dict(v) for k, v in GROUPS.items()}
     if C.get('hrs_law') == 'track':
@@ -142,8 +153,42 @@ def build(case, lite=False):
     return lay
 
 
+def _loops_capacity(lay):
+    """Capacity form of the EATCS loops: all flow through the radiators (no bypass), loop heat Qd_L
+    prescribed. The radiator outlet is then the supply temperature and the inlet is
+    Tret = Tout + Qd/(mdot cp); the capacity is the Qd at which Tout reaches the 2.8 C set point."""
+    P = S.LOOPS
+    gv, rows = {}, []
+    for L in ('A', 'B'):
+        d = P['loops'][L]; mdot, cp = d['mdot'], 'cp_nh3'
+        gv[f'Q_{L}'] = f'Qd_{L}'
+        gv[f'Tret_{L}'] = f"Tout_{L}+Q_{L}/({mdot}*{cp})"
+        outs = []
+        for k, oru in enumerate(d['orus']):
+            panels = sorted([p for p in lay['panels'] if p['fluid']['loop'] == L and p['fluid']['oru'] == oru], key=lambda p: p['fluid']['idx'])
+            prev = f'Tret_{L}'
+            for p in panels:
+                i = p['fluid']['idx']; tf = f"Tf_{L}_{k+1}_{i}"
+                p['fluid']['qexpr'] = f"{d['g']}*(0.5*({prev}+{tf})-T2)"
+                p['fluid']['t_name'] = 't_' + p['cls']
+                eq = f"C_f*{tf}t-(({mdot}/{len(d['orus'])})*{cp}*({prev}-{tf})-ip_{p['name']}({p['fluid']['qexpr']}))"
+                rows.append((tf, eq, f"{d['T_set']}", f'{L} ORU {oru} panel {i} NH3 outlet T', 'T'))
+                prev = tf
+            outs.append(prev)
+        gv[f'Tout_{L}'] = '(' + '+'.join(outs) + f')/{len(outs)}'
+        gv[f'feff_{L}'] = '1'
+        gv[f'Tmix_{L}'] = f'Tout_{L}'
+        gv[f'Qrad_{L}'] = f"{mdot}*{cp}*(Tret_{L}-Tout_{L})"
+    lay['int_ops_spec'] = []
+    lay['global_vars'] = gv
+    lay['ge_rows'] = rows
+    lay['int_ops'] = lambda builder: []
+
+
 def _loops(lay):
     """Loop bookkeeping: integration operators, global variables, DAE rows."""
+    if lay.get('capacity'):
+        return _loops_capacity(lay)
     P = S.LOOPS
     ops = []            # (opname, selection resolver)
     gv = {}
@@ -151,24 +196,36 @@ def _loops(lay):
 
     # --- heat pick-up per loop from cold-plate faces and cabin air
     pick = {L: [] for L in P['loops']}
+    groups = {L: {} for L in P['loops']}      # the same terms grouped by source, for the loop heat breakdown
+
+    def add(L, grp, term):
+        pick[L].append(term); groups[L].setdefault(grp, []).append(term)
     for b in lay['blocks']:
         cl = b.get('cool')
         if not cl: continue
         op = 'ic_' + b['name']
         ops.append((op, ('face', b['name'], cl['face'])))
-        pick[cl['loop']].append(f"{op}({cl['h']}*(T-{cl['T']}))")
+        if b['cls'] == 'rack':
+            grp = f"rack_{b['module']}_{'LT' if cl['T'] == 'T_LTL' else 'MT'}"
+        elif b['name'].startswith('IEA'):
+            grp = 'iea'
+        elif b['cls'] == 'box':
+            grp = 'oru'
+        else:
+            grp = 'payload_' + b['name']
+        add(cl['loop'], grp, f"{op}({cl['h']}*(T-{cl['T']}))")
     for mod, racks in lay['racks_by_module'].items():
         op = 'ia_' + mod
         ops.append((op, ('air', mod)))
-        lt_loop = S.MODULE_LOOPS[mod]['LT']
-        pick[lt_loop].append(f"{op}(h_air*(T-T_cab))")
+        add(S.MODULE_LOOPS[mod]['LT'], f'air_{mod}', f"{op}(h_air*(T-T_cab))")
     for c in lay['cylinders']:
         if c['name'] in S.MODULE_LOOPS:
             op = 'is_' + c['name']
             ops.append((op, ('skin', c['name'])))
-            pick[S.MODULE_LOOPS[c['name']]['LT']].append(f"-{op}(h_mli*(T_cab-T2))")
+            add(S.MODULE_LOOPS[c['name']]['LT'], f"mli_{c['name']}", f"-{op}(h_mli*(T_cab-T2))")
     for L, extra in P.get('other_loads', {}).items():
-        pick[L].append(extra)
+        add(L, 'crew', extra)
+    lay['pick_groups'] = groups
     # the collected heat is a global UNKNOWN Qc_L with the algebraic equation Qc_L = sum(pick-ups):
     # only that one row touches all rack/box DOFs; radiator panels then depend on Qc_L alone
     # (a global VARIABLE would put every rack DOF into every panel row: dense Jacobian block)
