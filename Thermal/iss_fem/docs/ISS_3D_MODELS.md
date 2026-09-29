@@ -193,7 +193,7 @@ IGOAL 的 S1 与 P1 散热器各由 3 个 ORU 沿 Y 并排组成，存档姿态�
 
 ### 2.7 三套模型的差异与矛盾
 
-1. 主散热器排列方式不同。IGOAL 的 3 个 ORU 沿 Y 并排，面板法向垂直于桁架轴线，TRRJ 绕 Y 轴转动即可实现侧边对日与正面对地。C 模型与 VTAD 模型把 3 个 ORU 沿 Z 上下叠放，面板法向平行于桁架轴线，绕 Y 轴转动无法改变面板对日角度。SPEC_FROM_PDF.md 摘录的文献 B 图1 为 3 个 ORU 并排悬挂于桁架下方，文献 A 为 3 个 ORU 收拢时沿 S1 或 P1 后向面排列，均与 IGOAL 一致，建模采用 IGOAL 排列。
+1. 主散热器排列方式不同。IGOAL 的 3 个 ORU 沿 Y 并排，面板法向垂直于桁架轴线，TRRJ 绕 Y 轴转动即可实现侧边对日与正面对地。C 模型与 VTAD 模型把 3 个 ORU 沿 Z 上下叠放，面板法向平行于桁架轴线，绕 Y 轴转动无法改变面板对日角度；SSP 51071 图 3.1.5-3 的线框图与 C 模型画法相同。文献 B 第2页图1 是从天顶方向拍摄的在轨照片，两翼散热器正面朝向相机，每翼 3 个 ORU 沿桁架方向并排，8 块面板沿 X 向后排列；文献 A 写明 3 个 ORU 收拢时沿 S1 或 P1 后向面排列。两份文献均与 IGOAL 一致，建模采用 IGOAL 排列。
 2. C 模型散热器尺寸与文献不符。C 模型主散热器面板宽 3.12 m，PVR 面板宽 3.40 m，与文献的主散热器 3.4 m、PVR 3.12 m 正好对调。
 3. 桁架总长。IGOAL 为 97.53 m，C 模型为 98.05 m，NASA 官网公布 94 m，差值 3.5 至 4 m。
 4. VTAD 模型整体偏大 4.4%，拟合比例 0.958，拟合后 19 个部件中心残差均方根 0.43 m，最大为 Columbus 的 1.15 m。VTAD 外侧桁架段包含 PVR 且按 SARJ 60° 姿态存档，未参与拟合。
@@ -210,6 +210,7 @@ IGOAL 的 S1 与 P1 散热器各由 3 个 ORU 沿 Y 并排组成，存档姿态�
 | PMA-3 于 2017 年 3 月 26 日由节点3 左舷口移至节点2 天顶口 | NASA 空间站博客 2017 年 3 月 27 日，https://blogs.nasa.gov/spacestation/2017/03/27/weekend-robotics-work-sets-up-thursday-spacewalk/ |
 | Pirs 于 2021 年 7 月 26 日自 SM 天底口分离 | NASA 空间站博客 2021 年 7 月 26 日，https://blogs.nasa.gov/spacestation/2021/07/26/progress-77-and-pirs-undocked-from-station/ |
 | 散热器与 PVR 文献尺寸 | 本目录 SPEC_FROM_PDF.md 第4节 |
+| 分析坐标系由 SSP 30219 定义，示意图为图 3.1.5-3 | SSP 51071 External Payloads Proposer's Guide to ISS 第 3-17 至 3-18 页，https://essp.larc.nasa.gov/EVI-6/pdf_files/External-Payloads-Proposers-Guide-to-ISS-SSP-51071-Baseline.pdf |
 
 ### 2.9 对 COMSOL 建模的用法
 
