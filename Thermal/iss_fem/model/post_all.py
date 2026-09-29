@@ -43,6 +43,8 @@ def main():
                 tl = ','.join(f'{n}:{t:.1f}' for n, t in times)
                 run([PY, '-u', 'iss_render.py', f, '--what', 'temp', '--times', tl, '--prefix', case, '--period', f'{per:.2f}',
                      '--cores', str(a.cores)], os.path.join(logd, 'post_render.log'))
+                pngs = [p for p in glob.glob(os.path.join(ROOT, 'out', 'figures', f'{case}_T_*.png')) if not p.endswith('_cb.png')]
+                run([sys.executable, 'iss_plots.py', '--colorbar'] + pngs, os.path.join(logd, 'post_colorbar.log'))
             else:
                 print('no solved model file for', case)
     if not a.no_report:

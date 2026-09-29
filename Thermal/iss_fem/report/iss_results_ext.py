@@ -17,6 +17,11 @@ def rng(a, b, nd=1):
     return num(a, nd) if num(a, nd) == num(b, nd) else f'{num(a, nd)} 至 {num(b, nd)}'
 
 
+def rngu(a, b, nd=1, unit='°C'):
+    """Range for running text, unit after both numbers."""
+    return f'{num(a, nd)} {unit}' if num(a, nd) == num(b, nd) else f'{num(a, nd)} {unit} 至 {num(b, nd)} {unit}'
+
+
 def rack_stats(c):
     it = R.items_by_kind(c).get('rack', [])
     out = {}
@@ -63,7 +68,7 @@ def pv_loops(c):
     for u in ('P4', 'P6', 'S4', 'S6'):
         L = 'PV' + u
         if f'f_{L}' in c['s']:
-            out[u] = dict(f=R.stat(c, f'f_{L}'), Q=R.stat(c, f'Q_{L}'), Tout=R.stat(c, f'Tout_{L}_C'), Tmix=R.stat(c, f'Tmix_{L}_C'))
+            out[u] = dict(f=R.stat(c, f'feff_{L}' if f'feff_{L}' in c['s'] else f'f_{L}'), Q=R.stat(c, f'Q_{L}'), Tout=R.stat(c, f'Tout_{L}_C'), Tmix=R.stat(c, f'Tmix_{L}_C'))
     return out
 
 
@@ -73,8 +78,10 @@ def saw_eclipse(c):
     if not ecl or 'saw_Tmean_C' not in c['s']:
         return None
     per = c['per']; t = c['t']
-    t_exit = (np.floor(t[-1] / per) - 1 + 0.5) * per + ecl / 360 * per / 2      # eclipse exit in the last full orbit
-    if t_exit < t[0]:
+    half = ecl / 360 * per / 2
+    k = np.floor((t[-1] - 0.5 * per - half) / per)                              # last eclipse whose exit lies inside the data
+    t_exit = (k + 0.5) * per + half
+    if t_exit < t[0] or t_exit > t[-1]:
         return None
     Tm = c['s']['saw_Tmean_C']; Tn = c['s']['saw_Tmin_C']
     k = int(np.argmin(np.abs(t - t_exit)))
@@ -148,3 +155,15 @@ def capacity():
                           Q_at_max_setpoint_kW=_crossing(q, [r['Tout_max_C'] for r in s], T_SET_C))
         summ[key] = dict(capacity=res)
     return dict(summary=summ, rows=rows)
+
+
+def capacity_history(case, q):
+    """End time of a capacity run and the outlet change over its last orbit at the same orbit position (K)."""
+    import os
+    p = os.path.join(R.OUT, 'capacity', f'history_{case}_{int(q)}kW.csv')
+    if not os.path.exists(p):
+        return None
+    d = np.genfromtxt(p, delimiter=',', names=True)
+    t = d['t_s']; per = 2 * np.pi * np.sqrt((6378.137e3 + 400e3) ** 3 / 3.986004418e14)
+    drift = max(abs(d[k][-1] - np.interp(t[-1] - per, t, d[k])) for k in d.dtype.names if k.startswith('Tout_'))
+    return dict(t_end=float(t[-1]), drift=float(drift))

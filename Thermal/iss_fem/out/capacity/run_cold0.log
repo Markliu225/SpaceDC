@@ -1,0 +1,5 @@
+06:17:56 capacity case cold0 Qd [35.0, 85.0, 135.0, 185.0]
+06:18:05 geometry: 0 domains, 48 boundaries, 192 edges (1s)
+06:18:07 selections: shells 48 bnds; solids -1 doms; hrs=48
+06:18:30 global equations: 48 unknowns
+06:18:38 mesh 1s {'tri': 1056, 'tet': 0}

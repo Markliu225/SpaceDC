@@ -1,0 +1,11 @@
+05:33:11 capacity case hot75 Qd [35.0, 60.0, 85.0, 110.0, 135.0]
+05:33:16 geometry: 0 domains, 48 boundaries, 192 edges (0s)
+05:33:18 selections: shells 48 bnds; solids -1 doms; hrs=48
+05:33:35 global equations: 48 unknowns
+05:33:40 mesh 0s {'tri': 1056, 'tet': 0}
+06:05:14 hot75 Qd 35 kW loop A: outlet mean -27.32 C, min -28.80, max -25.36, orbit-to-orbit drift -3.239 K (1856 s)
+06:05:14 hot75 Qd 35 kW loop B: outlet mean -24.45 C, min -25.98, max -22.69, orbit-to-orbit drift -2.615 K (1856 s)
+06:19:54 hot75 Qd 60 kW loop A: outlet mean -11.96 C, min -13.26, max -10.15, orbit-to-orbit drift 0.300 K (878 s)
+06:19:54 hot75 Qd 60 kW loop B: outlet mean -9.35 C, min -10.75, max -7.75, orbit-to-orbit drift 0.715 K (878 s)
+06:35:46 hot75 Qd 85 kW loop A: outlet mean 0.72 C, min -0.44, max 2.41, orbit-to-orbit drift 2.632 K (950 s)
+06:35:46 hot75 Qd 85 kW loop B: outlet mean 3.21 C, min 1.92, max 4.70, orbit-to-orbit drift 2.933 K (950 s)

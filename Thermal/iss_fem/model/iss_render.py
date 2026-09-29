@@ -99,7 +99,7 @@ def geometry_figures(j, stem, classes):
     except Exception: pass
     ds = r.dataset().create('dmesh', 'Mesh'); ds.set('mesh', 'mesh1')
     for view in ('iso', 'iso2', 'top', 'front', 'core', 'hrs'):
-        pg = plot_group(j, 'pg_geom_' + view, 'dmesh', '国际空间站热有限元模型几何，按热分类着色', view)
+        pg = plot_group(j, 'pg_geom_' + view, 'dmesh', '国际空间站有限元热模型几何，按部件类别着色', view)
         for c in classes:
             sel = f'geom1_csel_{c}_bnd'
             dsn = 'dm_' + c
@@ -114,7 +114,7 @@ def geometry_figures(j, stem, classes):
                 except Exception: pass
         pg.run(); export_image(j, 'pg_geom_' + view, os.path.join(FIG, f'{stem}_geom_{view}.png'))
     for view in ('iso', 'core'):
-        pg = plot_group(j, 'pg_mesh_' + view, 'dmesh', '国际空间站热有限元模型表面网格', view)
+        pg = plot_group(j, 'pg_mesh_' + view, 'dmesh', '国际空间站有限元热模型表面网格', view)
         m = pg.create('m1', 'Mesh')
         for k, v in (('elemcolor', 'custom'), ('customelemcolor', ['0.78', '0.84', '0.92']), ('wireframe', 'on'), ('wireframecolor', 'custom'), ('customwireframecolor', ['0.15', '0.15', '0.2'])):
             try: m.set(k, v)
@@ -136,10 +136,12 @@ def temperature_figures(j, stem, ds, times, period, rng=None):
         lvl = k + 1 if k >= 0 else None
         tt = t[k] if t else want
         for view in ('iso', 'core', 'hrs', 'top'):
-            title = f'表面温度 °C，t = {tt:.0f} s，第 {int(tt // period) + 1} 圈，轨道角 {360*(tt % period)/period:.0f}°'
+            title = f'表面温度，t = {tt:.0f} s，第 {int(tt // period) + 1} 圈，轨道角 {360*(tt % period)/period:.0f}°'
             pg = plot_group(j, f'pg_T_{view}_{name}', ds, title, view, lvl)
-            surface(pg, 's_shell', 'T2-273.15', sel='sel_shells', rng=rng)
-            surface(pg, 's_solid', 'T-273.15', sel='sel_ext_solid', rng=rng, legend=False)
+            # Plasma matches matplotlib's 'plasma': the COMSOL legend (ASCII minus signs) is switched off and
+            # iss_plots.py --colorbar appends a colour bar with true minus signs
+            surface(pg, 's_shell', 'T2-273.15', sel='sel_shells', rng=rng, colortable='Plasma', legend=False)
+            surface(pg, 's_solid', 'T-273.15', sel='sel_ext_solid', rng=rng, colortable='Plasma', legend=False)
             pg.run(); export_image(j, pg.tag(), os.path.join(FIG, f'{stem}_T_{view}_{name}.png'))
 
 

@@ -67,10 +67,17 @@ def run_case(client, case, a, qs):
     key = case + a.suffix
     if a.hmax:
         LAY.S.MESH_H['hrs'] = a.hmax
+    if a.alpha is not None:
+        # Z-93 solar absorptance override (sensitivity: end-of-life envelope 0.36)
+        z = dict(LAY.S.OPTICS_BY_CASE.get(case, {}).get('z93', LAY.S.OPTICS['z93'])); z['alpha'] = a.alpha
+        LAY.S.OPTICS_BY_CASE.setdefault(case, {})['z93'] = z
     lay = LAY.build(case, capacity=True)
     b = B.Builder(builder_args(case, a), lay, client=client)
     b.geometry(); b.selections(); b.materials(); b.physics(); b.mesh(); b.studies(); b.solver_scaling()
     j, model, per = b.j, b.model, lay['period']
+    if a.g is not None:
+        # NH3-to-panel conductance override (sensitivity: 40 W/m2K ~ fin efficiency 0.8 with the radiative conductance)
+        j.param().set('g_hrs', f'{a.g}[W/(m^2*K)]')
     rows = []
     loads_done = False
     for q in qs:
@@ -95,15 +102,17 @@ def run_case(client, case, a, qs):
             To = np.atleast_1d(np.asarray(model.evaluate(f'Tout_{L}-273.15', dataset=ds), dtype=float))
             Ti = np.atleast_1d(np.asarray(model.evaluate(f'Tret_{L}-273.15', dataset=ds), dtype=float))
             r = dict(case=case, Qd_kW=q, loop=L, Tout_mean_C=float(To[last].mean()), Tout_min_C=float(To[last].min()), Tout_max_C=float(To[last].max()),
-                     Tin_mean_C=float(Ti[last].mean()), drift_C=float(To[last].mean() - To[prev].mean()) if prev.any() else float('nan'),
+                     Tin_mean_C=float(Ti[last].mean()),
+                     # outlet change over one orbit at the same orbit position (end of run minus one period earlier)
+                     drift_C=float(To[-1] - np.interp(t[-1] - per, t, To)) if t[-1] >= per else float('nan'),
                      wall_s=round(wall, 1))
             rows.append(r)
             log(case, 'Qd %.0f kW loop %s: outlet mean %.2f C, min %.2f, max %.2f, orbit-to-orbit drift %.3f K (%.0f s)'
                 % (q, L, r['Tout_mean_C'], r['Tout_min_C'], r['Tout_max_C'], r['drift_C'], wall))
         with open(os.path.join(OUT, f'capacity_{key}.csv'), 'w', newline='', encoding='utf-8') as fh:
             w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
-        if q == qs[0]:
-            # time history of the first load for the report figure
+        if True:
+            # time history of every load (convergence check, figures)
             hist = {'t_s': t}
             for L in ('A', 'B'):
                 hist[f'Tout_{L}_C'] = np.atleast_1d(np.asarray(model.evaluate(f'Tout_{L}-273.15', dataset=ds), dtype=float))
@@ -132,6 +141,8 @@ def main():
     ap.add_argument('--no-reuse-loads', dest='reuse_loads', action='store_false')
     ap.add_argument('--hmax', type=float, default=None, help='radiator mesh size (m), default iss_spec.MESH_H')
     ap.add_argument('--suffix', default='', help='appended to the case name in the output files (sensitivity runs)')
+    ap.add_argument('--g', type=float, default=None, help='g_hrs override, W/(m2 K)')
+    ap.add_argument('--alpha', type=float, default=None, help='Z-93 solar absorptance override')
     a = ap.parse_args()
     qs = [float(x) for x in a.q.split(',')]
     os.makedirs(OUT, exist_ok=True)

@@ -32,7 +32,9 @@ def loop_table(c, loops=('A', 'B')):
         if f'Q_{L}' not in c['s']:
             continue
         q, qr = stat(c, f'Q_{L}'), stat(c, f'Qrad_{L}')
-        out[L] = dict(Q=q, Qrad=qr, f=stat(c, f'f_{L}'), Tout=stat(c, f'Tout_{L}_C'), Tret=stat(c, f'Tret_{L}_C'),
+        # reported flow fraction = smoothly bounded share actually sent through the radiators (feff); f is the valve integrator state
+        fkey = f'feff_{L}' if f'feff_{L}' in c['s'] else f'f_{L}'
+        out[L] = dict(Q=q, Qrad=qr, f=stat(c, fkey), f_int=stat(c, f'f_{L}'), Tout=stat(c, f'Tout_{L}_C'), Tret=stat(c, f'Tret_{L}_C'),
                       Tmix=stat(c, f'Tmix_{L}_C'), closure_pct=100.0 * (qr['mean'] - q['mean']) / q['mean'])
     return out
 
