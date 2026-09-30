@@ -279,7 +279,7 @@ def build(cases):
     D.formula('3 C_{f} dT_{i}/dt = f ṁ c_{p} ΔT_{i} − 3 ∫ g ΔT_{w} dA')
     D.p('式中 C_{f} 为氨节点热容，取 1 kJ/K；T_{i} 为第 i 个氨节点温度；f 为散热器分流比，即流经散热器的氨流量占回路总流量的比例；'
         '系数 3 对应同一回路的三个 ORU 均分流量；ΔT_{i} 为面板进出口氨温度差；ΔT_{w} 为氨进出口平均温度与面板局部温度之差，积分遍及该面板。'
-        '按进出口平均温度计算换热时，每块面板的传热单元数大于 2 会使出口氨温度略低于面板温度，第 5.5 节给出该偏差的大小。')
+        '按进出口平均温度计算换热时，每块面板的传热单元数大于 2 会使出口氨温度低于面板温度，入口面板吸收的热量偏多，下游面板偏少，第 5.5 节给出该偏差的大小。')
     D.p('散热器出口氨与旁路氨在泵模块的流量控制阀中混合后回到供液端，文献 A 第 10 页与第 11 页。模型按积分规律调节分流比，分流比的变化率等于混合供液温度与设定点之差'
         '除以积分时间系数 k_{c}，k_{c} 取 3000 K·s；按散热器进出口温差 25 K 估算，闭环时间常数约 2 min，温差增大时相应缩短。分流比设 0.02 的平滑下限，积分器带抗饱和处理，'
         '报告中的分流比取平滑限幅后的值。控制器要求的分流比超过 1 时，表示散热器全流量也不能把供液温度降到设定点，即散热能力不足。'
@@ -418,14 +418,15 @@ def conclusions(C, LT, CT, PER):
         tm = [v['Tmix'] for lt in lts for v in lt.values()]; to = [v['Tout'] for lt in lts for v in lt.values()]
         add(f'{ncase(C)}第三圈的回路 A 收集热量平均为 {X.rng(min(qa), max(qa))} kW，回路 B 为 {X.rng(min(qb), max(qb))} kW；'
             f'散热器分流比平均 {X.rng(min(fm), max(fm), 2)}，最大 {X.num(fx, 2)}；混合供液温度保持在 {X.rngu(min(x["min"] for x in tm), max(x["max"] for x in tm))}，'
-            f'散热器出口氨温度在 {X.rngu(min(x["min"] for x in to), max(x["max"] for x in to))} 之间。'
+            f'散热器出口氨温度在 {X.rngu(min(x["min"] for x in to), max(x["max"] for x in to))} 之间，分流比很小时受面板换热算法影响偏低约 2 K 至 3 K，见第 5.5 节。'
             + (f'收集热量仍随机柜升温缓慢增加，周期稳态时两回路合计约高 {X.num(max(stor), 1)} kW，不改变散热器余量的结论。' if stor and max(stor) > 0.3 else ''))
     fr = [(c, CT[c]['hrs']['min'], min(v['Tout']['min'] for v in LT[c].values())) for c in C if LT[c] and CT[c].get('hrs')]
     if fr:
         c0, tp, to0 = min(fr, key=lambda x: x[1])
         if tp < -72.0:
             add(f'当前热负荷下 EATCS 散热器分流比很小，流经散热器的少量氨被冷却到接近面板的辐射平衡温度。{CASE_LABEL[c0]}散热器面板最低 {X.num(tp)} °C，'
-                + ('低于' if tp < -77.0 else '接近') + ' −77 °C 的冰点。模型采用理想指向规律，散热器排热又因理想化处理偏多；实际运行中散热器按 RGAC 计算的目标转角调整以防冻，'
+                + '接近 −77 °C 的冰点；分流比很小时模型按氨进出口平均温度计算面板换热，出口端面板偏冷约 2 K，按传热单元数法逐块估算的面板最低温度约 −76 °C。'
+                '模型采用理想指向规律，散热器排热又因理想化处理偏多；实际运行中散热器按 RGAC 计算的目标转角调整以防冻，'
                 '文献 D16 记录的 P1 散热器在轨最低读数约为 −54 °C。按 SSP 41000 规定的 270 nmi 高度计算时，冷工况受到的地球红外与反照更少，冰点余量更小。')
     rk = {c: X.rack_stats(C[c]) for c in C}
     tmax = max((v['Tmax'] for c in C for v in rk[c].values()), default=float('nan'))
@@ -486,7 +487,7 @@ def final_remarks(C, LT, CT, PER):
     tmin = min((v['Tout']['min'] for c in C for v in LT[c].values()), default=None)
     if tmin is not None:
         add('文献 A 第 16 页说明，RGAC 在受晒段令散热器侧边对日，在地影段令散热器正面对地，同时使散热器足够冷以排热、足够暖以防止氨冻结，出口温度目标为 −40 °C。'
-            f'本模型没有模拟这一约束，组间辐射不计与面板换热均布又使散热器偏冷，计算的出口温度最低 {X.num(tmin)} °C；文献 D16 图 4 中 P1 散热器 2007 至 2010 年的在轨读数约为 −54 °C 至 +27 °C，'
+            f'本模型没有模拟这一约束，组间辐射不计与面板换热均布又使散热器偏冷，计算的出口温度最低 {X.num(tmin)} °C，其中约 2 K 至 3 K 来自面板换热算法的偏差；文献 D16 图 4 中 P1 散热器 2007 至 2010 年的在轨读数约为 −54 °C 至 +27 °C，'
             + ('计算最低值在该范围之内。' if tmin >= -54.0 else '计算最低值低于该范围。')
             + '后续可在散热器指向规律中加入 RGAC 对出口温度的约束，用在轨出口温度数据校核散热器与桁架、太阳翼之间遮挡的处理和面板翅片效率，并为每个散热器翼单设辐射组，消除两翼整体转动造成的相互遮挡。')
     add('舱外载荷不接冷板，温度取决于外表面光学性质与自身功率；IEA 与冷板设备的温度主要由冷板决定，多层隔热有效发射率影响进入 PVTCS 的热量。'
@@ -567,7 +568,7 @@ def results_section(D, cases, C, LT, CT, PER, IT):
                 txt += f'机柜只通过冷板与舱内空气散热，进入回路的热量比发热量多 {X.rng(-max(dr) / 1e3, -min(dr) / 1e3, 2)} kW，为机柜初始储热的释放，'
             else:
                 txt += '机柜只通过冷板与舱内空气散热，两者之差为机柜内部储热的变化，'
-            txt += ('达到周期稳态后两者相等。机柜初始温度按 500 W 机柜冷板面的平衡温度统一设定，功率较低的机柜初始偏热，功率较高的机柜初始偏冷，'
+            txt += ('达到周期稳态后两者相等。机柜初始温度按各自水温下 500 W 机柜冷板面的平衡温度设定，中温水回路机柜 297.5 K，低温水回路机柜 284 K，功率较低的机柜初始偏热，功率较高的机柜初始偏冷，'
                     '机柜内部导热形成的温度梯度需要数小时才能建立，三个轨道周期内机柜尚未完全达到周期稳态。IEA 与 MBSU、DDCU 的温度在第三圈已基本不变，'
                     '它们的发热量与进入回路的热量之差主要是经多层隔热向外辐射的热量，每台 IEA 约 0.2 kW。')
             D.p(txt)
@@ -591,7 +592,7 @@ def results_section(D, cases, C, LT, CT, PER, IT):
             D.table('回路收集热量的手算校核，单位 kW', ['工况', '回路', '机柜发热，手算', '机柜进入回路，有限元', '冷板设备发热，手算', '冷板设备进入回路，有限元', '舱体漏热，有限元'],
                     rows, widths=[2.6, 1.1, 2.3, 2.5, 2.3, 2.6, 2.4])
             D.p('手算值为各方块的设定功率。两个回路的机柜热量合计与手算值之差为机柜储热的变化；分回路比较时还要计入分配方式，各舱机柜与舱内空气的换热全部计入该舱低温水回路，'
-                '接中温水回路的机柜散入空气的热量因此计入另一回路。冷板设备的差值主要是经多层隔热向外辐射的热量。乘员热量两者相同，未列出。')
+                '接中温水回路的机柜散入空气的热量因此计入另一回路，周期稳态时这一分配使回路 A 的机柜热量比手算值高约 0.9 kW，回路 B 低约 0.9 kW。冷板设备的差值主要是经多层隔热向外辐射的热量。乘员热量两者相同，未列出。')
     f0 = D.fig + 1
     for c in cases:
         D.figure(os.path.join(FIG, f'{c}_loops.png'), f'{CASE_LABEL[c]} EATCS 回路时程' + ('，灰色区域为地影' if C[c]['summ']['orbit'].get('eclipse_deg', 0) else '，该工况全程受晒'), 15.5)
@@ -608,6 +609,7 @@ def results_section(D, cases, C, LT, CT, PER, IT):
         for nm in sorted(hrs):
             r = hrs[nm]; rows.append([CASE_LABEL[c], nm.replace('HRS_', ''), X.num(r['Tmin']), X.num(r['Tmean']), X.num(r['Tmax'])])
     D.table('EATCS 散热器 ORU 第三圈面板温度，单位 °C', ['工况', 'ORU', '最低', '平均', '最高'], rows, widths=[3.6, 2.4, 3.2, 3.2, 3.2])
+    D.p('分流比很小时，受面板换热算法影响，表中最高温度偏高约 4 K 至 8 K，最低温度偏低约 2 K，见第 5.5 节。')
     D.p('每个 ORU 的 8 块面板沿流向串联，入口面板温度最高，出口面板最低。回路 A 的三个 ORU 位于右舷，回路 B 的三个 ORU 位于左舷。'
         '同一翼的三个 ORU 在各种姿态下都位于同一平面内，相互之间没有辐射交换与遮挡，对地视角相同，流量均分，温度差别来自对面散热器翼的视角系数随 ORU 位置的变化；'
         '两个回路之间的差别来自流量、收集热量以及两翼整体转动造成的相互遮挡。β 为 0 的两个工况中，散热器在地影段转为正面对地，看到的地球红外增加，'
@@ -752,12 +754,12 @@ def results_section(D, cases, C, LT, CT, PER, IT):
         if not lt: continue
         tmix_min = min(v['Tmix']['min'] for v in lt.values()); tmix_max = max(v['Tmix']['max'] for v in lt.values())
         tpan = CT[c].get('hrs', {}).get('min'); tout_min = min(v['Tout']['min'] for v in lt.values())
-        pv = X.pv_loops(C[c]); pv_min = min((v['Tout']['min'] for v in pv.values()), default=None)
+        pv_min = CT[c].get('pvr', {}).get('min')
         if tpan is not None:
-            rows.append([CASE_LABEL[c], '氨冻结', '冰点 −77 °C，文献 A 第 5 页', f'散热器面板最低 {X.num(tpan)} °C，出口最低 {X.num(tout_min)} °C',
-                         X.num(tpan + 77.0) + ' K'])
+            rows.append([CASE_LABEL[c], '氨冻结', '冰点 −77 °C，文献 A 第 5 页', f'散热器面板最低 {X.num(tpan)} °C',
+                         X.num(tpan + 77.0) + ' K' + ('，修正后约 1 K' if tpan < -77.0 else '')])
         if pv_min is not None:
-            rows.append([CASE_LABEL[c], 'PVR 氨冻结', '冰点 −77 °C，文献 A 第 5 页', f'PVR 出口最低 {X.num(pv_min)} °C', X.num(pv_min + 77.0) + ' K'])
+            rows.append([CASE_LABEL[c], 'PVR 氨冻结', '冰点 −77 °C，文献 A 第 5 页', f'PVR 面板最低 {X.num(pv_min)} °C', X.num(pv_min + 77.0) + ' K'])
         rows.append([CASE_LABEL[c], '界面换热器防冻', '供液低于 1.67 °C 时保护动作，文献 A 第 11 页', f'混合供液最低 {X.num(tmix_min, 2)} °C', X.num(tmix_min - 1.67, 2) + ' K'])
         rows.append([CASE_LABEL[c], '泵控阀温控能力', '2.2 °C 至 6.1 °C，文献 A 第 11 页', f'混合供液 {X.rngu(tmix_min, tmix_max, 2)}',
                      '在范围内' if tmix_min >= 2.2 and tmix_max <= 6.1 else '超出范围'])
@@ -774,14 +776,16 @@ def results_section(D, cases, C, LT, CT, PER, IT):
             c0, tl, f0, tout0 = min(low, key=lambda x: x[1])
             H = S.HRS; lp = (abs(H['x_tip'] - H['x_root']) - (H['n_panels'] - 1) * H['gap']) / H['n_panels']
             gA = 120.0 * H['width'] * lp; ntu = gA / (f0 * X.loop_mcp('A') / 3.0); ntu1 = gA / (X.loop_mcp('A') / 3.0)
-            D.p(f'{CASE_LABEL[c0]}的散热器面板最低 {X.num(tl)} °C，' + ('低于' if tl < -77.0 else '接近') + ' −77 °C 的冰点。'
+            D.p(f'{CASE_LABEL[c0]}的散热器面板最低 {X.num(tl)} °C，接近 −77 °C 的冰点。'
                 f'该工况两个回路收集的热量约为单回路设计排热能力 35 kW 的三分之二，散热器分流比平均只有 {X.num(f0, 2)}，流经散热器的少量氨在面板内冷却到接近面板的辐射平衡温度；'
                 '模型采用理想的侧边对日与正面对地指向，散热器排热又因理想化处理偏多。文献 A 第 16 页说明，RGAC 的作用之一是使散热器足够暖以防止氨冻结，'
                 '实际运行中散热器转角会偏离理想规律，文献 D16 图 4 的在轨最低读数约为 −54 °C。模型中液氨物性按液态取值，没有模拟冻结，'
                 '该结果说明低负荷与冷环境下散热器必须依靠转角调节防冻。'
-                f'分流比很小时每块面板的传热单元数约为 {X.num(ntu, 0)}，远大于 2，面板换热按氨进出口平均温度计算会使出口氨温度略低于面板温度，'
-                f'本工况出口最低 {X.num(tout0)} °C，比面板最低温度低 {X.num(tl - tout0)} K，冰点判断以面板温度为准；该偏差对回路排热量的影响小于 1%，'
-                f'全流量的排热能力子模型中每块面板的传热单元数约为 {X.num(ntu1, 1)}，不受影响。')
+                f'分流比很小时每块面板的传热单元数约为 {X.num(ntu, 0)}，远大于 2。模型按氨进出口平均温度计算面板换热，入口面板吸收的热量偏多，出口氨温度低于该面板温度，'
+                f'下游面板得到的热量偏少，本工况出口最低 {X.num(tout0)} °C，比全部面板的最低温度还低 {X.num(tl - tout0)} K。按传热单元数法逐块计算的集总参数估算表明，'
+                'EATCS 入口面板温度偏高约 4 K 至 8 K，PVR 入口面板偏高约 2 K 至 5 K，出口端面板偏低约 2 K，出口氨温度偏低约 2 K 至 3 K；'
+                '修正后设计冷工况面板最低约 −76 °C，比冰点高约 1 K，这一余量小于算法偏差，结果只能说明面板温度接近冰点。该偏差对回路排热量的影响小于 1%，'
+                f'全流量的排热能力子模型中每块面板的传热单元数约为 {X.num(ntu1, 1)}，两种算法的出口温度相差不到 0.2 K。')
 
     capacity_section(D, cases, LT)
 
@@ -824,6 +828,7 @@ def results_section(D, cases, C, LT, CT, PER, IT):
             else:
                 txt += ('平均环境工况含进出地影与散热器姿态切换，两种步长的结果也一致。这些检验针对散热器子模型，全站模型其余部件的步长与网格影响未经检验。')
             txt += '太阳翼的时间常数只有数分钟，120 s 步长只能把出影升温的时刻分辨到一个时间步，即 2 min。'
+            txt += '全站模型的氨节点换热按进出口平均温度计算，分流比很小时的偏差见第 5.5 节，上述步长与网格检验不包括这一项。'
             D.p(txt)
 
 
