@@ -15,6 +15,8 @@ OUT = os.path.join(os.path.dirname(HERE), 'out')
 FIG = os.path.join(OUT, 'figures'); os.makedirs(FIG, exist_ok=True)
 plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'DejaVu Sans']
 plt.rcParams['axes.unicode_minus'] = True
+plt.rcParams['font.size'] = 12
+plt.rcParams['legend.framealpha'] = 1.0
 C = ['#1f77b4', '#d62728', '#2ca02c', '#ff7f0e', '#9467bd', '#8c564b', '#17becf', '#7f7f7f']
 CASE_CN = {'cold0': '设计冷工况', 'hot75': '设计热工况', 'nom0': '平均环境工况'}
 
@@ -29,8 +31,10 @@ def load(tag):
 def shade_eclipse(ax, d, summ):
     per = summ['orbit']['period'] if 'period' in summ['orbit'] else None
     ecl = summ['orbit'].get('eclipse_deg', 0.0)
+    t = d['t_s']
+    if per is not None: ax.set_xlim(t[0] / per, t[-1] / per)
     if not ecl or per is None: return
-    t = d['t_s']; n = int(np.ceil(t[-1] / per)) + 1
+    n = int(np.ceil(t[-1] / per)) + 1
     for k in range(n):
         a = (k + 0.5) * per - ecl / 360 * per / 2; b = (k + 0.5) * per + ecl / 360 * per / 2
         a, b = max(a, t[0]), min(b, t[-1])
@@ -53,7 +57,7 @@ def fig_loops(tag, d, summ):
     axs[2].axhline(2.8, color='k', lw=0.8, ls=':', label='供液设定点 2.8 °C'); axs[2].axhline(-40, color='k', lw=0.8, ls='-.', label='出口温度目标 −40 °C')
     axs[2].set_xlabel('轨道圈数')
     for ax in axs: ax.grid(alpha=0.3); ax.legend(fontsize=8, ncol=2)
-    fig.suptitle(f'{CASE_CN.get(tag, tag)} EATCS 回路时程，灰色区域为地影')
+    fig.suptitle(f'{CASE_CN.get(tag, tag)} EATCS 回路时程' + ('，灰色区域为地影' if summ['orbit'].get('eclipse_deg', 0) else '，全程受晒'))
     fig.tight_layout(); p = os.path.join(FIG, f'{tag}_loops.png'); fig.savefig(p, dpi=150); plt.close(fig); print('wrote', p)
 
 
@@ -87,7 +91,7 @@ def fig_classes(tag, d, summ):
         ax.plot(x, d[f'{c}_Tmean_C'], color=C[0]); ax.set_title(LABELS[c], fontsize=10); ax.set_ylabel('温度 °C', fontsize=9); ax.grid(alpha=0.3)
     for ax in axs[n:]: ax.axis('off')
     for ax in axs[-cols:]: ax.set_xlabel('轨道圈数')
-    fig.suptitle(f'{CASE_CN.get(tag, tag)}各类部件温度时程，实线为平均值，色带为最低值至最高值，灰色区域为地影')
+    fig.suptitle(f'{CASE_CN.get(tag, tag)}各类部件温度时程，实线为平均值，色带为最低值至最高值' + ('，灰色区域为地影' if summ['orbit'].get('eclipse_deg', 0) else '，全程受晒'))
     fig.tight_layout(); p = os.path.join(FIG, f'{tag}_classes.png'); fig.savefig(p, dpi=150); plt.close(fig); print('wrote', p)
 
 
@@ -95,8 +99,10 @@ def fig_orus(tag, d, summ):
     keys = [k for k in d if k.endswith('_Tmean_C') and ('_S1-' in k or '_P1-' in k)]
     if not keys: return
     fig, ax = plt.subplots(figsize=(10, 4.5)); x = d['orbit']; shade_eclipse(ax, d, summ)
-    for i, k in enumerate(sorted(keys)):
-        ax.plot(x, d[k], color=C[i % len(C)], label=k.split('_')[1])
+    for k in sorted(keys):
+        oru = k.split('_')[1]; j = int(oru[-1]) - 1
+        ax.plot(x, d[k], color=C[j], ls='-' if oru.startswith('S1') else '--', lw=1.6,
+                label=('回路 A ' if oru.startswith('S1') else '回路 B ') + oru)
     ax.set_ylabel('散热器 ORU 面板平均温度 °C'); ax.set_xlabel('轨道圈数'); ax.grid(alpha=0.3); ax.legend(ncol=3, fontsize=8)
     fig.suptitle(f'{CASE_CN.get(tag, tag)}六个 EATCS 散热器 ORU 面板平均温度时程')
     fig.tight_layout(); p = os.path.join(FIG, f'{tag}_orus.png'); fig.savefig(p, dpi=150); plt.close(fig); print('wrote', p)
@@ -115,10 +121,10 @@ def add_class_legend(path):
     """Append the thermal-class colour key below a COMSOL geometry render; writes <stem>_legend.png."""
     from matplotlib.patches import Patch
     img = plt.imread(path); h, w = img.shape[:2]
-    fig = plt.figure(figsize=(w / 150, h / 150 + 0.55), dpi=150)
-    ax = fig.add_axes([0, 0.55 / (h / 150 + 0.55), 1, 1 - 0.55 / (h / 150 + 0.55)]); ax.imshow(img); ax.axis('off')
+    fig = plt.figure(figsize=(w / 150, h / 150 + 1.0), dpi=150)
+    ax = fig.add_axes([0, 1.0 / (h / 150 + 1.0), 1, 1 - 1.0 / (h / 150 + 1.0)]); ax.imshow(img); ax.axis('off')
     handles = [Patch(facecolor=CLASS_COLORS[c], edgecolor='0.3', label=CLASS_CN[c]) for c in CLASS_COLORS]
-    fig.legend(handles=handles, loc='lower center', ncol=len(handles), fontsize=8, frameon=False, handlelength=1.4, columnspacing=1.0)
+    fig.legend(handles=handles, loc='lower center', ncol=5, fontsize=16, frameon=False, handlelength=1.4, columnspacing=1.2)
     out = path.replace('.png', '_legend.png'); fig.savefig(out, dpi=150); plt.close(fig); print('wrote', out)
 
 
@@ -127,13 +133,13 @@ def add_colorbar(path, vmin=-80.0, vmax=80.0, cmap='plasma', label='表面温度
     without its own legend; writes <stem>_cb.png. COMSOL's 'Plasma' table equals matplotlib's 'plasma'."""
     import matplotlib as mpl
     img = plt.imread(path); h, w = img.shape[:2]
-    extra = 0.8
+    extra = 1.3
     fig = plt.figure(figsize=(w / 150, h / 150 + extra), dpi=150)
     top = extra / (h / 150 + extra)
     ax = fig.add_axes([0, top, 1, 1 - top]); ax.imshow(img); ax.axis('off')
     cax = fig.add_axes([0.25, top * 0.55, 0.5, top * 0.22])
-    cb = fig.colorbar(mpl.cm.ScalarMappable(norm=mpl.colors.Normalize(vmin, vmax), cmap=cmap), cax=cax, orientation='horizontal')
-    cb.set_ticks(np.arange(vmin, vmax + 1, 20)); cb.ax.tick_params(labelsize=8); cb.set_label(label, fontsize=9)
+    cb = fig.colorbar(mpl.cm.ScalarMappable(norm=mpl.colors.Normalize(vmin, vmax), cmap=cmap), cax=cax, orientation='horizontal', extend='both')
+    cb.set_ticks(np.arange(vmin, vmax + 1, 20)); cb.ax.tick_params(labelsize=16); cb.set_label(label, fontsize=18)
     out = path.replace('.png', '_cb.png'); fig.savefig(out, dpi=150); plt.close(fig); print('wrote', out)
 
 
@@ -143,7 +149,7 @@ def fig_capacity(cases=('hot75', 'nom0', 'cold0')):
     for c in cases:
         p = os.path.join(OUT, 'capacity', f'capacity_{c}.csv')
         if not os.path.exists(p): continue
-        rows = list(csv.DictReader(open(p, encoding='utf-8')))
+        rows = [r for r in csv.DictReader(open(p, encoding='utf-8')) if float(r['Tin_mean_C']) <= 45.0]   # liquid NH3 range
         for L, ls in (('A', '-'), ('B', '--')):
             rr = sorted([r for r in rows if r['loop'] == L], key=lambda r: float(r['Qd_kW']))
             if not rr: continue
@@ -153,7 +159,7 @@ def fig_capacity(cases=('hot75', 'nom0', 'cold0')):
             ax.fill_between(q, lo, hi, color=C[k], alpha=0.12, lw=0)
         k += 1
     ax.axhline(2.8, color='k', lw=0.9, ls=':'); ax.text(ax.get_xlim()[0], 3.4, ' 供液设定点 2.8 °C', fontsize=9)
-    ax.axvline(35, color='0.4', lw=0.9, ls='-.'); ax.text(35.5, ax.get_ylim()[0] + 2, '单回路设计排热能力 35 kW', fontsize=9, color='0.3')
+    ax.axvline(35, color='0.4', lw=0.9, ls='-.'); ax.text(36.0, ax.get_ylim()[1] - 4, '单回路设计排热能力 35 kW', fontsize=10, color='0.3')
     ax.set_xlabel('单回路排热量 kW'); ax.set_ylabel('散热器出口氨温度 °C'); ax.grid(alpha=0.3); ax.legend(fontsize=8, ncol=2)
     fig.suptitle('散热器全流量时出口温度与排热量的关系，色带为一圈内最低值至最高值')
     fig.tight_layout(); p = os.path.join(FIG, 'capacity_outlet.png'); fig.savefig(p, dpi=150); plt.close(fig); print('wrote', p)

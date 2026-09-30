@@ -35,7 +35,7 @@ def make_views(j):
         except Exception: pass
         v = j.view().create('v_' + tag, 3); c = v.camera()
         c.set('projection', 'perspective'); c.set('position', [str(x) for x in pos]); c.set('target', [str(x) for x in tgt]); c.set('up', [str(x) for x in up])
-        try: c.set('viewangle', '28')
+        try: c.set('viewangle', '31')
         except Exception: pass
         c.set('autoupdate', 'off')
         for k, val in (('showgrid', 'off'), ('showaxisorientation', 'on'), ('scenelight', 'on'), ('showlabels', 'off')):
@@ -49,7 +49,7 @@ def export_image(j, pg_tag, path, w=2000, h=1250):
     except Exception: pass
     e = r.export().create('imgx', 'Image'); e.set('sourceobject', pg_tag); e.set('pngfilename', path)
     for k, v in (('imagetype', 'png'), ('size', 'manualweb'), ('unit', 'px'), ('width', str(w)), ('height', str(h)), ('antialias', 'on'),
-                 ('options', 'on'), ('title', 'on'), ('legend', 'on'), ('axes', 'off'), ('logo', 'off'), ('grid', 'off'), ('background', 'color'), ('transparent', 'off')):
+                 ('options', 'on'), ('title', 'off'), ('legend', 'on'), ('axes', 'off'), ('logo', 'off'), ('grid', 'off'), ('background', 'color'), ('transparent', 'off')):
         try: e.set(k, v)
         except Exception: pass
     e.run(); log('wrote', os.path.basename(path))

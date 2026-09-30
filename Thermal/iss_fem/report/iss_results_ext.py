@@ -8,7 +8,9 @@ MOD_CN = {'destiny': 'Destiny', 'harmony': 'Harmony', 'tranquility': 'Tranquilit
 
 
 def num(x, nd=1):
-    """Number with a true minus sign (U+2212)."""
+    """Number with a true minus sign (U+2212); a value that rounds to zero prints without a sign."""
+    if round(float(x), nd) == 0:
+        x = 0.0
     s = f'{x:.{nd}f}'
     return s.replace('-', '−')
 
@@ -97,7 +99,7 @@ def capacity_note(c):
     return {L: v['f']['max'] for L, v in lt.items()}
 
 
-BREAKDOWN_CN = [('rack_MT', '舱内机柜冷板，中温回路'), ('rack_LT', '舱内机柜冷板，低温回路'), ('air', '舱内空气'), ('mli', '舱体多层隔热漏热'),
+BREAKDOWN_CN = [('rack_MT', '舱内机柜冷板，中温水回路'), ('rack_LT', '舱内机柜冷板，低温水回路'), ('air', '舱内空气'), ('mli', '舱体多层隔热漏热'),
                 ('oru', '舱外设备冷板'), ('crew', '乘员代谢热')]
 
 
@@ -127,11 +129,22 @@ T_SET_C = (37 - 32) / 1.8
 
 
 def _crossing(qs, ys, target):
-    """Loop heat at which the (monotone increasing) outlet temperature reaches `target`, linear interpolation."""
+    """Loop heat at which the (monotone increasing) outlet temperature reaches `target`: quadratic through the
+    bracketing pair and its nearest neighbour (the curve is concave; linear interpolation over 50 kW steps would
+    overstate the crossing by about 2 kW), linear when only two points exist."""
     for k in range(len(qs) - 1):
         if (ys[k] - target) * (ys[k + 1] - target) <= 0 and ys[k + 1] != ys[k]:
-            return qs[k] + (target - ys[k]) * (qs[k + 1] - qs[k]) / (ys[k + 1] - ys[k])
+            lin = qs[k] + (target - ys[k]) * (qs[k + 1] - qs[k]) / (ys[k + 1] - ys[k])
+            idx = [k - 1, k, k + 1] if k >= 1 else ([k, k + 1, k + 2] if k + 2 < len(qs) else None)
+            if idx is None:
+                return lin
+            c = np.polyfit([qs[i] for i in idx], [ys[i] for i in idx], 2)
+            roots = [r.real for r in np.roots([c[0], c[1], c[2] - target]) if abs(r.imag) < 1e-9 and qs[k] - 1e-9 <= r.real <= qs[k + 1] + 1e-9]
+            return float(roots[0]) if roots else lin
     return None
+
+
+T_IN_MAX_C = 45.0   # liquid NH3 properties at 300 psia are used; points with a hotter radiator inlet are dropped
 
 
 def capacity():
@@ -146,6 +159,7 @@ def capacity():
     for p in files:
         key = os.path.basename(p)[len('capacity_'):-len('.csv')]
         rr = [dict(r, **{k: float(r[k]) for k in r if k not in ('case', 'loop')}) for r in csv.DictReader(open(p, encoding='utf-8'))]
+        rr = [r for r in rr if r['Tin_mean_C'] <= T_IN_MAX_C]
         rows[key] = rr
         res = {}
         for L in ('A', 'B'):
@@ -167,3 +181,15 @@ def capacity_history(case, q):
     t = d['t_s']; per = 2 * np.pi * np.sqrt((6378.137e3 + 400e3) ** 3 / 3.986004418e14)
     drift = max(abs(d[k][-1] - np.interp(t[-1] - per, t, d[k])) for k in d.dtype.names if k.startswith('Tout_'))
     return dict(t_end=float(t[-1]), drift=float(drift))
+
+
+def capacity_drifts():
+    """End-of-run outlet drift of every capacity run: {(key, q_kW): drift_K}."""
+    import glob, os
+    out = {}
+    for p in sorted(glob.glob(os.path.join(R.OUT, 'capacity', 'history_*.csv'))):
+        b = os.path.basename(p)[len('history_'):-len('kW.csv')]
+        key, q = b.rsplit('_', 1)
+        h = capacity_history(key, q)
+        if h: out[(key, float(q))] = h['drift']
+    return out

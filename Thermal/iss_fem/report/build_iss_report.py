@@ -132,7 +132,7 @@ def build(cases):
         '几何、材料、表面性质与热负荷依据文献 A、B、C 三份热控文献、NASA 公开三维模型、SSP 30219 坐标系规范与公开工程资料确定，'
         '每个取值都注明了文献、公开资料或模型取定依据。舱内机柜、舱外电子设备与舱外载荷简化为方块热源。机柜与舱外电子设备的热量经冷板进入冷却回路，'
         '由散热器面板向深空辐射；舱外载荷不接冷板，由方块外表面直接向空间辐射。分析覆盖设计冷工况、设计热工况与平均环境工况，'
-        f'每个工况由当地正午起连续计算 {t_end:.0f} s，即 {t_end / per0:.2f} 个轨道周期，统计取最后一个轨道周期，文中称第三圈。'
+        f'每个工况由轨道正午起连续计算 {t_end:.0f} s，即 {t_end / per0:.2f} 个轨道周期，统计取最后一个轨道周期，文中称第三圈。'
         '另建散热器排热能力子模型，求 EATCS 散热器在三个工况下的排热能力。')
     D.h(2, '1.1 主要结论')
     D.items(conclusions(C, LT, CT, PER))
@@ -234,7 +234,7 @@ def build(cases):
         '其余实体部件与全部壳部件的外表面参与轨道热载荷计算。轨道热载荷接口按太阳与红外两个波段计算直接日照、地球反照与地球红外，'
         '用半立方体法计算部件之间的相互辐射与遮挡，半立方体分辨率取 128，视角系数更新容差取 0.02，地球按 2 圈、每圈 6 个点离散，'
         '反照率与地球红外在全球取均匀值，深空温度取 2.7 K。')
-    D.p('本项目冒烟测试中用旋转域驱动面板转动，轨道位置由自定义函数给出，求解时轨道热载荷接口无法计算轨道速度变量，全站模型因此没有采用动网格。'
+    D.p('前期测试表明，用旋转域驱动面板转动并由自定义函数给出轨道位置时，轨道热载荷接口无法计算轨道速度变量，全站模型因此没有采用动网格。'
         '模型把全部部件按指向方式分为四个辐射组，每组一个轨道热载荷接口，各自设定指向规律，组内相互辐射与遮挡完整计算，组间不计。')
     D.p('指向规律中的术语定义如下。太阳 β 角为太阳方向与轨道面的夹角。轨道角自轨道正午点沿飞行方向起算，β 为 0 时地影中点位于轨道角 180°。'
         '侧边对日指太阳方向落在面板平面内，正面对地指面板法向指向天底，两者沿用文献 A 第 16 页的规定。参考姿态为建模时的几何姿态：'
@@ -242,7 +242,7 @@ def build(cases):
     D.table('辐射分组与指向规律', ['辐射组', '成员', '指向规律'], [
         ['机体组', '舱体、桁架与舱外方块', '+Z 指向天底，+X 指向速度方向'],
         ['散热器组', '6 个 EATCS 散热器 ORU', 'β 为 0 的工况在受晒段保持 TRRJ 零位，面板法向垂直于轨道面，任一轨道角都侧边对日；β 不为 0 的工况绕 X 轴转动，使太阳方向落在面板平面内；地影段面板法向转向天底'],
-        ['SARJ 组', '4 台 PVR，服务舱太阳翼', '绕 Y 轴随太阳转动，PVR 侧边对日，服务舱太阳翼电池面对日；服务舱太阳翼由自身驱动机构转动，指向规律与 SARJ 相同，并入本组'],
+        ['SARJ 组', '4 台 PVR，服务舱太阳翼', '绕 Y 轴随太阳转动，PVR 侧边对日，服务舱太阳翼电池面法向指向太阳在轨道面内的投影；服务舱太阳翼由自身驱动机构转动，指向规律与 SARJ 相同，并入本组'],
         ['太阳翼组', '8 个美国太阳翼', '电池面法向始终指向太阳，长轴垂直于 Y 轴，对应 SARJ 与 BGA 的组合转动'],
     ], widths=[2.6, 4.2, 9.0])
     D.p('每个辐射组按一个刚体转动。散热器组的两个散热器翼零位时沿 Y 轴相距 29.4 m 相向布置，地影段与设计热工况中面板接近正面对地，'
@@ -278,7 +278,8 @@ def build(cases):
         '第 i 块面板对应氨节点的能量方程为：')
     D.formula('3 C_{f} dT_{i}/dt = f ṁ c_{p} ΔT_{i} − 3 ∫ g ΔT_{w} dA')
     D.p('式中 C_{f} 为氨节点热容，取 1 kJ/K；T_{i} 为第 i 个氨节点温度；f 为散热器分流比，即流经散热器的氨流量占回路总流量的比例；'
-        '系数 3 对应同一回路的三个 ORU 均分流量；ΔT_{i} 为面板进出口氨温度差；ΔT_{w} 为氨平均温度与面板局部温度之差，积分遍及该面板。')
+        '系数 3 对应同一回路的三个 ORU 均分流量；ΔT_{i} 为面板进出口氨温度差；ΔT_{w} 为氨进出口平均温度与面板局部温度之差，积分遍及该面板。'
+        '按进出口平均温度计算换热时，每块面板的传热单元数大于 2 会使出口氨温度略低于面板温度，第 5.5 节给出该偏差的大小。')
     D.p('散热器出口氨与旁路氨在泵模块的流量控制阀中混合后回到供液端，文献 A 第 10 页与第 11 页。模型按积分规律调节分流比，分流比的变化率等于混合供液温度与设定点之差'
         '除以积分时间系数 k_{c}，k_{c} 取 3000 K·s；按散热器进出口温差 25 K 估算，闭环时间常数约 2 min，温差增大时相应缩短。分流比设 0.02 的平滑下限，积分器带抗饱和处理，'
         '报告中的分流比取平滑限幅后的值。控制器要求的分流比超过 1 时，表示散热器全流量也不能把供液温度降到设定点，即散热能力不足。'
@@ -292,7 +293,7 @@ def build(cases):
     ], widths=[3.4, 7.2, 5.2])
 
     D.h(2, '3.8 求解设置')
-    D.p('每个工况先由轨道热载荷研究步计算全时段外热流，再由轨道温度研究步求解温度与回路。外热流与温度都按 120 s 间隔计算，计算由当地正午起算，'
+    D.p('每个工况先由轨道热载荷研究步计算全时段外热流，再由轨道温度研究步求解温度与回路。外热流与温度都按 120 s 间隔计算，计算由轨道正午起算，'
         f'到 {t_end:.0f} s 结束，统计取最后 {per0:.1f} s。时间推进采用 BDF 法，步长手动取 120 s，求解日志显示起步与事件重启后的步为一阶，其余各步为二阶；'
         '进入与离开地影时求解器在事件时刻截断步长，之后继续以 120 s 推进，结果按 120 s 间隔插值输出。分离式求解器分六组：实体温度一组，'
         '壳温度与全部回路未知量一组，四个辐射组的表面辐射度各一组，每步最多 25 次分离迭代。')
@@ -306,7 +307,7 @@ def build(cases):
     D.items([
         ('1．', '部件按指向方式分为四个辐射组，组间不计相互辐射与遮挡；每组按一个刚体转动，散热器两翼与美国太阳翼之间的相对位置按第 3.5 节处理。'),
         ('2．', '部件之间全部不计导热。桁架段之间、设备与桁架之间、舱段之间、舱段与桁架之间以及散热器、PVR、太阳翼与桁架之间只通过同组辐射换热，冷板设备只与固定温度的冷板换热。'),
-        ('3．', '桁架以不透明实体包络表示，不计辐射穿过桁架杆件间隙的透射，计算得到的桁架温度为包络外表面温度，不代表单根杆件的温度。'),
+        ('3．', '桁架以不透明实体包络表示，不计辐射穿过桁架杆件间隙的透射。桁架包络的最低与最高温度出现在外表面；平均值为体积平均，包络内部扩散时间长达数小时至数天，平均值主要反映 253 K 的初始值，不代表单根杆件的温度。'),
         ('4．', 'P4 至 P6、S4 至 S6 桁架段与 IEA 实际随 SARJ 转动，模型放在机体组，按对地定向计算外热流。'),
         ('5．', '舱内空气温度取 22 °C 固定值；冷板一侧的冷却液温度取固定值，界面换热器与舱内水回路不建模，散热器入口温度按设定点计算。'),
         ('6．', '散热器面板内的换热按面板均布，不区分流管位置，相当于流管之间面板的翅片效率取 1。'),
@@ -323,7 +324,8 @@ def build(cases):
         ('12．', '核验建议中没有采用的条目：铬酸阳极化铝的实测值 0.32 与 0.49、多层隔热有效发射率 0.05、文献 D18 的太阳翼电池面光学性质、上条所列舱段位置修正。'),
         ('13．', '舱外设备与 IEA 外表面按多层隔热有效光学性质处理，吸收率 0.012、发射率 0.03，这一处理用于表示设备内部经多层隔热的散热，在相互辐射中却使设备外表面接近全反射面，'
                  '会把阳光反射到邻近部件表面。'),
-        ('14．', '文献 B 第 8 页至第 11 页记载，P1-3 散热器第 2 流路于 2017 年 5 月隔离并排空，翻修件 2019 年 4 月才上行，2019 年构型中回路 B 实际只有五条散热器流路工作；'
+        ('14．', '文献 A 列出的早期外部主动热控系统 EEATCS 的两台 P6 散热器在 2019 年构型中已收拢，模型不包括；PVTCS 泵流量控制组件的 275 W 功耗没有单独计入。'),
+        ('15．', '文献 B 第 8 页至第 11 页记载，P1-3 散热器第 2 流路于 2017 年 5 月隔离并排空，翻修件 2019 年 4 月才上行，2019 年构型中回路 B 实际只有五条散热器流路工作；'
                  '本模型六个散热器 ORU 的两条流路全部工作。'),
     ])
 
@@ -359,8 +361,10 @@ def build(cases):
     ], widths=[6.4, 9.4])
     D.p('复现步骤以平均环境工况 nom0 为例：在装有 MPh 的 Python 虚拟环境中依次运行 iss_build.py --case nom0 --no-solve 与 iss_run.py nom0 --orbits 3 --dt 120，'
         '再运行 post_all.py nom0，完成探针取值并生成时程图与温度云图，post_all.py 同时列出三个工况时生成本报告。几何与网格图由 iss_render.py 以 --what geom 生成，'
-        '色标由 iss_plots.py --legend 加注。散热器排热能力子模型由 iss_capacity.py hot75 --q 35,60,85,110,135 计算，另两个工况把 hot75 换为 nom0 与 cold0，'
-        '排热能力图由 iss_plots.py --capacity 生成；离散误差检验运行 iss_capacity.py hot75 --q 35 --dt 60 --suffix _dt60 与 iss_capacity.py hot75 --q 35 --hmax 0.8 --suffix _h08。')
+        '色标由 iss_plots.py --legend 加注。散热器排热能力子模型依次运行 iss_capacity.py hot75 --q 35,60,85,110,135、iss_capacity.py nom0 --q 35,85,135 与 '
+        'iss_capacity.py cold0 --q 35,85,135,185，排热能力图由 iss_plots.py --capacity 生成；离散误差检验运行 iss_capacity.py hot75 --q 35 --dt 60 --suffix _dt60、'
+        'iss_capacity.py hot75 --q 35 --hmax 0.8 --suffix _h08 与 iss_capacity.py nom0 --q 35 --dt 60 --suffix _dt60；敏感性计算运行 '
+        'iss_capacity.py hot75 --q 35,60,85 --g 40 --suffix _g40 与 iss_capacity.py hot75 --q 35,60,85 --alpha 0.36 --suffix _a36。')
     import json
     rb = {}
     for c in cases:
@@ -400,34 +404,47 @@ def conclusions(C, LT, CT, PER):
     def add(t):
         out.append((f'{n[0]}．', t)); n[0] += 1
     add('在 COMSOL 中建立了国际空间站全站有限元热模型，包含 19 个加压舱段共 20 个舱体圆柱、12 个桁架段、6 个 EATCS 散热器 ORU、4 台 PVR、18 块太阳翼毯面、'
-        '108 个方块热源与 6 个不发热的 EATCS 设备方块。几何、材料、表面性质与热负荷的每个取值都注明了文献、公开资料或模型取定依据，布局与 SSP 30219 的关节定义一致。')
+        '108 个方块热源与 6 个不发热的 EATCS 设备方块。几何、材料、表面性质与热负荷的每个取值都注明了文献、公开资料或模型取定依据；参考姿态下的关节转轴与零位与 SSP 30219 一致，在轨转动按四个刚体辐射组近似，见第 3.5 节。')
     lts = [LT[c] for c in C if LT[c]]
+    rack_W = sum(nb * 4 * w for nb, w in S.RACK_MODULES.values())
+    stor = []
+    for c in C:
+        b = X.breakdown(C[c]) or {}
+        if b.get('A') and b.get('B'):
+            stor.append((rack_W - sum(v for L in ('A', 'B') for k, v in b[L].items() if k in ('rack_MT', 'rack_LT', 'air'))) / 1e3)
     if lts:
         qa = [lt['A']['Q']['mean'] / 1e3 for lt in lts]; qb = [lt['B']['Q']['mean'] / 1e3 for lt in lts]
         fm = [v['f']['mean'] for lt in lts for v in lt.values()]; fx = max(v['f']['max'] for lt in lts for v in lt.values())
         tm = [v['Tmix'] for lt in lts for v in lt.values()]; to = [v['Tout'] for lt in lts for v in lt.values()]
-        add(f'{ncase(C)}第三圈，回路 A 收集热量平均 {X.rng(min(qa), max(qa))} kW，回路 B 为 {X.rng(min(qb), max(qb))} kW；'
+        add(f'{ncase(C)}第三圈的回路 A 收集热量平均为 {X.rng(min(qa), max(qa))} kW，回路 B 为 {X.rng(min(qb), max(qb))} kW；'
             f'散热器分流比平均 {X.rng(min(fm), max(fm), 2)}，最大 {X.num(fx, 2)}；混合供液温度保持在 {X.rngu(min(x["min"] for x in tm), max(x["max"] for x in tm))}，'
-            f'散热器出口氨温度在 {X.rngu(min(x["min"] for x in to), max(x["max"] for x in to))} 之间。')
-    fr = [(c, min(CT[c]['hrs']['min'], min(v['Tout']['min'] for v in LT[c].values()))) for c in C if LT[c] and CT[c].get('hrs')]
+            f'散热器出口氨温度在 {X.rngu(min(x["min"] for x in to), max(x["max"] for x in to))} 之间。'
+            + (f'收集热量仍随机柜升温缓慢增加，周期稳态时两回路合计约高 {X.num(max(stor), 1)} kW，不改变散热器余量的结论。' if stor and max(stor) > 0.3 else ''))
+    fr = [(c, CT[c]['hrs']['min'], min(v['Tout']['min'] for v in LT[c].values())) for c in C if LT[c] and CT[c].get('hrs')]
     if fr:
-        c0, tl = min(fr, key=lambda x: x[1])
-        if tl < -72.0:
-            add(f'当前热负荷下 EATCS 散热器分流比很小，流经散热器的氨接近面板辐射平衡温度，{CASE_LABEL[c0]}散热器氨温度最低 {X.num(tl)} °C，'
-                + ('低于' if tl < -77.0 else '接近') + ' −77 °C 的冰点。模型采用理想指向规律且散热器排热偏多，实际运行由 RGAC 调整散热器转角防冻，'
-                '文献 D16 的在轨最低读数约为 −54 °C。')
+        c0, tp, to0 = min(fr, key=lambda x: x[1])
+        if tp < -72.0:
+            add(f'当前热负荷下 EATCS 散热器分流比很小，流经散热器的少量氨被冷却到接近面板的辐射平衡温度。{CASE_LABEL[c0]}散热器面板最低 {X.num(tp)} °C，'
+                + ('低于' if tp < -77.0 else '接近') + ' −77 °C 的冰点。模型采用理想指向规律，散热器排热又因理想化处理偏多；实际运行中散热器按 RGAC 计算的目标转角调整以防冻，'
+                '文献 D16 记录的 P1 散热器在轨最低读数约为 −54 °C。按 SSP 41000 规定的 270 nmi 高度计算时，冷工况受到的地球红外与反照更少，冰点余量更小。')
     rk = {c: X.rack_stats(C[c]) for c in C}
     tmax = max((v['Tmax'] for c in C for v in rk[c].values()), default=float('nan'))
     rmean = [float(np.mean([v['Tmean'] for v in rk[c].values()])) for c in C if rk[c]]
     if rmean:
-        add(f'舱内机柜、MBSU、DDCU 与 IEA 等接冷板的方块，温度约等于冷却液温度加上功率与冷板换热系数之比，由取定的冷板参数决定，'
+        add(f'舱内机柜、MBSU、DDCU 与 IEA 等接冷板的方块，冷板面温度约等于冷却液温度加上功率除以冷板换热系数与冷板面积之积，方块温度再高出内部导热温差，由取定的冷板参数决定，'
             + (f'{ncase(C)}的机柜温度相同' if max(rmean) - min(rmean) < 0.05 else f'{ncase(C)}的机柜平均温度相差 {X.num(max(rmean) - min(rmean), 2)} K')
             + f'，机柜最高温度 {X.num(tmax)} °C。模型用这些方块把热量按设定路径送入回路，'
             '方块温度不用于判断机柜是否满足文献 D13 前面板 37 °C 的限值。')
     ps = {c: [r['Tmean'] for r in X.payload_stats(C[c]).values()] for c in C}
     if ps.get('cold0') and ps.get('hot75'):
+        pc = X.payload_stats(C['cold0']); ph = X.payload_stats(C['hot75'])
+        colder = [n for n in ph if n in pc and ph[n]['Tmean'] < pc[n]['Tmean']]
+        pdr = max((abs(PER[c].get('payload', 0.0)) for c in C), default=0.0)
         add(f"舱外载荷不接冷板，第三圈平均温度在设计冷工况为 {X.rngu(min(ps['cold0']), max(ps['cold0']))}，在设计热工况为 "
-            f"{X.rngu(min(ps['hot75']), max(ps['hot75']))}，是受轨道环境影响最大的方块热源。")
+            f"{X.rngu(min(ps['hot75']), max(ps['hot75']))}，是受轨道环境影响最大的方块热源。"
+            + (f"{'、'.join(colder)} 在设计热工况中比设计冷工况更冷，原因是 β 为 75° 时太阳从左舷一侧照射，ELC2 位于 AMS-02 的右舷侧，受其遮挡。" if colder == ['ELC2'] else
+               (f"{'、'.join(colder)} 在设计热工况中比设计冷工况更冷，原因是 β 为 75° 时太阳从左舷一侧照射，这些载荷受晒较少。" if colder else ''))
+            + f'载荷方块的时间常数约 5 h，第三圈平均温度每圈仍变化最多 {X.num(pdr)} K，达到周期稳态时还会变化约 {X.num(pdr * 3.2, 0)} K。')
     r35, mx = hot_capacity()
     if r35:
         t35 = max(r['Tout_max_C'] for r in r35)
@@ -435,8 +452,19 @@ def conclusions(C, LT, CT, PER):
         txt += ('低于 2.8 °C 设定点，模型散热器满足单回路 35 kW 的排热要求。' if t35 < X.T_SET_C else '高于 2.8 °C 设定点。')
         if 'A' in mx and 'B' in mx:
             txt += f"出口温度一圈最高值达到 2.8 °C 时，回路 A 与回路 B 分别可排出 {X.num(mx['A'], 0)} kW 与 {X.num(mx['B'], 0)} kW"
-            txt += ('，高于公开资料的估算值，差别来自入口温度随排热量升高与模型的理想化处理，该值应看作排热能力的上限。' if min(mx.values()) > 44 else '。')
+            txt += ('，高于公开资料的估算值。差别来自两方面：排热量增大时散热器入口温度随之升高，模型又作了理想化处理；该值应看作排热能力的上限。' if min(mx.values()) > 44 else '。')
+            capg = X.capacity() or {}
+            g40 = capg.get('summary', {}).get('hot75_g40', {}).get('capacity')
+            if g40 and all(g40[L]['Q_at_max_setpoint_kW'] for L in ('A', 'B')):
+                txt += (f"面板换热系数取 40 W·m⁻²·K⁻¹ 时两回路分别为 {X.num(g40['A']['Q_at_max_setpoint_kW'], 0)} kW 与 {X.num(g40['B']['Q_at_max_setpoint_kW'], 0)} kW。")
+            txt += ('设计热工况环境比规范原意温和，吸收率取 0.36 时 35 kW 的出口温度升高约 1.8 K，结论不变；2019 年回路 B 实际只有五条散热器流路工作；'
+                    f'散热器入口温度按 17 °C 封顶时，回路 A 与回路 B 的收集热量分别约为 {X.num((17 - X.T_SET_C) * X.loop_mcp("A") / 1e3, 0)} kW 与 {X.num((17 - X.T_SET_C) * X.loop_mcp("B") / 1e3, 0)} kW。')
         add(txt)
+    saw = {c: CT[c]['saw'] for c in C if 'saw' in CT[c]}
+    if 'cold0' in saw and 'nom0' in saw:
+        add(f"美国太阳翼光照段最高温度在设计冷工况为 {X.num(saw['cold0']['max'])} °C，与文献 D18 寿命初期 β 为 0° 的计算值 +53 °C 相差 {X.num(saw['cold0']['max'] - 53.0)} K；"
+            f"平均环境工况为 {X.num(saw['nom0']['max'])} °C，高出 {X.num(saw['nom0']['max'] - 53.0)} K，其中约 {X.num(saw['nom0']['max'] - saw['cold0']['max'])} K 来自两个工况的环境差别，"
+            '电池面发射率取 0.82 低于文献 D18 的 0.86，也使计算温度偏高约 4 K。出影时约 −80 °C 与文献 O14 的在轨特征一致，该项是面热容的标定项。')
     return out
 
 
@@ -452,19 +480,21 @@ def final_remarks(C, LT, CT, PER):
     qmax = max((v['Q']['mean'] for c in C for v in LT[c].values()), default=0) / 1e3
     add(f'在本模型 44.8 kW 舱内机柜热负荷与 6.1 kW EATCS 舱外冷板负荷下，{ncase(C)}的散热器分流比最大 {X.num(fmax, 2)}，'
         + ('EATCS 散热器仍有较大余量。' if fmax < 0.5 else ('EATCS 散热器余量有限。' if fmax < 1.0 else 'EATCS 散热器排热能力不足。'))
-        + (f'散热器排热能力子模型给出设计热工况下单回路排热能力的上限 {X.num(min(mx.values()), 0)} kW，全站模型中单回路收集热量最大 {X.num(qmax)} kW。' if mx else '')
+        + (f"散热器排热能力子模型给出设计热工况下单回路排热能力的上限，回路 A 为 {X.num(mx.get('A', 0), 0)} kW，回路 B 为 {X.num(mx.get('B', 0), 0)} kW；"
+           f'全站模型中单回路收集热量的第三圈平均值最大为 {X.num(qmax)} kW，比单回路 35 kW 的设计排热能力低 {X.num(35 - qmax)} kW。' if mx else '')
         + '舱内机柜增加功率时，应按单回路 35 kW 的设计排热能力核算余量。')
     tmin = min((v['Tout']['min'] for c in C for v in LT[c].values()), default=None)
     if tmin is not None:
         add('文献 A 第 16 页说明，RGAC 在受晒段令散热器侧边对日，在地影段令散热器正面对地，同时使散热器足够冷以排热、足够暖以防止氨冻结，出口温度目标为 −40 °C。'
             f'本模型没有模拟这一约束，组间辐射不计与面板换热均布又使散热器偏冷，计算的出口温度最低 {X.num(tmin)} °C；文献 D16 图 4 中 P1 散热器 2007 至 2010 年的在轨读数约为 −54 °C 至 +27 °C，'
             + ('计算最低值在该范围之内。' if tmin >= -54.0 else '计算最低值低于该范围。')
-            + '后续可用在轨出口温度数据修正散热器与桁架、太阳翼之间的遮挡以及面板翅片效率，并为每个散热器翼单设辐射组，消除两翼整体转动造成的相互遮挡。')
+            + '后续可在散热器指向规律中加入 RGAC 对出口温度的约束，用在轨出口温度数据校核散热器与桁架、太阳翼之间遮挡的处理和面板翅片效率，并为每个散热器翼单设辐射组，消除两翼整体转动造成的相互遮挡。')
     add('舱外载荷不接冷板，温度取决于外表面光学性质与自身功率；IEA 与冷板设备的温度主要由冷板决定，多层隔热有效发射率影响进入 PVTCS 的热量。'
         '工程应用时应以载荷的实测光学性质与热控设计替换本报告的典型值。')
-    add('本模型已具备按工况批量计算的脚本流程，可直接求解舱外载荷在不同安装位置与不同功率下的温度及 EATCS 余量，也可把载荷方块替换为在轨计算设备的详细模型。')
-    add('主要不确定性来自组间辐射不计、桁架按实体包络处理、散热器面板换热均布、机柜与 IEA 尚未完全达到周期稳态以及部分参数取模型取定值。'
-        '机柜与 IEA 的储热影响见第 5.1 节，离散误差见第 5.7 节；本报告没有做参数敏感性计算，其余各项对部件温度与回路收集热量的影响需由后续敏感性工况确定。')
+    add('本模型已具备按工况批量计算的脚本流程，可直接求解舱外载荷在不同安装位置与不同功率下的温度，以及载荷接入冷板后的 EATCS 余量，也可把载荷方块替换为在轨计算设备的详细模型。')
+    add('主要不确定性来自组间辐射不计、桁架按实体包络处理、散热器面板换热均布、机柜与舱外载荷尚未完全达到周期稳态以及部分参数采用模型取定值。'
+        '机柜储热的影响见第 5.1 节，离散误差见第 5.7 节，第 5.6 节给出了面板换热系数与涂层吸收率两项敏感性，其余参数对部件温度与回路收集热量的影响需由后续敏感性工况确定。'
+        '设计热工况桁架包络 113 °C 的局部最高温度来自舱外设备按有效光学性质处理后的反射集中，不代表真实桁架温度。')
     return out
 
 
@@ -472,8 +502,8 @@ def results_section(D, cases, C, LT, CT, PER, IT):
     import numpy as np
     import iss_results_ext as X
     D.h(1, '5 分析结果')
-    D.p('以下统计取每个工况最后一个轨道周期，即第三圈。热量与温度的时程由探针逐步输出，部件统计由有限元温度场在部件区域内求最小值、平均值与最大值。'
-        '温度云图按参考姿态绘制部件，太阳翼、PVR 与散热器在轨的实际指向随轨道变化，其外热流按各自的指向规律计算；各云图色标范围统一取 −80 °C 至 80 °C。')
+    D.p('以下统计取每个工况最后一个轨道周期，即第三圈。热量与温度的时程按时间步由探针输出；表中部件平均值为部件平均温度的一圈时间平均，最低与最高为一圈内部件各点温度的极值。'
+        '温度云图按参考姿态绘制部件，太阳翼、PVR 与散热器在轨的实际指向随轨道变化，其外热流按各自的指向规律计算；各云图色标范围统一取 −80 °C 至 80 °C，超出该范围的温度按色标两端颜色显示。')
 
     # ------------------------------------------------ 5.1 EATCS
     D.h(2, '5.1 EATCS 回路')
@@ -483,11 +513,11 @@ def results_section(D, cases, C, LT, CT, PER, IT):
             rows.append([CASE_LABEL[c], L, kw(v['Q']['mean']), kw(v['Qrad']['mean']), X.num(v['closure_pct']),
                          X.num(v['f']['mean'], 2), X.rng(v['f']['min'], v['f']['max'], 2), X.num(v['Tret']['mean']),
                          X.rng(v['Tout']['min'], v['Tout']['max']), X.rng(v['Tmix']['min'], v['Tmix']['max'])])
-    D.table('EATCS 回路第三圈统计，热量单位 kW，温度单位 °C', ['工况', '回路', '收集热量', '散热器排热', '控制偏差 %', '分流比平均', '分流比范围',
+    D.table('EATCS 回路第三圈统计，热量单位 kW，温度单位 °C', ['工况', '回路', '收集热量', '散热器排热', '排热与收集之差 %', '分流比平均', '分流比范围',
             '散热器入口平均', '散热器出口范围', '混合供液范围'], rows, widths=[2.4, 1.1, 1.5, 1.6, 1.4, 1.5, 1.9, 1.5, 2.0, 1.9])
-    D.p('两个回路的混合供液温度都保持在 2.8 °C 设定点附近，分流比控制正常。表中控制偏差为散热器排热与收集热量之差占收集热量的百分比。'
-        '模型按设定点计算散热器入口温度，散热器排热与收集热量之差等于 ṁ c_{p} 乘以 T_{set} 与 T_{mix} 之差，控制偏差因此反映混合供液温度偏离设定点的程度，'
-        '一圈平均偏差小说明混合供液温度的轨道平均值回到了设定点。散热器面板与氨节点的储热变化体现在散热器排热与面板净辐射散热之差中。')
+    D.p('两个回路的混合供液温度都保持在 2.8 °C 设定点附近。表中排热与收集之差为散热器排热减去收集热量后占收集热量的百分比。'
+        '模型按设定点计算散热器入口温度，该差值等于 ṁ c_{p} 乘以 T_{set} 与 T_{mix} 之差，反映混合供液温度偏离设定点的程度，不作为能量守恒的检验；'
+        '一圈平均差值小说明混合供液温度的轨道平均值回到了设定点。')
     BD = {c: X.breakdown(C[c]) for c in cases}
     if any(BD.values()):
         rows = []
@@ -509,6 +539,17 @@ def results_section(D, cases, C, LT, CT, PER, IT):
                 + ("，主要差别在接中温水回路的机柜：Destiny 与 Kibo 两个大舱的中温水回路热量进回路 B，" if hi == 'B' else "。Destiny 与 Kibo 两个大舱的中温水回路热量进回路 B，")
                 + f"回路 B 的中温机柜热量为 {X.num(b0['B'].get('rack_MT', 0) / 1e3, 1)} kW，回路 A 为 {X.num(b0['A'].get('rack_MT', 0) / 1e3, 1)} kW。"
                 '多层隔热漏热为负值，表示舱内空气经多层隔热向防护屏散失热量，舱内空调需要排出的热量相应减少，模型把这部分热量从对应舱段低温水回路的收集热量中扣除。')
+            tq = [r for c in cases for r in IT[c].get('skin', []) if r['name'] == 'tranquility']
+            lk = [ (BD[c] or {}).get('B', {}).get('mli', None) for c in cases]
+            import csv as _csv
+            lkt = []
+            for c in cases:
+                pth = os.path.join(ROOT, 'out', c, 'loop_breakdown.csv')
+                if os.path.exists(pth):
+                    lkt += [float(r['W_mean']) for r in _csv.DictReader(open(pth, encoding='utf-8')) if r['source'] == 'mli_tranquility']
+            if tq and lkt:
+                D.p(f"模型中 Tranquility 节点舱防护屏的平均温度在 {X.rngu(min(r['Tmean'] for r in tq), max(r['Tmean'] for r in tq))} 之间，"
+                    f'高于推算等效换热系数时假设的约 −48 °C，该舱漏热为 {X.rngu(min(lkt), max(lkt), 0, "W")}，因此低于文献 D15 的 −720 W。')
         rack_W = sum(nb * 4 * w for nb, w in S.RACK_MODULES.values()); iea_W = len(S.IEA['units']) * S.IEA['Q']
         coll, colli = [], []
         for c in cases:
@@ -521,14 +562,14 @@ def results_section(D, cases, C, LT, CT, PER, IT):
             txt = (f'舱内机柜共发热 {X.num(rack_W / 1e3, 1)} kW，第三圈经冷板与舱内空气进入回路的热量为 {X.rng(min(coll) / 1e3, max(coll) / 1e3)} kW；'
                    f'四台 IEA 共发热 {X.num(iea_W / 1e3, 1)} kW，第三圈进入 PVTCS 的热量为 {X.rng(min(colli) / 1e3, max(colli) / 1e3)} kW。')
             if all(x > 0 for x in dr):
-                txt += f'机柜只通过冷板与舱内空气散热，两者之差 {X.rng(min(dr) / 1e3, max(dr) / 1e3, 2)} kW 为机柜内部仍在升温储存的热量，'
+                txt += f'机柜只通过冷板与舱内空气散热，发热量与进入回路的热量之差 {X.rng(min(dr) / 1e3, max(dr) / 1e3, 2)} kW 为机柜内部仍在升温而储存的热量，'
             elif all(x < 0 for x in dr):
                 txt += f'机柜只通过冷板与舱内空气散热，进入回路的热量比发热量多 {X.rng(-max(dr) / 1e3, -min(dr) / 1e3, 2)} kW，为机柜初始储热的释放，'
             else:
                 txt += '机柜只通过冷板与舱内空气散热，两者之差为机柜内部储热的变化，'
-            txt += ('IEA 的差值中还包含经多层隔热向外辐射的热量。机柜初始温度按 500 W 机柜冷板面的平衡温度统一设定，功率较低的机柜初始偏热，功率较高的机柜初始偏冷，'
-                    'IEA 初始温度同样取冷板面平衡温度的估计值；方块内部导热形成的温度梯度需要数小时才能建立，三个轨道周期内机柜与 IEA 尚未完全达到周期稳态，'
-                    '达到稳态后回路收集热量将趋近发热量。')
+            txt += ('达到周期稳态后两者相等。机柜初始温度按 500 W 机柜冷板面的平衡温度统一设定，功率较低的机柜初始偏热，功率较高的机柜初始偏冷，'
+                    '机柜内部导热形成的温度梯度需要数小时才能建立，三个轨道周期内机柜尚未完全达到周期稳态。IEA 与 MBSU、DDCU 的温度在第三圈已基本不变，'
+                    '它们的发热量与进入回路的热量之差主要是经多层隔热向外辐射的热量，每台 IEA 约 0.2 kW。')
             D.p(txt)
     if any(BD.values()):
         hand = {}
@@ -549,9 +590,15 @@ def results_section(D, cases, C, LT, CT, PER, IT):
         if rows:
             D.table('回路收集热量的手算校核，单位 kW', ['工况', '回路', '机柜发热，手算', '机柜进入回路，有限元', '冷板设备发热，手算', '冷板设备进入回路，有限元', '舱体漏热，有限元'],
                     rows, widths=[2.6, 1.1, 2.3, 2.5, 2.3, 2.6, 2.4])
-            D.p('手算值为各方块的设定功率，周期稳态时进入回路的热量应等于该值；有限元值与手算值之差即为方块内部储热的变化，乘员热量两者相同，未列出。')
+            D.p('手算值为各方块的设定功率。两个回路的机柜热量合计与手算值之差为机柜储热的变化；分回路比较时还要计入分配方式，各舱机柜与舱内空气的换热全部计入该舱低温水回路，'
+                '接中温水回路的机柜散入空气的热量因此计入另一回路。冷板设备的差值主要是经多层隔热向外辐射的热量。乘员热量两者相同，未列出。')
+    f0 = D.fig + 1
     for c in cases:
-        D.figure(os.path.join(FIG, f'{c}_loops.png'), f'{CASE_LABEL[c]} EATCS 回路时程，灰色区域为地影', 15.5)
+        D.figure(os.path.join(FIG, f'{c}_loops.png'), f'{CASE_LABEL[c]} EATCS 回路时程' + ('，灰色区域为地影' if C[c]['summ']['orbit'].get('eclipse_deg', 0) else '，该工况全程受晒'), 15.5)
+    fe = [v['f']['mean'] for c in cases for v in LT[c].values()]
+    if fe:
+        D.p(f'图 {f0} 至图 {D.fig} 为三个工况的回路时程。散热器分流比在第一圈内由初值 0.20 降到 {X.rng(min(fe), max(fe), 2)}，此后随收集热量缓慢变化；'
+            '收集热量在三圈内持续小幅上升，对应机柜的升温储热。')
 
     # ------------------------------------------------ 5.2 radiators
     D.h(2, '5.2 散热器与 PVR')
@@ -563,7 +610,8 @@ def results_section(D, cases, C, LT, CT, PER, IT):
     D.table('EATCS 散热器 ORU 第三圈面板温度，单位 °C', ['工况', 'ORU', '最低', '平均', '最高'], rows, widths=[3.6, 2.4, 3.2, 3.2, 3.2])
     D.p('每个 ORU 的 8 块面板沿流向串联，入口面板温度最高，出口面板最低。回路 A 的三个 ORU 位于右舷，回路 B 的三个 ORU 位于左舷。'
         '同一翼的三个 ORU 在各种姿态下都位于同一平面内，相互之间没有辐射交换与遮挡，对地视角相同，流量均分，温度差别来自对面散热器翼的视角系数随 ORU 位置的变化；'
-        '两个回路之间的差别来自流量、收集热量以及两翼整体转动造成的相互遮挡。')
+        '两个回路之间的差别来自流量、收集热量以及两翼整体转动造成的相互遮挡。β 为 0 的两个工况中，散热器在地影段转为正面对地，看到的地球红外增加，'
+        '面板与出口氨温度升高约 5 K 至 7 K；最低温度出现在受晒段末端，此时面板处于 TRRJ 零位侧边对日，这也是需要转角调节防冻的时段。')
     rows = []
     for c in cases:
         for u, v in X.pv_loops(C[c]).items():
@@ -571,12 +619,17 @@ def results_section(D, cases, C, LT, CT, PER, IT):
     if rows:
         D.table('PVTCS 回路第三圈统计，热量单位 kW，温度单位 °C', ['工况', '光伏模块', '收集热量', '分流比平均', 'PVR 出口范围', '混合供液范围'], rows,
                 widths=[3.2, 2.2, 2.4, 2.4, 2.8, 2.8])
+        pvm = [v['Tmix']['mean'] for c in cases for v in X.pv_loops(C[c]).values()]
+        pvf = [v['f']['mean'] for c in cases for v in X.pv_loops(C[c]).values()]
+        if pvm:
+            D.p(f'PVTCS 分流比平均 {X.rng(min(pvf), max(pvf), 2)}，接近 0.02 的下限，平滑抗饱和项在该范围仍起作用，混合供液温度的一圈平均值比设定点低 '
+                f'{X.rngu(X.T_SET_C - max(pvm), X.T_SET_C - min(pvm), 2, "K")}，PVR 排热相应略高于收集热量。')
     for c in cases:
-        D.figure(os.path.join(FIG, f'{c}_orus.png'), f'{CASE_LABEL[c]}下六个 EATCS 散热器 ORU 面板平均温度时程', 15.5)
+        D.figure(os.path.join(FIG, f'{c}_orus.png'), f'{CASE_LABEL[c]}下六个 EATCS 散热器 ORU 面板平均温度时程，同一翼三个 ORU 的曲线基本重合', 15.5)
     for c in cases:
         path = os.path.join(FIG, f'{c}_T_hrs_noon_cb.png')
         if os.path.exists(path):
-            D.figure(path, f'{CASE_LABEL[c]}第三圈正午右舷 EATCS 散热器翼的表面温度，自右舷方向观察', 15.5)
+            D.figure(path, f'{CASE_LABEL[c]}第三圈正午右舷 EATCS 散热器翼的表面温度，自右舷上方观察，最上一排为后方左舷翼的面板，前景横条为右舷太阳翼', 15.5)
 
     # ------------------------------------------------ 5.3 classes
     D.h(2, '5.3 各类部件温度')
@@ -595,23 +648,25 @@ def results_section(D, cases, C, LT, CT, PER, IT):
     parts = []
     if saw:
         parts.append(f"美国太阳翼温度随日照变化最剧烈，第三圈在 {X.rngu(min(v['min'] for v in saw), max(v['max'] for v in saw))} 之间")
-    for k, nm in (('skin_usos', '美国段舱体防护屏'), ('skin_rus', '俄罗斯段舱体外表面'), ('truss', '桁架包络')):
+    for k, nm in (('skin_usos', '美国段舱体防护屏'), ('skin_rus', '俄罗斯段舱体外表面')):
         if all(k in CT[c] for c in cases) and len(cases) > 1:
             parts.append(f"{nm}平均温度在{'、'.join(CASE_LABEL[c] for c in cases)}分别为 {'、'.join(X.num(CT[c][k]['mean']) for c in cases)} °C")
     if parts:
         txt = '；'.join(parts) + '。'
-        if 'hot75' in cases and 'cold0' in cases and all(CT['hot75'][k]['mean'] > CT['cold0'][k]['mean'] for k in ('skin_usos', 'skin_rus', 'truss') if k in CT['hot75'] and k in CT['cold0']):
-            txt += '设计热工况 β 为 75°，全程受晒，环境热流也取上限，舱体与桁架的平均温度都高于设计冷工况。'
+        if 'hot75' in cases and 'cold0' in cases and all(CT['hot75'][k]['mean'] > CT['cold0'][k]['mean'] for k in ('skin_usos', 'skin_rus') if k in CT['hot75'] and k in CT['cold0']):
+            txt += '设计热工况 β 为 75°，全程受晒，环境热流也取上限，舱体的平均温度都高于设计冷工况。'
+        txt += ('β 为 75° 时太阳接近轨道面法向，从左舷一侧照射，朝左舷的表面升温，朝右舷与背阴的表面降温；服务舱太阳翼只能绕 Y 轴转动，太阳与电池面法向的夹角约 75°，'
+                '因此设计热工况中部分部件比设计冷工况更冷。桁架包络的平均值为体积平均，主要反映初始值，不作工况间比较，表中桁架的最低与最高值为外表面温度。')
         tmx = max((CT[c]['truss']['max'], c) for c in cases if 'truss' in CT[c]) if any('truss' in CT[c] for c in cases) else None
         if tmx and tmx[0] > 90.0:
             txt += (f'{CASE_LABEL[tmx[1]]}桁架包络最高 {X.num(tmx[0])} °C，出现在 S0 桁架段左舷端面、P1 段后向面与左舷氨罐组件围成的凹角处，该处在 β 为 75° 时正对太阳。舱外设备外表面按多层隔热有效发射率 0.03 与吸收率 0.012 处理，'
-                    '在相互辐射中接近全反射面，射入凹角的阳光经设备表面反射后集中到桁架表面，形成局部高温；实际多层隔热外层为 beta 布，吸收率约 0.36，不会形成这种反射。'
+                    '在相互辐射中接近全反射面，射入凹角的阳光经设备表面反射后集中到桁架表面，形成局部高温；实际多层隔热外层为 beta 布，吸收率约 0.36，仍会反射约三分之二的阳光，局部峰值会低一些但仍偏高，113 °C 应看作上限估计。'
                     '桁架包络的这一局部最高温度偏高，只出现在设备附近的凹角与缝隙处。')
         D.p(txt)
     for c in cases:
         D.figure(os.path.join(FIG, f'{c}_classes.png'), f'{CASE_LABEL[c]}各类部件温度时程', 15.5)
     for c in cases:
-        for tag, lab in (('noon', '第三圈正午'), ('ecl', '第三圈地影中点'), ('q90', '第三圈轨道角 90°')):
+        for tag, lab in (('noon', '第三圈正午'), ('ecl', '第三圈地影中点'), ('q90', '第三圈轨道角约 90°')):
             path = os.path.join(FIG, f'{c}_T_iso_{tag}_cb.png')
             if os.path.exists(path):
                 D.figure(path, f'{CASE_LABEL[c]}{lab}的表面温度', 15.5)
@@ -630,6 +685,7 @@ def results_section(D, cases, C, LT, CT, PER, IT):
         for nm, r in X.payload_stats(C[c]).items():
             rows.append([CASE_LABEL[c], nm, '1', X.num(r['Tmin']), X.num(r['Tmean']), X.num(r['Tmax'])])
     D.table('舱外方块第三圈温度，ATA、PM、NTA 不发热，单位 °C', ['工况', '部件', '数量', '最低', '平均', '最高'], rows, widths=[3.4, 2.6, 1.8, 2.6, 2.6, 2.6])
+    D.p('氨罐组件、泵模块与氮罐组件不发热，也不接冷板，只经多层隔热有效发射率 0.03 与外界换热，时间常数约 5 天，表中温度基本保持 285 K 的初始值，不是周期稳态结果。')
     rk_mean, lt_gap = {}, []
     for c in cases:
         it = IT[c].get('rack', [])
@@ -651,7 +707,8 @@ def results_section(D, cases, C, LT, CT, PER, IT):
                     else '大于两个水回路 13 K 的温差。')))
     if cp and iea:
         txt += (f'接氨冷板的 MBSU 与 DDCU 第三圈平均温度为 {X.rngu(min(cp), max(cp))}，IEA 为 {X.rngu(min(iea), max(iea))}，'
-                '比 2.8 °C 冷板温度高出冷板温升，外表面包覆多层隔热，温度主要由冷板决定。')
+                f'比 2.8 °C 的氨供液温度高 {X.num(min(min(cp), min(iea)) - X.T_SET_C)} K 至 {X.num(max(max(cp), max(iea)) - X.T_SET_C)} K，差值来自功率经冷板换热形成的温升；'
+                '外表面包覆多层隔热，温度主要由冷板决定。')
     if ps.get('cold0') and ps.get('hot75'):
         txt += (f"无冷板的舱外载荷只能向空间辐射散热，第三圈平均温度在设计冷工况为 {X.rngu(min(ps['cold0']), max(ps['cold0']))}，"
                 f"在设计热工况为 {X.rngu(min(ps['hot75']), max(ps['hot75']))}，受环境影响最大。")
@@ -679,7 +736,16 @@ def results_section(D, cases, C, LT, CT, PER, IT):
                 rows.append([CASE_LABEL[c], '太阳翼光照段最高温度', '文献 D18 图 27，寿命初期 β 为 0° 时约 +53 °C', X.num(saw['max']) + ' °C'])
         rows.append([CASE_LABEL[c], '散热器分流比', '单回路设计排热能力 35 kW，分流比达到 1 为能力上限，文献 A 第 5 页', f"最大 {X.num(max(v['f']['max'] for v in lt.values()), 2)}"])
     D.table('计算结果与规格、在轨数据对比', ['工况', '项目', '规格或在轨数据', '计算结果'], rows, widths=[2.8, 2.6, 6.0, 4.4])
-    D.p('太阳翼出影温度一行是标定项，毯面面热容按该在轨特征取定，只说明标定已经实现；其余各行为独立对比。')
+    D.p('太阳翼出影温度一行是标定项，毯面面热容按该在轨特征取定，这一行只检查标定结果：出影温度与在轨值接近，升到 0 °C 的时间比在轨的约 3 min 长一个 2 min 输出间隔左右。其余各行为独立对比。')
+    sw = {c: CT[c]['saw'] for c in cases if 'saw' in CT[c]}
+    b0c = [c for c in cases if S.CASES[c]['beta_deg'] == 0 and c in sw]
+    if b0c:
+        mx0 = [sw[c]['max'] for c in b0c]
+        txt = (f'β 为 0 的两个工况中太阳翼光照段最高温度比文献 D18 寿命初期计算值高 {X.rngu(min(mx0) - 53.0, max(mx0) - 53.0, 1, "K")}，'
+               f'最高值比文献 O17 的飞行极值高 {X.num(max(mx0) - 60.0)} K，计算的太阳翼温度偏高。')
+        if 'hot75' in sw and 'nom0' in sw and sw['hot75']['max'] < sw['nom0']['max']:
+            txt += '设计热工况的最高温度低于平均环境工况，原因是 β 为 75° 时太阳翼背面对地球的视角减小，受到的地球红外与反照较少。'
+        D.p(txt)
     rows = []
     for c in cases:
         lt = LT[c]
@@ -689,11 +755,11 @@ def results_section(D, cases, C, LT, CT, PER, IT):
         pv = X.pv_loops(C[c]); pv_min = min((v['Tout']['min'] for v in pv.values()), default=None)
         if tpan is not None:
             rows.append([CASE_LABEL[c], '氨冻结', '冰点 −77 °C，文献 A 第 5 页', f'散热器面板最低 {X.num(tpan)} °C，出口最低 {X.num(tout_min)} °C',
-                         X.num(min(tpan, tout_min) + 77.0) + ' K'])
+                         X.num(tpan + 77.0) + ' K'])
         if pv_min is not None:
             rows.append([CASE_LABEL[c], 'PVR 氨冻结', '冰点 −77 °C，文献 A 第 5 页', f'PVR 出口最低 {X.num(pv_min)} °C', X.num(pv_min + 77.0) + ' K'])
-        rows.append([CASE_LABEL[c], '界面换热器防冻', '供液低于 1.67 °C 时保护动作，文献 A 第 11 页', f'混合供液最低 {X.num(tmix_min)} °C', X.num(tmix_min - 1.67, 2) + ' K'])
-        rows.append([CASE_LABEL[c], '泵控阀温控能力', '2.2 °C 至 6.1 °C，文献 A 第 11 页', f'混合供液 {X.rngu(tmix_min, tmix_max)}',
+        rows.append([CASE_LABEL[c], '界面换热器防冻', '供液低于 1.67 °C 时保护动作，文献 A 第 11 页', f'混合供液最低 {X.num(tmix_min, 2)} °C', X.num(tmix_min - 1.67, 2) + ' K'])
+        rows.append([CASE_LABEL[c], '泵控阀温控能力', '2.2 °C 至 6.1 °C，文献 A 第 11 页', f'混合供液 {X.rngu(tmix_min, tmix_max, 2)}',
                      '在范围内' if tmix_min >= 2.2 and tmix_max <= 6.1 else '超出范围'])
     if rows:
         D.table('EATCS 与 PVTCS 温度限值核对', ['工况', '限值项目', '限值', '计算结果', '余量'], rows, widths=[2.6, 2.6, 4.2, 4.4, 2.0])
@@ -702,15 +768,20 @@ def results_section(D, cases, C, LT, CT, PER, IT):
         for c in cases:
             lt = LT[c]
             if not lt or not CT[c].get('hrs'): continue
-            frz.append((c, min(CT[c]['hrs']['min'], min(v['Tout']['min'] for v in lt.values())), max(v['f']['mean'] for v in lt.values())))
+            frz.append((c, CT[c]['hrs']['min'], max(v['f']['mean'] for v in lt.values()), min(v['Tout']['min'] for v in lt.values())))
         low = [x for x in frz if x[1] < -77.0 + 5.0]
         if low:
-            c0, tl, f0 = min(low, key=lambda x: x[1])
-            D.p(f'{CASE_LABEL[c0]}的散热器氨温度最低 {X.num(tl)} °C，' + ('低于' if tl < -77.0 else '接近') + ' −77 °C 的冰点。'
-                f'该工况回路收集的热量远低于设计值，散热器分流比平均只有 {X.num(f0, 2)}，流经散热器的少量氨在面板内冷却到接近面板的辐射平衡温度；'
-                '模型采用理想的侧边对日与正面对地指向，散热器排热又因理想化处理偏多。文献 A 第 16 页说明，RGAC 的作用之一就是使散热器足够暖以防止氨冻结，'
+            c0, tl, f0, tout0 = min(low, key=lambda x: x[1])
+            H = S.HRS; lp = (abs(H['x_tip'] - H['x_root']) - (H['n_panels'] - 1) * H['gap']) / H['n_panels']
+            gA = 120.0 * H['width'] * lp; ntu = gA / (f0 * X.loop_mcp('A') / 3.0); ntu1 = gA / (X.loop_mcp('A') / 3.0)
+            D.p(f'{CASE_LABEL[c0]}的散热器面板最低 {X.num(tl)} °C，' + ('低于' if tl < -77.0 else '接近') + ' −77 °C 的冰点。'
+                f'该工况两个回路收集的热量约为单回路设计排热能力 35 kW 的三分之二，散热器分流比平均只有 {X.num(f0, 2)}，流经散热器的少量氨在面板内冷却到接近面板的辐射平衡温度；'
+                '模型采用理想的侧边对日与正面对地指向，散热器排热又因理想化处理偏多。文献 A 第 16 页说明，RGAC 的作用之一是使散热器足够暖以防止氨冻结，'
                 '实际运行中散热器转角会偏离理想规律，文献 D16 图 4 的在轨最低读数约为 −54 °C。模型中液氨物性按液态取值，没有模拟冻结，'
-                '该结果说明低负荷与冷环境下散热器必须依靠转角调节防冻。')
+                '该结果说明低负荷与冷环境下散热器必须依靠转角调节防冻。'
+                f'分流比很小时每块面板的传热单元数约为 {X.num(ntu, 0)}，远大于 2，面板换热按氨进出口平均温度计算会使出口氨温度略低于面板温度，'
+                f'本工况出口最低 {X.num(tout0)} °C，比面板最低温度低 {X.num(tl - tout0)} K，冰点判断以面板温度为准；该偏差对回路排热量的影响小于 1%，'
+                f'全流量的排热能力子模型中每块面板的传热单元数约为 {X.num(ntu1, 1)}，不受影响。')
 
     capacity_section(D, cases, LT)
 
@@ -728,14 +799,15 @@ def results_section(D, cases, C, LT, CT, PER, IT):
                 rows.append([CASE_LABEL[c], f'回路 {L} 收集热量，kW', X.num(per[f'Q_{L}_kW'], 2)])
     if rows:
         D.table('最后一圈与前一圈平均值之差，温度单位 K', ['工况', '项目', '差值'], rows, widths=[4.0, 6.8, 5.0])
-    D.p('按面热容与线性化辐射换热系数估算，太阳翼的时间常数为数分钟，俄罗斯段舱体约 10 min，EATCS 散热器约 13 min 至 20 min，美国段舱体防护屏约 35 min 至 50 min，'
-        '这些部件在第三圈已接近周期稳态。机柜与 IEA 的时间常数约 2 h，初始温度取冷板面平衡温度的估计值；桁架包络等效导热系数只有 1 W·m⁻¹·K⁻¹，'
+    D.p('按面热容与线性化辐射换热系数估算，太阳翼的时间常数为数分钟，俄罗斯段舱体约 10 min，EATCS 散热器面板在 7 °C 至 −70 °C 之间约 13 min 至 35 min，美国段舱体防护屏约 35 min 至 50 min，'
+        '这些部件的温度在第三圈已跟随环境达到周期变化，散热器的残余漂移来自回路收集热量仍在随机柜升温增加。机柜与 IEA 的时间常数约 2 h，初始温度取冷板面平衡温度的估计值；'
+        '舱外载荷方块时间常数约 5 h，初始温度 255 K 为估计值，第三圈仍有漂移；桁架包络等效导热系数只有 1 W·m⁻¹·K⁻¹，'
         '内部扩散时间常数为 8 h 至 2 天，初始温度取整轨平均估计值 253 K。第三圈的残余漂移列于上表。')
     cap = X.capacity()
     if cap:
         base = {r['loop']: r for r in cap['rows'].get('hot75', []) if abs(r['Qd_kW'] - 35.0) < 1e-6}
         parts = []
-        for k, lab in (('hot75_dt60', '时间步长由 120 s 减为 60 s'), ('hot75_h08', '散热器网格尺寸由 1.2 m 减为 0.8 m'),
+        for k, lab in (('hot75_dt60', '设计热工况时间步长由 120 s 减为 60 s'), ('hot75_h08', '设计热工况散热器网格尺寸由 1.2 m 减为 0.8 m'),
                        ('nom0_dt60', '平均环境工况时间步长由 120 s 减为 60 s')):
             bb = base if not k.startswith('nom0') else {r['loop']: r for r in cap['rows'].get('nom0', []) if abs(r['Qd_kW'] - 35.0) < 1e-6}
             rr = {r['loop']: r for r in cap['rows'].get(k, []) if abs(r['Qd_kW'] - 35.0) < 1e-6}
@@ -743,11 +815,14 @@ def results_section(D, cases, C, LT, CT, PER, IT):
             if Ls:
                 dm = max(abs(rr[L]['Tout_mean_C'] - bb[L]['Tout_mean_C']) for L in Ls)
                 dx = max(abs(rr[L]['Tout_max_C'] - bb[L]['Tout_max_C']) for L in Ls)
-                parts.append(f'{lab} 后，出口温度一圈平均值最多变化 {X.num(dm, 2)} K，一圈最高值最多变化 {X.num(dx, 2)} K')
+                fmt = lambda v: '小于 0.01 K' if v < 0.005 else f'最多 {X.num(v, 2)} K'
+                parts.append(f'{lab} 后，出口温度一圈平均值的变化{fmt(dm)}，一圈最高值的变化{fmt(dx)}')
         if parts:
             txt = '离散误差用散热器排热能力子模型检验，以单回路 35 kW 为基准：' + '；'.join(parts) + '。'
             if 'nom0_dt60' not in cap['rows']:
                 txt += ('该检验只针对设计热工况，该工况全程受晒，没有进出地影与散热器姿态切换造成的热流突变，β 为 0 工况与全站模型的步长影响未经检验。')
+            else:
+                txt += ('平均环境工况含进出地影与散热器姿态切换，两种步长的结果也一致。这些检验针对散热器子模型，全站模型其余部件的步长与网格影响未经检验。')
             txt += '太阳翼的时间常数只有数分钟，120 s 步长只能把出影升温的时刻分辨到一个时间步，即 2 min。'
             D.p(txt)
 
@@ -762,8 +837,14 @@ def capacity_section(D, cases, LT):
            '散热器出口温度即为供液温度。')
     hist = X.capacity_history('hot75', 35)
     if hist:
-        txt += (f"每个排热量由当地正午起计算 {hist['t_end']:.0f} s，统计取最后一个轨道周期；温度研究步沿用第一次计算存储的外热流。"
-                f"设计热工况 35 kW 时，计算末时刻与前一轨道周期同一轨道位置的出口温度最多相差 {X.num(hist['drift'], 2)} K。")
+        txt += (f"每个排热量由轨道正午起计算 {hist['t_end']:.0f} s，统计取最后一个轨道周期；温度研究步沿用第一次计算存储的外热流，"
+                '第一个排热量由初始温度起算，其余排热量由前一排热量的末态接续计算。')
+        dr = X.capacity_drifts()
+        first = [v for (k, q), v in dr.items() if abs(q - 35.0) < 1e-6]
+        rest = [v for (k, q), v in dr.items() if abs(q - 35.0) > 1e-6]
+        if first and rest:
+            txt += (f'计算末时刻与前一轨道周期同一轨道位置的出口温度之差，第一个排热量最大 {X.num(max(first), 2)} K，其余各点不超过 {X.num(max(rest), 2)} K，'
+                    '排热能力插值所用的各点都属于后者。')
     D.p(txt)
     if not cap or not cap['rows']:
         D.p('排热能力子模型的结果尚未生成。')
@@ -803,7 +884,7 @@ def capacity_section(D, cases, LT):
         if ra and rb:
             dT = abs(rb['Tout_mean_C'] - ra['Tout_mean_C'])
             dflow = abs(35e3 / X.loop_mcp('A') - 35e3 / X.loop_mcp('B')) / 2
-            txt += (f'同一排热量下两个回路出口温度的一圈平均值相差 {X.num(dT, 1)} K，两回路流量不同只能解释其中约 {X.num(dflow, 1)} K，'
+            txt += (f'设计热工况单回路排热 35 kW 时，回路 B 出口温度的一圈平均值比回路 A 高 {X.num(dT, 1)} K，两回路流量不同只能解释其中约 {X.num(dflow, 1)} K，'
                     '其余来自两翼整体转动后上下相叠造成的遮挡，见第 3.5 节；实际两翼并排，没有这一差别。')
         D.p(txt)
     sens = [(k, lab) for k, lab in (('hot75', '基准：g 为 120 W·m⁻²·K⁻¹，Z-93 吸收率 0.24'),
@@ -824,12 +905,21 @@ def capacity_section(D, cases, LT):
             rows.append(cells)
         D.table('设计热工况散热器排热能力对理想化处理的敏感性', ['计算条件', '35 kW 时出口最高温度 A，°C', '35 kW 时出口最高温度 B，°C',
                 '排热能力 A，kW', '排热能力 B，kW'], rows, widths=[5.2, 2.7, 2.7, 2.6, 2.6])
-        D.p('表中排热能力指出口温度一圈最高值达到 2.8 °C 时的单回路排热量。面板与氨之间的换热系数 g 取 40 W·m⁻²·K⁻¹ 时，氨到面板的串联热阻使面板平均温度降低，'
-            '按面板两面线性化辐射换热系数 6 至 9 W·m⁻²·K⁻¹ 计，效果相当于面板综合翅片效率约 0.8 至 0.9；吸收率取 0.36 考察涂层老化的影响。')
+        txt = ('表中排热能力指出口温度一圈最高值达到 2.8 °C 时的单回路排热量。面板与氨之间的换热系数 g 取 40 W·m⁻²·K⁻¹ 时，氨到面板的串联热阻使面板平均温度降低，'
+               '按面板两面线性化辐射换热系数 6 至 9 W·m⁻²·K⁻¹ 计，效果相当于面板综合翅片效率约 0.8 至 0.9；吸收率取 0.36 考察涂层老化的影响。')
+        def capv(k):
+            res = cap['summary'][k]['capacity']
+            v = [res[L]['Q_at_max_setpoint_kW'] for L in ('A', 'B') if res[L]['Q_at_max_setpoint_kW'] is not None]
+            return sum(v) / len(v) if len(v) == 2 else None
+        b0, g0, a0 = capv('hot75'), capv('hot75_g40') if 'hot75_g40' in cap['rows'] else None, capv('hot75_a36') if 'hot75_a36' in cap['rows'] else None
+        if b0 and g0 and a0:
+            txt += (f'两个回路平均，换热系数降低使排热能力下降 {X.num(b0 - g0, 0)} kW，吸收率提高使其下降 {X.num(b0 - a0, 0)} kW，'
+                    '两项都不足以使排热能力降到单回路约 44 kW 的解析估算；入口温度上限与散热器和站体之间的遮挡也使实际能力更低，见下段。')
+        D.p(txt)
     if mx and min(mx.values()) > 44:
         qa, qb = (17 - X.T_SET_C) * X.loop_mcp('A') / 1e3, (17 - X.T_SET_C) * X.loop_mcp('B') / 1e3
         D.p('子模型求得的排热量高于参考值，原因有两方面。第一，排热量增大时散热器入口温度随之升高，散热器温度越高排热越多。'
-            '舱内热量经界面换热器传给氨，氨出口温度受中温水回路回水温度限制，回水温度随舱内负荷变化，部分界面换热器串联；'
+            '舱内热量经界面换热器传给氨，界面换热器氨侧出口温度即散热器入口温度，受中温水回路回水温度限制，回水温度随舱内负荷变化，部分界面换热器串联；'
             f'若以中温水回路供水温度 17 °C 近似作为散热器入口温度上限，按模型流量计算，回路 A 与回路 B 的收集热量分别约为 {X.num(qa, 0)} kW 与 {X.num(qb, 0)} kW，'
             '更高入口温度对应的排热量需按界面换热器性能核算。第二，模型的理想化处理使散热器排热偏多：散热器与桁架、太阳翼、PVR 之间的遮挡和相互辐射按组间不计处理；'
             '面板与氨的换热在面板上均布，相当于流管之间面板的翅片效率取 1，实际面板靠两层 0.254 mm 铝蒙皮导热，远离流管处的面板温度低于氨温度；'
