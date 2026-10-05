@@ -1,0 +1,29 @@
+{
+ "tag": "beta0_lite_try",
+ "case": "beta0",
+ "mesh": {
+  "tri": 4772,
+  "tet": 3644
+ },
+ "orbit": {
+  "period": 5572.069701428109,
+  "funcs": {
+   "rx": "6793137.0*cos((2*pi*t/5572.0697+0.000000))",
+   "ry": "6793137.0*sin((2*pi*t/5572.0697+0.000000))*cos(0.90128803)",
+   "rz": "6793137.0*sin((2*pi*t/5572.0697+0.000000))*sin(0.90128803)"
+  },
+  "rays": [
+   "-1.00000000",
+   "0.00000000",
+   "-0.00000000"
+  ],
+  "sun_ecs": [
+   1.0,
+   -0.0,
+   0.0
+  ],
+  "eclipse_deg": 139.73825115170982,
+  "R": 6793137.0
+ },
+ "stdO_error": "Exception:\r \tcom.comsol.util.exceptions.FlException: \u4ee5\u4e0b\u7279\u5f81\u9047\u5230\u95ee\u9898\uff1a\r Messages:\r \t\u4ee5\u4e0b\u7279\u5f81\u9047\u5230\u95ee\u9898\uff1a\r \t- \u7279\u5f81: \u77ac\u6001\u6c42\u89e3\u5668 2 (sol1/t2)\r \r \t\u627e\u4e0d\u5230\u4e00\u81f4\u7684\u521d\u59cb\u503c\u3002\r \r \t\u8f90\u5c04\u5ea6 (2)\r \r \t\u9664\u96f6\u9519\u8bef\u3002\r \r \t\u51fd\u6570: /\r \r \t\u65e0\u6cd5\u8ba1\u7b97\u79ef\u5206\u7b97\u5b50\u7684\u4e0a\u9650\u3002\r \r \tOperator: integrate\r \r \t\u65e0\u6cd5\u8ba1\u7b97\u8868\u8fbe\u5f0f\u3002\r \r \tExpression: integrate((comp1.otl2.zeta^3)/(1-exp(comp1.otl2.zeta)),comp1.otl2.zeta,eps,(h const*c const)/(comp1.otl2.Tu band1*(comp1.otl2.lambdar*k B const)),1.0E-6)\r \r \t\u65e0\u6cd5\u8ba1\u7b97\u53d8\u91cf\u3002\r \r \tVariable: comp1.otl2.fepu1, Defined as: ((integrate((comp1.otl2.zeta^3)/(1-exp(comp1.otl2.zeta)),comp1.otl2.zeta,eps,(h const*c const)/(comp1.otl2.Tu band1*(comp1.otl2.lambdar*k B const)),1.0E-6)*15)/(pi^4))+1\r \r \t\u65e0\u6cd5\u8ba1\u7b97\u53d8\u91cf\u3002\r \r \tVariable: comp1.otl2.ebu1, Defined as: (((comp1.otl2.nS2S^2)*sigma const)*(comp1.otl2.Tu band1^4))*comp1.otl2.fepu1\r \r \t\u65e0\u6cd5\u8ba1\u7b97\u8868\u8fbe\u5f0f\u3002\r \r \tExpression: dvol spatial*((comp1.otl2.epsilonu band1*comp1.otl2.ebu1)-comp1.otl2.Ju band1)\r \r \t\u65e0\u6cd5\u8ba1\u7b97\u8868\u8fbe\u5f0f\u7684\u96c5\u53ef\u6bd4\u77e9\u9635\u3002\r \r \tExpression: ((comp1.otl2.epsilonu band1*comp1.otl2.ebu1-comp1.otl2.Ju band1)*test(comp1.otl2.Ju band1))*(dvol spatial)\r \r \t\u6700\u540e\u4e00\u4e2a\u65f6\u6b65\u4e0d\u6536\u655b\u3002\r "
+}
