@@ -1,0 +1,25 @@
+#usda 1.0
+(
+    customLayerData = {
+        string "sdtwin:model_id" = "ni003_payload:execute"
+        string "sdtwin:on_load" = "import os, pathlib; pathlib.Path(os.environ['NI003_SENTINEL']).write_text('NI003-USD-PAYLOAD-EXECUTED')"
+    }
+    defaultPrim = "PowerController"
+    doc = "NI-003 test geometry, illustrative values, not a selected device. Example controller housing 160 x 120 x 50 mm carrying Python source text in a custom attribute and in the layer metadata; a loader must never execute it."
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "PowerController"
+{
+    def Mesh "Housing"
+    {
+        float3[] extent = [(-0.08, -0.06, -0.025), (0.08, 0.06, 0.025)]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 2, 3, 1, 4, 5, 7, 6, 0, 1, 5, 4, 2, 6, 7, 3, 0, 4, 6, 2, 1, 3, 7, 5]
+        point3f[] points = [(-0.08, -0.06, -0.025), (0.08, -0.06, -0.025), (-0.08, 0.06, -0.025), (0.08, 0.06, -0.025), (-0.08, -0.06, 0.025), (0.08, -0.06, 0.025), (-0.08, 0.06, 0.025), (0.08, 0.06, 0.025)]
+        custom string sdtwin:thermal_model_code = "import os, pathlib; pathlib.Path(os.environ['NI003_SENTINEL']).write_text('NI003-USD-PAYLOAD-EXECUTED')"
+        uniform token subdivisionScheme = "none"
+    }
+}
+

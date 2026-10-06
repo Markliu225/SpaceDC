@@ -1,0 +1,31 @@
+{
+  "asset_id": "sdtwin.example.cold_plate",
+  "asset_version": "0.1.0",
+  "description": "Machined aluminium cold plate with heat-pipe saddles. Geometry authored in centimetres; pockets and channels remove part of the envelope volume.",
+  "geometry_uri": "../geometry/cold_plate.usda",
+  "capabilities": [
+    {
+      "domain": "thermal",
+      "model_id": "sdtwin.thermal.cold_plate/1",
+      "parameter_set": {
+        "materials": [
+          {"material_id": "plate_al6061", "density_kg_m3": 2700.0, "geometry_prim": "Plate",
+           "volume_basis": "extent_box", "solid_fraction": 0.8, "cp_J_kgK": 896.0,
+           "source": "illustrative test value: Al 6061 density and specific heat, 80 percent solid after machining"}
+        ],
+        "surfaces": [],
+        "temperature_range_K": [243.15, 343.15]
+      }
+    }
+  ],
+  "ports": [
+    {"name": "T_C_K", "kind": "temperature", "unit": "K", "description": "cold plate temperature"},
+    {"name": "board_link", "kind": "thermal_interface", "unit": "W", "description": "interface path JC"},
+    {"name": "heat_pipe_link", "kind": "thermal_interface", "unit": "W", "description": "heat-pipe path CR"}
+  ],
+  "provenance": {
+    "status": "illustrative_test_value",
+    "note": "All values are illustrative test values for a small computing satellite; no device has been selected.",
+    "references": []
+  }
+}

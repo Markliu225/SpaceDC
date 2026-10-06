@@ -1,0 +1,794 @@
+{
+ "case_id": "HT-001",
+ "status": "pass",
+ "checks": [
+  {
+   "name": "前置条件 PA-001 已通过",
+   "expected": "the PA-001 record of this pytest session, or else tests/results/PA-001.json, has case_id PA-001, status pass, at least one check and no failed check; an evidence file must be written after the last change of the thermal package sources, so that it applies to the module under test",
+   "actual": "PA-001 record of this pytest session (PA-001 ran before HT-001); case_id 'PA-001', status 'pass', 114 checks, 0 failed; newest thermal source thermal/__init__.py modified 2026-10-06T06:57:29+08:00, evidence current True",
+   "passed": true
+  },
+  {
+   "name": "前置条件 五条连接的热阻已按式 T5 装配并与手算一致",
+   "expected": "R_K_W in SR, JC, CR, BR, DR = 0.8, 0.09, 0.12, 0.5, 1.5 K/W from the hand T5 table, relative error <= 1e-12; R_BR = 0.5 K/W as in design 4.3",
+   "actual": "R_K_W = [0.8, 0.09, 0.12, 0.5, 1.5] K/W; max relative error 5.551e-17 against the hand table and 5.667e-17 against exact T5 of the float inputs",
+   "passed": true
+  },
+  {
+   "name": "参考 手算表与独立精确计算一致",
+   "expected": "exact rational T2 with the hand T5 resistances reproduces every hand table value of the four tabulated states",
+   "actual": "largest absolute difference 0.0 W over 4 states x 5 paths",
+   "passed": true
+  },
+  {
+   "name": "步骤1 返回字典含 run_id、time_s 与 q_W",
+   "expected": "dict with run_id = 'HT-001', time_s = 1200.0 and q_W of shape (5,)",
+   "actual": "type dict, keys ['q_W', 'run_id', 'time_s'], run_id 'HT-001', time_s 1200.0, q_W shape (5,)",
+   "passed": true
+  },
+  {
+   "name": "步骤1 SR 热流与手算一致",
+   "expected": "q_SR = (270 - 300) / 0.8 = -37.5 W, relative error <= 1e-12",
+   "actual": "q_SR = -37.5 W, relative error 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤1 JC 热流与手算一致",
+   "expected": "q_JC = (345 - 318) / 0.09 = 300 W, relative error <= 1e-12",
+   "actual": "q_JC = 300.0 W, relative error 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤1 CR 热流与手算一致",
+   "expected": "q_CR = (318 - 300) / 0.12 = 150 W, relative error <= 1e-12",
+   "actual": "q_CR = 150.0 W, relative error 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤1 BR 热流与手算一致",
+   "expected": "q_BR = (303 - 300) / 0.5 = 6 W, relative error <= 1e-12",
+   "actual": "q_BR = 6.0 W, relative error 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤1 DR 热流与手算一致",
+   "expected": "q_DR = (312 - 300) / 1.5 = 8 W, relative error <= 1e-12",
+   "actual": "q_DR = 8.0 W, relative error 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤1 q_W 按 SR、JC、CR、BR、DR 的固定顺序排列",
+   "expected": "PATH_ORDER = ('SR', 'JC', 'CR', 'BR', 'DR') and q_W[k] equals the hand value of the k-th path (the five hand values are distinct, so a permutation would be detected)",
+   "actual": "PATH_ORDER = ('SR', 'JC', 'CR', 'BR', 'DR'); paths identified from the q_W values: ['SR', 'JC', 'CR', 'BR', 'DR']",
+   "passed": true
+  },
+  {
+   "name": "步骤1 电池算例 q_BR 为 6 W",
+   "expected": "T_B = 303 K, T_R = 300 K, R_BR = 0.5 K/W: q_BR = 3 / 0.5 = 6 W (design 4.3), relative error <= 1e-12",
+   "actual": "q_BR = 6.0 W, relative error 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 电池算例对调两端温度后五条连接热流与手算一致",
+   "expected": "T_B = 300 K, T_R = 303 K: q_W = [-41.25, 300, 125, -6, 6] W from the hand table, relative error <= 1e-12",
+   "actual": "q_W = [-41.25, 300.0, 125.0, -6.0, 6.0] W, max relative error 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 电池算例对调两端温度后 q_BR 为 −6 W",
+   "expected": "q_BR = (300 - 303) / 0.5 = -6 W: sign opposite to the 6 W of the example, same magnitude, relative error <= 1e-12",
+   "actual": "q_BR = -6.0 W against 6.0 W before the exchange; relative error 0.000e+00; relative magnitude difference 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 SR 对调两端温度后热流变号且大小不变",
+   "expected": "T_S = 270.0 K and T_R = 300.0 K exchanged: q_SR changes sign and keeps its magnitude; all five flows equal exact T2 within 1e-12",
+   "actual": "q_SR -37.5 W -> 37.5 W, relative magnitude difference 0.000e+00; max relative error of the five flows 3.701e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤2 JC 对调两端温度后热流变号且大小不变",
+   "expected": "T_J = 345.0 K and T_C = 318.0 K exchanged: q_JC changes sign and keeps its magnitude; all five flows equal exact T2 within 1e-12",
+   "actual": "q_JC 300.0 W -> -300.0 W, relative magnitude difference 0.000e+00; max relative error of the five flows 3.701e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤2 CR 对调两端温度后热流变号且大小不变",
+   "expected": "T_C = 318.0 K and T_R = 300.0 K exchanged: q_CR changes sign and keeps its magnitude; all five flows equal exact T2 within 1e-12",
+   "actual": "q_CR 150.0 W -> -150.0 W, relative magnitude difference 0.000e+00; max relative error of the five flows 3.701e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤2 BR 对调两端温度后热流变号且大小不变",
+   "expected": "T_B = 303.0 K and T_R = 300.0 K exchanged: q_BR changes sign and keeps its magnitude; all five flows equal exact T2 within 1e-12",
+   "actual": "q_BR 6.0 W -> -6.0 W, relative magnitude difference 0.000e+00; max relative error of the five flows 3.701e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤2 DR 对调两端温度后热流变号且大小不变",
+   "expected": "T_D = 312.0 K and T_R = 300.0 K exchanged: q_DR changes sign and keeps its magnitude; all five flows equal exact T2 within 1e-12",
+   "actual": "q_DR 8.0 W -> -8.0 W, relative magnitude difference 0.000e+00; max relative error of the five flows 3.701e-17",
+   "passed": true
+  },
+  {
+   "name": "输入2 电池算例两端温度均为 300 K 时 q_BR 为零",
+   "expected": "q_BR = 0 W exactly; the other four flows equal the hand table within 1e-12",
+   "actual": "q_W = [-37.5, 300.0, 150.0, 0.0, 8.0] W, q_BR = 0.0 W, max relative error 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "输入2 电池算例两端温度均为 303 K 时 q_BR 为零",
+   "expected": "q_BR = 0 W exactly; the other four flows equal the hand table within 1e-12",
+   "actual": "q_W = [-41.25, 300.0, 125.0, 0.0, 6.0] W, q_BR = 0.0 W, max relative error 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "输入2 SR 两端温度相等时热流为零",
+   "expected": "T_S = T_R = 300.0 K: q_SR = 0 W exactly; the other flows equal exact T2 within 1e-12",
+   "actual": "q_W = [0.0, 300.0, 150.0, 6.0, 8.0] W, max relative error 3.701e-17",
+   "passed": true
+  },
+  {
+   "name": "输入2 JC 两端温度相等时热流为零",
+   "expected": "T_J = T_C = 318.0 K: q_JC = 0 W exactly; the other flows equal exact T2 within 1e-12",
+   "actual": "q_W = [-37.5, 0.0, 150.0, 6.0, 8.0] W, max relative error 3.701e-17",
+   "passed": true
+  },
+  {
+   "name": "输入2 CR 两端温度相等时热流为零",
+   "expected": "T_C = T_R = 300.0 K: q_CR = 0 W exactly; the other flows equal exact T2 within 1e-12",
+   "actual": "q_W = [-37.5, 500.0, 0.0, 6.0, 8.0] W, max relative error 3.701e-17",
+   "passed": true
+  },
+  {
+   "name": "输入2 BR 两端温度相等时热流为零",
+   "expected": "T_B = T_R = 300.0 K: q_BR = 0 W exactly; the other flows equal exact T2 within 1e-12",
+   "actual": "q_W = [-37.5, 300.0, 150.0, 0.0, 8.0] W, max relative error 3.701e-17",
+   "passed": true
+  },
+  {
+   "name": "输入2 DR 两端温度相等时热流为零",
+   "expected": "T_D = T_R = 300.0 K: q_DR = 0 W exactly; the other flows equal exact T2 within 1e-12",
+   "actual": "q_W = [-37.5, 300.0, 150.0, 6.0, 0.0] W, max relative error 3.701e-17",
+   "passed": true
+  },
+  {
+   "name": "输入2 六个节点温度均为 293.15 K 时五条连接热流全为零",
+   "expected": "q_W = [0, 0, 0, 0, 0] W exactly",
+   "actual": "q_W = [0.0, 0.0, 0.0, 0.0, 0.0] W",
+   "passed": true
+  },
+  {
+   "name": "步骤3 每条路径的第一个与第二个节点取自路径名称",
+   "expected": "first and second node of each path from its name: {'SR': ('S', 'R'), 'JC': ('J', 'C'), 'CR': ('C', 'R'), 'BR': ('B', 'R'), 'DR': ('D', 'R')}",
+   "actual": "PATH_NODES = {'SR': ('S', 'R'), 'JC': ('J', 'C'), 'CR': ('C', 'R'), 'BR': ('B', 'R'), 'DR': ('D', 'R')}",
+   "passed": true
+  },
+  {
+   "name": "步骤3 SR 第一个节点较热时热流为正 较冷时热流为负",
+   "expected": "T_S = T_R + 10.0 K: q_SR = +12.5 W > 0, heat flows from S to R; T_S = T_R - 10.0 K: q_SR = -12.5 W < 0; flows equal exact T2 within 1e-12",
+   "actual": "q_SR = 12.5 W and -12.5 W; max relative error of the ten flows 3.701e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤3 JC 第一个节点较热时热流为正 较冷时热流为负",
+   "expected": "T_J = T_C + 10.0 K: q_JC = +111.111 W > 0, heat flows from J to C; T_J = T_C - 10.0 K: q_JC = -111.111 W < 0; flows equal exact T2 within 1e-12",
+   "actual": "q_JC = 111.11111111111111 W and -111.11111111111111 W; max relative error of the ten flows 3.701e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤3 CR 第一个节点较热时热流为正 较冷时热流为负",
+   "expected": "T_C = T_R + 10.0 K: q_CR = +83.3333 W > 0, heat flows from C to R; T_C = T_R - 10.0 K: q_CR = -83.3333 W < 0; flows equal exact T2 within 1e-12",
+   "actual": "q_CR = 83.33333333333334 W and -83.33333333333334 W; max relative error of the ten flows 7.835e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤3 BR 第一个节点较热时热流为正 较冷时热流为负",
+   "expected": "T_B = T_R + 10.0 K: q_BR = +20 W > 0, heat flows from B to R; T_B = T_R - 10.0 K: q_BR = -20 W < 0; flows equal exact T2 within 1e-12",
+   "actual": "q_BR = 20.0 W and -20.0 W; max relative error of the ten flows 3.701e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤3 DR 第一个节点较热时热流为正 较冷时热流为负",
+   "expected": "T_D = T_R + 10.0 K: q_DR = +6.66667 W > 0, heat flows from D to R; T_D = T_R - 10.0 K: q_DR = -6.66667 W < 0; flows equal exact T2 within 1e-12",
+   "actual": "q_DR = 6.666666666666667 W and -6.666666666666667 W; max relative error of the ten flows 7.332e-17",
+   "passed": true
+  },
+  {
+   "name": "预期2 一次调用中每条路径只求值一次",
+   "expected": "R_ij read once per path {'SR': 1, 'JC': 1, 'CR': 1, 'BR': 1, 'DR': 1}; end temperatures read once per path, so node reads equal the number of paths at the node {'S': 1, 'J': 1, 'C': 2, 'B': 1, 'D': 1, 'R': 4}; instrumented q_W bitwise identical to the plain call",
+   "actual": "R_K_W reads per path {'SR': 1, 'JC': 1, 'CR': 1, 'BR': 1, 'DR': 1} (5 in all); temperature reads per node {'S': 1, 'J': 1, 'C': 2, 'B': 1, 'D': 1, 'R': 4}; instrumented q_W [-37.5, 300.0, 150.0, 6.0, 8.0] W, bitwise identical True",
+   "passed": true
+  },
+  {
+   "name": "步骤1 热阻按 SR、JC、CR、BR、DR 的固定顺序读取",
+   "expected": "order of the first R_K_W read of each path during one call = ['SR', 'JC', 'CR', 'BR', 'DR'] (repeated reads are the count check above)",
+   "actual": "order of first reads = ['SR', 'JC', 'CR', 'BR', 'DR']; full read sequence = ['SR', 'JC', 'CR', 'BR', 'DR']",
+   "passed": true
+  },
+  {
+   "name": "步骤1 两端温度按 SR、JC、CR、BR、DR 的固定顺序读取",
+   "expected": "end temperatures read path by path in the order SR, JC, CR, BR, DR, first node then second node as in T2 q_ij = (T_i - T_j) / R_ij: ['S', 'R', 'J', 'C', 'C', 'R', 'B', 'R', 'D', 'R']",
+   "actual": "temperature read sequence = ['S', 'R', 'J', 'C', 'C', 'R', 'B', 'R', 'D', 'R']",
+   "passed": true
+  },
+  {
+   "name": "步骤1 按 SR、JC、CR、BR、DR 的固定顺序逐条执行 T2",
+   "expected": "the reads of each path, its two end temperatures and its resistance, are complete before any read of the next path, in the order SR, JC, CR, BR, DR (15 reads in all)",
+   "actual": "merged read sequence = ['T_S', 'T_R', 'R_SR', 'T_J', 'T_C', 'R_JC', 'T_C', 'T_R', 'R_CR', 'T_B', 'T_R', 'R_BR', 'T_D', 'T_R', 'R_DR']",
+   "passed": true
+  },
+  {
+   "name": "预期2 节点 S 温度升高 1 K 只改变与其相连路径的热流",
+   "expected": "changed paths ['SR']; other flows bitwise unchanged; all flows equal exact T2 within 1e-12",
+   "actual": "changed paths ['SR']; q_W = [-36.25, 300.0, 150.0, 6.0, 8.0] W; max relative error 3.701e-17",
+   "passed": true
+  },
+  {
+   "name": "预期2 节点 J 温度升高 1 K 只改变与其相连路径的热流",
+   "expected": "changed paths ['JC']; other flows bitwise unchanged; all flows equal exact T2 within 1e-12",
+   "actual": "changed paths ['JC']; q_W = [-37.5, 311.11111111111114, 150.0, 6.0, 8.0] W; max relative error 6.450e-17",
+   "passed": true
+  },
+  {
+   "name": "预期2 节点 C 温度升高 1 K 只改变与其相连路径的热流",
+   "expected": "changed paths ['JC', 'CR']; other flows bitwise unchanged; all flows equal exact T2 within 1e-12",
+   "actual": "changed paths ['JC', 'CR']; q_W = [-37.5, 288.8888888888889, 158.33333333333334, 6.0, 8.0] W; max relative error 5.044e-17",
+   "passed": true
+  },
+  {
+   "name": "预期2 节点 B 温度升高 1 K 只改变与其相连路径的热流",
+   "expected": "changed paths ['BR']; other flows bitwise unchanged; all flows equal exact T2 within 1e-12",
+   "actual": "changed paths ['BR']; q_W = [-37.5, 300.0, 150.0, 8.0, 8.0] W; max relative error 3.701e-17",
+   "passed": true
+  },
+  {
+   "name": "预期2 节点 D 温度升高 1 K 只改变与其相连路径的热流",
+   "expected": "changed paths ['DR']; other flows bitwise unchanged; all flows equal exact T2 within 1e-12",
+   "actual": "changed paths ['DR']; q_W = [-37.5, 300.0, 150.0, 6.0, 8.666666666666666] W; max relative error 3.941e-17",
+   "passed": true
+  },
+  {
+   "name": "预期2 节点 R 温度升高 1 K 只改变与其相连路径的热流",
+   "expected": "changed paths ['SR', 'CR', 'BR', 'DR']; other flows bitwise unchanged; all flows equal exact T2 within 1e-12",
+   "actual": "changed paths ['SR', 'CR', 'BR', 'DR']; q_W = [-38.75, 300.0, 141.66666666666669, 4.0, 7.333333333333333] W; max relative error 9.674e-17",
+   "passed": true
+  },
+  {
+   "name": "预期2 thermal_derivative 一次求值只调用一次 calculate_heat_flows 并沿用其热流",
+   "expected": "one call of calculate_heat_flows per thermal_derivative evaluation; ThermalEvaluation.q_W equals that single result, so the same value serves the outflow and inflow ends",
+   "actual": "calculate_heat_flows called 1 time(s); ThermalEvaluation.q_W [-37.5, 300.0, 150.0, 6.0, 8.0] W, bitwise identical to the single call True",
+   "passed": true
+  },
+  {
+   "name": "预期2 函数没有状态更新 状态对象调用前后逐位相同",
+   "expected": "ThermalState run_id, time_s, temperature_K and its read-only flag unchanged by the call",
+   "actual": "run_id 'HT-001', time_s 1200.0, temperature_K [270.0, 345.0, 318.0, 303.0, 312.0, 300.0] K, bitwise equal True, writeable False before False",
+   "passed": true
+  },
+  {
+   "name": "预期2 函数没有状态更新 调用方可写温度数组未被修改",
+   "expected": "a caller-owned writeable temperature array keeps its values and stays writeable",
+   "actual": "values bitwise equal True, writeable True, shares memory with q_W False",
+   "passed": true
+  },
+  {
+   "name": "预期2 函数没有状态更新 参数对象调用前后相同",
+   "expected": "R_K_W, C_J_K and provenance of ThermalParameters unchanged by the calls",
+   "actual": "R_K_W bitwise equal True, C_J_K bitwise equal True, provenance equal True",
+   "passed": true
+  },
+  {
+   "name": "预期2 函数没有状态更新 返回结果只含热流且不与输入共享内存",
+   "expected": "result holds run_id, time_s equal to the input and q_W; no ThermalState or temperature field; q_W shares no memory with the state or the resistances",
+   "actual": "keys ['q_W', 'run_id', 'time_s'], run_id 'HT-001', time_s 1200.0, ThermalState or temperature present False, q_W shares memory with inputs False",
+   "passed": true
+  },
+  {
+   "name": "预期2 重复调用结果逐位相同",
+   "expected": "two calls on the same state and parameters return bitwise identical q_W",
+   "actual": "[-37.5, 300.0, 150.0, 6.0, 8.0] W and [-37.5, 300.0, 150.0, 6.0, 8.0] W",
+   "passed": true
+  },
+  {
+   "name": "步骤4 对照 未注入异常的同类输入正常返回相同热流",
+   "expected": "each control returns q_W bitwise identical to the base call, so each rejection below comes from the injected fault",
+   "actual": "{'state object without constructor checks': True, 'parameter object without constructor checks': True, 'parameters rebuilt through ThermalParameters': True}",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 缺少节点 状态温度数组缺少节点 D 只有五个值",
+   "expected": "ThermalInputError whose message names ['state.temperature_K']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalInputError: state.temperature_K must have shape (6,) with one value per node in the order ('S', 'J', 'C', 'B', 'D', 'R'), got shape (5,) | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 缺少节点 ThermalState 构造时温度数组只有五个值",
+   "expected": "ThermalInputError whose message names ['ThermalState.temperature_K']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalInputError: ThermalState.temperature_K must have shape (6,) with one value per node in the order ('S', 'J', 'C', 'B', 'D', 'R'), got shape (5,) | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 缺少节点 状态对象缺少温度字段",
+   "expected": "ThermalInputError whose message names ['temperature_K']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalInputError: state has no field 'temperature_K' (SimpleNamespace given) | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 缺少节点 参数节点次序缺少节点 D",
+   "expected": "ThermalConfigurationError whose message names ['node_order']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: parameters.provenance['node_order'] must be ('S', 'J', 'C', 'B', 'D', 'R'), got ('S', 'J', 'C', 'B', 'R') | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 缺少节点 参数实例映射缺少节点 D",
+   "expected": "ThermalConfigurationError whose message names ['instance_map', \"'D'\"]; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: parameters.instance_map['nodes'] is missing node(s) ['D']; every node of ('S', 'J', 'C', 'B', 'D', 'R') needs its instances | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 数组次序不符 参数节点次序为 R J C B D S",
+   "expected": "ThermalConfigurationError whose message names ['node_order']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: parameters.provenance['node_order'] must be ('S', 'J', 'C', 'B', 'D', 'R'), got ('R', 'J', 'C', 'B', 'D', 'S') | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 数组次序不符 参数节点次序为 S J C B R D",
+   "expected": "ThermalConfigurationError whose message names ['node_order']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: parameters.provenance['node_order'] must be ('S', 'J', 'C', 'B', 'D', 'R'), got ('S', 'J', 'C', 'B', 'R', 'D') | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 数组次序不符 参数路径次序为 BR JC CR SR DR",
+   "expected": "ThermalConfigurationError whose message names ['path_order']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: parameters.provenance['path_order'] must be ('SR', 'JC', 'CR', 'BR', 'DR'), got ('BR', 'JC', 'CR', 'SR', 'DR') | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 数组次序不符 参数路径次序为 SR JC CR DR BR",
+   "expected": "ThermalConfigurationError whose message names ['path_order']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: parameters.provenance['path_order'] must be ('SR', 'JC', 'CR', 'BR', 'DR'), got ('SR', 'JC', 'CR', 'DR', 'BR') | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 数组次序不符 ThermalParameters 构造时节点次序为 R J C B D S",
+   "expected": "ThermalConfigurationError whose message names ['ThermalParameters.provenance', 'node_order']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: ThermalParameters.provenance['node_order'] must be ('S', 'J', 'C', 'B', 'D', 'R'), got ('R', 'J', 'C', 'B', 'D', 'S') | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 数组次序不符 ThermalParameters 构造时路径次序为 BR JC CR SR DR",
+   "expected": "ThermalConfigurationError whose message names ['ThermalParameters.provenance', 'path_order']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: ThermalParameters.provenance['path_order'] must be ('SR', 'JC', 'CR', 'BR', 'DR'), got ('BR', 'JC', 'CR', 'SR', 'DR') | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 数组形状或类型不符 状态温度为以节点名为键的映射 键序为 R S J C B D",
+   "expected": "ThermalInputError whose message names ['state.temperature_K']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalInputError: state.temperature_K must have shape (6,) with one value per node in the order ('S', 'J', 'C', 'B', 'D', 'R'), got shape () | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 数组形状或类型不符 状态温度为以节点名为键的映射 键序为 S J C B D R",
+   "expected": "ThermalInputError whose message names ['state.temperature_K']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalInputError: state.temperature_K must have shape (6,) with one value per node in the order ('S', 'J', 'C', 'B', 'D', 'R'), got shape () | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 数组形状或类型不符 状态温度为一行六列的二维数组",
+   "expected": "ThermalInputError whose message names ['state.temperature_K']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalInputError: state.temperature_K must have shape (6,) with one value per node in the order ('S', 'J', 'C', 'B', 'D', 'R'), got shape (1, 6) | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 数组形状或类型不符 参数热阻数组按节点给出六个值",
+   "expected": "ThermalConfigurationError whose message names ['R_K_W']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: parameters.R_K_W must have shape (5,) with one value per path in the order ('SR', 'JC', 'CR', 'BR', 'DR'), got shape (6,) | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 热阻为零或负值 参数 R_BR 为零",
+   "expected": "ThermalConfigurationError whose message names ['R_K_W', 'BR']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: parameters.R_K_W[3] (path BR) must be > 0, got np.float64(0.0) | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 热阻为零或负值 参数 R_BR 为负零",
+   "expected": "ThermalConfigurationError whose message names ['R_K_W', 'BR']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: parameters.R_K_W[3] (path BR) must be > 0, got np.float64(-0.0) | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 热阻为零或负值 参数 R_BR 为 −0.5 K/W",
+   "expected": "ThermalConfigurationError whose message names ['R_K_W', 'BR']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: parameters.R_K_W[3] (path BR) must be > 0, got np.float64(-0.5) | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 热阻为零或负值 ThermalParameters 构造时 R_BR 为零",
+   "expected": "ThermalConfigurationError whose message names ['ThermalParameters.R_K_W', 'BR']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: ThermalParameters.R_K_W[3] (path BR) must be > 0, got np.float64(0.0) | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 热阻为零或负值 ThermalParameters 构造时 R_BR 为 −0.5 K/W",
+   "expected": "ThermalConfigurationError whose message names ['ThermalParameters.R_K_W', 'BR']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: ThermalParameters.R_K_W[3] (path BR) must be > 0, got np.float64(-0.5) | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 热阻为零或负值 装配完成后改写 R_K_W 字段使 R_BR 为零",
+   "expected": "ThermalConfigurationError whose message names ['R_K_W', 'BR']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: parameters.R_K_W[3] (path BR) must be > 0, got np.float64(0.0) | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 热阻为零或负值 装配时 BR 等效总热阻为零",
+   "expected": "ThermalConfigurationError whose message names [\"connection 'BR'\", 'equivalent_total_resistance_K_W']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: connection 'BR': equivalent_total_resistance_K_W must be > 0, got 0.0 | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 热阻为零或负值 装配时 BR 等效总热阻为 −0.5 K/W",
+   "expected": "ThermalConfigurationError whose message names [\"connection 'BR'\", 'equivalent_total_resistance_K_W']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: connection 'BR': equivalent_total_resistance_K_W must be > 0, got -0.5 | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 热阻为零或负值 装配时 BR 实心路径长度为零且接触热阻为零",
+   "expected": "ThermalConfigurationError whose message names [\"connection 'BR'\", 'length_m']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: connection 'BR': length_m must be > 0, got 0.0 | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 热阻为零或负值 装配时 BR 接触热阻为负使总热阻为负",
+   "expected": "ThermalConfigurationError whose message names [\"connection 'BR'\", 'contact_resistance_K_W']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: connection 'BR': contact_resistance_K_W must be >= 0, got -0.3 | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 输入为非有限值 状态 T_B 为 NaN",
+   "expected": "ThermalInputError whose message names ['state.temperature_K', 'index 3']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalInputError: state.temperature_K must contain only finite values, got np.float64(nan) at index 3 | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 输入为非有限值 状态 T_R 为正无穷",
+   "expected": "ThermalInputError whose message names ['state.temperature_K', 'index 5']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalInputError: state.temperature_K must contain only finite values, got np.float64(inf) at index 5 | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 输入为非有限值 状态 T_S 为负无穷",
+   "expected": "ThermalInputError whose message names ['state.temperature_K', 'index 0']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalInputError: state.temperature_K must contain only finite values, got np.float64(-inf) at index 0 | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 输入为非有限值 状态 time_s 为 NaN",
+   "expected": "ThermalInputError whose message names ['state.time_s']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalInputError: state.time_s must be finite, got nan | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 输入为非有限值 状态 time_s 为正无穷",
+   "expected": "ThermalInputError whose message names ['state.time_s']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalInputError: state.time_s must be finite, got inf | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 输入为非有限值 参数 R_BR 为 NaN",
+   "expected": "ThermalConfigurationError whose message names ['R_K_W', 'index 3']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: parameters.R_K_W must contain only finite values, got np.float64(nan) at index 3 | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 输入为非有限值 参数 R_BR 为正无穷",
+   "expected": "ThermalConfigurationError whose message names ['R_K_W', 'index 3']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: parameters.R_K_W must contain only finite values, got np.float64(inf) at index 3 | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 输入为非有限值 ThermalState 构造时 T_B 为 NaN",
+   "expected": "ThermalInputError whose message names ['ThermalState.temperature_K', 'index 3']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalInputError: ThermalState.temperature_K must contain only finite values, got np.float64(nan) at index 3 | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 输入为非有限值 ThermalParameters 构造时 R_BR 为正无穷",
+   "expected": "ThermalConfigurationError whose message names ['ThermalParameters.R_K_W', 'index 3']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: ThermalParameters.R_K_W must contain only finite values, got np.float64(inf) at index 3 | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "预期3 连接未装配 装配时缺少 DR 连接",
+   "expected": "ThermalConfigurationError whose message names [\"['DR']\"]; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: connection(s) ['DR'] are not defined; every path of ('SR', 'JC', 'CR', 'BR', 'DR') needs its conducting structure or a supported equivalent resistance (design 5.2, 5.5) | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "预期3 连接未装配 参数热阻数组缺少 DR 只有四个值",
+   "expected": "ThermalConfigurationError whose message names ['R_K_W']; the same error on a second injection; no heat flow returned and no zero resistance or clipped flow used",
+   "actual": "ThermalConfigurationError: parameters.R_K_W must have shape (5,) with one value per path in the order ('SR', 'JC', 'CR', 'BR', 'DR'), got shape (4,) | identical on the second injection",
+   "passed": true
+  },
+  {
+   "name": "预期3 有效极端输入的热阻按覆盖值与式 T5 装配",
+   "expected": "overrides {'CR': {'equivalent_total_resistance_K_W': 0.0001}, 'DR': {'contact_resistance_K_W': 1000000.0}} applied: R_K_W = [0.8, 0.09, 0.0001, 0.5, 1000001.25] K/W from T5 of the overridden connections, relative error <= 1e-12",
+   "actual": "R_K_W = [0.8, 0.09, 0.0001, 0.5, 1000001.25] K/W; relative errors {SR: 5.667e-17, JC: 0.000e+00, CR: 0.000e+00, BR: 1.041e-17, DR: 4.337e-23}",
+   "passed": true
+  },
+  {
+   "name": "预期3 有效极端输入下热流按式 T2 计算 不截断",
+   "expected": "T2 with the T5 resistances of the overridden connections: q_CR = (110) / 0.0001 = 1100000.0 W; q_BR = (1/1048576) / 0.5 = 1.9073486328125e-06 W; q_DR = (95) / 1000001.25 = 9.499988125014843e-05 W; every flow equal to exact T2 within 1e-12, none set to zero or capped",
+   "actual": "R_K_W = [0.8, 0.09, 0.0001, 0.5, 1000001.25] K/W; q_W = [162.5, 22.22222222222222, 1100000.0, 1.9073486328125e-06, 9.499988125014843e-05] W; references [162.5, 22.22222222222222, 1100000.0, 1.9073486328125e-06, 9.499988125014843e-05] W; relative errors ['1.156e-18', '7.253e-17', '4.792e-17', '1.041e-17', '4.888e-17']; zero flows among ['CR', 'BR', 'DR']: []",
+   "passed": true
+  },
+  {
+   "name": "预期1 算例热流 q_BR 为 6 W 对调后为 −6 W 等温时为零",
+   "expected": "q_BR = 6 W, -6 W after exchanging T_B and T_R, 0 W at T_B = T_R = 300 K and 303 K; the step 1, step 2 and input 2 battery checks passed (the input 2 checks include the other four flows of those states)",
+   "actual": "q_BR = 6.0 W, reversed -6.0 W, equal {300: 0.0, 303: 0.0} W; checks passed: example True, reversed True, equal temperatures True",
+   "passed": true
+  },
+  {
+   "name": "预期3 异常输入报告错误 不用零热阻或临时截断热流代替实际路径",
+   "expected": "every abnormal input and unassembled connection raises a definite error and returns no flow; valid extreme inputs assembled with their overrides give exact T2 flows; both test functions completed",
+   "actual": "36/36 abnormal inputs raised; returned a result: []; extreme resistances as T5 True; extreme valid flows exact True; test functions not completed: []",
+   "passed": true
+  },
+  {
+   "name": "验收判据1 热流与手算的相对误差不超过限值",
+   "expected": "relative error <= 1e-12 for every compared flow; flows with a zero reference exactly 0 W; every test function that compares flows completed",
+   "actual": "160 flows compared, 148 with a non-zero reference: max relative error 9.674e-17 at perturb R CR; 12 zero references, all exactly zero True; test functions not completed: []",
+   "passed": true
+  },
+  {
+   "name": "验收判据2 全部异常输入给出确定的报错",
+   "expected": "every injected abnormal input raises the contract error class with a message naming the field, identically on repetition; every test function that injects abnormal inputs completed",
+   "actual": "36/36 abnormal inputs met the requirement; categories ['数组形状或类型不符', '数组次序不符', '热阻为零或负值', '缺少节点', '输入为非有限值', '连接未装配']; test functions not completed: []",
+   "passed": true
+  }
+ ],
+ "metrics": {
+  "precondition_PA-001": {
+   "case": "PA-001",
+   "newest_thermal_source": "thermal/__init__.py",
+   "newest_thermal_source_modified": "2026-10-06T06:57:29+08:00",
+   "source": "session",
+   "case_id": "PA-001",
+   "status": "pass",
+   "checks": 114,
+   "failed": 0,
+   "current": true
+  },
+  "R_K_W_assembled": {
+   "SR": 0.8,
+   "JC": 0.09,
+   "CR": 0.12,
+   "BR": 0.5,
+   "DR": 1.5
+  },
+  "R_K_W_hand": {
+   "SR": "0.8",
+   "JC": "0.09",
+   "CR": "0.12",
+   "BR": "0.5",
+   "DR": "1.5"
+  },
+  "q_W_base_W": {
+   "SR": -37.5,
+   "JC": 300.0,
+   "CR": 150.0,
+   "BR": 6.0,
+   "DR": 8.0
+  },
+  "q_BR_battery_example_W": 6.0,
+  "q_BR_reversed_W": -6.0,
+  "q_W_end_temperatures_exchanged_W": {
+   "SR": {
+    "before_W": -37.5,
+    "after_W": 37.5
+   },
+   "JC": {
+    "before_W": 300.0,
+    "after_W": -300.0
+   },
+   "CR": {
+    "before_W": 150.0,
+    "after_W": -150.0
+   },
+   "BR": {
+    "before_W": 6.0,
+    "after_W": -6.0
+   },
+   "DR": {
+    "before_W": 8.0,
+    "after_W": -8.0
+   }
+  },
+  "q_BR_equal_end_temperatures_W": {
+   "300 K": 0.0,
+   "303 K": 0.0
+  },
+  "q_W_equal_end_temperatures_per_path_W": {
+   "SR": 0.0,
+   "JC": 0.0,
+   "CR": 0.0,
+   "BR": 0.0,
+   "DR": 0.0
+  },
+  "q_W_sign_convention_W": {
+   "SR": {
+    "first_hotter_W": 12.5,
+    "first_colder_W": -12.5
+   },
+   "JC": {
+    "first_hotter_W": 111.11111111111111,
+    "first_colder_W": -111.11111111111111
+   },
+   "CR": {
+    "first_hotter_W": 83.33333333333334,
+    "first_colder_W": -83.33333333333334
+   },
+   "BR": {
+    "first_hotter_W": 20.0,
+    "first_colder_W": -20.0
+   },
+   "DR": {
+    "first_hotter_W": 6.666666666666667,
+    "first_colder_W": -6.666666666666667
+   }
+  },
+  "evaluations_per_path_in_one_call": {
+   "SR": 1,
+   "JC": 1,
+   "CR": 1,
+   "BR": 1,
+   "DR": 1
+  },
+  "temperature_reads_per_node_in_one_call": {
+   "S": 1,
+   "J": 1,
+   "C": 2,
+   "B": 1,
+   "D": 1,
+   "R": 4
+  },
+  "resistance_read_sequence_in_one_call": [
+   "SR",
+   "JC",
+   "CR",
+   "BR",
+   "DR"
+  ],
+  "temperature_read_sequence_in_one_call": [
+   "S",
+   "R",
+   "J",
+   "C",
+   "C",
+   "R",
+   "B",
+   "R",
+   "D",
+   "R"
+  ],
+  "merged_read_sequence_in_one_call": [
+   "T_S",
+   "T_R",
+   "R_SR",
+   "T_J",
+   "T_C",
+   "R_JC",
+   "T_C",
+   "T_R",
+   "R_CR",
+   "T_B",
+   "T_R",
+   "R_BR",
+   "T_D",
+   "T_R",
+   "R_DR"
+  ],
+  "calculate_heat_flows_calls_per_thermal_derivative": 1,
+  "abnormal_inputs_step4": {
+   "缺少节点": "5/5 rejected as required",
+   "数组次序不符": "6/6 rejected as required",
+   "数组形状或类型不符": "4/4 rejected as required",
+   "热阻为零或负值": "10/10 rejected as required",
+   "输入为非有限值": "9/9 rejected as required"
+  },
+  "abnormal_inputs_array_order_basis": "The 数组次序不符 injections change only the node_order or path_order that the parameter object declares in its provenance; the controls with the declared orders unchanged are accepted, so these rejections come from the declared order. The state temperature array has no order field (ThermalState, design table 6): it is read in the order S, J, C, B, D, R, and a permutation of its six values cannot be told from other temperatures. A mapping keyed by node name is rejected for its type whatever its key order; it is recorded, with the 1 x 6 array and the six-value R_K_W, under 数组形状或类型不符.",
+  "R_K_W_extreme_valid_K_W": {
+   "SR": 0.8,
+   "JC": 0.09,
+   "CR": 0.0001,
+   "BR": 0.5,
+   "DR": 1000001.25
+  },
+  "q_W_extreme_valid_W": {
+   "SR": 162.5,
+   "JC": 22.22222222222222,
+   "CR": 1100000.0,
+   "BR": 1.9073486328125e-06,
+   "DR": 9.499988125014843e-05
+  },
+  "max_relative_error": 9.674178669478815e-17,
+  "flows_compared": 160,
+  "zero_reference_flows": 12,
+  "non_finite_flows": 0,
+  "abnormal_inputs_rejected": "36/36"
+ },
+ "summary_cn": "本用例按设计报告第 4.2 节式 T2、第 4.3 节电池算例与第 5.5 节检验 calculate_heat_flows。前置条件 PA-001 已在本次测试会话中先于本用例执行，记录为通过，114 项检查全部通过；五条连接热阻在本用例内由 assemble_thermal_parameters 按式 T5 装配，SR、JC、CR、BR、DR 依次为 0.8、0.09、0.12、0.5、1.5 K/W，与手算一致。电池算例取电池温度 $T_B$ 为 303 K，散热板温度 $T_R$ 为 300 K，$R_BR$ 为 0.5 K/W，计算得到 $q_BR$ 为 6 W，两端温度对调后为 −6 W，两端温度均为 300 K 与均为 303 K 时分别为 0 W 与 0 W，$q_BR$ 的三项结果均与预期一致。五条连接逐条对调两端温度后热流变号且大小不变，逐条两端等温时该条连接热流严格为零，六个节点温度均为 293.15 K 时五条连接热流全为零，第一个节点较热时热流为正，较冷时热流为负，正值表示由路径名称第一个节点流向第二个节点。共 160 个热流值与手算或独立精确计算比较，非零参考值的最大相对误差为 9.7×10^{−17}，不超过验收限 1×10^{−12}；参考值为零的 12 个热流值全部严格为零。插桩计数显示一次调用中五条路径各求值一次，每条路径的热阻读取 1 次，各节点温度的读取次数等于与其相连的路径数，两端温度按 S、R、J、C、C、R、B、R、D、R 的次序读取，热阻按 SR、JC、CR、BR、DR 的次序读取，每条路径的两端温度与热阻读取完毕后才读取下一条路径。任一节点温度升高 1 K 只改变与其相连路径的热流，thermal_derivative 一次求值调用 calculate_heat_flows 1 次并沿用其热流，调用前后状态与参数逐位相同，返回结果只含热流且不与输入共享内存，重复调用结果逐位相同。缺少节点、数组次序不符、数组形状或类型不符、热阻为零或负值、输入为非有限值与连接未装配共 36 项异常输入中 36 项给出确定的报错并指出具体字段，没有任何一项返回结果；数组次序不符的 6 项只改动参数对象声明的 node_order 或 path_order，均由该声明检出，状态温度以节点名为键给出时不论键序均被拒绝。有效极端输入下覆盖后的 $R_CR$ 为 1×10^{−4} K/W，$R_DR$ 为 1000001.25 K/W，与按覆盖值和式 T5 的计算一致；$q_CR$ 为 1.1×10^{6} W，$q_DR$ 为 9.5×10^{−5} W，$T_B$ 比 $T_R$ 高 2^{−20} K 时 $q_BR$ 为 1.9×10^{−6} W；五条连接热流与式 T2 的最大相对误差为 7.3×10^{−17}，没有被置零或截断。",
+ "anomalies_cn": "无",
+ "environment": {
+  "python": "3.11.9",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "astropy": "8.0.1",
+  "pytest": "9.1.1",
+  "ntu_space_dynamics": "0.1.0",
+  "usd": "0.26.8"
+ },
+ "execution": {
+  "started_utc": "2026-10-05T23:17:02.838518+00:00",
+  "recorded_utc": "2026-10-05T23:40:12.008851+00:00",
+  "collected_functions": 10,
+  "finished_functions": 10,
+  "unexecuted_functions": [],
+  "source_sha256": {
+   "thermal/__init__.py": "ffb342305704801c8871a2af365af61877f7e6485b07ec381e0f777da9d294f5",
+   "thermal/environment.py": "5c3eba796dd28d41a4f1b6fa637ada3c0b8d2942ebc5f65b1e55f1384fa99f41",
+   "thermal/model.py": "9f758d46ea25844878e8cac7ccc402c31610548d255ded7d8d980ae95a965b9e",
+   "thermal/parameters.py": "792e7f5d1175e3564b7486a230039cf026fbad78074cfc8de4fbf352d9c946f9",
+   "thermal/types.py": "2c76359dfa9555ef7d51df83009a5985964c66080dc9062746815451e827a794",
+   "sdtwin_sim/__init__.py": "e2c3bee5849391a86fa79109339d001a75779dd93835d9e829f5f1591de81a31",
+   "sdtwin_sim/coupled.py": "f05e19e220284ad3a0c1e4188eb405fa66b6777f4226decfe95d2c559bca1dff",
+   "sdtwin_sim/earth_flux.py": "03b0d340d77e583cf73a3f0ec31ca0d9830c3bdc5f824903adae266b82a853a2",
+   "sdtwin_sim/power_stand_in.py": "3229251cdd2834bc2df18177c079e651f53a0827fb57cba21527ebdbf281c58f",
+   "sdtwin_sim/scene.py": "b7b1ad5328e6f6278354249e3087d47197895294af8607d21c7dcce354c7ab9b",
+   "tests/conftest.py": "345e7f788242083755505607636fa4af3e88cbf303a6a1728e4ab327e106d11e",
+   "tests/data/dm_001/reference.py": "3bba4938e76134c73272c00250517cc01c519da62f881382ddb42daa9c79fe2c",
+   "tests/data/en_001/en001_reference.py": "73370bd0a9fdc7e7c373e8dda1b5aa0c9a6970dc047fba3cf8a7c3fd808e6ea4",
+   "tests/data/en_003/earth_reference.py": "880154b92405e9af399b772296148219ca78f8ac62e9fcbeaeef67bb45ce117f",
+   "tests/data/en_003/fe_explore.py": "0cceaffd85c2d15b11fee6c7e6b5bbb00a17d94e63940b45a2db1863dfecd473",
+   "tests/data/en_003/fe_export.py": "b33fc7276138dc59e944c5cbfed73acc0d1f1ec2ce7d458b90eed62790aa8f85",
+   "tests/data/en_003/fe_refine.py": "6ad00122cb8f7a65d0f5c23f7c139b20e92d6f75fa0f472b16d2d97628995c43",
+   "tests/data/en_003/fe_refine_ladder.py": "587ffe012aa40955c6b615f68d6e257314ac0bc418765aaa358e17dc848e0580",
+   "tests/data/en_003/ladder_compare.py": "fdf7d4d74fb0f099934f5ef3c3bbdef67df6f7cf3605a5ad1984cb48450cc3ab",
+   "tests/data/fe_001/fe001_support.py": "d1bd978ad70120cf974e46cd996a8367bd5efc08e4d8755405c2a3a21be41051",
+   "tests/data/fe_002/fe002_support.py": "2c27a76b1fd972625293b26b8e1a07d0850ba78254c4457782607279205c4f7c",
+   "tests/data/fe_003/fe003_support.py": "00d548cb2c513707bfeb16f81bf130eded88fb09a87ba8785ad27ee341a985f2",
+   "tests/data/fe_004/fe004_support.py": "54a7d7d8ce2fa0e4f9b054f596a927f8531c0cc0b77a783dcd7ab6973c1f6e44",
+   "tests/data/ht_001/t2_reference.py": "2098ccd9080957ab24ff44712b3b8e688d2b41cfa077e95460a96c82f3d27f89",
+   "tests/data/ht_002/ht002_reference.py": "076d20dec2f98fb84bbbcda17b3a0313de6c8ffb44f4c2121282eb01387bd7e7",
+   "tests/data/ht_003/analytic.py": "5ee9b0e8d1c4e06067e44754c2dd2393218e4d2a6a3d91d64064d726cb06a3a5",
+   "tests/data/ni_001/ni001_support.py": "fc84c2b085ace6fa38819195dd85f0ae47846dbd8505432ef469dd19a276b0c7",
+   "tests/data/ni_002/ni002_reference.py": "b263602b77beb5b57e4b7360db586394228e18381b8f1e40abf20f1c3295665b",
+   "tests/data/ni_003/make_ni003_data.py": "d03cfe33141adc1f8288763c42009504dcdf076ba5e46d9539ddedca64eedce7",
+   "tests/data/ni_003/ni003_support.py": "bc563f0d0b9d56e461eac3e8db7c76b37ce1431468dd4b51d257a4a551257616",
+   "tests/data/ni_003/payload/ni003_payload.py": "4755abecf85fc0e3ee9006954b933ff3e1728e8647f725a0cb05e0bff654d433",
+   "tests/data/ni_003/probe_no_exec.py": "a2d7e9613788aa4f5eb24af6c8b5dac16a234a28b96df880b7a0bfef6672cc32",
+   "tests/data/ni_003/run_alone.py": "932a1b32033842df026eac9a1496ccd301c89291e980e969fbb3a5022acee0f6",
+   "tests/data/pa_001/pa001_inputs.py": "f1b685263ff6770efd7dd01f2f9b378230ab7fab12800b3e5a697d4cf17fc4b4",
+   "tests/data/simready/make_geometry.py": "2a4c7a5b278c7ddcbe2b673950b13c7bdaaf03921f8883693bc30e28c254094c",
+   "tests/data/simready/make_scene_variants.py": "994ca8d44a44023f7d778c0337ad5403420eea194bc8202194c440a28d1f1247",
+   "tests/test_dm_001_data_objects.py": "44d85eac05803a2bb04c5e1d0c2fea1c0c572c60299ee6f28eb7cb4986f897a8",
+   "tests/test_ec_001_power_ports.py": "cdb8dac627ff5e5bd56a852fd6344996658d8dc2df56beebb8efdd5a159c7f67",
+   "tests/test_en_001_surface_environment.py": "1b0f11127159690d57558aedcdece9c11559b2b6dda75637714d26090c0dd679",
+   "tests/test_en_002_surface_heat.py": "c45ab4a04ceaa6211d5aaf72befbf5d95e8e9c7be5b86454ccc4a6b5cae39e34",
+   "tests/test_en_003_earth_flux.py": "eaa1527e9722b6feb07abc9289f43680b60c59791ce838e072a5e24b90e62c79",
+   "tests/test_fe_001_solar_array_fe.py": "f23d462dbbd432308214db7d5634689b059f5e5b1bb4f46251c0836d139f3cd7",
+   "tests/test_fe_002_radiator_fe.py": "f1be285404e242cc6394363eac2ed1345233e1497ed83fff5f4e3dde09260aa1",
+   "tests/test_fe_003_compute_cold_plate_fe.py": "3a9bfdd73afca2fb2257235348b85702707b5c390b1814a3d15621fba39bafce",
+   "tests/test_fe_004_whole_satellite_chain.py": "6aaeec63a82a4031d916d063694f2aa9a6b750c1712ce2bb7ba036497f1e9a66",
+   "tests/test_ht_001_heat_flows.py": "2d91f41677820f09cdb4e6edac6582be56c9647cea59bfaa629e30da1e759049",
+   "tests/test_ht_002_derivative_balance.py": "728e57be7630d1be877a265ad0206e9ab0cef1374a9bd74f20f438f18a0d144b",
+   "tests/test_ht_003_analytic.py": "a66ffc2613929fbd9bb44a0f2a8f1d41879069d1b2d9584f8fb2041f1545e832",
+   "tests/test_ni_001_numerics_eclipse.py": "1f4cba777b1aba392d09bb130ec6652d2b04004a3ac97ea4e49a88424aacdf47",
+   "tests/test_ni_002_end_to_end.py": "fb33ca9517ced5761c63ae7d68cefc72e98c3c3e36c7a8665b0d89fc9d3c696e",
+   "tests/test_ni_003_scene_assembly.py": "2ce365771b66f67e78334bbb3358a210d8eabed0753d82b7abeb4f3e900e6226",
+   "tests/test_pa_001_t5_assembly.py": "fa1b1edba0b491daf8a6e06ecd6d3a1e8baa9307daf94b5d885659a0620e3293"
+  }
+ }
+}

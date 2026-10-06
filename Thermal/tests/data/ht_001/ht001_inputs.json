@@ -1,0 +1,108 @@
+{
+ "case_id": "HT-001",
+ "description": "Inputs of HT-001 (calculate_heat_flows, design 4.2 T2, 4.3 battery example, 5.5). Component masses, specific heats, surfaces and connection data are illustrative test values, not selected device parameters. The BR connection is built so that T5 gives R_BR = 0.5 K/W, the value of the design 4.3 battery example.",
+ "run_id": "HT-001",
+ "time_s": 1200.0,
+ "components": [
+  {"instance_id": "SolarArray01", "node_id": "S", "asset_id": "ht001_solar_array", "asset_version": "1.0",
+   "temperature_range_K": [173.15, 393.15],
+   "materials": [{"material_id": "ht001_sa_substrate", "mass_kg": 4.0, "cp_J_kgK": 900.0, "source": "HT-001 illustrative test value"}],
+   "surfaces": [
+    {"surface_id": "SA_front", "area_m2": 1.0, "normal_body": [0.0, 0.0, 1.0], "absorptivity": 0.9, "emissivity": 0.85, "source": "HT-001 illustrative test value"},
+    {"surface_id": "SA_back", "area_m2": 1.0, "normal_body": [0.0, 0.0, -1.0], "absorptivity": 0.5, "emissivity": 0.8, "source": "HT-001 illustrative test value"}],
+   "ports": ["P_pv_W"]},
+  {"instance_id": "Compute01", "node_id": "J", "asset_id": "ht001_compute_board", "asset_version": "1.0",
+   "temperature_range_K": [233.15, 373.15],
+   "materials": [{"material_id": "ht001_board", "mass_kg": 2.0, "cp_J_kgK": 900.0, "source": "HT-001 illustrative test value"}],
+   "ports": ["P_load_W"]},
+  {"instance_id": "ColdPlate01", "node_id": "C", "asset_id": "ht001_cold_plate", "asset_version": "1.0",
+   "temperature_range_K": [233.15, 373.15],
+   "materials": [{"material_id": "ht001_plate", "mass_kg": 1.5, "cp_J_kgK": 900.0, "source": "HT-001 illustrative test value"}]},
+  {"instance_id": "Battery01", "node_id": "B", "asset_id": "ht001_battery_pack", "asset_version": "1.0",
+   "temperature_range_K": [253.15, 333.15],
+   "materials": [{"material_id": "ht001_cells", "mass_kg": 1.0, "cp_J_kgK": 1000.0, "source": "HT-001 illustrative test value, C_B = 1000 J/K as in design 4.3"}],
+   "ports": ["Q_B_W"]},
+  {"instance_id": "Controller01", "node_id": "D", "asset_id": "ht001_power_controller", "asset_version": "1.0",
+   "temperature_range_K": [233.15, 358.15],
+   "materials": [{"material_id": "ht001_controller", "mass_kg": 0.8, "cp_J_kgK": 900.0, "source": "HT-001 illustrative test value"}]},
+  {"instance_id": "PDU01", "node_id": "D", "asset_id": "ht001_pdu", "asset_version": "1.0",
+   "temperature_range_K": [233.15, 358.15],
+   "materials": [{"material_id": "ht001_pdu_body", "mass_kg": 0.7, "cp_J_kgK": 900.0, "source": "HT-001 illustrative test value"}],
+   "ports": ["Q_D_W"]},
+  {"instance_id": "Radiator01", "node_id": "R", "asset_id": "ht001_radiator_panel", "asset_version": "1.0",
+   "temperature_range_K": [173.15, 373.15],
+   "materials": [{"material_id": "ht001_radiator", "mass_kg": 6.0, "cp_J_kgK": 900.0, "source": "HT-001 illustrative test value"}],
+   "surfaces": [
+    {"surface_id": "RAD_out", "area_m2": 1.2, "normal_body": [1.0, 0.0, 0.0], "absorptivity": 0.2, "emissivity": 0.9, "source": "HT-001 illustrative test value"}]}
+ ],
+ "connections": [
+  {"path": "SR", "length_m": 0.12, "conductivity_W_mK": 150.0, "area_m2": 0.002, "contact_resistance_K_W": 0.4, "source": "HT-001 illustrative solid path"},
+  {"path": "JC", "equivalent_total_resistance_K_W": 0.06, "includes_contact": false, "contact_resistance_K_W": 0.03, "source": "HT-001 illustrative equivalent path, contact given separately"},
+  {"path": "CR", "equivalent_total_resistance_K_W": 0.12, "includes_contact": true, "source": "HT-001 illustrative heat-pipe equivalent including contact"},
+  {"path": "BR", "length_m": 0.125, "conductivity_W_mK": 200.0, "area_m2": 0.0025, "contact_resistance_K_W": 0.25, "source": "HT-001 solid path giving R_BR = 0.5 K/W of design 4.3"},
+  {"path": "DR", "length_m": 0.05, "conductivity_W_mK": 20.0, "area_m2": 0.002, "contact_resistance_K_W": 0.25, "source": "HT-001 illustrative solid path"}
+ ],
+ "hand_calculation": {
+  "note": "Written by hand from T5 and T2 with decimal arithmetic; signs are kept (positive = from the first node of the path name to the second).",
+  "resistance_K_W": {
+   "SR": {"formula": "0.12 / (150 x 0.002) + 0.4 = 0.4 + 0.4", "value": "0.8"},
+   "JC": {"formula": "0.06 + 0.03 (total without contact plus contact)", "value": "0.09"},
+   "CR": {"formula": "0.12 (total already includes contact)", "value": "0.12"},
+   "BR": {"formula": "0.125 / (200 x 0.0025) + 0.25 = 0.25 + 0.25", "value": "0.5"},
+   "DR": {"formula": "0.05 / (20 x 0.002) + 0.25 = 1.25 + 0.25", "value": "1.5"}
+  },
+  "states": {
+   "base": {
+    "description": "Battery example of design 4.3 (T_B = 303 K, T_R = 300 K) with the other four nodes set for distinct flows of both signs",
+    "temperature_K": {"S": 270.0, "J": 345.0, "C": 318.0, "B": 303.0, "D": 312.0, "R": 300.0},
+    "q_W": {"SR": {"formula": "(270 - 300) / 0.8", "value": "-37.5"},
+            "JC": {"formula": "(345 - 318) / 0.09", "value": "300"},
+            "CR": {"formula": "(318 - 300) / 0.12", "value": "150"},
+            "BR": {"formula": "(303 - 300) / 0.5", "value": "6"},
+            "DR": {"formula": "(312 - 300) / 1.5", "value": "8"}}
+   },
+   "battery_reversed": {
+    "description": "Battery example with the two end temperatures exchanged: T_B = 300 K, T_R = 303 K",
+    "temperature_K": {"S": 270.0, "J": 345.0, "C": 318.0, "B": 300.0, "D": 312.0, "R": 303.0},
+    "q_W": {"SR": {"formula": "(270 - 303) / 0.8", "value": "-41.25"},
+            "JC": {"formula": "(345 - 318) / 0.09", "value": "300"},
+            "CR": {"formula": "(318 - 303) / 0.12", "value": "125"},
+            "BR": {"formula": "(300 - 303) / 0.5", "value": "-6"},
+            "DR": {"formula": "(312 - 303) / 1.5", "value": "6"}}
+   },
+   "battery_equal_300": {
+    "description": "Battery example with equal end temperatures T_B = T_R = 300 K",
+    "temperature_K": {"S": 270.0, "J": 345.0, "C": 318.0, "B": 300.0, "D": 312.0, "R": 300.0},
+    "q_W": {"SR": {"formula": "(270 - 300) / 0.8", "value": "-37.5"},
+            "JC": {"formula": "(345 - 318) / 0.09", "value": "300"},
+            "CR": {"formula": "(318 - 300) / 0.12", "value": "150"},
+            "BR": {"formula": "(300 - 300) / 0.5", "value": "0"},
+            "DR": {"formula": "(312 - 300) / 1.5", "value": "8"}}
+   },
+   "battery_equal_303": {
+    "description": "Battery example with equal end temperatures T_B = T_R = 303 K",
+    "temperature_K": {"S": 270.0, "J": 345.0, "C": 318.0, "B": 303.0, "D": 312.0, "R": 303.0},
+    "q_W": {"SR": {"formula": "(270 - 303) / 0.8", "value": "-41.25"},
+            "JC": {"formula": "(345 - 318) / 0.09", "value": "300"},
+            "CR": {"formula": "(318 - 303) / 0.12", "value": "125"},
+            "BR": {"formula": "(303 - 303) / 0.5", "value": "0"},
+            "DR": {"formula": "(312 - 303) / 1.5", "value": "6"}}
+   }
+  }
+ },
+ "battery_example": {"T_B_K": "303", "T_R_K": "300", "R_BR_K_W": "0.5", "q_BR_W": "6", "q_BR_reversed_W": "-6", "q_BR_equal_W": "0",
+                     "source": "Design report 4.3: q_BR = 3 / 0.5 = 6 W; reversed and equal cases from HT-001 expected results"},
+ "all_equal_temperature_K": 293.15,
+ "sign_offset_K": 10.0,
+ "perturbation_K": 1.0,
+ "extreme_valid": {
+  "description": "Valid but extreme inputs that must give the exact T2 values: a very small R_CR, a very large R_DR and a temperature difference of 2^-20 K on BR.",
+  "overrides": {"connections": {"CR": {"equivalent_total_resistance_K_W": 0.0001},
+                                "DR": {"contact_resistance_K_W": 1000000.0}},
+                "source": "HT-001 extreme valid probe"},
+  "temperature_K": {"S": 390.0, "J": 372.0, "C": 370.0, "B": 260.0, "D": 355.0, "R": 260.0},
+  "B_offset_K": 9.5367431640625e-07
+ },
+ "derivative_ports_W": {"P_pv_W": 0.0, "P_load_W": 100.0, "Q_B_W": 10.0, "Q_D_W": 5.0,
+                        "note": "Eclipse instant (G = 0, no albedo or infrared) used only to count calls of calculate_heat_flows inside thermal_derivative; Q_B = 10 W as in design 4.3"}
+}

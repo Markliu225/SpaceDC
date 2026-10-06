@@ -1,0 +1,107 @@
+{
+ "case_id": "NI-001",
+ "description": "Numerical settings of thermal design chapter 8 table 8 and chapter 7, run on the FE-001 mean environment case (nom0) through sdtwin_sim.coupled. The scenario block repeats the FE-001 inputs of tests/data/fe_001/fe001_config.json for the mean environment case; the test checks them against that file, the FE parameter table iss_fem/model/iss_spec.py and the FE orbit record iss_fem/out/nom0/summary.json. NI-001 adds a computing load start and stop on Compute01, the solver matrix, and one step that must be rejected.",
+ "scenario": {
+  "fe001_config": "tests/data/fe_001/fe001_config.json",
+  "fe_case": "nom0",
+  "label_cn": "平均环境工况",
+  "beta_deg": 0.0,
+  "solar_constant_W_m2": 1371.0,
+  "albedo": 0.31,
+  "olr_W_m2": 241.0,
+  "orbit_record": "iss_fem/out/nom0/summary.json",
+  "spec_file": "iss_fem/model/iss_spec.py",
+  "altitude_m": 400000.0,
+  "period_s_rounded": 5553.6,
+  "t_end_s": 16560.0,
+  "epoch_utc": "2019-06-01T00:00:00+00:00",
+  "solar_array": {
+   "instance_id": "SolarArray01",
+   "asset_id": "fe001_iss_us_solar_array_blankets",
+   "asset_version": "iss_fem-2026-09-30",
+   "material_id": "SolarArray01_blanket",
+   "front": {"surface_id": "SolarArray01_front", "normal_body": [0.0, 0.0, 1.0], "absorptivity": 0.72, "emissivity": 0.82},
+   "back": {"surface_id": "SolarArray01_back", "normal_body": [0.0, 0.0, -1.0], "absorptivity": 0.55, "emissivity": 0.85},
+   "areal_heat_capacity_J_m2K": 1600.0,
+   "pv_fraction": 0.073,
+   "initial_temperature_K": 290.0,
+   "temperature_range_K": [100.0, 420.0]
+  },
+  "SR": {"equivalent_total_resistance_K_W": 1.0e12, "includes_contact": true},
+  "auxiliary_nodes": {
+   "temperature_range_K": [100.0, 450.0],
+   "initial_temperature_K": 250.0,
+   "components": [
+    {"instance_id": "Compute01", "node_id": "J", "mass_kg": 2.0, "cp_J_kgK": 900.0, "ports": ["P_load_W"]},
+    {"instance_id": "ColdPlate01", "node_id": "C", "mass_kg": 2.0, "cp_J_kgK": 900.0, "ports": []},
+    {"instance_id": "Battery01", "node_id": "B", "mass_kg": 2.0, "cp_J_kgK": 1000.0, "ports": ["Q_B_W"]},
+    {"instance_id": "Controller01", "node_id": "D", "mass_kg": 1.0, "cp_J_kgK": 900.0, "ports": []},
+    {"instance_id": "PDU01", "node_id": "D", "mass_kg": 1.0, "cp_J_kgK": 900.0, "ports": ["Q_D_W"]},
+    {"instance_id": "Radiator01", "node_id": "R", "mass_kg": 20.0, "cp_J_kgK": 900.0, "ports": [],
+     "surfaces": [
+      {"surface_id": "Radiator01_a", "normal_body": [1.0, 0.0, 0.0], "area_m2": 1.0, "absorptivity": 0.2, "emissivity": 0.9},
+      {"surface_id": "Radiator01_b", "normal_body": [-1.0, 0.0, 0.0], "area_m2": 1.0, "absorptivity": 0.2, "emissivity": 0.9}
+     ]}
+   ],
+   "resistances_K_W": {"JC": 0.5, "CR": 0.5, "BR": 2.0, "DR": 2.0}
+  },
+  "fe001_environment_step_s": 10.0,
+  "fe001_event_time_tol_s": 1.0e-3,
+  "source": "FE-001 inputs for the mean environment case, from tests/data/fe_001/fe001_config.json: solar array from the FE parameter table iss_spec.py, SR with a very large resistance because the FE has no array to radiator conduction, auxiliary nodes J, C, B, D and R with explicit test values"
+ },
+ "load": {
+  "instance_id": "Compute01",
+  "port": "P_load_W",
+  "power_W": 100.0,
+  "start_s": 11805.25,
+  "stop_s": 15763.75,
+  "start_label": "load start Compute01",
+  "stop_label": "load stop Compute01",
+  "source": "NI-001 input: one computing load start and one stop inside the last orbit, both in sunlight and away from the eclipse boundaries and from the output grid; in the thermal-only FE-001 case the load is the prescribed P_load_W of Compute01 and its start and stop are declared input discontinuities of the coupled run"
+ },
+ "matrix": {
+  "methods": ["RK45", "Radau"],
+  "rtol": [1.0e-6, 1.0e-8],
+  "atol_T_K": [1.0e-6, 1.0e-8],
+  "max_step_s": [60.0, 10.0],
+  "output_step_s": [10.0, 60.0],
+  "environment_step_s": 10.0,
+  "event_time_tol_s": 1.0e-3,
+  "source": "NI-001 inputs: RK45 and Radau; relative tolerance 1e-6 and 1e-8; temperature absolute tolerance 1e-6 K and 1e-8 K; maximum step 60 s and 10 s; output interval 10 s and 60 s; every combination is run once; eclipse scan step and event time tolerance as in FE-001"
+ },
+ "earth_flux_table": {
+  "spacing_s": 10.0,
+  "resolution": [240, 360],
+  "interpolation": "not-a-knot cubic spline of each surface irradiance, clipped at zero",
+  "check_stride": 5,
+  "source": "thermal design table 8: synchronized environment values with declared interpolation on continuous intervals and a declared input spacing; the samples are sdtwin_sim.earth_flux records with the FE-001 albedo, infrared, solar constant, Earth radius and quadrature resolution"
+ },
+ "exact_run": {
+  "method": "RK45", "rtol": 1.0e-8, "atol_T_K": 1.0e-8, "max_step_s": 60.0, "output_step_s": 60.0,
+  "source": "precondition run of the FE-001 mean environment case with the EarthFluxModel of FE-001, evaluated at every trial, used to show that the case runs and that the Earth-flux table represents it"
+ },
+ "rejected_step": {
+  "method": "RK45", "rtol": 1.0e-8, "atol_T_K": 1.0e-8, "max_step_s": 60.0, "output_step_s": 10.0,
+  "first_step_s": 60.0,
+  "boundary_kind": "sunlit_to_umbra",
+  "boundary_index_in_last_orbit": 0,
+  "source": "NI-001 input: a first step of 60 s at the eclipse entry of the last orbit; its Dormand-Prince error norm is computed beforehand from the independent reference and is far above one, so the attempt must be rejected"
+ },
+ "reference": {
+  "rk4_step_s": 1.0,
+  "rk4_check_step_s": 0.5,
+  "source": "independent hand implementation of T2 to T5 integrated on the closed-form eclipse and load segments by a classical fourth order Runge-Kutta method written in the test support, with steps landing on whole seconds and on the 10 s knots of the Earth-flux spline; the half step run bounds the error of the reference"
+ },
+ "criteria": {
+  "tighten_K": 0.01,
+  "method_K": 0.01,
+  "eclipse_time_s": 1.0,
+  "output_K": 0.01,
+  "table_fidelity_K": 0.001,
+  "table_view_factor_tol": 1.0e-4,
+  "reference_agreement_K": 1.0e-6,
+  "last_orbit_grid_s": 1.0,
+  "boundary_ulps": 4,
+  "analytic_margin_s": 1.0e-6
+ }
+}

@@ -1,0 +1,104 @@
+{
+ "case_id": "FE-001",
+ "description": "Solar array node S of the thermal design against the ISS finite element mean temperature of the US solar array blankets (saw_Tmean_C), third orbit of the three FE cases. Values below are the inputs of the FE-001 entry of Thermal/test_report/build_test_report_cn.py; the test checks them against the FE model parameter table iss_fem/model/iss_spec.py and the FE run summaries.",
+ "fe": {
+  "out_dir": "iss_fem/out",
+  "spec_file": "iss_fem/model/iss_spec.py",
+  "report_file": "iss_fem/docs/REPORT.md",
+  "series_file": "series.csv",
+  "summary_file": "summary.json",
+  "time_column": "t_s",
+  "temperature_column": "saw_Tmean_C",
+  "spread_columns": ["saw_Tmin_C", "saw_Tmax_C"],
+  "output_interval_s": 120.0,
+  "end_time_s": 16560.0,
+  "source": "ISS FE model, COMSOL 6.3, report iss_fem/docs/REPORT.md section 3.8 (BDF with manual 120 s steps from orbit noon to 16560 s, output every 120 s) and chapter 5 (statistics over the last orbital period, the third orbit)"
+ },
+ "cases": {
+  "cold0": {"label_cn": "设计冷工况", "beta_deg": 0.0, "solar_constant_W_m2": 1321.0, "albedo": 0.20, "olr_W_m2": 206.0},
+  "nom0": {"label_cn": "平均环境工况", "beta_deg": 0.0, "solar_constant_W_m2": 1371.0, "albedo": 0.31, "olr_W_m2": 241.0},
+  "hot75": {"label_cn": "设计热工况", "beta_deg": 75.0, "solar_constant_W_m2": 1423.0, "albedo": 0.40, "olr_W_m2": 286.0}
+ },
+ "orbit": {
+  "altitude_m": 400000.0,
+  "period_s": 5553.6,
+  "source": "FE-001 input: 400 km circular orbit, period 5553.6 s; positions use the FE orbit functions of summary.json"
+ },
+ "solar_array": {
+  "instance_id": "SolarArray01",
+  "asset_id": "fe001_iss_us_solar_array_blankets",
+  "asset_version": "iss_fem-2026-09-30",
+  "material_id": "SolarArray01_blanket",
+  "front": {"surface_id": "SolarArray01_front", "normal_body": [0.0, 0.0, 1.0], "absorptivity": 0.72, "emissivity": 0.82},
+  "back": {"surface_id": "SolarArray01_back", "normal_body": [0.0, 0.0, -1.0], "absorptivity": 0.55, "emissivity": 0.85},
+  "areal_heat_capacity_J_m2K": 1600.0,
+  "pv_fraction": 0.073,
+  "initial_temperature_K": 290.0,
+  "temperature_range_K": [100.0, 420.0],
+  "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+ },
+ "SR": {
+  "equivalent_total_resistance_K_W": 1.0e12,
+  "includes_contact": true,
+  "source": "FE-001 test configuration recorded per thermal design 9.4: the FE model has no conduction between the solar array and the radiators (FE report 3.9 simplification 2), so SR takes a very large resistance that represents no conduction"
+ },
+ "auxiliary_nodes": {
+  "note": "J, C, B, D and R are not compared in FE-001. Their explicit values only complete the six-node model; P_load_W, Q_B_W and Q_D_W are zero and SR decouples S from R.",
+  "temperature_range_K": [100.0, 450.0],
+  "initial_temperature_K": 250.0,
+  "components": [
+   {"instance_id": "Compute01", "node_id": "J", "mass_kg": 2.0, "cp_J_kgK": 900.0, "ports": ["P_load_W"]},
+   {"instance_id": "ColdPlate01", "node_id": "C", "mass_kg": 2.0, "cp_J_kgK": 900.0, "ports": []},
+   {"instance_id": "Battery01", "node_id": "B", "mass_kg": 2.0, "cp_J_kgK": 1000.0, "ports": ["Q_B_W"]},
+   {"instance_id": "Controller01", "node_id": "D", "mass_kg": 1.0, "cp_J_kgK": 900.0, "ports": []},
+   {"instance_id": "PDU01", "node_id": "D", "mass_kg": 1.0, "cp_J_kgK": 900.0, "ports": ["Q_D_W"]},
+   {"instance_id": "Radiator01", "node_id": "R", "mass_kg": 20.0, "cp_J_kgK": 900.0, "ports": [],
+    "surfaces": [
+     {"surface_id": "Radiator01_a", "normal_body": [1.0, 0.0, 0.0], "area_m2": 1.0, "absorptivity": 0.2, "emissivity": 0.9},
+     {"surface_id": "Radiator01_b", "normal_body": [-1.0, 0.0, 0.0], "area_m2": 1.0, "absorptivity": 0.2, "emissivity": 0.9}
+    ]}
+  ],
+  "resistances_K_W": {"JC": 0.5, "CR": 0.5, "BR": 2.0, "DR": 2.0},
+  "source": "FE-001 auxiliary node, not compared; explicit test value"
+ },
+ "solver": {
+  "method": "RK45",
+  "rtol": 1.0e-8,
+  "atol_T_K": 1.0e-6,
+  "max_step_s": 30.0,
+  "output_step_s": 10.0,
+  "environment_step_s": 10.0,
+  "event_time_tol_s": 1.0e-3,
+  "source": "thermal design table 8: adaptive RK45 with relative tolerance, temperature absolute tolerance and maximum step as scene settings; output sampled on the accepted solution every 10 s"
+ },
+ "epoch_utc": "2019-06-01T00:00:00+00:00",
+ "criteria": {
+  "acceptance_K": 3.0,
+  "repetition_K": 0.01,
+  "max_extra_orbits": 2,
+  "eclipse_time_tol_s": 1.0e-3,
+  "view_factor_tol": 1.0e-4,
+  "relative_tol_exact": 1.0e-12,
+  "relative_tol_env": 1.0e-4,
+  "q_SR_max_W": 1.0e-6,
+  "clearly_lower_K": 3.0,
+  "analytic_K": 0.001,
+  "statistics_grid_s": 1.0,
+  "term_check_stride": 10,
+  "position_tol_m": 1.0e-6,
+  "sun_direction_tol": 1.0e-8,
+  "quaternion_norm_tol": 1.0e-9,
+  "pv_over_limit_relative": 1.0e-9,
+  "pv_eclipse_probe_W": 1.0,
+  "notes": {
+   "curve": "the expected result 'curves coincide with the FE' is judged at every FE output instant of the third orbit against the module solution at the same instant, with the acceptance difference acceptance_K; no time window is applied",
+   "position_tol_m": "orbit_input position_m against the FE orbit function text evaluated directly; both are the same formula, so only rounding remains",
+   "sun_direction_tol": "the FE ray direction 'rays' of summary.json is written with 8 decimals, so its unit vector is known to about 1e-8",
+   "quaternion_norm_tol": "unit quaternion tolerance of thermal design 5.3 and IMPLEMENTATION.md",
+   "pv_over_limit_relative": "P_pv above absorbed_solar_S_W by this relative amount, far above the 1e-12 rounding allowance of the module, must be rejected",
+   "pv_eclipse_probe_W": "positive P_pv offered in the eclipse, where absorbed_solar_S_W is zero, must be rejected"
+  }
+ },
+ "reference_quadrature": {"n_psi": 300, "n_phi": 720,
+  "method": "Earth-centred Gauss-Legendre quadrature in the central angle and midpoint rule in azimuth over the visible spherical cap of a Lambertian Earth; independent of sdtwin_sim.earth_flux, which integrates over the satellite sky"}
+}

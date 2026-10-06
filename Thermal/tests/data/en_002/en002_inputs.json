@@ -1,0 +1,106 @@
+{
+ "case_id": "EN-002",
+ "note": "Inputs of test case EN-002 (calculate_surface_heat, thermal design 4.4 T4 and 5.4). The design 4.4 example (A = 2 m^2, direct irradiance 1000 W/m^2, absorptivity 0.8, absorbed 1600 W) is taken from the design text; every other number is an EN-002 test value chosen so that front and back faces, the two radiator coating regions, absorptivity and emissivity all differ, which lets a wrong surface, a wrong optical property or a second area projection show up in the comparison. Hand calculations in the test module use only this file and the design formulas.",
+ "stefan_boltzmann_W_m2_K4": 5.670374419e-08,
+ "stefan_boltzmann_source": "thermal design table 5",
+ "relative_tolerance": 1e-12,
+ "run_id": "EN002",
+ "time_s": 1800.0,
+ "epoch_utc": "2026-03-20T12:00:00+00:00",
+ "orbit_radius_m": 6778137.0,
+ "sun_distance_m": 149597870700.0,
+ "attitude_quaternion_xyzw": [0.0, 0.0, 0.0, 1.0],
+ "orientations": {
+  "facing": {"sun_direction": [1.0, 0.0, 0.0], "label_cn": "正对太阳", "incidence_deg_front": 0.0},
+  "oblique": {"sun_direction": [0.5, 0.8660254037844386, 0.0], "label_cn": "侧对太阳 入射角 60°", "incidence_deg_front": 60.0},
+  "edge_on": {"sun_direction": [0.0, 1.0, 0.0], "label_cn": "侧对太阳 入射角 90°", "incidence_deg_front": 90.0},
+  "away": {"sun_direction": [-1.0, 0.0, 0.0], "label_cn": "背对太阳", "incidence_deg_front": 180.0}
+ },
+ "design_example": {
+  "source": "thermal design 4.4: A_f = 2 m^2, g_sun,f = 1000 W/m^2, alpha_f = 0.8, absorbed 2 x 1000 x 0.8 = 1600 W",
+  "G_W_m2": 1000.0,
+  "expected_absorbed_W": 1600.0,
+  "surfaces": {
+   "SolarArray01": [
+    {"surface_id": "S_example", "area_m2": 2.0, "normal_body": [1.0, 0.0, 0.0], "absorptivity": 0.8, "emissivity": 0.85,
+     "source": "thermal design 4.4 example area and absorptivity; emissivity EN-002 test value"}
+   ],
+   "Radiator01": [
+    {"surface_id": "R_example", "area_m2": 1.0, "normal_body": [0.0, 0.0, -1.0], "absorptivity": 0.2, "emissivity": 0.88,
+     "source": "EN-002 test value"}
+   ]
+  }
+ },
+ "components": [
+  {"instance_id": "SolarArray01", "node_id": "S", "asset_id": "en002_solar_array_panel", "asset_version": "1.0",
+   "materials": [{"material_id": "en002_sa_cells_substrate", "mass_kg": 6.0, "cp_J_kgK": 900.0, "source": "EN-002 test value"}],
+   "surfaces": [
+    {"surface_id": "S_front", "area_m2": 2.0, "normal_body": [1.0, 0.0, 0.0], "absorptivity": 0.8, "emissivity": 0.85,
+     "source": "solar cell side; area and absorptivity of the thermal design 4.4 example, emissivity EN-002 test value"},
+    {"surface_id": "S_back", "area_m2": 1.8, "normal_body": [-1.0, 0.0, 0.0], "absorptivity": 0.45, "emissivity": 0.8,
+     "source": "back coating; EN-002 test value"}
+   ],
+   "temperature_range_K": [150.0, 420.0], "ports": ["P_pv_W"]},
+  {"instance_id": "Compute01", "node_id": "J", "asset_id": "en002_compute_board", "asset_version": "1.0",
+   "materials": [{"material_id": "en002_compute_board", "mass_kg": 2.0, "cp_J_kgK": 800.0, "source": "EN-002 test value"}],
+   "temperature_range_K": [233.15, 373.15], "ports": ["P_load_W"]},
+  {"instance_id": "ColdPlate01", "node_id": "C", "asset_id": "en002_cold_plate", "asset_version": "1.0",
+   "materials": [{"material_id": "en002_cold_plate_al", "mass_kg": 3.0, "cp_J_kgK": 900.0, "source": "EN-002 test value"}],
+   "temperature_range_K": [223.15, 373.15], "ports": []},
+  {"instance_id": "Battery01", "node_id": "B", "asset_id": "en002_battery_pack", "asset_version": "1.0",
+   "materials": [{"material_id": "en002_battery_cells", "mass_kg": 4.0, "cp_J_kgK": 1000.0, "source": "EN-002 test value"}],
+   "temperature_range_K": [253.15, 333.15], "ports": ["Q_B_W"]},
+  {"instance_id": "Controller01", "node_id": "D", "asset_id": "en002_power_controller", "asset_version": "1.0",
+   "materials": [{"material_id": "en002_controller_box", "mass_kg": 1.5, "cp_J_kgK": 900.0, "source": "EN-002 test value"}],
+   "temperature_range_K": [233.15, 358.15], "ports": []},
+  {"instance_id": "PDU01", "node_id": "D", "asset_id": "en002_pdu", "asset_version": "1.0",
+   "materials": [{"material_id": "en002_pdu_box", "mass_kg": 1.0, "cp_J_kgK": 900.0, "source": "EN-002 test value"}],
+   "temperature_range_K": [233.15, 358.15], "ports": ["Q_D_W"]},
+  {"instance_id": "Radiator01", "node_id": "R", "asset_id": "en002_radiator_panel", "asset_version": "1.0",
+   "materials": [{"material_id": "en002_radiator_panel", "mass_kg": 8.0, "cp_J_kgK": 900.0, "source": "EN-002 test value"}],
+   "surfaces": [
+    {"surface_id": "R_out", "area_m2": 1.5, "normal_body": [0.0, 0.0, -1.0], "absorptivity": 0.2, "emissivity": 0.88,
+     "source": "main radiator face, white coating; EN-002 test value"},
+    {"surface_id": "R_aux", "area_m2": 0.4, "normal_body": [0.0, 1.0, 0.0], "absorptivity": 0.35, "emissivity": 0.7,
+     "source": "second coating region of the radiator; EN-002 test value"}
+   ],
+   "temperature_range_K": [150.0, 420.0], "ports": []}
+ ],
+ "connections": [
+  {"path": "SR", "equivalent_total_resistance_K_W": 5.0, "includes_contact": true, "source": "EN-002 test value, not used by T4"},
+  {"path": "JC", "equivalent_total_resistance_K_W": 0.1, "includes_contact": true, "source": "EN-002 test value, not used by T4"},
+  {"path": "CR", "equivalent_total_resistance_K_W": 0.2, "includes_contact": true, "source": "EN-002 test value, not used by T4"},
+  {"path": "BR", "equivalent_total_resistance_K_W": 0.5, "includes_contact": true, "source": "EN-002 test value, not used by T4"},
+  {"path": "DR", "equivalent_total_resistance_K_W": 0.8, "includes_contact": true, "source": "EN-002 test value, not used by T4"}
+ ],
+ "material_temperature_range_K": {
+  "source": "declared applicability range of the optical and thermal constants used for the range check of design 5.4; EN-002 test values",
+  "SolarArray01": [233.15, 373.15],
+  "Radiator01": [173.15, 353.15]
+ },
+ "environments": {
+  "direct_only": {"label_cn": "只有直射", "G_W_m2": 1361.0,
+   "albedo_W_m2": {"S_front": 0.0, "S_back": 0.0, "R_out": 0.0, "R_aux": 0.0},
+   "infrared_W_m2": {"S_front": 0.0, "S_back": 0.0, "R_out": 0.0, "R_aux": 0.0},
+   "orientations": ["facing", "oblique", "edge_on", "away"]},
+  "albedo_only": {"label_cn": "只有反照", "G_W_m2": 0.0,
+   "albedo_W_m2": {"S_front": 95.0, "S_back": 240.0, "R_out": 330.0, "R_aux": 60.0},
+   "infrared_W_m2": {"S_front": 0.0, "S_back": 0.0, "R_out": 0.0, "R_aux": 0.0},
+   "orientations": ["facing", "oblique"]},
+  "infrared_only": {"label_cn": "只有红外", "G_W_m2": 0.0,
+   "albedo_W_m2": {"S_front": 0.0, "S_back": 0.0, "R_out": 0.0, "R_aux": 0.0},
+   "infrared_W_m2": {"S_front": 55.0, "S_back": 175.0, "R_out": 215.0, "R_aux": 40.0},
+   "orientations": ["facing", "oblique"]},
+  "combined": {"label_cn": "直射 反照 红外同时存在", "G_W_m2": 1361.0,
+   "albedo_W_m2": {"S_front": 95.0, "S_back": 240.0, "R_out": 330.0, "R_aux": 60.0},
+   "infrared_W_m2": {"S_front": 55.0, "S_back": 175.0, "R_out": 215.0, "R_aux": 40.0},
+   "orientations": ["facing", "oblique", "edge_on", "away"]},
+  "no_irradiance": {"label_cn": "无外部辐照", "G_W_m2": 0.0,
+   "albedo_W_m2": {"S_front": 0.0, "S_back": 0.0, "R_out": 0.0, "R_aux": 0.0},
+   "infrared_W_m2": {"S_front": 0.0, "S_back": 0.0, "R_out": 0.0, "R_aux": 0.0},
+   "orientations": ["facing"]}
+ },
+ "cosine_sweep_front": [1.0, 0.75, 0.5, 0.25, 0.0, -0.25, -0.5, -0.75, -1.0],
+ "temperatures_K": [200.0, 300.0, 400.0],
+ "internal_temperatures_K": {"J": 318.15, "C": 308.15, "B": 293.15, "D": 303.15}
+}

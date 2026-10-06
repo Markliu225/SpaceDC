@@ -1,0 +1,146 @@
+{
+  "DM-001": {
+    "case_id": "DM-001",
+    "source_sha256": "6e2577106d286ed15fdf9b12c074ab52730c5c26d8168f05132e8a8d6dd62b25",
+    "summary_cn": "检查四个数据对象的字段、数组顺序、单位、只读性、异常构造与联合运行中的试算状态。电池热量为 10 W 与 −10 W 时，温度导数分别为 0.004 K/s 与 −0.016 K/s，后者由式 T3 独立计算。修正包公开导出后，公开名称共 13 个，包含附录 A 的九个名称及四个错误与警告类。SurfaceRecord 与顺序常量从 thermal.types 导入。拒绝步、事件边界与温度归属检查见原始检查明细。",
+    "summary_en": "The four records were checked for fields, array order, units, immutability, invalid construction and trial-state handling in coupled runs. Battery heat inputs of 10 W and −10 W give 0.004 K/s and −0.016 K/s; the latter is independently calculated from T3. After correcting package exports, the 13 public names comprise the nine names in Appendix A and four error or warning classes. SurfaceRecord and ordering constants are imported from thermal.types. The evidence also records rejected-step, event-boundary and temperature-ownership checks.",
+    "anomalies_cn": "无",
+    "anomalies_en": "None",
+    "status": "pass"
+  },
+  "PA-001": {
+    "case_id": "PA-001",
+    "source_sha256": "21f9ec6d8f2d52be96e5dc6371f2544a87ca4d9d66d1ae67c690d74644c45bc5",
+    "summary_cn": "按材料质量与比热、几何导热项和接触热阻装配六个热容与五条热阻，并测试场景覆盖值。与独立手算相比，基准值及覆盖值的最大相对误差为 1.00×10^{−16}。设计算例热容为 1000 J/K，MBSU 热容为 108.7 kJ/K，散热器面热容为 7.2 kJ·m^{−2}·K^{−1}。接触热阻重复计入、参数缺失、非有限值与非法表面参数分别执行拒绝检查，参数记录保留来源与覆盖过程。",
+    "summary_en": "Six capacitances and five resistances were assembled from material mass and specific heat, conduction geometry and contact resistance, with explicit scene overrides. The largest relative error of baseline and overridden values against independent calculations is 1.00×10^{−16}. The design example gives 1000 J/K, the MBSU gives 108.7 kJ/K, and the radiator areal capacity is 7.2 kJ·m^{−2}·K^{−1}. Rejection checks cover double-counted contact resistance, missing and non-finite parameters and invalid surfaces. Provenance records parameter sources and overrides.",
+    "anomalies_cn": "无",
+    "anomalies_en": "None",
+    "status": "pass"
+  },
+  "EN-001": {
+    "case_id": "EN-001",
+    "source_sha256": "ff3307af1b9c6eda016ee93e74750cd6843f6e893422ce3b1bfd4a1aadc4fa71",
+    "summary_cn": "在 400 km 圆轨道上取 5555 个时刻，并用固定旋转、随机四元数、姿态动力学和对地指向等姿态检查表面环境。入射余弦与独立旋转计算的最大绝对差为 7.77×10^{−16}，限值为 1×10^{−12}。G 与 Orbit 输出逐位一致，日食因子没有重复相乘。51 项异常输入检查覆盖四元数、法向、坐标系、表面顺序、时间与缺失环境记录。",
+    "summary_en": "The surface environment was evaluated at 5555 instants on a 400 km circular orbit using fixed rotations, random quaternions, attitude dynamics and Earth-pointing attitudes. The largest incidence-cosine error against independent rotation calculations is 7.77×10^{−16} against 1×10^{−12}. G is bitwise identical to Orbit output, with no second eclipse multiplier. The 51 invalid-input checks cover quaternions, normals, frames, surface order, timing and missing environment records.",
+    "anomalies_cn": "无",
+    "anomalies_en": "None",
+    "status": "pass"
+  },
+  "EN-002": {
+    "case_id": "EN-002",
+    "source_sha256": "c7d4ee39c29259e38323318ad6ea178d7772c20d882bed9c3a908424ecdecf52",
+    "summary_cn": "对不同朝向、光学参数、日照与地球热流组合逐项手算式 T4。吸热与辐射功率最大相对误差为 1.93×10^{−16}，验收限值为 1×10^{−12}。第 4.4 节算例得到 1600 W。温度由 200 K 变为 400 K 时，辐射功率比为 16，符合四次方关系。内部节点不额外计算表面辐射，温区越界按设计记录警告。",
+    "summary_en": "T4 was calculated independently for combinations of orientation, optical properties, sunlight and Earth flux. The largest relative error of absorbed and emitted power is 1.93×10^{−16} against 1×10^{−12}. The Section 4.4 example gives 1600 W. Raising temperature from 200 K to 400 K gives an emission ratio of 16, as required by the fourth-power law. Internal nodes do not receive additional surface-radiation terms, and out-of-range temperatures produce warnings.",
+    "anomalies_cn": "无",
+    "anomalies_en": "None",
+    "status": "pass"
+  },
+  "EN-003": {
+    "case_id": "EN-003",
+    "source_sha256": "75b43f7c7f72fd870de3b8196433bea5a6d6efffbe7ab3d7950043b9c27f9c1a",
+    "summary_cn": "用对地平板解析视角系数、独立地心面元积分和蒙特卡罗积分检查 earth_flux。相对误差判据保持为 1%，仅数值零使用 1×10^{−12} W/m² 绝对容限。有限元对比保留原 2×6 地球离散数据，对相同时刻的热载荷、周期平均值与峰值执行 3% 判据。散热器对比使用不受另一翼遮挡的外侧面，内侧面差异另作诊断。原始参考数据存在超限项，详细数值见后表。另完成 1 个工况的 2×6、4×12 与 8×24 地球离散对比，比较固定采样时刻的平均热载荷。加密结果用于核对参照，不能覆盖原验收结果，也不等同于整段温度计算已收敛。",
+    "summary_en": "earth_flux was checked against the analytic nadir-plate view factor, independent geocentric quadrature and Monte Carlo integration. The relative criterion remains 1%; only numerical zero uses an absolute tolerance of 1×10^{−12} W/m². The original FE comparison retains the 2×6 planet discretisation and applies the 3% criterion to simultaneous loads, orbit means and peaks. Radiator comparisons use the outer faces without obstruction by the other wing; inner faces are diagnostic. Original-reference exceedances remain in the following tables. A further 1 cases compare 2×6, 4×12 and 8×24 planet discretisations using mean loads at fixed sample instants. Refinement verifies the reference; it neither replaces the original acceptance nor establishes convergence of the full temperature simulation.",
+    "anomalies_cn": "本用例未满足全部要求，记录 19 项未通过检查。超限数值及证据范围见实际结果和后续对比表。每项预期值、实际值与判定保存在 tests/results/EN-003.json。",
+    "anomalies_en": "The case does not meet all recorded requirements. The measured exceedances and their evidence limits are stated above and in the comparison tables. Failed check count: 19. See tests/results/EN-003.json for each expected value, actual value and verdict.",
+    "status": "fail"
+  },
+  "HT-001": {
+    "case_id": "HT-001",
+    "source_sha256": "c10da5bfa2933684df84d86583fa713167fcb28bffcf750ffb981b888eb8d991",
+    "summary_cn": "五条传热连接逐条按式 T2 与独立手算比较，最大相对误差为 9.67×10^{−17}。电池算例热流为 6 W，两端温度交换后为 −6 W，两端等温时为零。测试同时记录端点温度与热阻读取顺序、每条路径求值次数、极端有效热阻，以及非法输入的拒绝结果。",
+    "summary_en": "All five heat paths were compared with independent T2 calculations, giving a largest relative error of 9.67×10^{−17}. The battery example gives 6 W, changes to −6 W when the end temperatures are exchanged, and gives zero for equal temperatures. Checks also record temperature and resistance access order, evaluations per path, extreme valid resistances and rejection of invalid inputs.",
+    "anomalies_cn": "无",
+    "anomalies_en": "None",
+    "status": "pass"
+  },
+  "HT-002": {
+    "case_id": "HT-002",
+    "source_sha256": "19c8c454d9c99afa0e6eeb2cfe350a969c53ac1249ca91e86f9884169072885d",
+    "summary_cn": "设计电池算例得到温度导数 0.004 K/s。对固定随机种子的 1000 组输入执行逐节点式 T3 与全网式 T1 检查，T1 残差与输入热功率之比最大为 8.75×10^{−16}，限值为 1×10^{−12}。五条内部热流在全网求和中成对抵消，返回的 T_B_K 与 T_J_K 是本次输入状态的温度。",
+    "summary_en": "The design battery example gives a derivative of 0.004 K/s. With a fixed random seed, 1000 input sets were checked against node balances T3 and total balance T1. The largest T1 residual divided by input heat power is 8.75×10^{−16} against 1×10^{−12}. All five internal flows cancel in the total balance. Returned T_B_K and T_J_K are temperatures from the input state.",
+    "anomalies_cn": "无",
+    "anomalies_en": "None",
+    "status": "pass"
+  },
+  "HT-003": {
+    "case_id": "HT-003",
+    "source_sha256": "1a08f2c183a4de793f7cbfe88a378570922d4385b11f8df5b2e89871ab5ccc8e",
+    "summary_cn": "通过联合求解器执行计算节点阶跃响应、串联热阻稳态与散热板辐射平衡三个解析算例。阶跃响应最大温差为 1.79×10^{−6} K，串联链路稳态温差误差为 3.75×10^{−8} K，辐射平衡温度误差为 4.09×10^{−12} K。稳态误差与 0.001 K 判据比较。固定温度边界以已声明的大热容与大热阻近似，边界漂移另行核对。",
+    "summary_en": "Three analytic cases were run through the coupled solver: computing-node step response, series-resistance equilibrium and radiator radiation balance. The largest step-response error is 1.79×10^{−6} K, the series steady-temperature-drop error is 3.75×10^{−8} K, and the radiation equilibrium error is 4.09×10^{−12} K. Steady errors are compared with 0.001 K. Fixed-temperature boundaries use declared large capacitances and isolation resistances, with boundary drift checked separately.",
+    "anomalies_cn": "无",
+    "anomalies_en": "None",
+    "status": "pass"
+  },
+  "EC-001": {
+    "case_id": "EC-001",
+    "source_sha256": "2d79bfd84b5f7778f9e8858cef69738a6f3d39d83baef6935068ab3632b47420",
+    "summary_cn": "分别改变四个 Power 端口，导数变化与独立式 T3 计算的最大相对差为 6.05×10^{−16}。检查负电池热量、光伏限发、超出吸收太阳功率的电输出，以及 invalid、supply_shortfall 与 device_boundary 的处理。联合运行中记录 1700 次 Power 调用，电池温度均来自同次热状态。供电端保留的校验温度副本与热初值一致，运行中不独立积分电池温度。",
+    "summary_en": "Each Power port was varied independently. The largest relative error of derivative changes against T3 is 6.05×10^{−16}. Tests cover negative battery heat, PV curtailment, PV output exceeding absorbed sunlight, and handling of invalid, supply_shortfall and device_boundary results. The coupled run records 1700 Power calls, each using battery temperature from the same thermal evaluation. The Power validation copy agrees with the thermal initial temperature; Power does not integrate a separate battery temperature.",
+    "anomalies_cn": "无",
+    "anomalies_en": "None",
+    "status": "pass"
+  },
+  "FE-001": {
+    "case_id": "FE-001",
+    "source_sha256": "645f0599aa9e76d59861e71911aecfc48c55ed3eb62c4ad6c996e66b7240cdbd",
+    "summary_cn": "按 ISS 太阳翼面积、面热容、正反面光学参数与三个环境工况运行集总模型。第三圈最低、平均与最高温度九个统计量的最大绝对差为 1.69 K，满足 3 K 判据。但在有限元输出的相同时刻逐点比较，冷、平均、热工况的最大温差分别为 9.18 K、12.09 K 与 1.46 K，冷与平均工况不满足曲线对比要求，因此本用例不通过。比较不允许前后平移时间。偏差集中在日食转换之后，当前证据不能把偏差全部归因于有限元时间步长。关闭反照与红外的对照另行记录。",
+    "summary_en": "The lumped model uses ISS array area, areal heat capacity, front and back optical properties and three environmental cases. The largest absolute difference among nine third-orbit minimum, mean and maximum statistics is 1.69 K, meeting 3 K. However, simultaneous pointwise comparison at FE output instants gives maxima of 9.18 K, 12.09 K and 1.46 K for the cold, mean and hot cases. The cold and mean curves exceed the requirement, so the case fails. No time shift is allowed. Differences concentrate after eclipse transitions; current evidence does not attribute all of them to FE time stepping. Runs without albedo and infrared are recorded separately.",
+    "anomalies_cn": "本用例未满足全部要求，记录 3 项未通过检查。超限数值及证据范围见实际结果和后续对比表。每项预期值、实际值与判定保存在 tests/results/FE-001.json。",
+    "anomalies_en": "The case does not meet all recorded requirements. The measured exceedances and their evidence limits are stated above and in the comparison tables. Failed check count: 3. See tests/results/FE-001.json for each expected value, actual value and verdict.",
+    "status": "fail"
+  },
+  "FE-002": {
+    "case_id": "FE-002",
+    "source_sha256": "618cb5a2c12de03ff6da1bb6b05a3d534f9e91833ebbf953056c902de0ca6307",
+    "summary_cn": "按有限元散热器面积、面热容与氨回路热容配置节点 R，将有限元回路进热量作为边界输入，对三种环境下的 A、B 两个回路分别运行。第三圈平均温度的最大绝对差为 3.39 K，验收限值为 5 K。环境吸热、表面辐射、积分结果与独立计算分别核对。有限元最低面板温度与面板温差另行记录，平均温度通过不代表局部最低温度或热点通过。遮挡与沿流向温差是解释残差的候选因素，本测试没有分离它们各自的贡献。",
+    "summary_en": "Node R uses FE radiator area, panel heat capacity and ammonia-loop capacity. FE loop heat input is prescribed as a boundary condition for separate A and B loop runs in three environments. The largest absolute third-orbit mean-temperature difference is 3.39 K against 5 K. Environmental absorption, emission and integration are checked independently. FE coldest-panel temperatures and panel spreads are recorded separately; passing a mean-temperature criterion does not validate local minima or hot spots. Obstruction and along-flow gradients are possible residual contributors, but their individual effects are not isolated here.",
+    "anomalies_cn": "无",
+    "anomalies_en": "None",
+    "status": "pass"
+  },
+  "FE-003": {
+    "case_id": "FE-003",
+    "source_sha256": "bfaf31f3f8ee3131e18f0dd713554b82ccfc04638c18e670a580eceaefc81624",
+    "summary_cn": "以 ISS 平均环境工况的冷却液温度作为冷板边界，对 14 台 MBSU、DDCU 与 IEA 的计算节点到冷板链路进行比较。设备平均温度最大绝对差为 0.25 K，限值为 1 K。冷板边界的大热容、隔离热阻及来源均记入归档，实际求解设置与配置逐项核对。设备分得的冷板进热量按回路比例近似；约 5.4% 的剩余量同时包含外表面辐射与蓄热，现有数据不能将两者分开。",
+    "summary_en": "The computing-node to cold-plate path was compared for 14 ISS MBSU, DDCU and IEA units using mean-case coolant temperature as the cold-plate boundary. The largest absolute device mean-temperature difference is 0.25 K against 1 K. Large boundary capacitance, isolation resistance and sources are archived, and actual solver settings are compared with the configuration. Per-device cold-plate input is approximated using each loop share. The roughly 5.4% remainder includes both external radiation and storage; available data cannot separate them.",
+    "anomalies_cn": "无",
+    "anomalies_en": "None",
+    "status": "pass"
+  },
+  "FE-004": {
+    "case_id": "FE-004",
+    "source_sha256": "84a46706b840d03bb4e410dac88c6790dabb33c66e8df28fbf2288f269a0bc1b",
+    "summary_cn": "运行 12 块 V100 与 12 块 A100 两个整星算例，比较第四、五圈的平均温度。计算节点比有限元 GPU 基板高 7.9 至 12.5 K，散热板高 5.9 至 9.2 K，均有超出 5 K 的项目。本用例不通过。单节点对照模型比有限元基板分别低 12.46 K 与 15.06 K，后者超出预期的 12 至 15 K 区间。四个散热板主表面以外的有限元能量收支剩余项包含多个节点的表面贡献，现有导出不足以分离来源，不能用整个剩余项修正节点温度或认定链路热阻已被验证。机身改接 D 节点的敏感性试验未消除偏差。",
+    "summary_en": "Two whole-satellite cases with 12 V100 and 12 A100 devices were run, comparing fourth- and fifth-orbit means. Computing-node temperatures exceed FE GPU baseplate temperatures by 7.9 to 12.5 K; radiator temperatures exceed FE values by 5.9 to 9.2 K. Several values exceed 5 K and the case fails. The single-node controls are 12.46 K and 15.06 K below the FE baseplate; the latter exceeds the expected 12 to 15 K interval. The FE energy-budget remainder beyond four main radiator faces includes surfaces belonging to several nodes, which available exports cannot separate. It cannot be used in full to correct node temperatures or validate chain resistance. Assigning the bus to node D does not remove the discrepancy.",
+    "anomalies_cn": "本用例未满足全部要求，记录 10 项未通过检查。超限数值及证据范围见实际结果和后续对比表。每项预期值、实际值与判定保存在 tests/results/FE-004.json。",
+    "anomalies_en": "The case does not meet all recorded requirements. The measured exceedances and their evidence limits are stated above and in the comparison tables. Failed check count: 10. See tests/results/FE-004.json for each expected value, actual value and verdict.",
+    "status": "fail"
+  },
+  "NI-001": {
+    "case_id": "NI-001",
+    "source_sha256": "1c1cdd55d4d442442b289078f51540087ffeb343f4c25095926274e75866bfba",
+    "summary_cn": "组合 RK45 与 Radau、两组相对与绝对容限、两种最大步长及两种输出间隔，执行 32 组数值设置对比，并补充直接环境计算和拒绝步试验。容限收紧 100 倍后最大温差为 5.53×10^{−4} K，两种积分方法最大温差为 5.81×10^{−4} K，均与 0.01 K 判据比较。日食定位最大误差为 3.64×10^{−12} s。32 组设置的固定输出网格、边界分段与独立参考解均有记录；积分器统计与试算日志用于检查拒绝状态没有写入输出。",
+    "summary_en": "RK45 and Radau, two relative and absolute tolerances, two maximum steps and two output intervals form a 32-setting matrix, supplemented by direct-environment and rejected-step runs. Tightening tolerances 100-fold changes temperature by at most 5.53×10^{−4} K; the largest method difference is 5.81×10^{−4} K, compared with 0.01 K. The largest eclipse-location error is 3.64×10^{−12} s. Fixed output grids, segmentation and independent reference solutions are recorded for the 32 settings. Solver statistics and trial logs check exclusion of rejected states from output.",
+    "anomalies_cn": "无",
+    "anomalies_en": "None",
+    "status": "pass"
+  },
+  "NI-002": {
+    "case_id": "NI-002",
+    "source_sha256": "c45f2be9bddbdfad73579bb3f2abe79d3dccda3ddf3cbb6d77cbf8e46667507d",
+    "summary_cn": "使用 Orbit、earth_flux、测试用供电程序与六节点热模型联合运行 24 h，太阳能板法向与太阳方向夹角为 55°，基本请求功率 60 W，另有 900 s 功率爬升。保存 1441 个输出样本。两次相同输入运行比较 106826 个归档叶项，其中 89161 个为数值，差异项为 0。独立故障注入运行检查 invalid 停止行为；注入供电不足与实际电池约束事件分别检查定位、断开与重启。启动前参数记录由测试驱动程序写出。Power 校验温度与热初值一致，运行中的电池温度来自当前热状态。",
+    "summary_en": "Orbit, earth_flux, the Power stand-in and the six-node thermal model were coupled for 24 h with a 55° solar-array incidence angle, a 60 W base request and a 900 s request ramp. The archive contains 1441 output samples. Two identical-input runs compare 106826 archive leaves, including 89161 numeric leaves, with 0 differences. A separate fault-injection run checks invalid-result stopping. Injected supply loss and a physical battery constraint separately exercise location, disconnection and restart. The test driver writes the pre-run parameter record. Power validation temperature agrees with the thermal initial value; runtime battery temperature comes from the current thermal state.",
+    "anomalies_cn": "无",
+    "anomalies_en": "None",
+    "status": "pass"
+  },
+  "NI-003": {
+    "case_id": "NI-003",
+    "source_sha256": "99bfa49cdf2428d42b68aa2d784f5de64b123854abaf5c63f5bde668ae97e31d",
+    "summary_cn": "检查 SimReady 资产、USD 物理尺寸、显示缩放、材料质量、场景覆盖与模型登记。面积、质量、热容与热阻的最大相对误差分别为 0、1.43×10^{−16}、1.63×10^{−16} 与 0。其中四个材料部分由尺寸、密度与实心比例计算，其余使用声明质量。两个卫星场景各自运行 5600 s，再次运行及独立进程运行的归档相同。运行前显式修正示例电池锂占比，使其与测试电池参数守恒，运行时不自动替换初值。密度覆盖后的有效密度与质量来源保留在参数记录中，USD 内文本不被执行。",
+    "summary_en": "SimReady assets, USD physical dimensions, display scale, material masses, scene overrides and model registration were checked. The largest relative errors of area, mass, capacitance and resistance are 0, 1.43×10^{−16}, 1.63×10^{−16} and 0. Four material portions use size, density and solid fraction; the others use declared masses. Two satellite scenes run for 5600 s each, with identical repeat and separate-process archives. Example lithium fractions were explicitly corrected before execution to conserve the test cell inventory; runtime does not replace scene values. Parameter provenance retains effective density and mass sources after overrides, and text embedded in USD is not executed.",
+    "anomalies_cn": "无",
+    "anomalies_en": "None",
+    "status": "pass"
+  }
+}

@@ -1,0 +1,66 @@
+[
+  {
+    "tilt_deg": 0,
+    "adaptive": 0.8854560340541683,
+    "analytic": 0.885456034054168,
+    "absolute_error": 3.3306690738754696e-16,
+    "albedo": 0.020253375854997396,
+    "quadrature_error": 9.830536763002145e-15
+  },
+  {
+    "tilt_deg": 20,
+    "adaptive": 0.8320568566329601,
+    "analytic": 0.8320568566329603,
+    "absolute_error": 1.1102230246251565e-16,
+    "albedo": 0.02711093890449729,
+    "quadrature_error": 1.0667535566521938e-14
+  },
+  {
+    "tilt_deg": 45,
+    "adaptive": 0.660628969488131,
+    "analytic": 0.6606289694909067,
+    "absolute_error": 2.775668583865354e-12,
+    "albedo": 0.031024144198958995,
+    "quadrature_error": 9.817774492670693e-10
+  },
+  {
+    "tilt_deg": 90,
+    "adaptive": 0.28872721644795973,
+    "analytic": 0.2887272164479594,
+    "absolute_error": 3.3306690738754696e-16,
+    "albedo": 0.023621389632188988,
+    "quadrature_error": 3.2055160353645606e-15
+  },
+  {
+    "tilt_deg": 120,
+    "adaptive": 0.09443488229012387,
+    "analytic": 0.0944348822904863,
+    "absolute_error": 3.6243230638888235e-13,
+    "albedo": 0.011097872368479122,
+    "quadrature_error": 3.8484483323676673e-10
+  },
+  {
+    "tilt_deg": 150,
+    "adaptive": 0.004421787335522208,
+    "analytic": 0.00442178733554921,
+    "absolute_error": 2.700183826531699e-14,
+    "albedo": 0.0008766080678771652,
+    "quadrature_error": 2.934935000783873e-11
+  },
+  {
+    "tilt_deg": 160,
+    "adaptive": 3.55401902324882e-07,
+    "analytic": 3.554019022133925e-07,
+    "absolute_error": 1.114894940724856e-16,
+    "albedo": 1.1181945031591024e-07,
+    "quadrature_error": 2.4486029440918916e-15
+  },
+  {
+    "tilt_deg": 180,
+    "adaptive": 0.0,
+    "analytic": 0.0,
+    "absolute_error": 0.0,
+    "albedo": 0.0,
+    "quadrature_error": 0.0
+  }
+]

@@ -1,0 +1,19 @@
+06:06:34 hot75 2x6 loaded 30.5 s
+06:06:36 hot75 2x6 activate ['ht', 'on', 'htlsh', 'on', 'ge', 'on', 'otl_body', 'off', 'otl_hrs', 'on', 'otl_sarj', 'off', 'otl_saw', 'on', 'frame:spatial1', 'on', 'frame:material1', 'on'] tlist 0 120
+06:07:24 hot75 2x6 stdL solved in 48.2 s
+06:07:26 hot75 2x6 exported, total 82.2 s
+06:07:26 written C:\Workspace\SpaceDC\Thermal\tests\data\en_003\fe_loads_ladder_hot75.json 2x6@0 120
+06:07:35 hot75 4x12 loaded 8.6 s
+06:07:37 hot75 4x12 activate ['ht', 'on', 'htlsh', 'on', 'ge', 'on', 'otl_body', 'off', 'otl_hrs', 'on', 'otl_sarj', 'off', 'otl_saw', 'on', 'frame:spatial1', 'on', 'frame:material1', 'on'] tlist 0 120
+06:08:25 hot75 4x12 stdL solved in 48.2 s
+06:08:26 hot75 4x12 exported, total 59.6 s
+06:08:26 written C:\Workspace\SpaceDC\Thermal\tests\data\en_003\fe_loads_ladder_hot75.json 4x12@0 120
+ceptions.FlException: 以下特征遇到问题： Messages: 	以下特征遇到问题： 	- 特征: 瞬态求解器 1 (sol1/t1)  	时间列表必须严格单调。 
+06:06:34 written C:\Workspace\SpaceDC\Thermal\tests\data\en_003\fe_loads_ladder_hot75.json 4x12@0
+06:09:15 hot75 8x24 loaded 18.7 s
+06:09:20 hot75 8x24 activate ['ht', 'on', 'htlsh', 'on', 'ge', 'on', 'otl_body', 'off', 'otl_hrs', 'on', 'otl_sarj', 'off', 'otl_saw', 'on', 'frame:spatial1', 'on', 'frame:material1', 'on'] tlist 0 120
+06:11:49 hot75 8x24 stdL solved in 149.1 s
+06:11:50 hot75 8x24 exported, total 173.3 s
+06:11:50 written C:\Workspace\SpaceDC\Thermal\tests\data\en_003\fe_loads_ladder_hot75.json 8x24@0 120
+06:11:56 hot75 16x48 loaded 6.4 s
+06:12:06 hot75 16x48 activate ['ht', 'on', 'htlsh', 'on', 'ge', 'on', 'otl_body', 'off', 'otl_hrs', 'on', 'otl_sarj', 'off', 'otl_saw', 'on', 'frame:spatial1', 'on', 'frame:material1', 'on'] tlist 0 120

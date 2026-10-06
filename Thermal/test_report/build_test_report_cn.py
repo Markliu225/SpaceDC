@@ -21,17 +21,66 @@ THERMAL = HERE.parent
 TEMPLATE = THERMAL / 'SDTwin_Thermal_Design_Report_CN.docx'
 OUT_DOCX = THERMAL / 'SDTwin_Thermal_Test_Report_CN.docx'
 RES = json.loads((HERE / 'out' / 'fe_compare.json').read_text(encoding='utf-8'))
+TESTS = THERMAL / 'tests'
+RESULTS_DIR = TESTS / 'results'
 
 M_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/math'
 DATE_CN = '2026年10月5日'
 DATE_ISO = '2026-10-05'
 LABEL_FILL = 'E7E6E6'
 CASE_W = [1560, 2450, 1500, 2799]          # portrait text width 8309 twips
+STATUS_CN = {'pass': '通过', 'fail': '不通过', 'partial': '部分执行', 'not_run': '未执行'}
 
 
 def fmt(v, nd=1):
     s = f'{v:.{nd}f}'
     return s.replace('-', '−')
+
+
+def load_results():
+    """Evidence written by tests/conftest.py, one tests/results/<CASE_ID>.json per executed case."""
+    out = {}
+    for p in sorted(RESULTS_DIR.glob('*.json')):
+        if p.stem.endswith('_series'):
+            continue
+        d = json.loads(p.read_text(encoding='utf-8'))
+        if 'case_id' in d and 'checks' in d:
+            out[d['case_id']] = d
+    return out
+
+
+RESULTS = load_results()
+
+
+def test_file(cid):
+    hits = sorted(TESTS.glob(f'test_{cid.lower().replace("-", "_")}_*.py'))
+    return hits[0].relative_to(THERMAL).as_posix() if hits else ''
+
+
+def check_counts(cid):
+    checks = RESULTS[cid]['checks']
+    passed = sum(1 for c in checks if c['passed'])
+    return len(checks), passed, len(checks) - passed
+
+
+def conclusion_marks(status):
+    if status == 'not_run':
+        return '☐ 通过  ☐ 不通过  ☒ 未执行'
+    return '  '.join(('☒ ' if s == status else '☐ ') + STATUS_CN[s] for s in ('pass', 'fail', 'partial'))
+
+
+def status_cn(cid):
+    return STATUS_CN[RESULTS[cid]['status']] if cid in RESULTS else '未执行'
+
+
+def case_result_fields(cid):
+    """实际结果、异常记录、测试结论与执行记录 from the evidence file of an executed case."""
+    r = RESULTS[cid]
+    n, ok, bad = check_counts(cid)
+    tail = (f'测试程序 {test_file(cid)} 共记录 {n} 项检查，{ok} 项通过' + (f'，{bad} 项未通过' if bad else '')
+            + f'。证据文件为 tests/results/{cid}.json。')
+    return dict(actual=[r['summary_cn'].strip(), tail], anomaly=r['anomalies_cn'].strip() or '无', status=r['status'],
+                executor=f'自动测试，{DATE_CN}')
 
 
 # =============================================================== low-level XML helpers
@@ -330,9 +379,9 @@ class Writer:
         for r, (lab, key, kind) in enumerate(rows, start=1):
             label(r, 0, lab)
             wide(r, c[key], kind)
-        label(8, 0, '用例设计'); short(8, 1, ''); label(8, 2, '执行人与日期'); short(8, 3, '')
+        label(8, 0, '用例设计'); short(8, 1, ''); label(8, 2, '执行人与日期'); short(8, 3, c.get('executor', ''))
         label(9, 0, '实际结果'); wide(9, c.get('actual', '未执行。正式执行时附运行清单、输入散列值、输出文件、对比报告与日志摘录。'))
-        label(10, 0, '记录人'); short(10, 1, ''); label(10, 2, '测试结论'); short(10, 3, '☐ 通过  ☐ 不通过  ☒ 未执行')
+        label(10, 0, '记录人'); short(10, 1, ''); label(10, 2, '测试结论'); short(10, 3, conclusion_marks(c.get('status', 'not_run')))
         label(11, 0, '异常记录'); wide(11, c.get('anomaly', '无，用例未执行。'))
         return self._place(t._tbl)
 
@@ -370,6 +419,9 @@ def prepare(doc):
     set_cell(vt.rows[1].cells[1], '集总热网络; 有限元对标; 测试用例')
     for cell, txt in zip(vt.rows[4].cells, ['1.0', '初稿', DATE_ISO, '', '测试框架与对比方案初稿']):
         set_cell(cell, txt)
+    if RESULTS:
+        for cell, txt in zip(vt.rows[5].cells, ['2.0', '执行测试用例', DATE_ISO, '', '按已实现的热模块执行全部用例，记录实际结果、测试结论与证据']):
+            set_cell(cell, txt)
     # body anchors: first Heading 1 .. section breaks
     first = next(i for i, el in enumerate(kids) if el.tag == qn('w:p') and el.find('.//' + qn('w:pStyle')) is not None
                  and el.find('.//' + qn('w:pStyle')).get(qn('w:val')) == '1')
@@ -743,9 +795,16 @@ def build():
                  'calculate_heat_flows：按式 T2 计算五条连接的有符号热流。',
                  'thermal_derivative：按式 T3 计算六个组件的温度导数。']:
         w.bullet(line)
-    w.para('测试用例按设计报告第 4 章的式 T1 至 T5、第 5 章的数据对象与函数、第 7 章的运行流程、第 8 章的数值设置和第 9 章的资产装配要求编写，'
-           '每个用例在设计依据栏注明对应的章节、公式与函数。热模块目前处于设计阶段，函数尚未实现。有限元对标用例已用按设计报告公式编写的原型程序与国际空间站有限元结果做过对比，'
-           '结果记入第 7 章。模块实现后按同一组用例正式执行，因此全部用例的状态当前为未执行。')
+    if RESULTS:
+        w.para('测试用例按设计报告第 4 章的式 T1 至 T5、第 5 章的数据对象与函数、第 7 章的运行流程、第 8 章的数值设置和第 9 章的资产装配要求编写，'
+               '每个用例在设计依据栏注明对应的章节、公式与函数。热模块已按设计报告实现为 thermal 软件包，四个数据对象与五个函数的名称、字段与调用顺序与设计报告一致。'
+               '端到端用例另需积分流程、地球反照与红外计算、场景装配与供电结果，这些测试辅助程序位于 sdtwin_sim 目录。其中测试用供电程序按《SDTwin 供电模块软件模块设计报告》编写，'
+               '电池参数为说明性测试值，不代表选定器件。')
+        w.para(f'全部 {len(RESULTS)} 个用例已于{DATE_CN}执行，各用例的实际结果与测试结论见第 3 章，有限元对比结果见第 7 章，汇总见第 8 章。')
+    else:
+        w.para('测试用例按设计报告第 4 章的式 T1 至 T5、第 5 章的数据对象与函数、第 7 章的运行流程、第 8 章的数值设置和第 9 章的资产装配要求编写，'
+               '每个用例在设计依据栏注明对应的章节、公式与函数。热模块目前处于设计阶段，函数尚未实现。有限元对标用例已用按设计报告公式编写的原型程序与国际空间站有限元结果做过对比，'
+               '结果记入第 7 章。模块实现后按同一组用例正式执行，因此全部用例的状态当前为未执行。')
     w.heading(2, '缩略语与约定')
     w.caption('缩略语与约定')
     w.table(['术语', '说明'], [
@@ -760,7 +819,10 @@ def build():
         ['GPU', '图形处理器，本项目用作计算芯片'],
         ['第三圈', '有限元计算的最后一个轨道周期，全部统计取这一圈'],
         ['组件符号', '$S$、$J$、$C$、$B$、$D$、$R$ 依次表示太阳能板、计算节点、冷板、电池、电源设备和公共散热板，与设计报告一致'],
-    ], [2000, 6309], center_cols=(0,))
+    ] + ([
+        ['sdtwin_sim', '测试辅助程序目录，含联合积分流程、地球反照与红外计算、场景装配与测试用供电程序'],
+        ['测试用供电程序', '按供电模块设计报告编写的 Power 函数，为端到端用例给出四个功率端口、电池状态导数与事件判断，电池参数为说明性测试值'],
+    ] if RESULTS else []), [2000, 6309], center_cols=(0,))
     w.para('模块内部温度使用 K。第 7 章的有限元对比结果以 °C 给出温度、以 K 给出温度差，最低、平均与最高温度均为按精确轨道周期时间加权的统计值。')
 
     # ------------------------------------------------------------ 2 test content
@@ -775,7 +837,7 @@ def build():
         for cid in ids:
             k += 1
             c = CASES[cid]
-            rows.append([str(k), cid, c['func'], c['name'], c['req'], '未执行'])
+            rows.append([str(k), cid, c['func'], c['name'], c['req'], status_cn(cid)])
     w.table(['序号', '用例编号', '被测函数或对象', '测试名称', '对应需求', '状态'], rows,
             [650, 1000, 2750, 1850, 1159, 900], center_cols=(0, 1, 4, 5))
     t_cov = w.tab + 1
@@ -844,6 +906,8 @@ def build():
         for cid in ids:
             k += 1
             c = dict(CASES[cid], id=cid)
+            if cid in RESULTS:
+                c.update(case_result_fields(cid))
             w.heading(3, f'测试项目 {k}：{c["name"]}')
             w.para(c['intro'])
             w.caption(f'{cid} {c["name"]}测试用例')
@@ -868,6 +932,12 @@ def build():
                  '参照计算独立进行，设计报告算例、手算表、解析解与有限元结果不使用热模块代码。',
                  '有限元对比统一取第三圈，按精确轨道周期做时间加权统计，比较同一部件的平均温度。']:
         w.bullet(line)
+    if RESULTS:
+        env = next(iter(RESULTS.values()))['environment']
+        w.para(f'本次执行环境为 Windows 11 家庭版，Python {env["python"]}，NumPy {env["numpy"]}，SciPy {env["scipy"]}，Astropy {env["astropy"]}，'
+               f'pytest {env["pytest"]}，Orbit 软件包 ntu_space_dynamics {env["ntu_space_dynamics"]}，OpenUSD {env["usd"]}。'
+               '在 Thermal 目录执行 .venv/Scripts/python.exe -m pytest tests -q 运行全部用例，控制台输出保存在 tests/results/pytest_run.txt，'
+               '每个用例的检查项、关键数值、结果说明与异常记录保存在 tests/results 下以用例编号命名的结果文件中。')
 
     # ------------------------------------------------------------ 6 test data
     w.heading(1, '测试数据')
@@ -882,8 +952,14 @@ def build():
         ['6', '已求解的有限元模型', '参照', 'MPH', 'Thermal/iss_fem/out/comsol，用于导出表面热载荷'],
         ['7', '整星有限元结果', '参照', 'CSV、JSON', 'space-compute-demo/tools/comsol_benchmark/full_twin/out'],
         ['8', '原型对比程序与结果', '证据', 'Python、JSON、PNG', 'Thermal/test_report 下的 fe_compare.py、figures.py 与 out 目录'],
+    ] + ([
+        ['9', '供电模块设计报告', '依据', 'DOCX', 'Power/SDTwin_Power_Design_Report_CN.docx'],
+        ['10', '热模块与测试辅助程序', '被测对象', 'Python', 'Thermal/thermal 与 Thermal/sdtwin_sim，接口约定见 Thermal/IMPLEMENTATION.md'],
+        ['11', '测试程序与用例数据', '程序', 'Python、JSON、USD', 'Thermal/tests 下的 test 程序与 data 目录'],
+        ['12', '执行证据', '证据', 'JSON、TXT', 'Thermal/tests/results 下各用例的结果文件、时程文件与 pytest_run.txt'],
+    ] if RESULTS else [
         ['9', '运行清单、模块输出、日志与对比报告', '证据', 'JSON、CSV、TXT', '正式执行时生成'],
-    ], [650, 2000, 1000, 1100, 3559], center_cols=(0, 2, 3))
+    ]), [650, 2000, 1000, 1100, 3559], center_cols=(0, 2, 3))
 
     # ------------------------------------------------------------ 7 FE prototype results
     w.heading(1, '有限元原型对比结果')
@@ -984,4 +1060,7 @@ def build():
 
 
 if __name__ == '__main__':
+    import sys
+    if len(sys.argv) > 1:      # another file name, for example when the report is open in Word
+        OUT_DOCX = THERMAL / f'{sys.argv[1]}.docx'
     build()

@@ -1,0 +1,2698 @@
+{
+ "case_id": "EN-003",
+ "status": "fail",
+ "checks": [
+  {
+   "name": "步骤1 解析值 400 km 对地平板视角系数",
+   "expected": "(R/r)^2 = (6378137/6778137)^2 = 0.8855",
+   "actual": "0.885456",
+   "passed": true
+  },
+  {
+   "name": "步骤1 earth_flux 对地平板视角系数与解析值",
+   "expected": "两条轨道全部位置的视角系数 0.8855，相对误差不超过 0.1%",
+   "actual": "earth_view_factor 0.885459 至 0.885459，earth_flux_record 红外除以地球红外 0.885459 至 0.885459，最大相对误差 3.26e-06，样本 192 与 576 个",
+   "passed": true
+  },
+  {
+   "name": "步骤2 参照校核 地心面元积分与解析倾斜平板视角系数",
+   "expected": "0° 至 180° 每 1° 绝对差不超过 2e-5",
+   "actual": "最大绝对差 7.03e-06",
+   "passed": true
+  },
+  {
+   "name": "步骤2 参照校核 面元积分网格加密收敛",
+   "expected": "600×1200 与 300×600 网格的反照与红外辐照按步骤2 判据折算相差不超过 0.1%，即参照误差不超过门限的十分之一",
+   "actual": "全部 9216 个样本最大 2.42e-05",
+   "passed": true
+  },
+  {
+   "name": "步骤2 参照校核 蒙特卡罗积分",
+   "expected": "四个构型各 4×10^6 个随机面元，与面元积分之差不超过 4 倍标准误差",
+   "actual": "β 0° nadir F 0.8857±0.0015 对 0.8855，F_alb 0.8822±0.0015 对 0.8819；β 0° sun F 0.3487±0.0006 对 0.3483，F_alb 0.0026±0.0000 对 0.0026；β 75° cross_pos F 0.2885±0.0005 对 0.2887，F_alb 0.0364±0.0001 对 0.0364；β 75° antisun F 0.1821±0.0003 对 0.1819，F_alb 0.0000±0.0000 对 0.0000；最大 2.17 倍标准误差",
+   "passed": true
+  },
+  {
+   "name": "步骤2 对地平板反照辐照与可见地球面元积分",
+   "expected": "逐点相对差不超过 1%，仅参照接近数值零时使用 1e-12 W/m² 的绝对容限",
+   "actual": "β 0° 与 75°、三组环境值、1 个法向、每圈 96 个位置，共 576 个样本；参照值不低于 1e-10 W/m² 的 465 个样本最大相对差 1.00e+00，其余 111 个样本最大绝对差 0.00e+00 W/m²；按判据折算最大 1.00e+00；最大值 模块 501.97 参照 501.97 W/m²",
+   "passed": false
+  },
+  {
+   "name": "步骤2 对地平板红外辐照与可见地球面元积分",
+   "expected": "逐点相对差不超过 1%，仅参照接近数值零时使用 1e-12 W/m² 的绝对容限",
+   "actual": "β 0° 与 75°、三组环境值、1 个法向、每圈 96 个位置，共 576 个样本；参照值不低于 1e-10 W/m² 的 576 个样本最大相对差 4.68e-06，其余 0 个样本最大绝对差 0.00e+00 W/m²；按判据折算最大 4.68e-06；最大值 模块 253.24 参照 253.24 W/m²；与解析倾斜平板视角系数相比最大相对差 3.26e-06，小值样本最大绝对差 0.00e+00 W/m²",
+   "passed": true
+  },
+  {
+   "name": "步骤2 背地平板反照辐照与可见地球面元积分",
+   "expected": "逐点相对差不超过 1%，仅参照接近数值零时使用 1e-12 W/m² 的绝对容限",
+   "actual": "β 0° 与 75°、三组环境值、1 个法向、每圈 96 个位置，共 576 个样本；参照值不低于 1e-10 W/m² 的 0 个样本最大相对差 0.00e+00，其余 576 个样本最大绝对差 0.00e+00 W/m²；按判据折算最大 0.00e+00；最大值 模块 0.00 参照 0.00 W/m²；模块与参照全部为 0：True",
+   "passed": true
+  },
+  {
+   "name": "步骤2 背地平板红外辐照与可见地球面元积分",
+   "expected": "逐点相对差不超过 1%，仅参照接近数值零时使用 1e-12 W/m² 的绝对容限",
+   "actual": "β 0° 与 75°、三组环境值、1 个法向、每圈 96 个位置，共 576 个样本；参照值不低于 1e-10 W/m² 的 0 个样本最大相对差 0.00e+00，其余 576 个样本最大绝对差 0.00e+00 W/m²；按判据折算最大 0.00e+00；最大值 模块 0.00 参照 0.00 W/m²；与解析倾斜平板视角系数相比最大相对差 0.00e+00，小值样本最大绝对差 0.00e+00 W/m²；模块与参照全部为 0：True",
+   "passed": true
+  },
+  {
+   "name": "步骤2 垂直于当地竖直方向平板反照辐照与可见地球面元积分",
+   "expected": "逐点相对差不超过 1%，仅参照接近数值零时使用 1e-12 W/m² 的绝对容限",
+   "actual": "β 0° 与 75°、三组环境值、4 个法向、每圈 96 个位置，共 2304 个样本；参照值不低于 1e-10 W/m² 的 1713 个样本最大相对差 1.00e+00，其余 591 个样本最大绝对差 0.00e+00 W/m²；按判据折算最大 1.00e+00；最大值 模块 163.65 参照 163.65 W/m²",
+   "passed": false
+  },
+  {
+   "name": "步骤2 垂直于当地竖直方向平板红外辐照与可见地球面元积分",
+   "expected": "逐点相对差不超过 1%，仅参照接近数值零时使用 1e-12 W/m² 的绝对容限",
+   "actual": "β 0° 与 75°、三组环境值、4 个法向、每圈 96 个位置，共 2304 个样本；参照值不低于 1e-10 W/m² 的 2304 个样本最大相对差 1.98e-05，其余 0 个样本最大绝对差 0.00e+00 W/m²；按判据折算最大 1.98e-05；最大值 模块 82.58 参照 82.58 W/m²；与解析倾斜平板视角系数相比最大相对差 1.98e-05，小值样本最大绝对差 0.00e+00 W/m²",
+   "passed": true
+  },
+  {
+   "name": "步骤2 跟踪太阳平板反照辐照与可见地球面元积分",
+   "expected": "逐点相对差不超过 1%，仅参照接近数值零时使用 1e-12 W/m² 的绝对容限",
+   "actual": "β 0° 与 75°、三组环境值、1 个法向、每圈 96 个位置，共 576 个样本；参照值不低于 1e-10 W/m² 的 432 个样本最大相对差 1.00e+00，其余 144 个样本最大绝对差 0.00e+00 W/m²；按判据折算最大 1.00e+00；最大值 模块 37.13 参照 37.13 W/m²",
+   "passed": false
+  },
+  {
+   "name": "步骤2 跟踪太阳平板红外辐照与可见地球面元积分",
+   "expected": "逐点相对差不超过 1%，仅参照接近数值零时使用 1e-12 W/m² 的绝对容限",
+   "actual": "β 0° 与 75°、三组环境值、1 个法向、每圈 96 个位置，共 576 个样本；参照值不低于 1e-10 W/m² 的 543 个样本最大相对差 1.68e-03，其余 33 个样本最大绝对差 0.00e+00 W/m²；按判据折算最大 1.68e-03；最大值 模块 253.24 参照 253.24 W/m²；与解析倾斜平板视角系数相比最大相对差 1.68e-03，小值样本最大绝对差 0.00e+00 W/m²",
+   "passed": true
+  },
+  {
+   "name": "步骤2 跟踪太阳背面平板反照辐照与可见地球面元积分",
+   "expected": "逐点相对差不超过 1%，仅参照接近数值零时使用 1e-12 W/m² 的绝对容限",
+   "actual": "β 0° 与 75°、三组环境值、1 个法向、每圈 96 个位置，共 576 个样本；参照值不低于 1e-10 W/m² 的 282 个样本最大相对差 2.07e-04，其余 294 个样本最大绝对差 0.00e+00 W/m²；按判据折算最大 2.07e-04；最大值 模块 501.97 参照 501.97 W/m²",
+   "passed": true
+  },
+  {
+   "name": "步骤2 跟踪太阳背面平板红外辐照与可见地球面元积分",
+   "expected": "逐点相对差不超过 1%，仅参照接近数值零时使用 1e-12 W/m² 的绝对容限",
+   "actual": "β 0° 与 75°、三组环境值、1 个法向、每圈 96 个位置，共 576 个样本；参照值不低于 1e-10 W/m² 的 543 个样本最大相对差 1.67e-03，其余 33 个样本最大绝对差 0.00e+00 W/m²；按判据折算最大 1.67e-03；最大值 模块 253.24 参照 253.24 W/m²；与解析倾斜平板视角系数相比最大相对差 1.67e-03，小值样本最大绝对差 0.00e+00 W/m²",
+   "passed": true
+  },
+  {
+   "name": "test_step2_orientations_vs_numerical_integration call",
+   "expected": "test function completes",
+   "actual": "            orientation[f\"beta_{beta:.0f}\"] = entry |         SERIES[\"orientation\"] = orientation | >       assert all_ok | E       assert False |  | tests\\test_en_003_earth_flux.py:403: AssertionError",
+   "passed": false
+  },
+  {
+   "name": "步骤3 冷工况 有限元轨道、太阳方向与日食",
+   "expected": "模型轨道函数半径 6778137 m、周期 5553.6243 s、倾角 0.90128803 rad，太阳光线方向与 summary.json 太阳方向相反",
+   "actual": "rx 6778137.0*cos((2*pi*t/5553.6243+0.000000))；光线 [-1.0, 0.0, -0.0]；太阳方向 [1.0, -0.0, 0.0]；有限元日食事件 [1695.229, 3861.554, 7248.872, 9415.178] s，柱形地影边界与之相差 [1.67, 1.51] s；有限元行星半径 6378[km]，使对地视角系数变化 −0.0043%",
+   "passed": true
+  },
+  {
+   "name": "步骤3 冷工况 有限元模型环境参数",
+   "expected": "太阳常数 1321 W/m²，反照率 0.20，地球红外 206 W/m²，β 0°",
+   "actual": "模型读出 {'S_sun': '1321.0[W/m^2]', 'albedo': '0.2', 'q_olr': '206.0[W/m^2]', 'T_space': '2.7[K]'}，文件 iss_cold0_34584.mph，行星离散 2 圈每圈 6 点",
+   "passed": true
+  },
+  {
+   "name": "步骤3 冷工况 耦合运行 太阳翼指向",
+   "expected": "run_coupled 经 thermal_derivative 与 earth_flux 完成最后一个周期，全部输出样本有效",
+   "actual": "状态 completed，10920 至 16560 s，样本 48 个，日食边界 2 个，已接受步 104 个",
+   "passed": true
+  },
+  {
+   "name": "步骤3 冷工况 耦合运行 散热器指向",
+   "expected": "run_coupled 经 thermal_derivative 与 earth_flux 完成最后一个周期，全部输出样本有效",
+   "actual": "状态 completed，10920 至 16560 s，样本 48 个，日食边界 2 个，已接受步 105 个",
+   "passed": true
+  },
+  {
+   "name": "步骤3 冷工况 earth_flux 经式 T4 进入温度导数",
+   "expected": "耦合运行输出的 Q_env 与按 earth_flux 记录手算的式 T4 相对差不超过 1e-9",
+   "actual": "太阳能板与散热板最大相对差 0.00e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤3 冷工况 太阳翼正反面辐照与独立参照",
+   "expected": "有限元输出时刻 earth_flux 红外与解析倾斜平板视角系数逐点相差不超过 0.1%，反照与地心面元积分逐点相差不超过 1%，参照接近数值零时使用 1e-12 W/m² 的绝对容限",
+   "actual": "红外最大 7.32e-03，反照最大 1.00e+00；整周期平均 有限元比参照 背面红外 3.9%、正面红外 3.9%、背面反照 −2.0%、正面反照 43.4%；16 块毯面背面红外整周期平均相对全体平均 −0.06% 至 0.05%，背面反照 −0.04% 至 0.03%",
+   "passed": false
+  },
+  {
+   "name": "步骤3 冷工况 太阳翼反照热载荷与有限元",
+   "expected": "最后一个轨道周期同一时刻逐点比较、时间加权平均与峰值均相差不超过 3%，零参考值绝对差不超过 1e-12 W",
+   "actual": "平均 earth_flux 87.026 kW，有限元 88.398 kW，相差 −1.6%；峰值 315.565 kW 对 309.865 kW，相差 1.8%；有限元值不低于峰值 10% 的时刻逐点最大相差 22.8%，全部非零参考值逐点最大相差 100.0%",
+   "passed": false
+  },
+  {
+   "name": "步骤3 冷工况 太阳翼红外热载荷与有限元",
+   "expected": "最后一个轨道周期同一时刻逐点比较、时间加权平均与峰值均相差不超过 3%，零参考值绝对差不超过 1e-12 W",
+   "actual": "平均 earth_flux 303.313 kW，有限元 315.249 kW，相差 −3.8%；峰值 382.555 kW 对 375.967 kW，相差 1.8%；有限元值不低于峰值 10% 的时刻逐点最大相差 13.4%，全部非零参考值逐点最大相差 13.4%",
+   "passed": false
+  },
+  {
+   "name": "步骤3 冷工况 散热器反照热载荷与有限元",
+   "expected": "最后一个轨道周期同一时刻逐点比较、时间加权平均与峰值均相差不超过 3%，零参考值绝对差不超过 1e-12 W",
+   "actual": "平均 earth_flux 1.600 kW，有限元 1.580 kW，相差 1.2%；峰值 5.005 kW 对 4.944 kW，相差 1.2%；有限元值不低于峰值 10% 的时刻逐点最大相差 4.2%，全部非零参考值逐点最大相差 79.3%",
+   "passed": false
+  },
+  {
+   "name": "步骤3 冷工况 散热器红外热载荷与有限元",
+   "expected": "最后一个轨道周期同一时刻逐点比较、时间加权平均与峰值均相差不超过 3%，零参考值绝对差不超过 1e-12 W",
+   "actual": "平均 earth_flux 28.851 kW，有限元 28.470 kW，相差 1.3%；峰值 36.638 kW 对 35.943 kW，相差 1.9%；有限元值不低于峰值 10% 的时刻逐点最大相差 1.9%，全部非零参考值逐点最大相差 1.9%",
+   "passed": true
+  },
+  {
+   "name": "步骤3 平均工况 有限元轨道、太阳方向与日食",
+   "expected": "模型轨道函数半径 6778137 m、周期 5553.6243 s、倾角 0.90128803 rad，太阳光线方向与 summary.json 太阳方向相反",
+   "actual": "rx 6778137.0*cos((2*pi*t/5553.6243+0.000000))；光线 [-1.0, 0.0, -0.0]；太阳方向 [1.0, -0.0, 0.0]；有限元日食事件 [1695.217, 3861.554, 7248.872, 9415.178] s，柱形地影边界与之相差 [1.67, 1.51] s；有限元行星半径 6378[km]，使对地视角系数变化 −0.0043%",
+   "passed": true
+  },
+  {
+   "name": "步骤3 平均工况 有限元模型环境参数",
+   "expected": "太阳常数 1371 W/m²，反照率 0.31，地球红外 241 W/m²，β 0°",
+   "actual": "模型读出 {'S_sun': '1371.0[W/m^2]', 'albedo': '0.31', 'q_olr': '241.0[W/m^2]', 'T_space': '2.7[K]'}，文件 iss_nom0_29756.mph，行星离散 2 圈每圈 6 点",
+   "passed": true
+  },
+  {
+   "name": "步骤3 平均工况 耦合运行 太阳翼指向",
+   "expected": "run_coupled 经 thermal_derivative 与 earth_flux 完成最后一个周期，全部输出样本有效",
+   "actual": "状态 completed，10920 至 16560 s，样本 48 个，日食边界 2 个，已接受步 104 个",
+   "passed": true
+  },
+  {
+   "name": "步骤3 平均工况 耦合运行 散热器指向",
+   "expected": "run_coupled 经 thermal_derivative 与 earth_flux 完成最后一个周期，全部输出样本有效",
+   "actual": "状态 completed，10920 至 16560 s，样本 48 个，日食边界 2 个，已接受步 105 个",
+   "passed": true
+  },
+  {
+   "name": "步骤3 平均工况 earth_flux 经式 T4 进入温度导数",
+   "expected": "耦合运行输出的 Q_env 与按 earth_flux 记录手算的式 T4 相对差不超过 1e-9",
+   "actual": "太阳能板与散热板最大相对差 0.00e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤3 平均工况 太阳翼正反面辐照与独立参照",
+   "expected": "有限元输出时刻 earth_flux 红外与解析倾斜平板视角系数逐点相差不超过 0.1%，反照与地心面元积分逐点相差不超过 1%，参照接近数值零时使用 1e-12 W/m² 的绝对容限",
+   "actual": "红外最大 7.32e-03，反照最大 1.00e+00；整周期平均 有限元比参照 背面红外 3.9%、正面红外 3.9%、背面反照 −2.0%、正面反照 43.4%；16 块毯面背面红外整周期平均相对全体平均 −0.06% 至 0.05%，背面反照 −0.04% 至 0.03%",
+   "passed": false
+  },
+  {
+   "name": "步骤3 平均工况 太阳翼反照热载荷与有限元",
+   "expected": "最后一个轨道周期同一时刻逐点比较、时间加权平均与峰值均相差不超过 3%，零参考值绝对差不超过 1e-12 W",
+   "actual": "平均 earth_flux 139.997 kW，有限元 142.203 kW，相差 −1.6%；峰值 507.640 kW 对 498.470 kW，相差 1.8%；有限元值不低于峰值 10% 的时刻逐点最大相差 22.8%，全部非零参考值逐点最大相差 100.0%",
+   "passed": false
+  },
+  {
+   "name": "步骤3 平均工况 太阳翼红外热载荷与有限元",
+   "expected": "最后一个轨道周期同一时刻逐点比较、时间加权平均与峰值均相差不超过 3%，零参考值绝对差不超过 1e-12 W",
+   "actual": "平均 earth_flux 354.847 kW，有限元 368.811 kW，相差 −3.8%；峰值 447.552 kW 对 439.845 kW，相差 1.8%；有限元值不低于峰值 10% 的时刻逐点最大相差 13.4%，全部非零参考值逐点最大相差 13.4%",
+   "passed": false
+  },
+  {
+   "name": "步骤3 平均工况 散热器反照热载荷与有限元",
+   "expected": "最后一个轨道周期同一时刻逐点比较、时间加权平均与峰值均相差不超过 3%，零参考值绝对差不超过 1e-12 W",
+   "actual": "平均 earth_flux 3.432 kW，有限元 3.389 kW，相差 1.2%；峰值 10.735 kW 对 10.605 kW，相差 1.2%；有限元值不低于峰值 10% 的时刻逐点最大相差 4.2%，全部非零参考值逐点最大相差 79.3%",
+   "passed": false
+  },
+  {
+   "name": "步骤3 平均工况 散热器红外热载荷与有限元",
+   "expected": "最后一个轨道周期同一时刻逐点比较、时间加权平均与峰值均相差不超过 3%，零参考值绝对差不超过 1e-12 W",
+   "actual": "平均 earth_flux 33.752 kW，有限元 33.307 kW，相差 1.3%；峰值 42.863 kW 对 42.050 kW，相差 1.9%；有限元值不低于峰值 10% 的时刻逐点最大相差 1.9%，全部非零参考值逐点最大相差 1.9%",
+   "passed": true
+  },
+  {
+   "name": "步骤3 热工况 有限元轨道、太阳方向与日食",
+   "expected": "模型轨道函数半径 6778137 m、周期 5553.6243 s、倾角 0.90128803 rad，太阳光线方向与 summary.json 太阳方向相反",
+   "actual": "rx 6778137.0*cos((2*pi*t/5553.6243+0.000000))；光线 [-0.25881905, 0.75740843, -0.59945406]；太阳方向 [0.25881904510252074, -0.7574084327478404, 0.5994540582018604]；有限元日食事件 [] s，柱形地影边界与之相差 [] s；有限元行星半径 6378[km]，使对地视角系数变化 −0.0043%",
+   "passed": true
+  },
+  {
+   "name": "步骤3 热工况 有限元模型环境参数",
+   "expected": "太阳常数 1423 W/m²，反照率 0.40，地球红外 286 W/m²，β 75°",
+   "actual": "模型读出 {'S_sun': '1423.0[W/m^2]', 'albedo': '0.4', 'q_olr': '286.0[W/m^2]', 'T_space': '2.7[K]'}，文件 iss_hot75_2404.mph，行星离散 2 圈每圈 6 点",
+   "passed": true
+  },
+  {
+   "name": "步骤3 热工况 耦合运行 太阳翼指向",
+   "expected": "run_coupled 经 thermal_derivative 与 earth_flux 完成最后一个周期，全部输出样本有效",
+   "actual": "状态 completed，10920 至 16560 s，样本 48 个，日食边界 0 个，已接受步 97 个",
+   "passed": true
+  },
+  {
+   "name": "步骤3 热工况 耦合运行 散热器指向",
+   "expected": "run_coupled 经 thermal_derivative 与 earth_flux 完成最后一个周期，全部输出样本有效",
+   "actual": "状态 completed，10920 至 16560 s，样本 48 个，日食边界 0 个，已接受步 97 个",
+   "passed": true
+  },
+  {
+   "name": "步骤3 热工况 earth_flux 经式 T4 进入温度导数",
+   "expected": "耦合运行输出的 Q_env 与按 earth_flux 记录手算的式 T4 相对差不超过 1e-9",
+   "actual": "太阳能板与散热板最大相对差 0.00e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤3 热工况 太阳翼正反面辐照与独立参照",
+   "expected": "有限元输出时刻 earth_flux 红外与解析倾斜平板视角系数逐点相差不超过 0.1%，反照与地心面元积分逐点相差不超过 1%，参照接近数值零时使用 1e-12 W/m² 的绝对容限",
+   "actual": "红外最大 6.86e-06，反照最大 9.65e-02；整周期平均 有限元比参照 背面红外 9.9%、正面红外 9.9%、背面反照 −11.2%、正面反照 35.0%；16 块毯面背面红外整周期平均相对全体平均 −0.10% 至 0.04%，背面反照 −0.19% 至 0.08%",
+   "passed": false
+  },
+  {
+   "name": "步骤3 热工况 太阳翼反照热载荷与有限元",
+   "expected": "最后一个轨道周期同一时刻逐点比较、时间加权平均与峰值均相差不超过 3%，零参考值绝对差不超过 1e-12 W",
+   "actual": "平均 earth_flux 44.330 kW，有限元 52.608 kW，相差 −15.7%；峰值 124.905 kW 对 139.006 kW，相差 −10.1%；有限元值不低于峰值 10% 的时刻逐点最大相差 65.6%，全部非零参考值逐点最大相差 781272125220.5%",
+   "passed": false
+  },
+  {
+   "name": "步骤3 热工况 太阳翼红外热载荷与有限元",
+   "expected": "最后一个轨道周期同一时刻逐点比较、时间加权平均与峰值均相差不超过 3%，零参考值绝对差不超过 1e-12 W",
+   "actual": "平均 earth_flux 344.923 kW，有限元 379.079 kW，相差 −9.0%；峰值 351.411 kW 对 384.183 kW，相差 −8.5%；有限元值不低于峰值 10% 的时刻逐点最大相差 10.1%，全部非零参考值逐点最大相差 10.1%",
+   "passed": false
+  },
+  {
+   "name": "步骤3 热工况 散热器反照热载荷与有限元",
+   "expected": "最后一个轨道周期同一时刻逐点比较、时间加权平均与峰值均相差不超过 3%，零参考值绝对差不超过 1e-12 W",
+   "actual": "平均 earth_flux 2.317 kW，有限元 2.370 kW，相差 −2.2%；峰值 6.992 kW 对 7.044 kW，相差 −0.7%；有限元值不低于峰值 10% 的时刻逐点最大相差 16.3%，全部非零参考值逐点最大相差 72.2%",
+   "passed": false
+  },
+  {
+   "name": "步骤3 热工况 散热器红外热载荷与有限元",
+   "expected": "最后一个轨道周期同一时刻逐点比较、时间加权平均与峰值均相差不超过 3%，零参考值绝对差不超过 1e-12 W",
+   "actual": "平均 earth_flux 49.439 kW，有限元 48.501 kW，相差 1.9%；峰值 50.307 kW 对 49.353 kW，相差 1.9%；有限元值不低于峰值 10% 的时刻逐点最大相差 2.0%，全部非零参考值逐点最大相差 2.0%",
+   "passed": true
+  },
+  {
+   "name": "test_step3_fe_thermal_loads call",
+   "expected": "test function completes",
+   "actual": "            out_case[\"areas_m2\"] = {\"solar_array_each_face\": run[\"area_saw\"], \"radiator_each_face\": run[\"area_hrs\"]} |             SERIES[\"fe\"][case] = out_case | >       assert all_ok | E       assert False |  | tests\\test_en_003_earth_flux.py:866: AssertionError",
+   "passed": false
+  },
+  {
+   "name": "步骤3 平均工况 地球离散加密实验完成",
+   "expected": "三个离散级别与模块使用相同时刻，全部热载荷有限",
+   "actual": "16 个时刻，2x6 来源 production export，有限值 True",
+   "passed": true
+  },
+  {
+   "name": "步骤3 热工况 地球离散加密实验完成",
+   "expected": "三个离散级别与模块使用相同时刻，全部热载荷有限",
+   "actual": "16 个时刻，2x6 来源 ladder，有限值 True",
+   "passed": true
+  },
+  {
+   "name": "步骤3 热工况 原始离散热载荷重现",
+   "expected": "2x6 重算与原导出相同，按 max|参考值|, 1 W 缩放的差不超过 1e-8",
+   "actual": "4.3328251288768695e-15",
+   "passed": true
+  },
+  {
+   "name": "步骤3 地球离散加密覆盖三个工况",
+   "expected": "cold0、nom0、hot75 全部完成",
+   "actual": "['cold0']",
+   "passed": false
+  },
+  {
+   "name": "test_step3_fe_ladder call",
+   "expected": "test function completes",
+   "actual": "        if missing: |             case_record.check('步骤3 地球离散加密覆盖三个工况', 'cold0、nom0、hot75 全部完成', missing, False) | >       assert not missing and all(checks) | E       AssertionError: assert (not ['cold0']) |  | tests\\test_en_003_earth_flux.py:992: AssertionError",
+   "passed": false
+  },
+  {
+   "name": "步骤4 缺失记录 albedo_W_m2 SAW_cells 置为空值",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.albedo_W_m2 for surface 'SAW_cells' is not configured (None); a missing environment value is not taken as zero",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 albedo_W_m2 删去 SAW_cells 一项",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.albedo_W_m2 has 3 value(s) for the 4 surface(s) ('SAW_cells', 'SAW_back', 'HRS_up', 'HRS_down'); every surface needs its own record",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 albedo_W_m2 SAW_cells 为非数",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.albedo_W_m2 for surface 'SAW_cells' must be finite, got nan",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 albedo_W_m2 SAW_back 置为空值",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.albedo_W_m2 for surface 'SAW_back' is not configured (None); a missing environment value is not taken as zero",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 albedo_W_m2 删去 SAW_back 一项",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.albedo_W_m2 has 3 value(s) for the 4 surface(s) ('SAW_cells', 'SAW_back', 'HRS_up', 'HRS_down'); every surface needs its own record",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 albedo_W_m2 SAW_back 为非数",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.albedo_W_m2 for surface 'SAW_back' must be finite, got nan",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 albedo_W_m2 HRS_up 置为空值",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.albedo_W_m2 for surface 'HRS_up' is not configured (None); a missing environment value is not taken as zero",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 albedo_W_m2 删去 HRS_up 一项",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.albedo_W_m2 has 3 value(s) for the 4 surface(s) ('SAW_cells', 'SAW_back', 'HRS_up', 'HRS_down'); every surface needs its own record",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 albedo_W_m2 HRS_up 为非数",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.albedo_W_m2 for surface 'HRS_up' must be finite, got nan",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 albedo_W_m2 HRS_down 置为空值",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.albedo_W_m2 for surface 'HRS_down' is not configured (None); a missing environment value is not taken as zero",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 albedo_W_m2 删去 HRS_down 一项",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.albedo_W_m2 has 3 value(s) for the 4 surface(s) ('SAW_cells', 'SAW_back', 'HRS_up', 'HRS_down'); every surface needs its own record",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 albedo_W_m2 HRS_down 为非数",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.albedo_W_m2 for surface 'HRS_down' must be finite, got nan",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 删去 albedo_W_m2 字段",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux is missing field(s) ['albedo_W_m2']; albedo and infrared are environment data that cannot be inferred from the solar irradiance (design 5.3)",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 infrared_W_m2 SAW_cells 置为空值",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.infrared_W_m2 for surface 'SAW_cells' is not configured (None); a missing environment value is not taken as zero",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 infrared_W_m2 删去 SAW_cells 一项",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.infrared_W_m2 has 3 value(s) for the 4 surface(s) ('SAW_cells', 'SAW_back', 'HRS_up', 'HRS_down'); every surface needs its own record",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 infrared_W_m2 SAW_cells 为非数",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.infrared_W_m2 for surface 'SAW_cells' must be finite, got nan",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 infrared_W_m2 SAW_back 置为空值",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.infrared_W_m2 for surface 'SAW_back' is not configured (None); a missing environment value is not taken as zero",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 infrared_W_m2 删去 SAW_back 一项",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.infrared_W_m2 has 3 value(s) for the 4 surface(s) ('SAW_cells', 'SAW_back', 'HRS_up', 'HRS_down'); every surface needs its own record",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 infrared_W_m2 SAW_back 为非数",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.infrared_W_m2 for surface 'SAW_back' must be finite, got nan",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 infrared_W_m2 HRS_up 置为空值",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.infrared_W_m2 for surface 'HRS_up' is not configured (None); a missing environment value is not taken as zero",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 infrared_W_m2 删去 HRS_up 一项",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.infrared_W_m2 has 3 value(s) for the 4 surface(s) ('SAW_cells', 'SAW_back', 'HRS_up', 'HRS_down'); every surface needs its own record",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 infrared_W_m2 HRS_up 为非数",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.infrared_W_m2 for surface 'HRS_up' must be finite, got nan",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 infrared_W_m2 HRS_down 置为空值",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.infrared_W_m2 for surface 'HRS_down' is not configured (None); a missing environment value is not taken as zero",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 infrared_W_m2 删去 HRS_down 一项",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.infrared_W_m2 has 3 value(s) for the 4 surface(s) ('SAW_cells', 'SAW_back', 'HRS_up', 'HRS_down'); every surface needs its own record",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 infrared_W_m2 HRS_down 为非数",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux.infrared_W_m2 for surface 'HRS_down' must be finite, got nan",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 删去 infrared_W_m2 字段",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux is missing field(s) ['infrared_W_m2']; albedo and infrared are environment data that cannot be inferred from the solar irradiance (design 5.3)",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 删去 SAW_cells 整条记录",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux has no record for surface(s) ['SAW_cells'] of the asset surfaces ('SAW_cells', 'SAW_back', 'HRS_up', 'HRS_down')",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 删去 SAW_back 整条记录",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux has no record for surface(s) ['SAW_back'] of the asset surfaces ('SAW_cells', 'SAW_back', 'HRS_up', 'HRS_down')",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 删去 HRS_up 整条记录",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux has no record for surface(s) ['HRS_up'] of the asset surfaces ('SAW_cells', 'SAW_back', 'HRS_up', 'HRS_down')",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 删去 HRS_down 整条记录",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux has no record for surface(s) ['HRS_down'] of the asset surfaces ('SAW_cells', 'SAW_back', 'HRS_up', 'HRS_down')",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 删去 SAW_cells 与 HRS_up 两条记录",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：earth_flux has no record for surface(s) ['SAW_cells', 'HRS_up'] of the asset surfaces ('SAW_cells', 'SAW_back', 'HRS_up', 'HRS_down')",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 calculate_surface_heat albedo_W_m2 空值",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：environment.albedo_W_m2 for surface 'SAW_back' is not configured (None); a missing environment value is not taken as zero",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 calculate_surface_heat infrared_W_m2 空值",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：environment.infrared_W_m2 for surface 'SAW_back' is not configured (None); a missing environment value is not taken as zero",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 EarthFluxModel 缺 albedo",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：EarthFluxModel is missing ['albedo']; Earth albedo and infrared are environment data that must be configured, or switched off explicitly with EarthFluxModel.disabled(reason) (design 5.3, 9.4)",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 EarthFluxModel 缺 olr_W_m2",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：EarthFluxModel is missing ['olr_W_m2']; Earth albedo and infrared are environment data that must be configured, or switched off explicitly with EarthFluxModel.disabled(reason) (design 5.3, 9.4)",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 EarthFluxModel 缺 solar_constant_W_m2",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：EarthFluxModel is missing ['solar_constant_W_m2']; Earth albedo and infrared are environment data that must be configured, or switched off explicitly with EarthFluxModel.disabled(reason) (design 5.3, 9.4)",
+   "passed": true
+  },
+  {
+   "name": "步骤4 缺失记录 耦合运行中 900 s 起缺少一条反照记录",
+   "expected": "拒绝计算并在报错中指出未配置字段或缺失的表面，不按零处理",
+   "actual": "报错 True，指出字段 True：停止 True，最后已接受时刻 844.2 s，报错 ThermalInputError: earth_flux.albedo_W_m2 for surface 'SAW_back' is not configured (None); a missing environment value is not taken as zero",
+   "passed": true
+  },
+  {
+   "name": "步骤4 显式关闭反照与红外的简化条件",
+   "expected": "EarthFluxModel.disabled 给出零输入，并在归档 notes 中记录原因",
+   "actual": "零输入 True，notes 记录 True",
+   "passed": true
+  }
+ ],
+ "metrics": {
+  "nadir_view_factor_analytic": 0.8854560340541678,
+  "nadir_view_factor_module": 0.8854589201218201,
+  "nadir_view_factor_max_rel_error": 3.2594138406023144e-06,
+  "reference_quadrature_vs_analytic_max_abs": 7.028315311297106e-06,
+  "reference_grid_convergence_max": 2.419651083013998e-05,
+  "reference_monte_carlo_max_sigma": 2.1744669968028956,
+  "step2_对地_反照_max_rel": 1.0,
+  "step2_对地_红外_max_rel": 4.678058560612796e-06,
+  "step2_背地_反照_max_rel": 0.0,
+  "step2_背地_红外_max_rel": 0.0,
+  "step2_垂直于当地竖直方向_反照_max_rel": 1.0,
+  "step2_垂直于当地竖直方向_红外_max_rel": 1.9750585662314942e-05,
+  "step2_跟踪太阳_反照_max_rel": 1.0,
+  "step2_跟踪太阳_红外_max_rel": 0.001677411089840485,
+  "step2_跟踪太阳背面_反照_max_rel": 0.00020701828106819246,
+  "step2_跟踪太阳背面_红外_max_rel": 0.0016696466115617694,
+  "step2_worst_criterion": 1.0,
+  "fe_planet_discretisation": {
+   "cold0": [
+    "2",
+    "6"
+   ],
+   "nom0": [
+    "2",
+    "6"
+   ],
+   "hot75": [
+    "2",
+    "6"
+   ]
+  },
+  "fe_export_provenance": {
+   "tool": "tests/data/en_003/fe_export.py",
+   "comsol": "6.3",
+   "mph": "1.3.2",
+   "exported_utc": "2026-10-05T13:19:46.581983+00:00",
+   "files": {
+    "cold0": {
+     "file": "iss_cold0_34584.mph",
+     "file_bytes": 446285718,
+     "file_mtime_utc": "2026-09-29T23:10:32.237602+00:00",
+     "dataset": "dset4"
+    },
+    "nom0": {
+     "file": "iss_nom0_29756.mph",
+     "file_bytes": 446287128,
+     "file_mtime_utc": "2026-09-29T23:11:12.396397+00:00",
+     "dataset": "dset4"
+    },
+    "hot75": {
+     "file": "iss_hot75_2404.mph",
+     "file_bytes": 420318005,
+     "file_mtime_utc": "2026-09-29T23:25:57.296029+00:00",
+     "dataset": "dset4"
+    }
+   },
+   "variables": {
+    "Gextu1": "up side, solar band external irradiation W/m^2",
+    "Gextu2": "up side, infrared band external irradiation W/m^2",
+    "Gextd1": "down side, solar band external irradiation W/m^2",
+    "Gextd2": "down side, infrared band external irradiation W/m^2"
+   }
+  },
+  "fe_cold0_eclipse_event_offsets_s": [
+   1.6686096094472305,
+   1.5078903905468906
+  ],
+  "fe_cold0_planet_radius": {
+   "R_planet": "6378[km]",
+   "nadir_view_factor_change_rel": -4.295879146076764e-05
+  },
+  "fe_cold0_saw_faces_vs_references": {
+   "saw_back_infrared": {
+    "reference_mean_W_m2": 73.47896766148855,
+    "fe_mean_W_m2": 76.37697807086207,
+    "module_mean_W_m2": 73.47903457570084,
+    "fe_minus_reference_rel": 0.03943999897663782,
+    "module_minus_reference_rel": 9.106580347097033e-07
+   },
+   "saw_cells_infrared": {
+    "reference_mean_W_m2": 73.47842794662904,
+    "fe_mean_W_m2": 76.36314118458516,
+    "module_mean_W_m2": 73.47849485908218,
+    "fe_minus_reference_rel": 0.03925932166174578,
+    "module_minus_reference_rel": 9.106407826827275e-07
+   },
+   "saw_back_albedo": {
+    "reference_mean_W_m2": 58.977916138977996,
+    "fe_mean_W_m2": 57.803252096920154,
+    "module_mean_W_m2": 58.97833437397488,
+    "fe_minus_reference_rel": -0.019917015027960887,
+    "module_minus_reference_rel": 7.091383084817912e-06
+   },
+   "saw_cells_albedo": {
+    "reference_mean_W_m2": 3.8472576048565896,
+    "fe_mean_W_m2": 5.515111442720722,
+    "module_mean_W_m2": 3.8467109910124555,
+    "fe_minus_reference_rel": 0.433517588153888,
+    "module_minus_reference_rel": -0.0001420788260822739
+   },
+   "blanket_spread_rel": {
+    "back_infrared": [
+     -0.0006186513487820289,
+     0.0004894602201483966
+    ],
+    "back_albedo": [
+     -0.0003809028196664066,
+     0.00025415052184785125
+    ],
+    "cells_infrared": [
+     -0.0005797693360339862,
+     0.0004930087351742163
+    ]
+   }
+  },
+  "fe_cold0_saw_back_ir_fe_minus_exact_mean_rel": 0.03943999897663782,
+  "fe_cold0_saw_back_albedo_mean_W_m2": {
+   "module": 58.97833437397488,
+   "fe": 57.803252096920154,
+   "rel": 0.020328999397550118
+  },
+  "fe_cold0_saw_back_albedo_peak_W_m2": {
+   "module": 232.12029135454688,
+   "fe": 227.92741320856862,
+   "rel": 0.018395672933564578
+  },
+  "fe_cold0_saw_back_infrared_mean_W_m2": {
+   "module": 73.47903457570084,
+   "fe": 76.37697807086207,
+   "rel": -0.03794263099114154
+  },
+  "fe_cold0_saw_back_infrared_peak_W_m2": {
+   "module": 182.07978582905085,
+   "fe": 178.9441532353438,
+   "rel": 0.01752296756845205
+  },
+  "fe_cold0_saw_cells_albedo_mean_W_m2": {
+   "module": 3.8467109910124555,
+   "fe": 5.515111442720722,
+   "rel": -0.3025143678484236
+  },
+  "fe_cold0_saw_cells_albedo_peak_W_m2": {
+   "module": 17.14621024534492,
+   "fe": 22.13626821489538,
+   "rel": -0.2254245350258575
+  },
+  "fe_cold0_saw_cells_infrared_mean_W_m2": {
+   "module": 73.47849485908218,
+   "fe": 76.36314118458516,
+   "rel": -0.03777537540696775
+  },
+  "fe_cold0_saw_cells_infrared_peak_W_m2": {
+   "module": 182.253776003245,
+   "fe": 178.44265518445238,
+   "rel": 0.02135767826842274
+  },
+  "fe_cold0_radiator_up_albedo_mean_W_m2": {
+   "module": 24.16095715433027,
+   "fe": 23.864193610559575,
+   "rel": 0.012435515258281378
+  },
+  "fe_cold0_radiator_up_albedo_peak_W_m2": {
+   "module": 75.5804388539622,
+   "fe": 74.66808759192479,
+   "rel": 0.01221875759057324
+  },
+  "fe_cold0_radiator_up_infrared_mean_W_m2": {
+   "module": 107.28848881533493,
+   "fe": 105.66849220720087,
+   "rel": 0.015330933320762033
+  },
+  "fe_cold0_radiator_up_infrared_peak_W_m2": {
+   "module": 182.40453754509502,
+   "fe": 178.94415323534307,
+   "rel": 0.019337789177168274
+  },
+  "fe_cold0_radiator_down_albedo_mean_W_m2": {
+   "module": 24.160957154330276,
+   "fe": 23.864193610559578,
+   "rel": 0.012435515258281526
+  },
+  "fe_cold0_radiator_down_albedo_peak_W_m2": {
+   "module": 75.58043885396218,
+   "fe": 74.66808759192482,
+   "rel": 0.012218757590572475
+  },
+  "fe_cold0_radiator_down_infrared_mean_W_m2": {
+   "module": 36.34494279667373,
+   "fe": 36.07081146593424,
+   "rel": 0.0075998104727524485
+  },
+  "fe_cold0_radiator_down_infrared_peak_W_m2": {
+   "module": 59.478406134138176,
+   "fe": 59.02943796045174,
+   "rel": 0.007605835142581502
+  },
+  "fe_cold0_radiator_inner_S1_down_infrared_mean_W_m2": {
+   "module": 36.34494279667373,
+   "fe": 36.070811465934256,
+   "rel": 0.007599810472752051
+  },
+  "fe_cold0_radiator_inner_P1_up_infrared_mean_W_m2": {
+   "module": 107.28848881533493,
+   "fe": 97.04095425782576,
+   "rel": 0.1056001008634225
+  },
+  "fe_cold0_face_irradiance_module_over_fe": "saw_back_albedo 平均 58.98/57.80 峰值 232.12/227.93；saw_back_infrared 平均 73.48/76.38 峰值 182.08/178.94；saw_cells_albedo 平均 3.85/5.52 峰值 17.15/22.14；saw_cells_infrared 平均 73.48/76.36 峰值 182.25/178.44；radiator_up_albedo 平均 24.16/23.86 峰值 75.58/74.67；radiator_up_infrared 平均 107.29/105.67 峰值 182.40/178.94；radiator_down_albedo 平均 24.16/23.86 峰值 75.58/74.67；radiator_down_infrared 平均 36.34/36.07 峰值 59.48/59.03",
+  "fe_cold0_太阳翼_反照_load": {
+   "module_mean_W": 87026.44322840443,
+   "fe_mean_W": 88398.17641145966,
+   "rel_mean": -0.015517663810962975,
+   "module_peak_W": 315565.25574676186,
+   "fe_peak_W": 309865.07909813937,
+   "rel_peak": 0.018395672933564595,
+   "inst_max_rel_above_10pct_peak": 0.22849014183068167,
+   "pointwise_max_rel": 1.0,
+   "pointwise_max_abs_W": 8963.181323526398,
+   "worst_relative_point": {
+    "time_s": 15000.0,
+    "module_W": 0.0,
+    "fe_W": 50.9586794229135,
+    "abs_diff_W": 50.9586794229135
+   },
+   "pointwise_window_s": [
+    11006.375699999826,
+    16559.999999999825
+   ],
+   "zero_reference_abs_pass": true,
+   "pass": false
+  },
+  "fe_cold0_太阳翼_红外_load": {
+   "module_mean_W": 303313.493027634,
+   "fe_mean_W": 315248.98120009445,
+   "rel_mean": -0.037860513068192235,
+   "module_peak_W": 382555.14194610954,
+   "fe_peak_W": 375967.0829448612,
+   "rel_peak": 0.017522967568452064,
+   "inst_max_rel_above_10pct_peak": 0.13395097673495526,
+   "pointwise_max_rel": 0.13395097673495526,
+   "pointwise_max_abs_W": 37953.71577679805,
+   "worst_relative_point": {
+    "time_s": 15240.0,
+    "module_W": 245386.62784679435,
+    "fe_W": 283340.3436235924,
+    "abs_diff_W": 37953.71577679805
+   },
+   "pointwise_window_s": [
+    11006.375699999826,
+    16559.999999999825
+   ],
+   "zero_reference_abs_pass": true,
+   "pass": false
+  },
+  "fe_cold0_散热器_反照_load": {
+   "module_mean_W": 1599.8999252283015,
+   "fe_mean_W": 1580.2487181814763,
+   "rel_mean": 0.012435515258281304,
+   "module_peak_W": 5004.815732207204,
+   "fe_peak_W": 4944.401291397107,
+   "rel_peak": 0.012218757590572827,
+   "inst_max_rel_above_10pct_peak": 0.04173207847505786,
+   "pointwise_max_rel": 0.7933692286491807,
+   "pointwise_max_abs_W": 84.98309770392706,
+   "worst_relative_point": {
+    "time_s": 15120.0,
+    "module_W": 2.746076376166672,
+    "fe_W": 13.289774597532535,
+    "abs_diff_W": 10.543698221365863
+   },
+   "pointwise_window_s": [
+    11006.375699999826,
+    16559.999999999825
+   ],
+   "zero_reference_abs_pass": false,
+   "pass": false
+  },
+  "fe_cold0_散热器_红外_load": {
+   "module_mean_W": 28850.567284498426,
+   "fe_mean_W": 28470.108049258997,
+   "rel_mean": 0.013363462990065144,
+   "module_peak_W": 36638.22777456086,
+   "fe_peak_W": 35943.166400350994,
+   "rel_peak": 0.01933778917716825,
+   "inst_max_rel_above_10pct_peak": 0.019337789177175678,
+   "pointwise_max_rel": 0.019337789177175678,
+   "pointwise_max_abs_W": 695.0613742101268,
+   "worst_relative_point": {
+    "time_s": 13560.0,
+    "module_W": 36638.22777456086,
+    "fe_W": 35943.16640035073,
+    "abs_diff_W": 695.0613742101268
+   },
+   "pointwise_window_s": [
+    11006.375699999826,
+    16559.999999999825
+   ],
+   "zero_reference_abs_pass": true,
+   "pass": true
+  },
+  "fe_cold0_loads_summary": {
+   "太阳翼反照": {
+    "mean_rel": -0.015517663810962975,
+    "peak_rel": 0.018395672933564595
+   },
+   "太阳翼红外": {
+    "mean_rel": -0.037860513068192235,
+    "peak_rel": 0.017522967568452064
+   },
+   "散热器反照": {
+    "mean_rel": 0.012435515258281304,
+    "peak_rel": 0.012218757590572827
+   },
+   "散热器红外": {
+    "mean_rel": 0.013363462990065144,
+    "peak_rel": 0.01933778917716825
+   }
+  },
+  "fe_nom0_eclipse_event_offsets_s": [
+   1.6686096094472305,
+   1.5078903905468906
+  ],
+  "fe_nom0_planet_radius": {
+   "R_planet": "6378[km]",
+   "nadir_view_factor_change_rel": -4.295879146076764e-05
+  },
+  "fe_nom0_saw_faces_vs_references": {
+   "saw_back_infrared": {
+    "reference_mean_W_m2": 85.96325828358614,
+    "fe_mean_W_m2": 89.35364910231928,
+    "module_mean_W_m2": 85.96333656671798,
+    "fe_minus_reference_rel": 0.03943999897663838,
+    "module_minus_reference_rel": 9.106580346631587e-07
+   },
+   "saw_cells_infrared": {
+    "reference_mean_W_m2": 85.96262686959999,
+    "fe_mean_W_m2": 89.33746128876211,
+    "module_mean_W_m2": 85.96270515067381,
+    "fe_minus_reference_rel": 0.03925932166174428,
+    "module_minus_reference_rel": 9.106407828199545e-07
+   },
+   "saw_back_albedo": {
+    "reference_mean_W_m2": 94.8758672907912,
+    "fe_mean_W_m2": 92.9862232161699,
+    "module_mean_W_m2": 94.87654009191166,
+    "fe_minus_reference_rel": -0.01991701502795868,
+    "module_minus_reference_rel": 7.091383084768352e-06
+   },
+   "saw_cells_albedo": {
+    "reference_mean_W_m2": 6.188958950189629,
+    "fe_mean_W_m2": 8.871981507458603,
+    "module_mean_W_m2": 6.188079630167313,
+    "fe_minus_reference_rel": 0.4335175881537826,
+    "module_minus_reference_rel": -0.00014207882608248165
+   },
+   "blanket_spread_rel": {
+    "back_infrared": [
+     -0.0006186513487821399,
+     0.0004894602201479525
+    ],
+    "back_albedo": [
+     -0.00038090281966907114,
+     0.00025415052184496467
+    ],
+    "cells_infrared": [
+     -0.000579769336032876,
+     0.0004930087351755486
+    ]
+   }
+  },
+  "fe_nom0_saw_back_ir_fe_minus_exact_mean_rel": 0.03943999897663838,
+  "fe_nom0_saw_back_albedo_mean_W_m2": {
+   "module": 94.87654009191166,
+   "fe": 92.9862232161699,
+   "rel": 0.02032899939754777
+  },
+  "fe_nom0_saw_back_albedo_peak_W_m2": {
+   "module": 373.40440964646467,
+   "fe": 366.65946210361284,
+   "rel": 0.018395672933556546
+  },
+  "fe_nom0_saw_back_infrared_mean_W_m2": {
+   "module": 85.96333656671798,
+   "fe": 89.35364910231928,
+   "rel": -0.037942630991142104
+  },
+  "fe_nom0_saw_back_infrared_peak_W_m2": {
+   "module": 213.01567177087986,
+   "fe": 209.34728606659235,
+   "rel": 0.01752296756844806
+  },
+  "fe_nom0_saw_cells_albedo_mean_W_m2": {
+   "module": 6.188079630167313,
+   "fe": 8.871981507458603,
+   "rel": -0.3025143678483725
+  },
+  "fe_nom0_saw_cells_albedo_peak_W_m2": {
+   "module": 27.582554187638323,
+   "fe": 35.609899144626525,
+   "rel": -0.22542453502566337
+  },
+  "fe_nom0_saw_cells_infrared_mean_W_m2": {
+   "module": 85.96270515067381,
+   "fe": 89.33746128876211,
+   "rel": -0.037775375406966225
+  },
+  "fe_nom0_saw_cells_infrared_peak_W_m2": {
+   "module": 213.21922338243715,
+   "fe": 208.76058203617833,
+   "rel": 0.02135767826842967
+  },
+  "fe_nom0_radiator_up_albedo_mean_W_m2": {
+   "module": 38.86695079546522,
+   "fe": 38.38955687518518,
+   "rel": 0.012435515258281831
+  },
+  "fe_nom0_radiator_up_albedo_peak_W_m2": {
+   "module": 121.58380892249235,
+   "fe": 120.11613893809198,
+   "rel": 0.012218757590575008
+  },
+  "fe_nom0_radiator_up_infrared_mean_W_m2": {
+   "module": 125.51711555580445,
+   "fe": 123.62187680551169,
+   "rel": 0.015330933320762064
+  },
+  "fe_nom0_radiator_up_infrared_peak_W_m2": {
+   "module": 213.39559974935872,
+   "fe": 209.34728606659053,
+   "rel": 0.0193377891771689
+  },
+  "fe_nom0_radiator_down_albedo_mean_W_m2": {
+   "module": 38.86695079546522,
+   "fe": 38.38955687518519,
+   "rel": 0.012435515258281456
+  },
+  "fe_nom0_radiator_down_albedo_peak_W_m2": {
+   "module": 121.58380892249231,
+   "fe": 120.116138938092,
+   "rel": 0.012218757590574413
+  },
+  "fe_nom0_radiator_down_infrared_mean_W_m2": {
+   "module": 42.520054436885296,
+   "fe": 42.199347394612424,
+   "rel": 0.00759981047275192
+  },
+  "fe_nom0_radiator_down_infrared_peak_W_m2": {
+   "module": 69.58396057440437,
+   "fe": 69.05871140033437,
+   "rel": 0.007605835142580649
+  },
+  "fe_nom0_radiator_inner_S1_down_infrared_mean_W_m2": {
+   "module": 42.520054436885296,
+   "fe": 42.199347394612396,
+   "rel": 0.007599810472752599
+  },
+  "fe_nom0_radiator_inner_P1_up_infrared_mean_W_m2": {
+   "module": 125.51711555580445,
+   "fe": 113.52849502978655,
+   "rel": 0.10560010086342142
+  },
+  "fe_nom0_face_irradiance_module_over_fe": "saw_back_albedo 平均 94.88/92.99 峰值 373.40/366.66；saw_back_infrared 平均 85.96/89.35 峰值 213.02/209.35；saw_cells_albedo 平均 6.19/8.87 峰值 27.58/35.61；saw_cells_infrared 平均 85.96/89.34 峰值 213.22/208.76；radiator_up_albedo 平均 38.87/38.39 峰值 121.58/120.12；radiator_up_infrared 平均 125.52/123.62 峰值 213.40/209.35；radiator_down_albedo 平均 38.87/38.39 峰值 121.58/120.12；radiator_down_infrared 平均 42.52/42.20 峰值 69.58/69.06",
+  "fe_nom0_太阳翼_反照_load": {
+   "module_mean_W": 139996.6261790468,
+   "fe_mean_W": 142203.28901072763,
+   "rel_mean": -0.015517663810956948,
+   "module_peak_W": 507639.6265894445,
+   "fe_peak_W": 498469.9366673022,
+   "rel_peak": 0.018395672933556487,
+   "inst_max_rel_above_10pct_peak": 0.22849014183007438,
+   "pointwise_max_rel": 1.0,
+   "pointwise_max_abs_W": 14418.780069284025,
+   "worst_relative_point": {
+    "time_s": 15000.0,
+    "module_W": 0.0,
+    "fe_W": 81.97558040493881,
+    "abs_diff_W": 81.97558040493881
+   },
+   "pointwise_window_s": [
+    11006.375699999826,
+    16559.999999999825
+   ],
+   "zero_reference_abs_pass": true,
+   "pass": false
+  },
+  "fe_nom0_太阳翼_红外_load": {
+   "module_mean_W": 354847.3389303873,
+   "fe_mean_W": 368810.70130690647,
+   "rel_mean": -0.037860513068192,
+   "module_peak_W": 447552.374801031,
+   "fe_peak_W": 439844.985386951,
+   "rel_peak": 0.017522967568447963,
+   "inst_max_rel_above_10pct_peak": 0.13395097673494963,
+   "pointwise_max_rel": 0.13395097673494963,
+   "pointwise_max_abs_W": 44402.16263207712,
+   "worst_relative_point": {
+    "time_s": 15240.0,
+    "module_W": 287078.53063629824,
+    "fe_W": 331480.69326837535,
+    "abs_diff_W": 44402.16263207712
+   },
+   "pointwise_window_s": [
+    11006.375699999826,
+    16559.999999999825
+   ],
+   "zero_reference_abs_pass": true,
+   "pass": false
+  },
+  "fe_nom0_散热器_反照_load": {
+   "module_mean_W": 3431.609726072574,
+   "fe_mean_W": 3389.4600439783467,
+   "rel_mean": 0.01243551525828129,
+   "module_peak_W": 10734.780390337542,
+   "fe_peak_W": 10605.198046210855,
+   "rel_peak": 0.012218757590574763,
+   "inst_max_rel_above_10pct_peak": 0.0417320784750604,
+   "pointwise_max_rel": 0.7933692286491778,
+   "pointwise_max_abs_W": 182.27941637721858,
+   "worst_relative_point": {
+    "time_s": 15120.0,
+    "module_W": 5.890032402899811,
+    "fe_W": 28.505107755221943,
+    "abs_diff_W": 22.61507535232213
+   },
+   "pointwise_window_s": [
+    11006.375699999826,
+    16559.999999999825
+   ],
+   "zero_reference_abs_pass": false,
+   "pass": false
+  },
+  "fe_nom0_散热器_红外_load": {
+   "module_mean_W": 33752.3626969132,
+   "fe_mean_W": 33307.262329472906,
+   "rel_mean": 0.013363462990064972,
+   "module_peak_W": 42863.169386743524,
+   "fe_peak_W": 42050.015060604775,
+   "rel_peak": 0.019337789177168815,
+   "inst_max_rel_above_10pct_peak": 0.019337789177174283,
+   "pointwise_max_rel": 0.019337789177174283,
+   "pointwise_max_abs_W": 813.1543261389743,
+   "worst_relative_point": {
+    "time_s": 13560.0,
+    "module_W": 42863.169386743524,
+    "fe_W": 42050.01506060455,
+    "abs_diff_W": 813.1543261389743
+   },
+   "pointwise_window_s": [
+    11006.375699999826,
+    16559.999999999825
+   ],
+   "zero_reference_abs_pass": true,
+   "pass": true
+  },
+  "fe_nom0_loads_summary": {
+   "太阳翼反照": {
+    "mean_rel": -0.015517663810956948,
+    "peak_rel": 0.018395672933556487
+   },
+   "太阳翼红外": {
+    "mean_rel": -0.037860513068192,
+    "peak_rel": 0.017522967568447963
+   },
+   "散热器反照": {
+    "mean_rel": 0.01243551525828129,
+    "peak_rel": 0.012218757590574763
+   },
+   "散热器红外": {
+    "mean_rel": 0.013363462990064972,
+    "peak_rel": 0.019337789177168815
+   }
+  },
+  "fe_hot75_eclipse_event_offsets_s": [],
+  "fe_hot75_planet_radius": {
+   "R_planet": "6378[km]",
+   "nadir_view_factor_change_rel": -4.295879146076764e-05
+  },
+  "fe_hot75_saw_faces_vs_references": {
+   "saw_back_infrared": {
+    "reference_mean_W_m2": 83.55915052571848,
+    "fe_mean_W_m2": 91.83579745898165,
+    "module_mean_W_m2": 83.55900077092191,
+    "fe_minus_reference_rel": 0.09905135321733215,
+    "module_minus_reference_rel": -1.7922010411162367e-06
+   },
+   "saw_cells_infrared": {
+    "reference_mean_W_m2": 83.55895658927878,
+    "fe_mean_W_m2": 91.83064341457326,
+    "module_mean_W_m2": 83.5588068338501,
+    "fe_minus_reference_rel": 0.09899222253280025,
+    "module_minus_reference_rel": -1.792212765605839e-06
+   },
+   "saw_back_albedo": {
+    "reference_mean_W_m2": 11.522249465791447,
+    "fe_mean_W_m2": 10.232616998450304,
+    "module_mean_W_m2": 11.522485009174824,
+    "fe_minus_reference_rel": -0.11192540754910307,
+    "module_minus_reference_rel": 2.0442482527105307e-05
+   },
+   "saw_cells_albedo": {
+    "reference_mean_W_m2": 16.11062704021231,
+    "fe_mean_W_m2": 21.743615769301258,
+    "module_mean_W_m2": 16.10668767960233,
+    "fe_minus_reference_rel": 0.34964428852017626,
+    "module_minus_reference_rel": -0.0002445193846364468
+   },
+   "blanket_spread_rel": {
+    "back_infrared": [
+     -0.000966049445688677,
+     0.00041512660987708117
+    ],
+    "back_albedo": [
+     -0.0018504798644141118,
+     0.0007973522753794704
+    ],
+    "cells_infrared": [
+     -0.0009315317908096254,
+     0.0004199935140700717
+    ]
+   }
+  },
+  "fe_hot75_saw_back_ir_fe_minus_exact_mean_rel": 0.09905135321733215,
+  "fe_hot75_saw_back_albedo_mean_W_m2": {
+   "module": 11.522485009174824,
+   "fe": 10.232616998450304,
+   "rel": 0.12605455778515567
+  },
+  "fe_hot75_saw_back_albedo_peak_W_m2": {
+   "module": 44.580832145083356,
+   "fe": 41.30045207186567,
+   "rel": 0.07942721952557795
+  },
+  "fe_hot75_saw_back_infrared_mean_W_m2": {
+   "module": 83.55900077092191,
+   "fe": 91.83579745898165,
+   "rel": -0.090126039268691
+  },
+  "fe_hot75_saw_back_infrared_peak_W_m2": {
+   "module": 117.25648316318497,
+   "fe": 124.60133245097055,
+   "rel": -0.058946795698799674
+  },
+  "fe_hot75_saw_cells_albedo_mean_W_m2": {
+   "module": 16.10668767960233,
+   "fe": 21.743615769301258,
+   "rel": -0.25924520325903794
+  },
+  "fe_hot75_saw_cells_albedo_peak_W_m2": {
+   "module": 36.12863469433091,
+   "fe": 46.557902023284896,
+   "rel": -0.22400638507590007
+  },
+  "fe_hot75_saw_cells_infrared_mean_W_m2": {
+   "module": 83.5588068338501,
+   "fe": 91.83064341457326,
+   "rel": -0.09007708400103014
+  },
+  "fe_hot75_saw_cells_infrared_peak_W_m2": {
+   "module": 117.29157207870709,
+   "fe": 124.55274771006872,
+   "rel": -0.05829799634981989
+  },
+  "fe_hot75_radiator_up_albedo_mean_W_m2": {
+   "module": 0.0,
+   "fe": 3.476890350593232e-14,
+   "rel": -1.0
+  },
+  "fe_hot75_radiator_up_albedo_peak_W_m2": {
+   "module": 0.0,
+   "fe": 1.5798473640415975e-13,
+   "rel": -1.0
+  },
+  "fe_hot75_radiator_up_infrared_mean_W_m2": {
+   "module": 0.0,
+   "fe": 0.0,
+   "rel": null
+  },
+  "fe_hot75_radiator_up_infrared_peak_W_m2": {
+   "module": 0.0,
+   "fe": 0.0,
+   "rel": null
+  },
+  "fe_hot75_radiator_down_albedo_mean_W_m2": {
+   "module": 43.74531583932043,
+   "fe": 44.73073638139055,
+   "rel": -0.022030054092292643
+  },
+  "fe_hot75_radiator_down_albedo_peak_W_m2": {
+   "module": 131.99610716371174,
+   "fe": 132.97481049965484,
+   "rel": -0.007360065656537525
+  },
+  "fe_hot75_radiator_down_infrared_mean_W_m2": {
+   "module": 248.87062105583905,
+   "fe": 244.1481861377765,
+   "rel": 0.019342494379203046
+  },
+  "fe_hot75_radiator_down_infrared_peak_W_m2": {
+   "module": 253.23839979354338,
+   "fe": 248.43423100596894,
+   "rel": 0.019337789193225204
+  },
+  "fe_hot75_radiator_inner_S1_down_infrared_mean_W_m2": {
+   "module": 248.87062105583905,
+   "fe": 228.16478554916748,
+   "rel": 0.09074947940294517
+  },
+  "fe_hot75_radiator_inner_P1_up_infrared_mean_W_m2": {
+   "module": 0.0,
+   "fe": 0.0,
+   "rel": null
+  },
+  "fe_hot75_face_irradiance_module_over_fe": "saw_back_albedo 平均 11.52/10.23 峰值 44.58/41.30；saw_back_infrared 平均 83.56/91.84 峰值 117.26/124.60；saw_cells_albedo 平均 16.11/21.74 峰值 36.13/46.56；saw_cells_infrared 平均 83.56/91.83 峰值 117.29/124.55；radiator_up_albedo 平均 0.00/0.00 峰值 0.00/0.00；radiator_up_infrared 平均 0.00/0.00 峰值 0.00/0.00；radiator_down_albedo 平均 43.75/44.73 峰值 132.00/132.97；radiator_down_infrared 平均 248.87/244.15 峰值 253.24/248.43",
+  "fe_hot75_太阳翼_反照_load": {
+   "module_mean_W": 44329.716520698516,
+   "fe_mean_W": 52608.17330405484,
+   "rel_mean": -0.15736065830512794,
+   "module_peak_W": 124905.19831414428,
+   "fe_peak_W": 139006.48158223185,
+   "rel_peak": -0.1014433507530057,
+   "inst_max_rel_above_10pct_peak": 0.6555145365351749,
+   "pointwise_max_rel": 7812721252.205463,
+   "pointwise_max_abs_W": 14694.317221028046,
+   "worst_relative_point": {
+    "time_s": 13320.0,
+    "module_W": 407.82899820690886,
+    "fe_W": 5.2200633427127796e-08,
+    "abs_diff_W": 407.82899815470824
+   },
+   "pointwise_window_s": [
+    11006.375699999826,
+    16559.999999999825
+   ],
+   "zero_reference_abs_pass": true,
+   "pass": false
+  },
+  "fe_hot75_太阳翼_红外_load": {
+   "module_mean_W": 344923.35220377333,
+   "fe_mean_W": 379079.14181249565,
+   "rel_mean": -0.09010200203950244,
+   "module_peak_W": 351411.43993586366,
+   "fe_peak_W": 384183.1465173196,
+   "rel_peak": -0.08530230146360297,
+   "inst_max_rel_above_10pct_peak": 0.10095244828607568,
+   "pointwise_max_rel": 0.10095244828607568,
+   "pointwise_max_abs_W": 38263.469933396555,
+   "worst_relative_point": {
+    "time_s": 12720.0,
+    "module_W": 340761.21528242715,
+    "fe_W": 379024.6852158237,
+    "abs_diff_W": 38263.469933396555
+   },
+   "pointwise_window_s": [
+    11006.375699999826,
+    16559.999999999825
+   ],
+   "zero_reference_abs_pass": true,
+   "pass": false
+  },
+  "fe_hot75_散热器_反照_load": {
+   "module_mean_W": 2317.395857899562,
+   "fe_mean_W": 2369.598235197977,
+   "rel_mean": -0.02203005409229358,
+   "module_peak_W": 6992.456818087616,
+   "fe_peak_W": 7044.303353272269,
+   "rel_peak": -0.0073600656565378265,
+   "inst_max_rel_above_10pct_peak": 0.16266233818056572,
+   "pointwise_max_rel": 0.7216655893213972,
+   "pointwise_max_abs_W": 131.59322480250148,
+   "worst_relative_point": {
+    "time_s": 14760.0,
+    "module_W": 16.794653599373678,
+    "fe_W": 60.33983925461064,
+    "abs_diff_W": 43.54518565523696
+   },
+   "pointwise_window_s": [
+    11006.375699999826,
+    16559.999999999825
+   ],
+   "zero_reference_abs_pass": false,
+   "pass": false
+  },
+  "fe_hot75_散热器_红外_load": {
+   "module_mean_W": 49439.44299997186,
+   "fe_mean_W": 48501.30674683717,
+   "rel_mean": 0.019342494379202966,
+   "module_peak_W": 50307.12495866626,
+   "fe_peak_W": 49352.751847336905,
+   "rel_peak": 0.019337789193225152,
+   "inst_max_rel_above_10pct_peak": 0.019780820653080355,
+   "pointwise_max_rel": 0.019780820653080355,
+   "pointwise_max_abs_W": 954.3731113293543,
+   "worst_relative_point": {
+    "time_s": 16559.999999999825,
+    "module_W": 48614.61835018576,
+    "fe_W": 47671.63430182218,
+    "abs_diff_W": 942.984048363578
+   },
+   "pointwise_window_s": [
+    11006.375699999826,
+    16559.999999999825
+   ],
+   "zero_reference_abs_pass": true,
+   "pass": true
+  },
+  "fe_hot75_loads_summary": {
+   "太阳翼反照": {
+    "mean_rel": -0.15736065830512794,
+    "peak_rel": -0.1014433507530057
+   },
+   "太阳翼红外": {
+    "mean_rel": -0.09010200203950244,
+    "peak_rel": -0.08530230146360297
+   },
+   "散热器反照": {
+    "mean_rel": -0.02203005409229358,
+    "peak_rel": -0.0073600656565378265
+   },
+   "散热器红外": {
+    "mean_rel": 0.019342494379202966,
+    "peak_rel": 0.019337789193225152
+   }
+  },
+  "fe_ladder_missing_cases": [
+   "cold0"
+  ],
+  "fe_ladder_diagnostic": {
+   "nom0": {
+    "time_s": [
+     10920.000000000071,
+     11280.000000000038,
+     11640.000000000004,
+     12000.000000000056,
+     12360.000000000175,
+     12720.000000000084,
+     13080.000000000044,
+     13440.000000000011,
+     13800.000000000073,
+     14160.000000000016,
+     14520.000000000058,
+     14880.000000000064,
+     15240.00000000019,
+     15600.000000000018,
+     15959.99999999994,
+     16320.000000000093
+    ],
+    "level_2x6_source": "production export",
+    "sampling": {
+     "4x12": {
+      "raw_sample_count": 20,
+      "excluded_event_times_s": [
+       12802.43571702451,
+       12802.435717024524,
+       14968.787702716583,
+       14968.787702716585
+      ]
+     },
+     "8x24": {
+      "raw_sample_count": 20,
+      "excluded_event_times_s": [
+       12802.43571702451,
+       12802.435717024524,
+       14968.787702716583,
+       14968.787702716585
+      ]
+     }
+    },
+    "loads": {
+     "太阳翼反照": {
+      "label_en": "Solar array albedo",
+      "module_mean_W": 151700.85279802923,
+      "module_peak_W": 489302.71591930866,
+      "production_mean_W": 153253.9568773359,
+      "production_peak_W": 475698.3911618175,
+      "ladder_2x6_vs_production_max_rel": 0.0,
+      "fe_mean_W": {
+       "2x6": 153253.9568773359,
+       "4x12": 153764.0888364063,
+       "8x24": 152671.12052693998
+      },
+      "fe_peak_W": {
+       "2x6": 475698.3911618175,
+       "4x12": 490740.0669020981,
+       "8x24": 490795.7669292891
+      },
+      "fe_converged_mean_W": {
+       "value": 152671.12052693998,
+       "ratio": -2.1425207537634403,
+       "order": null,
+       "monotone": false
+      },
+      "fe_converged_peak_W": {
+       "value": 490795.9739557176,
+       "ratio": 0.003703046665330048,
+       "order": 8.077071554375866,
+       "monotone": true
+      },
+      "finest_vs_converged_mean_rel": 0.0,
+      "finest_vs_converged_peak_rel": -4.218176991474316e-07,
+      "production_vs_converged_mean_rel": 0.003817593978378382,
+      "module_vs_converged_mean_rel": -0.006355280065816647,
+      "module_vs_converged_peak_rel": -0.0030425229945827813,
+      "module_vs_finest_mean_rel": -0.006355280065816647,
+      "module_vs_finest_peak_rel": -0.003042102460096294,
+      "module_vs_production_mean_rel": -0.01013418583736653,
+      "module_vs_finest_pointwise_max_rel_above_10pct_peak": 0.01917967460277499,
+      "series_W": {
+       "module": [
+        485814.99026950455,
+        489302.71591930866,
+        349548.01857490494,
+        195092.3532089535,
+        58106.555914677185,
+        63.97253294037613,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        10768.353076021216,
+        129701.63245233479,
+        275062.97525278584,
+        433752.0775670366
+       ],
+       "production": [
+        472213.3860516954,
+        475698.3911618175,
+        351756.6822399523,
+        209148.2072257641,
+        70475.7199578009,
+        1125.9383802931975,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        20987.935552052157,
+        142469.7320907084,
+        284405.3326140198,
+        423781.98476327094
+       ],
+       "2x6": [
+        472213.3860516954,
+        475698.3911618175,
+        351756.6822399523,
+        209148.2072257641,
+        70475.7199578009,
+        1125.9383802931975,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        20987.935552052157,
+        142469.7320907084,
+        284405.3326140198,
+        423781.98476327094
+       ],
+       "4x12": [
+        487186.60088250437,
+        490740.0669020981,
+        355573.17627078947,
+        199461.7512834518,
+        61831.32147932252,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        15242.450051287533,
+        133356.18210653952,
+        282372.26592480275,
+        434461.6064817045
+       ],
+       "8x24": [
+        487274.22935520153,
+        490795.7669292891,
+        351875.5916600011,
+        196867.6091641861,
+        59242.81380602962,
+        5.4468618562255635,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        13063.685416370108,
+        131010.96877605311,
+        277495.1308509274,
+        435106.68561112555
+       ]
+      }
+     },
+     "太阳翼红外": {
+      "label_en": "Solar array infrared",
+      "module_mean_W": 357560.0492882066,
+      "module_peak_W": 439814.60789039155,
+      "production_mean_W": 370645.6450462373,
+      "production_peak_W": 430378.2456189341,
+      "ladder_2x6_vs_production_max_rel": 0.0,
+      "fe_mean_W": {
+       "2x6": 370645.6450462373,
+       "4x12": 363733.51278720185,
+       "8x24": 359807.25326437625
+      },
+      "fe_peak_W": {
+       "2x6": 430378.2456189341,
+       "4x12": 441824.809154747,
+       "8x24": 441449.8257618706
+      },
+      "fe_converged_mean_W": {
+       "value": 354644.4364927055,
+       "ratio": 0.568024362915402,
+       "order": 0.815975285749912,
+       "monotone": true
+      },
+      "fe_converged_peak_W": {
+       "value": 441449.8257618706,
+       "ratio": -0.03275947333041806,
+       "order": null,
+       "monotone": false
+      },
+      "finest_vs_converged_mean_rel": 0.014557726670490037,
+      "finest_vs_converged_peak_rel": 0.0,
+      "production_vs_converged_mean_rel": 0.045119017548329456,
+      "module_vs_converged_mean_rel": 0.008221228068133257,
+      "module_vs_converged_peak_rel": -0.003704198701759435,
+      "module_vs_finest_mean_rel": -0.006245577196628812,
+      "module_vs_finest_peak_rel": -0.003704198701759435,
+      "module_vs_production_mean_rel": -0.0353048684988549,
+      "module_vs_finest_pointwise_max_rel_above_10pct_peak": 0.010653547898865813,
+      "series_W": {
+       "module": [
+        438327.4047322495,
+        439814.60789039155,
+        379630.76215738954,
+        322210.2464649354,
+        290812.21282406827,
+        291703.4414950601,
+        324623.73698918306,
+        382349.2611453627,
+        430571.9174505863,
+        411619.7374788496,
+        349282.5151107705,
+        303347.10829203733,
+        287078.53063629835,
+        303766.7225064002,
+        350278.0832975321,
+        415544.50014019106
+       ],
+       "production": [
+        428903.29366680636,
+        430378.2456189341,
+        384103.14236357465,
+        345694.7596181491,
+        333689.8714362501,
+        329143.3744611897,
+        343603.53770100255,
+        383348.9841620654,
+        421566.26937321026,
+        403517.5398380465,
+        358026.99580755574,
+        330958.7281498591,
+        331480.69326837535,
+        333197.7349725532,
+        363472.6913753165,
+        409244.458926908
+       ],
+       "2x6": [
+        428903.29366680636,
+        430378.2456189341,
+        384103.14236357465,
+        345694.7596181491,
+        333689.8714362501,
+        329143.3744611897,
+        343603.53770100255,
+        383348.9841620654,
+        421566.26937321026,
+        403517.5398380465,
+        358026.99580755574,
+        330958.7281498591,
+        331480.69326837535,
+        333197.7349725532,
+        363472.6913753165,
+        409244.458926908
+       ],
+       "4x12": [
+        440314.95007711323,
+        441824.809154747,
+        386588.843776422,
+        329911.8866561295,
+        300257.13023891754,
+        299721.1831560711,
+        332409.2956611574,
+        387477.4258133098,
+        432306.7262927321,
+        413150.70823184773,
+        358148.7574236836,
+        312680.5066731474,
+        295577.03478270414,
+        312358.57233963546,
+        359543.6765377505,
+        417464.69777986093
+       ],
+       "8x24": [
+        439948.67788811517,
+        441449.8257618706,
+        382451.77677416225,
+        325348.92803976685,
+        292109.38030108024,
+        292935.9516630259,
+        327863.9601346985,
+        384735.0166915494,
+        431947.5051243583,
+        412886.15059477097,
+        352362.9213990982,
+        306613.6312995321,
+        288537.7334444369,
+        306863.5387575255,
+        353589.4359746107,
+        417271.61838141904
+       ]
+      }
+     },
+     "散热器反照": {
+      "label_en": "Radiator albedo",
+      "module_mean_W": 3677.206970503211,
+      "module_peak_W": 10549.291631674292,
+      "production_mean_W": 3629.67871770331,
+      "production_peak_W": 10379.466986079155,
+      "ladder_2x6_vs_production_max_rel": 0.0,
+      "fe_mean_W": {
+       "2x6": 3629.67871770331,
+       "4x12": 3760.6042896893714,
+       "8x24": 3692.8117031659062
+      },
+      "fe_peak_W": {
+       "2x6": 10379.466986079155,
+       "4x12": 10772.149282989129,
+       "8x24": 10584.377163588186
+      },
+      "fe_converged_mean_W": {
+       "value": 3692.8117031659062,
+       "ratio": -0.5177948470653434,
+       "order": null,
+       "monotone": false
+      },
+      "fe_converged_peak_W": {
+       "value": 10584.377163588186,
+       "ratio": -0.4781782139875566,
+       "order": null,
+       "monotone": false
+      },
+      "finest_vs_converged_mean_rel": 0.0,
+      "finest_vs_converged_peak_rel": 0.0,
+      "production_vs_converged_mean_rel": -0.01709618321683478,
+      "module_vs_converged_mean_rel": -0.004225704941661981,
+      "module_vs_converged_peak_rel": -0.0033148414282318885,
+      "module_vs_finest_mean_rel": -0.004225704941661981,
+      "module_vs_finest_peak_rel": -0.0033148414282318885,
+      "module_vs_production_mean_rel": 0.01309434153719652,
+      "module_vs_finest_pointwise_max_rel_above_10pct_peak": 0.008980448835831338,
+      "series_W": {
+       "module": [
+        10513.553193421223,
+        10549.291631674292,
+        8859.060355857924,
+        5719.3835511618345,
+        1653.7852707461113,
+        0.3080915657701301,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        134.6517458077857,
+        3894.458091704838,
+        7546.684961057816,
+        9964.134635053777
+       ],
+       "production": [
+        10344.405161415465,
+        10379.466986079155,
+        8716.383565957598,
+        5627.245674627952,
+        1644.5691522538903,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        291.9887578300668,
+        3833.3551432388326,
+        7428.7287793994,
+        9808.716262450605
+       ],
+       "2x6": [
+        10344.405161415465,
+        10379.466986079155,
+        8716.383565957598,
+        5627.245674627952,
+        1644.5691522538903,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        291.9887578300668,
+        3833.3551432388326,
+        7428.7287793994,
+        9808.716262450605
+       ],
+       "4x12": [
+        10735.723993454962,
+        10772.149282989129,
+        9046.184065808544,
+        5840.206967920832,
+        1705.3662459770705,
+        1.679867844828206e-12,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        219.27352076226492,
+        3974.430225695725,
+        7701.651427837386,
+        10174.68290458403
+       ],
+       "8x24": [
+        10548.586812694022,
+        10584.377163588186,
+        8888.4976923742,
+        5738.404810217873,
+        1668.7715886163696,
+        0.008332611684075722,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        186.46261918581968,
+        3905.150904802099,
+        7567.4019504581465,
+        9997.325376106099
+       ]
+      }
+     },
+     "散热器红外": {
+      "label_en": "Radiator infrared",
+      "module_mean_W": 33544.64127739235,
+      "module_peak_W": 42863.169386743524,
+      "production_mean_W": 33107.885694571014,
+      "production_peak_W": 42050.015060604775,
+      "ladder_2x6_vs_production_max_rel": 0.0,
+      "fe_mean_W": {
+       "2x6": 33107.885694571014,
+       "4x12": 34049.33648978344,
+       "8x24": 33690.37865154166
+      },
+      "fe_peak_W": {
+       "2x6": 42050.015060604775,
+       "4x12": 43059.07828960717,
+       "8x24": 43023.29875745734
+      },
+      "fe_converged_mean_W": {
+       "value": 33690.37865154166,
+       "ratio": -0.38128157102548105,
+       "order": null,
+       "monotone": false
+      },
+      "fe_converged_peak_W": {
+       "value": 43023.29875745734,
+       "ratio": -0.035458166665334044,
+       "order": null,
+       "monotone": false
+      },
+      "finest_vs_converged_mean_rel": 0.0,
+      "finest_vs_converged_peak_rel": 0.0,
+      "production_vs_converged_mean_rel": -0.017289593655071284,
+      "module_vs_converged_mean_rel": -0.004325786173455123,
+      "module_vs_converged_peak_rel": -0.0037219221988658373,
+      "module_vs_finest_mean_rel": -0.004325786173455123,
+      "module_vs_finest_peak_rel": -0.0037219221988658373,
+      "module_vs_production_mean_rel": 0.013191889897486138,
+      "module_vs_finest_pointwise_max_rel_above_10pct_peak": 0.004888471287777164,
+      "series_W": {
+       "module": [
+        27953.30636646125,
+        27953.483778585512,
+        27953.567786606603,
+        27953.486920961433,
+        27953.613778394105,
+        27953.613778394094,
+        42863.16938674348,
+        42863.16938674348,
+        42863.16938674352,
+        42863.169386743524,
+        42863.169386743524,
+        42863.169386743524,
+        27953.613778394105,
+        27953.613778394094,
+        27953.60398888781,
+        27953.340162737542
+       ],
+       "production": [
+        27742.608074950815,
+        27742.608074950767,
+        27742.60807495071,
+        27742.608074950767,
+        27742.608074950833,
+        27742.608074950724,
+        42050.015060604775,
+        42050.01506060472,
+        42050.01506060473,
+        42050.015060604775,
+        42050.015060604775,
+        42050.01506060472,
+        27742.60807495072,
+        27742.608074950782,
+        27742.608074950782,
+        27742.60807495081
+       ],
+       "2x6": [
+        27742.608074950815,
+        27742.608074950767,
+        27742.60807495071,
+        27742.608074950767,
+        27742.608074950833,
+        27742.608074950724,
+        42050.015060604775,
+        42050.01506060472,
+        42050.01506060473,
+        42050.015060604775,
+        42050.015060604775,
+        42050.01506060472,
+        27742.60807495072,
+        27742.608074950782,
+        27742.608074950782,
+        27742.60807495081
+       ],
+       "4x12": [
+        28643.49140988922,
+        28643.491409889215,
+        28643.491409889222,
+        28643.491409889226,
+        28643.491409889226,
+        28643.49140988922,
+        43059.07828960717,
+        43059.07828960716,
+        43059.07828960708,
+        43059.07828960713,
+        43059.07828960716,
+        43059.07828960716,
+        28643.491409889215,
+        28643.49140988922,
+        28643.491409889237,
+        28643.49140988921
+       ],
+       "8x24": [
+        28090.62658799232,
+        28090.626587992316,
+        28090.626587992323,
+        28090.62658799232,
+        28090.626587992323,
+        28090.62658799232,
+        43023.29875745734,
+        43023.298757457334,
+        43023.298757457196,
+        43023.29875745719,
+        43023.298757457334,
+        43023.298757457334,
+        28090.626587992185,
+        28090.626587992185,
+        28090.626587992287,
+        28090.626587992316
+       ]
+      }
+     }
+    }
+   },
+   "hot75": {
+    "time_s": [
+     10920.000000000071,
+     11280.000000000038,
+     11640.000000000004,
+     12000.000000000056,
+     12360.000000000175,
+     12720.000000000084,
+     13080.000000000044,
+     13440.000000000011,
+     13800.000000000073,
+     14160.000000000016,
+     14520.000000000058,
+     14880.000000000064,
+     15240.00000000019,
+     15600.000000000018,
+     15959.99999999994,
+     16320.000000000093
+    ],
+    "level_2x6_source": "ladder",
+    "sampling": {
+     "2x6": {
+      "raw_sample_count": 16,
+      "excluded_event_times_s": []
+     },
+     "4x12": {
+      "raw_sample_count": 16,
+      "excluded_event_times_s": []
+     },
+     "8x24": {
+      "raw_sample_count": 16,
+      "excluded_event_times_s": []
+     }
+    },
+    "loads": {
+     "太阳翼反照": {
+      "label_en": "Solar array albedo",
+      "module_mean_W": 47058.812094031484,
+      "module_peak_W": 122855.63109032385,
+      "production_mean_W": 55469.751649824655,
+      "production_peak_W": 136155.42834572226,
+      "ladder_2x6_vs_production_max_rel": 0.0,
+      "fe_mean_W": {
+       "2x6": 55469.751649824655,
+       "4x12": 50155.988379874514,
+       "8x24": 48077.10993901438
+      },
+      "fe_peak_W": {
+       "2x6": 136155.42834572226,
+       "4x12": 126402.96046683588,
+       "8x24": 123393.46902133849
+      },
+      "fe_converged_mean_W": {
+       "value": 46741.131751163775,
+       "ratio": 0.3912252645157151,
+       "order": 1.3539285553369722,
+       "monotone": true
+      },
+      "fe_converged_peak_W": {
+       "value": 122050.28788315825,
+       "ratio": 0.30858768086924887,
+       "order": 1.696247625666955,
+       "monotone": true
+      },
+      "finest_vs_converged_mean_rel": 0.02858249549803295,
+      "finest_vs_converged_peak_rel": 0.011005145186270273,
+      "production_vs_converged_mean_rel": 0.18674387143917523,
+      "module_vs_converged_mean_rel": 0.006796590732097514,
+      "module_vs_converged_peak_rel": 0.006598453974451693,
+      "module_vs_finest_mean_rel": -0.02118051285267775,
+      "module_vs_finest_peak_rel": -0.00435872283420148,
+      "module_vs_production_mean_rel": -0.1516311017379462,
+      "module_vs_finest_pointwise_max_rel_above_10pct_peak": 0.07888795053183995,
+      "series_W": {
+       "module": [
+        122462.19896355963,
+        122855.63109032385,
+        104383.66960382165,
+        71351.96521117521,
+        34849.53670239594,
+        9040.309488485522,
+        1444.5864412707108,
+        221.8186522879619,
+        62.519496971602756,
+        105.33519307133275,
+        594.5707737348525,
+        3900.7656491567473,
+        21334.54967454788,
+        53588.29882792752,
+        90324.60071322166,
+        116420.63702255164
+       ],
+       "production": [
+        135656.9049563898,
+        136155.42834572226,
+        115551.25937260357,
+        84276.78036733172,
+        48051.01349319761,
+        19865.148215227484,
+        4172.082768350339,
+        5.2200633427127796e-08,
+        5.2200633427127796e-08,
+        5.2200633427127796e-08,
+        343.4733561858484,
+        12304.817102264937,
+        33509.30104254297,
+        68282.61604895392,
+        101229.1716865655,
+        128118.0296417018
+       ],
+       "2x6": [
+        135656.9049563898,
+        136155.42834572226,
+        115551.25937260357,
+        84276.78036733172,
+        48051.01349319761,
+        19865.148215227484,
+        4172.082768350339,
+        5.2200633427127796e-08,
+        5.2200633427127796e-08,
+        5.2200633427127796e-08,
+        343.4733561858484,
+        12304.817102264937,
+        33509.30104254297,
+        68282.61604895392,
+        101229.1716865655,
+        128118.0296417018
+       ],
+       "4x12": [
+        126008.7917266227,
+        126402.96046683588,
+        107632.90457857697,
+        76419.11238739078,
+        40098.561440952464,
+        13635.02836569602,
+        4029.91182631836,
+        71.40885838703875,
+        5.2200633427127796e-08,
+        5.2200633427127796e-08,
+        1402.9692736709537,
+        7702.52389024837,
+        26231.1160134264,
+        58665.674810774864,
+        94467.03056934688,
+        119727.8198696402
+       ],
+       "8x24": [
+        122970.23867844132,
+        123393.46902133849,
+        105161.62455849531,
+        72901.23123168029,
+        36709.20031310298,
+        10819.008996010707,
+        2775.4421486733168,
+        425.4558449209464,
+        5.2200633427127796e-08,
+        45.0097747342167,
+        1392.3201716681276,
+        5494.292910612423,
+        23161.731177945414,
+        55350.87035237017,
+        91638.5955318094,
+        116995.26831237477
+       ]
+      }
+     },
+     "太阳翼红外": {
+      "label_en": "Solar array infrared",
+      "module_mean_W": 345130.03542162455,
+      "module_peak_W": 351086.60707474157,
+      "production_mean_W": 379141.14141614735,
+      "production_peak_W": 383098.27839532716,
+      "ladder_2x6_vs_production_max_rel": 0.0,
+      "fe_mean_W": {
+       "2x6": 379141.14141614735,
+       "4x12": 354458.29273016966,
+       "8x24": 346729.29692895536
+      },
+      "fe_peak_W": {
+       "2x6": 383098.27839532716,
+       "4x12": 360852.18486681726,
+       "8x24": 352828.5027130123
+      },
+      "fe_converged_mean_W": {
+       "value": 343205.7688848448,
+       "ratio": 0.3131322441564511,
+       "order": 1.675156020171705,
+       "monotone": true
+      },
+      "fe_converged_peak_W": {
+       "value": 348301.88105869916,
+       "ratio": 0.36067825317384755,
+       "order": 1.4712156553606128,
+       "monotone": true
+      },
+      "finest_vs_converged_mean_rel": 0.010266517534245803,
+      "finest_vs_converged_peak_rel": 0.012996259568148144,
+      "production_vs_converged_mean_rel": 0.10470503642192534,
+      "module_vs_converged_mean_rel": 0.0056067429840475835,
+      "module_vs_converged_peak_rel": 0.00799515066521589,
+      "module_vs_finest_mean_rel": -0.004612421048627164,
+      "module_vs_finest_peak_rel": -0.004936947057498794,
+      "module_vs_production_mean_rel": -0.08970565913128387,
+      "module_vs_finest_pointwise_max_rel_above_10pct_peak": 0.00498955227736408,
+      "series_W": {
+       "module": [
+        351024.76747447875,
+        351086.60707474157,
+        348368.2415090479,
+        344435.770426386,
+        341424.3745393596,
+        340761.21528242703,
+        342413.81234323466,
+        344971.381195567,
+        346521.1586017971,
+        345921.91482384864,
+        343614.70952344465,
+        341305.2530633106,
+        340785.22266712144,
+        342798.89185616805,
+        346550.3687235493,
+        350096.87764150987
+       ],
+       "production": [
+        382899.5942304204,
+        383098.27839532716,
+        380931.9732985762,
+        379501.7775424428,
+        379399.1576256101,
+        379024.6852158237,
+        375320.9718423708,
+        376636.348210016,
+        379165.29214024777,
+        377018.98680775356,
+        376838.98369871755,
+        378250.9314875342,
+        377803.0612582043,
+        380487.4359706904,
+        379769.0280775073,
+        380111.7568571158
+       ],
+       "2x6": [
+        382899.5942304204,
+        383098.27839532716,
+        380931.9732985762,
+        379501.7775424428,
+        379399.1576256101,
+        379024.6852158237,
+        375320.9718423708,
+        376636.348210016,
+        379165.29214024777,
+        377018.98680775356,
+        376838.98369871755,
+        378250.9314875342,
+        377803.0612582043,
+        380487.4359706904,
+        379769.0280775073,
+        380111.7568571158
+       ],
+       "4x12": [
+        360810.73348861,
+        360852.18486681726,
+        357870.35362100013,
+        354093.8633777214,
+        349689.20410456765,
+        349500.3084033192,
+        352402.7916122251,
+        354622.34194626886,
+        356265.24944863695,
+        355606.1875254362,
+        353478.170716363,
+        350321.93928794656,
+        347963.9037018505,
+        351701.32865947596,
+        356474.6291946159,
+        359679.49372785963
+       ],
+       "8x24": [
+        352665.49979665125,
+        352828.5027130123,
+        349677.5555439054,
+        345951.21678030555,
+        343136.47190419585,
+        342321.95070106373,
+        343874.803916415,
+        346588.49111181777,
+        348240.9235685137,
+        347593.3873625409,
+        345164.0781495981,
+        342892.38413983816,
+        342452.4158695992,
+        344404.67194714333,
+        348146.6029835667,
+        351729.79437511857
+       ]
+      }
+     },
+     "散热器反照": {
+      "label_en": "Radiator albedo",
+      "module_mean_W": 2475.8541129606447,
+      "module_peak_W": 6879.49875090589,
+      "production_mean_W": 2526.9854193040746,
+      "production_peak_W": 6918.934694400205,
+      "ladder_2x6_vs_production_max_rel": 4.305853059263217e-15,
+      "fe_mean_W": {
+       "2x6": 2526.985419304072,
+       "4x12": 2525.4294023467273,
+       "8x24": 2499.50367314816
+      },
+      "fe_peak_W": {
+       "2x6": 6918.934694400203,
+       "4x12": 6973.311472848345,
+       "8x24": 6927.099447356279
+      },
+      "fe_converged_mean_W": {
+       "value": 2499.50367314816,
+       "ratio": 16.66159811189385,
+       "order": null,
+       "monotone": false
+      },
+      "fe_converged_peak_W": {
+       "value": 6927.099447356279,
+       "ratio": -0.8498485348141309,
+       "order": null,
+       "monotone": false
+      },
+      "finest_vs_converged_mean_rel": 0.0,
+      "finest_vs_converged_peak_rel": 0.0,
+      "production_vs_converged_mean_rel": 0.010994881284291517,
+      "module_vs_converged_mean_rel": -0.009461702513814837,
+      "module_vs_converged_peak_rel": -0.00687166350247149,
+      "module_vs_finest_mean_rel": -0.009461702513814837,
+      "module_vs_finest_peak_rel": -0.00687166350247149,
+      "module_vs_production_mean_rel": -0.020234112137264094,
+      "module_vs_finest_pointwise_max_rel_above_10pct_peak": 0.01876074391242473,
+      "series_W": {
+       "module": [
+        6857.745265033206,
+        6879.49875090589,
+        5834.481808126066,
+        3836.6142372864447,
+        1340.2197231639225,
+        123.17670903751129,
+        10.2569138241867,
+        0.9113030362308424,
+        0.18152414168635472,
+        0.35189493344374717,
+        3.239004763746039,
+        38.24233151414026,
+        488.55153790513344,
+        2673.4173874262847,
+        5005.802055231979,
+        6520.975361040444
+       ],
+       "production": [
+        6897.043485987094,
+        6918.934694400205,
+        5866.496324995235,
+        3907.6233562132384,
+        1451.7525801692711,
+        229.1040487253873,
+        32.040886940267235,
+        4.184598587642083e-12,
+        2.0922992938210403e-12,
+        1.56922447036578e-12,
+        2.3057306697983684,
+        120.09067103367744,
+        619.0372631925077,
+        2787.282240179026,
+        5041.9782690655575,
+        6558.077157293917
+       ],
+       "2x6": [
+        6897.04348598708,
+        6918.934694400203,
+        5866.49632499523,
+        3907.6233562132215,
+        1451.7525801692739,
+        229.10404872538717,
+        32.04088694026722,
+        4.1845985876420805e-12,
+        2.0922992938210395e-12,
+        1.5692244703657794e-12,
+        2.3057306697983693,
+        120.09067103367754,
+        619.0372631925065,
+        2787.282240179024,
+        5041.978269065558,
+        6558.07715729392
+       ],
+       "4x12": [
+        6951.24821867349,
+        6973.311472848345,
+        5914.866951828968,
+        3914.405842089825,
+        1406.2739870551954,
+        168.59119091274687,
+        28.95751313760399,
+        0.3174731379190754,
+        2.0922992938210395e-12,
+        1.5692244703657794e-12,
+        7.73436046342211,
+        69.56911430088319,
+        533.8217124740462,
+        2744.5783541098253,
+        5083.576335568062,
+        6609.617910947305
+       ],
+       "8x24": [
+        6905.182406019954,
+        6927.099447356279,
+        5877.133357232982,
+        3873.174136185473,
+        1365.843972149753,
+        139.68776044125318,
+        19.301677424368105,
+        1.773068589050435,
+        2.0922992938210395e-12,
+        0.1495044904925793,
+        7.58699881816276,
+        51.04091538172404,
+        504.7633814732575,
+        2706.0851139374577,
+        5046.854336620309,
+        6566.382694250039
+       ]
+      }
+     },
+     "散热器红外": {
+      "label_en": "Radiator infrared",
+      "module_mean_W": 49413.74943132722,
+      "module_peak_W": 50305.256002645256,
+      "production_mean_W": 48476.32445496697,
+      "production_peak_W": 49350.91834627263,
+      "ladder_2x6_vs_production_max_rel": 4.3328251288768695e-15,
+      "fe_mean_W": {
+       "2x6": 48476.32445496694,
+       "4x12": 49639.59815211542,
+       "8x24": 49598.3505994845
+      },
+      "fe_peak_W": {
+       "2x6": 49350.918346272614,
+       "4x12": 50535.17944460891,
+       "8x24": 50493.18771720879
+      },
+      "fe_converged_mean_W": {
+       "value": 49598.3505994845,
+       "ratio": -0.03545816666535427,
+       "order": null,
+       "monotone": false
+      },
+      "fe_converged_peak_W": {
+       "value": 50493.18771720879,
+       "ratio": -0.03545816666536783,
+       "order": null,
+       "monotone": false
+      },
+      "finest_vs_converged_mean_rel": 0.0,
+      "finest_vs_converged_peak_rel": 0.0,
+      "production_vs_converged_mean_rel": -0.02262224713031478,
+      "module_vs_converged_mean_rel": -0.003721921514043333,
+      "module_vs_converged_peak_rel": -0.0037219221653436263,
+      "module_vs_finest_mean_rel": -0.003721921514043333,
+      "module_vs_finest_peak_rel": -0.0037219221653436263,
+      "module_vs_production_mean_rel": 0.019337789877842092,
+      "module_vs_finest_pointwise_max_rel_above_10pct_peak": 0.003721922317404432,
+      "series_W": {
+       "module": [
+        48665.61642058194,
+        48654.998706404964,
+        49125.15955278577,
+        49804.52575812246,
+        50265.538542126305,
+        50194.20800797277,
+        49640.38278426046,
+        48975.33400981548,
+        48608.18159389481,
+        48747.7690897984,
+        49316.114629852134,
+        49977.70117450348,
+        50305.256002645256,
+        50072.510129552524,
+        49441.24580991564,
+        48825.44868900313
+       ],
+       "production": [
+        47742.38420559386,
+        47731.967903700446,
+        48193.20936575347,
+        48859.68738537925,
+        49311.9543566282,
+        49241.97704321628,
+        48698.65838920075,
+        48046.22618287055,
+        47686.038964838444,
+        47822.97834564605,
+        48380.5418524391,
+        49029.57751153597,
+        49350.91834627263,
+        49122.58788630062,
+        48503.29922203018,
+        47899.184318065716
+       ],
+       "2x6": [
+        47742.384205593815,
+        47731.967903700526,
+        48193.20936575349,
+        48859.687385379235,
+        49311.95435662817,
+        49241.97704321619,
+        48698.65838920054,
+        48046.22618287055,
+        47686.038964838546,
+        47822.97834564611,
+        48380.541852438946,
+        49029.57751153589,
+        49350.918346272614,
+        49122.587886300505,
+        48503.29922203022,
+        47899.184318065694
+       ],
+       "4x12": [
+        48888.04573026486,
+        48877.37947109541,
+        49349.68922404865,
+        50032.16054264404,
+        50495.28044628125,
+        50423.62390555562,
+        49867.26737570083,
+        49199.17892411438,
+        48830.34838748313,
+        48970.573866846826,
+        49541.51707949059,
+        50206.12747778709,
+        50535.17944460891,
+        50301.36979822293,
+        49667.22022561884,
+        49048.60853408337
+       ],
+       "8x24": [
+        48847.42267298102,
+        48836.76527683833,
+        49308.68256848812,
+        49990.586794023126,
+        50453.32187257492,
+        50381.724874171276,
+        49825.830643490866,
+        49158.297333658134,
+        48789.77327325816,
+        48929.88223359164,
+        49500.35102639535,
+        50164.40917299365,
+        50493.18771720879,
+        50259.57235272784,
+        49625.9497206882,
+        49007.852058662684
+       ]
+      }
+     }
+    }
+   }
+  },
+  "fe_refined_comparison": {
+   "levels": [
+    "2x6",
+    "4x12",
+    "8x24"
+   ],
+   "step_s": 360,
+   "instants": 16,
+   "sample_start_s": 10920.000000000071,
+   "sample_end_s": 16320.000000000093,
+   "cases": {
+    "nom0": {
+     "太阳翼反照": {
+      "label_cn": "太阳翼反照",
+      "label_en": "Solar array albedo",
+      "fe_mean_kW": {
+       "2x6": 153.2539568773359,
+       "4x12": 153.7640888364063,
+       "8x24": 152.67112052693997
+      },
+      "module_mean_kW": 151.70085279802922,
+      "rel_vs_finest": -0.006355280065816647,
+      "rel_vs_extrapolated": -0.006355280065816647,
+      "extrapolation_monotone": false
+     },
+     "太阳翼红外": {
+      "label_cn": "太阳翼红外",
+      "label_en": "Solar array infrared",
+      "fe_mean_kW": {
+       "2x6": 370.6456450462373,
+       "4x12": 363.73351278720185,
+       "8x24": 359.80725326437624
+      },
+      "module_mean_kW": 357.56004928820664,
+      "rel_vs_finest": -0.006245577196628812,
+      "rel_vs_extrapolated": 0.008221228068133257,
+      "extrapolation_monotone": true
+     },
+     "散热器反照": {
+      "label_cn": "散热器反照",
+      "label_en": "Radiator albedo",
+      "fe_mean_kW": {
+       "2x6": 3.6296787177033103,
+       "4x12": 3.7606042896893714,
+       "8x24": 3.6928117031659062
+      },
+      "module_mean_kW": 3.6772069705032107,
+      "rel_vs_finest": -0.004225704941661981,
+      "rel_vs_extrapolated": -0.004225704941661981,
+      "extrapolation_monotone": false
+     },
+     "散热器红外": {
+      "label_cn": "散热器红外",
+      "label_en": "Radiator infrared",
+      "fe_mean_kW": {
+       "2x6": 33.10788569457102,
+       "4x12": 34.04933648978344,
+       "8x24": 33.69037865154166
+      },
+      "module_mean_kW": 33.54464127739235,
+      "rel_vs_finest": -0.004325786173455123,
+      "rel_vs_extrapolated": -0.004325786173455123,
+      "extrapolation_monotone": false
+     }
+    },
+    "hot75": {
+     "太阳翼反照": {
+      "label_cn": "太阳翼反照",
+      "label_en": "Solar array albedo",
+      "fe_mean_kW": {
+       "2x6": 55.46975164982466,
+       "4x12": 50.155988379874515,
+       "8x24": 48.07710993901438
+      },
+      "module_mean_kW": 47.05881209403148,
+      "rel_vs_finest": -0.02118051285267775,
+      "rel_vs_extrapolated": 0.006796590732097514,
+      "extrapolation_monotone": true
+     },
+     "太阳翼红外": {
+      "label_cn": "太阳翼红外",
+      "label_en": "Solar array infrared",
+      "fe_mean_kW": {
+       "2x6": 379.1411414161474,
+       "4x12": 354.45829273016966,
+       "8x24": 346.72929692895536
+      },
+      "module_mean_kW": 345.13003542162454,
+      "rel_vs_finest": -0.004612421048627164,
+      "rel_vs_extrapolated": 0.0056067429840475835,
+      "extrapolation_monotone": true
+     },
+     "散热器反照": {
+      "label_cn": "散热器反照",
+      "label_en": "Radiator albedo",
+      "fe_mean_kW": {
+       "2x6": 2.5269854193040717,
+       "4x12": 2.5254294023467274,
+       "8x24": 2.49950367314816
+      },
+      "module_mean_kW": 2.475854112960645,
+      "rel_vs_finest": -0.009461702513814837,
+      "rel_vs_extrapolated": -0.009461702513814837,
+      "extrapolation_monotone": false
+     },
+     "散热器红外": {
+      "label_cn": "散热器红外",
+      "label_en": "Radiator infrared",
+      "fe_mean_kW": {
+       "2x6": 48.47632445496694,
+       "4x12": 49.63959815211542,
+       "8x24": 49.598350599484505
+      },
+      "module_mean_kW": 49.41374943132722,
+      "rel_vs_finest": -0.003721921514043333,
+      "rel_vs_extrapolated": -0.003721921514043333,
+      "extrapolation_monotone": false
+     }
+    }
+   }
+  },
+  "step4_variants": 37,
+  "step4_reported": 37
+ },
+ "summary_cn": "按设计报告第 5.3 节与表 5 检验 earth_flux 为太阳能板与散热板表面提供的地球反照与红外辐照。400 km 对地平板视角系数解析值 0.8855，earth_flux 为 0.8855，最大相对误差 0.000326%，门限 0.1%。β 0° 与 75° 两条 400 km 圆轨道每圈 96 个位置，冷、平均、热三组环境值，对地、背地、垂直于当地竖直方向、跟踪太阳及其背面共 8 个法向，与独立的地心面元积分和解析倾斜平板视角系数逐点比较，按判据折算的最大相差为 100.00%，门限 1%；参照面元积分与解析视角系数最大绝对差 0.000007，网格加密后参照变化不超过 0.00242%，蒙特卡罗校核最大 2.2 倍标准误差。从已求解的国际空间站有限元模型导出美国太阳翼正面与背面、EATCS 散热器两翼外侧面的太阳波段与红外波段外部辐照；太阳能板按太阳翼正反两面配置，散热板按散热器两翼外侧面配置，在同一轨道、太阳方向与指向规律下经 run_coupled 运行最后一个轨道周期，比较时间加权平均与峰值热载荷，门限 3%：冷工况太阳翼反照平均相差 −1.6%、峰值相差 1.8%，太阳翼红外平均相差 −3.8%、峰值相差 1.8%，散热器反照平均相差 1.2%、峰值相差 1.2%，散热器红外平均相差 1.3%、峰值相差 1.9%；平均工况太阳翼反照平均相差 −1.6%、峰值相差 1.8%，太阳翼红外平均相差 −3.8%、峰值相差 1.8%，散热器反照平均相差 1.2%、峰值相差 1.2%，散热器红外平均相差 1.3%、峰值相差 1.9%；热工况太阳翼反照平均相差 −15.7%、峰值相差 −10.1%，太阳翼红外平均相差 −9.0%、峰值相差 −8.5%，散热器反照平均相差 −2.2%、峰值相差 −0.7%，散热器红外平均相差 1.9%、峰值相差 1.9%。在有限元输出时刻，earth_flux 的太阳翼正反面红外与解析倾斜平板视角系数逐点相差不超过 0.1%，反照与地心面元积分逐点相差不超过 1%；同一时刻有限元整周期平均相对参照的偏差为冷工况背面红外 3.9%、背面反照 −2.0%、正面反照 43.4%；平均工况背面红外 3.9%、背面反照 −2.0%、正面反照 43.4%；热工况背面红外 9.9%、背面反照 −11.2%、正面反照 35.0%。有限元 16 块毯面之间背面地球红外整周期平均与全体平均相差不超过 0.10%，毯面之间的遮挡不能解释上述偏差；有限元把地球离散为 2 圈每圈 6 个点，太阳翼在掠射角下看到地球时偏差最大；有限元行星半径 6378 km，由此引起的对地平板视角系数变化为 0.0043%，可以忽略。散热器两翼内侧面在部分姿态下被另一翼挡住地球，冷工况左舷翼内侧面地球红外 earth_flux 比有限元高 10.6%，平均工况左舷翼内侧面地球红外 earth_flux 比有限元高 10.6%，热工况右舷翼内侧面地球红外 earth_flux 比有限元高 9.1%，设计报告第 4.4 节不计组件间遮挡，这些面只作记录，比较取两翼外侧面。反照或红外记录缺失、空值与非有限值等 37 种异常情形中 37 种被拒绝并指出相应字段或表面，耦合运行在缺失记录的时刻之前停止，显式关闭反照与红外时归档记录了该简化条件。",
+ "anomalies_cn": "步骤2 对地平板反照辐照与可见地球面元积分未达到判据；步骤2 垂直于当地竖直方向平板反照辐照与可见地球面元积分未达到判据；步骤2 跟踪太阳平板反照辐照与可见地球面元积分未达到判据；冷工况 太阳翼正反面辐照与独立参照未达到判据；冷工况 太阳翼反照热载荷与有限元：平均 earth_flux 87.026 kW，有限元 88.398 kW，相差 −1.6%；峰值 315.565 kW 对 309.865 kW，相差 1.8%；冷工况 太阳翼红外热载荷与有限元：平均 earth_flux 303.313 kW，有限元 315.249 kW，相差 −3.8%；峰值 382.555 kW 对 375.967 kW，相差 1.8%；冷工况 散热器反照热载荷与有限元：平均 earth_flux 1.600 kW，有限元 1.580 kW，相差 1.2%；峰值 5.005 kW 对 4.944 kW，相差 1.2%；平均工况 太阳翼正反面辐照与独立参照未达到判据；平均工况 太阳翼反照热载荷与有限元：平均 earth_flux 139.997 kW，有限元 142.203 kW，相差 −1.6%；峰值 507.640 kW 对 498.470 kW，相差 1.8%；平均工况 太阳翼红外热载荷与有限元：平均 earth_flux 354.847 kW，有限元 368.811 kW，相差 −3.8%；峰值 447.552 kW 对 439.845 kW，相差 1.8%；平均工况 散热器反照热载荷与有限元：平均 earth_flux 3.432 kW，有限元 3.389 kW，相差 1.2%；峰值 10.735 kW 对 10.605 kW，相差 1.2%；热工况 太阳翼正反面辐照与独立参照未达到判据；热工况 太阳翼反照热载荷与有限元：平均 earth_flux 44.330 kW，有限元 52.608 kW，相差 −15.7%；峰值 124.905 kW 对 139.006 kW，相差 −10.1%；热工况 太阳翼红外热载荷与有限元：平均 earth_flux 344.923 kW，有限元 379.079 kW，相差 −9.0%；峰值 351.411 kW 对 384.183 kW，相差 −8.5%；热工况 散热器反照热载荷与有限元：平均 earth_flux 2.317 kW，有限元 2.370 kW，相差 −2.2%；峰值 6.992 kW 对 7.044 kW，相差 −0.7%；地球离散加密覆盖三个工况未达到判据。",
+ "environment": {
+  "python": "3.11.9",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "astropy": "8.0.1",
+  "pytest": "9.1.1",
+  "ntu_space_dynamics": "0.1.0",
+  "usd": "0.26.8"
+ },
+ "execution": {
+  "started_utc": "2026-10-06T01:20:59.544683+00:00",
+  "recorded_utc": "2026-10-06T01:22:33.877140+00:00",
+  "collected_functions": 7,
+  "finished_functions": 7,
+  "unexecuted_functions": [],
+  "source_sha256": {
+   "thermal/__init__.py": "ffb342305704801c8871a2af365af61877f7e6485b07ec381e0f777da9d294f5",
+   "thermal/environment.py": "5c3eba796dd28d41a4f1b6fa637ada3c0b8d2942ebc5f65b1e55f1384fa99f41",
+   "thermal/model.py": "9f758d46ea25844878e8cac7ccc402c31610548d255ded7d8d980ae95a965b9e",
+   "thermal/parameters.py": "792e7f5d1175e3564b7486a230039cf026fbad78074cfc8de4fbf352d9c946f9",
+   "thermal/types.py": "2c76359dfa9555ef7d51df83009a5985964c66080dc9062746815451e827a794",
+   "sdtwin_sim/__init__.py": "e2c3bee5849391a86fa79109339d001a75779dd93835d9e829f5f1591de81a31",
+   "sdtwin_sim/coupled.py": "f05e19e220284ad3a0c1e4188eb405fa66b6777f4226decfe95d2c559bca1dff",
+   "sdtwin_sim/earth_flux.py": "03b0d340d77e583cf73a3f0ec31ca0d9830c3bdc5f824903adae266b82a853a2",
+   "sdtwin_sim/power_stand_in.py": "3229251cdd2834bc2df18177c079e651f53a0827fb57cba21527ebdbf281c58f",
+   "sdtwin_sim/scene.py": "b7b1ad5328e6f6278354249e3087d47197895294af8607d21c7dcce354c7ab9b",
+   "tests/conftest.py": "345e7f788242083755505607636fa4af3e88cbf303a6a1728e4ab327e106d11e",
+   "tests/data/dm_001/reference.py": "3bba4938e76134c73272c00250517cc01c519da62f881382ddb42daa9c79fe2c",
+   "tests/data/en_001/en001_reference.py": "73370bd0a9fdc7e7c373e8dda1b5aa0c9a6970dc047fba3cf8a7c3fd808e6ea4",
+   "tests/data/en_003/earth_reference.py": "880154b92405e9af399b772296148219ca78f8ac62e9fcbeaeef67bb45ce117f",
+   "tests/data/en_003/fe_explore.py": "0cceaffd85c2d15b11fee6c7e6b5bbb00a17d94e63940b45a2db1863dfecd473",
+   "tests/data/en_003/fe_export.py": "b33fc7276138dc59e944c5cbfed73acc0d1f1ec2ce7d458b90eed62790aa8f85",
+   "tests/data/en_003/fe_refine.py": "6ad00122cb8f7a65d0f5c23f7c139b20e92d6f75fa0f472b16d2d97628995c43",
+   "tests/data/en_003/fe_refine_ladder.py": "1aa91782972a6b62c176a57b499b28c30a0d4452f822b8abae07e5abd0c46f8a",
+   "tests/data/en_003/ladder_compare.py": "03c67bc6490156b9e99741a6c32e6f577b1749645879e61e42f180a97d0ca8fe",
+   "tests/data/fe_001/fe001_support.py": "d1bd978ad70120cf974e46cd996a8367bd5efc08e4d8755405c2a3a21be41051",
+   "tests/data/fe_002/fe002_support.py": "2c27a76b1fd972625293b26b8e1a07d0850ba78254c4457782607279205c4f7c",
+   "tests/data/fe_003/fe003_support.py": "00d548cb2c513707bfeb16f81bf130eded88fb09a87ba8785ad27ee341a985f2",
+   "tests/data/fe_004/fe004_support.py": "54a7d7d8ce2fa0e4f9b054f596a927f8531c0cc0b77a783dcd7ab6973c1f6e44",
+   "tests/data/ht_001/t2_reference.py": "2098ccd9080957ab24ff44712b3b8e688d2b41cfa077e95460a96c82f3d27f89",
+   "tests/data/ht_002/ht002_reference.py": "076d20dec2f98fb84bbbcda17b3a0313de6c8ffb44f4c2121282eb01387bd7e7",
+   "tests/data/ht_003/analytic.py": "5ee9b0e8d1c4e06067e44754c2dd2393218e4d2a6a3d91d64064d726cb06a3a5",
+   "tests/data/ni_001/ni001_support.py": "fc84c2b085ace6fa38819195dd85f0ae47846dbd8505432ef469dd19a276b0c7",
+   "tests/data/ni_002/ni002_reference.py": "b263602b77beb5b57e4b7360db586394228e18381b8f1e40abf20f1c3295665b",
+   "tests/data/ni_003/make_ni003_data.py": "d03cfe33141adc1f8288763c42009504dcdf076ba5e46d9539ddedca64eedce7",
+   "tests/data/ni_003/ni003_support.py": "bc563f0d0b9d56e461eac3e8db7c76b37ce1431468dd4b51d257a4a551257616",
+   "tests/data/ni_003/payload/ni003_payload.py": "4755abecf85fc0e3ee9006954b933ff3e1728e8647f725a0cb05e0bff654d433",
+   "tests/data/ni_003/probe_no_exec.py": "a2d7e9613788aa4f5eb24af6c8b5dac16a234a28b96df880b7a0bfef6672cc32",
+   "tests/data/ni_003/run_alone.py": "932a1b32033842df026eac9a1496ccd301c89291e980e969fbb3a5022acee0f6",
+   "tests/data/pa_001/pa001_inputs.py": "f1b685263ff6770efd7dd01f2f9b378230ab7fab12800b3e5a697d4cf17fc4b4",
+   "tests/data/simready/make_geometry.py": "2a4c7a5b278c7ddcbe2b673950b13c7bdaaf03921f8883693bc30e28c254094c",
+   "tests/data/simready/make_scene_variants.py": "994ca8d44a44023f7d778c0337ad5403420eea194bc8202194c440a28d1f1247",
+   "tests/test_dm_001_data_objects.py": "44d85eac05803a2bb04c5e1d0c2fea1c0c572c60299ee6f28eb7cb4986f897a8",
+   "tests/test_ec_001_power_ports.py": "cdb8dac627ff5e5bd56a852fd6344996658d8dc2df56beebb8efdd5a159c7f67",
+   "tests/test_en_001_surface_environment.py": "1b0f11127159690d57558aedcdece9c11559b2b6dda75637714d26090c0dd679",
+   "tests/test_en_002_surface_heat.py": "c45ab4a04ceaa6211d5aaf72befbf5d95e8e9c7be5b86454ccc4a6b5cae39e34",
+   "tests/test_en_003_earth_flux.py": "da07491636b21bf179f88648fa38ea53aca7d305b7d93c1f0a3a020da9ac6f10",
+   "tests/test_fe_001_solar_array_fe.py": "f23d462dbbd432308214db7d5634689b059f5e5b1bb4f46251c0836d139f3cd7",
+   "tests/test_fe_002_radiator_fe.py": "f1be285404e242cc6394363eac2ed1345233e1497ed83fff5f4e3dde09260aa1",
+   "tests/test_fe_003_compute_cold_plate_fe.py": "3a9bfdd73afca2fb2257235348b85702707b5c390b1814a3d15621fba39bafce",
+   "tests/test_fe_004_whole_satellite_chain.py": "6aaeec63a82a4031d916d063694f2aa9a6b750c1712ce2bb7ba036497f1e9a66",
+   "tests/test_ht_001_heat_flows.py": "2d91f41677820f09cdb4e6edac6582be56c9647cea59bfaa629e30da1e759049",
+   "tests/test_ht_002_derivative_balance.py": "728e57be7630d1be877a265ad0206e9ab0cef1374a9bd74f20f438f18a0d144b",
+   "tests/test_ht_003_analytic.py": "a66ffc2613929fbd9bb44a0f2a8f1d41879069d1b2d9584f8fb2041f1545e832",
+   "tests/test_ni_001_numerics_eclipse.py": "1f4cba777b1aba392d09bb130ec6652d2b04004a3ac97ea4e49a88424aacdf47",
+   "tests/test_ni_002_end_to_end.py": "fb33ca9517ced5761c63ae7d68cefc72e98c3c3e36c7a8665b0d89fc9d3c696e",
+   "tests/test_ni_003_scene_assembly.py": "2ce365771b66f67e78334bbb3358a210d8eabed0753d82b7abeb4f3e900e6226",
+   "tests/test_pa_001_t5_assembly.py": "fa1b1edba0b491daf8a6e06ecd6d3a1e8baa9307daf94b5d885659a0620e3293"
+  }
+ }
+}

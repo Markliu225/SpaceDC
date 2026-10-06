@@ -1,0 +1,5 @@
+2026-10-06T08:00:05+08:00 Completed refinement levels: ['hot75/4x12']
+2026-10-06T08:07:05+08:00 Completed refinement levels: ['hot75/4x12', 'hot75/8x24']
+2026-10-06T08:17:24+08:00 Completed refinement levels: ['hot75/4x12', 'hot75/8x24', 'nom0/4x12']
+2026-10-06T09:20:24+08:00 Completed refinement levels: ['hot75/4x12', 'hot75/8x24', 'nom0/4x12', 'nom0/8x24']
+2026-10-06T09:29:54+08:00 Completed refinement levels: ['hot75/4x12', 'hot75/8x24', 'nom0/4x12', 'nom0/8x24', 'cold0/4x12']

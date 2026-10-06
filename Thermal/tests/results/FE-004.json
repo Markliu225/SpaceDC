@@ -1,0 +1,956 @@
+{
+ "case_id": "FE-004",
+ "status": "fail",
+ "checks": [
+  {
+   "name": "步骤1 caseA 有限元数据与报告一致",
+   "expected": "probes 与 OrbitWiz 轨迹的第四、五圈样本均值与 REPORT.md section 7.8 table, orbits 4 to 5 cyclic means (sample mean of the 120 s probe output over 3P <= tau <= 5P, as computed by compare_report.py) 相差不超过 0.05 K",
+   "actual": "radiator_mean 40.190 °C 报告 40.2 °C; baseplate_mean 59.233 °C 报告 59.2 °C; bus_mean 66.181 °C 报告 66.2 °C; orbitwiz_node 46.776 °C 报告 46.8 °C; 最大差 0.033 K",
+   "passed": true
+  },
+  {
+   "name": "步骤1 caseA 散热板辐射面积与有限元一致",
+   "expected": "四个散热板面面积之和等于有限元积分的散热板面积, 相对差 <= 1e-6",
+   "actual": "模块 6.272640 m2, 有限元 6.272640 m2",
+   "passed": true
+  },
+  {
+   "name": "步骤1 caseB 有限元数据与报告一致",
+   "expected": "probes 与 OrbitWiz 轨迹的第四、五圈样本均值与 REPORT.md section 7.8 table, orbits 4 to 5 cyclic means (sample mean of the 120 s probe output over 3P <= tau <= 5P, as computed by compare_report.py) 相差不超过 0.05 K",
+   "actual": "radiator_mean 53.903 °C 报告 53.9 °C; baseplate_mean 78.273 °C 报告 78.3 °C; bus_mean 84.709 °C 报告 84.7 °C; orbitwiz_node 63.208 °C 报告 63.2 °C; 最大差 0.027 K",
+   "passed": true
+  },
+  {
+   "name": "步骤1 caseB 散热板辐射面积与有限元一致",
+   "expected": "四个散热板面面积之和等于有限元积分的散热板面积, 相对差 <= 1e-6",
+   "actual": "模块 6.272640 m2, 有限元 6.272640 m2",
+   "passed": true
+  },
+  {
+   "name": "步骤1 C_J 按 T5 第一行",
+   "expected": "C_J = sum m cp = 234267.912287 J/K, 相对差 <= 1e-12; 封装 13.753 kg + 刀片 146.367 kg + 机身 100.178 kg, cp 900.0 J/kgK",
+   "actual": "模块 C_J_K[J] = 234267.912287 J/K",
+   "passed": true
+  },
+  {
+   "name": "步骤1 C_C 按 T5 第一行",
+   "expected": "C_C = sum m cp = 7996.878845 J/K, 相对差 <= 1e-12; 热管传输段与连接段 8.885 kg, cp 900.0 J/kgK",
+   "actual": "模块 C_J_K[C] = 7996.878845 J/K",
+   "passed": true
+  },
+  {
+   "name": "步骤1 C_R 按 T5 第一行",
+   "expected": "C_R = sum m cp = 38077.910722 J/K, 相对差 <= 1e-12; 散热板 13.800 kg + 集热管与分支热管 28.509 kg, cp 900.0 J/kgK",
+   "actual": "模块 C_J_K[R] = 38077.910722 J/K",
+   "passed": true
+  },
+  {
+   "name": "步骤1 C_S 按 T5 第一行",
+   "expected": "C_S = sum m cp = 118441.225265 J/K, 相对差 <= 1e-12; 太阳翼 2.5 kg/m2 x 52.6405 m2, cp 900.0 J/kgK",
+   "actual": "模块 C_J_K[S] = 118441.225265 J/K",
+   "passed": true
+  },
+  {
+   "name": "步骤1 质量只计一次",
+   "expected": "有限元重叠块按 Form Union 合并后计体积, 机身并集体积小于各块体积之和; 每个材料份额只属于一个组件",
+   "actual": "机身并集 0.037103 m3, 各块之和 0.039399 m3; 10 个材料份额各出现一次",
+   "passed": true
+  },
+  {
+   "name": "步骤1 刀片三维导热解",
+   "expected": "热平衡误差 <= 1e-8 W/W, 最细两级网格的基板温升相对变化 <= 0.02",
+   "actual": "4.0 mm 85572 单元 基板 0.04501 K/W 封装 0.04557 K/W 机身热 0.04196 K/W; 3.0 mm 202076 单元 基板 0.04472 K/W 封装 0.04527 K/W 机身热 0.04168 K/W; 2.5 mm 345655 单元 基板 0.04460 K/W 封装 0.04515 K/W 机身热 0.04156 K/W; 热平衡最大误差 2.91e-13; 相对变化 0.0026",
+   "passed": true
+  },
+  {
+   "name": "步骤1 R_JC 按 T5 第二行",
+   "expected": "R_JC = l/(k A) + R_contact = 0.1170/(238.0 x 0.132265) + 1.2722e-05 = 3.729485e-03 K/W; 导热部分为刀片三维解 0.04460 K/W 除以 12, 接触部分为导热垫 6e-06 m2K/W 除以封装底面 0.03930 m2 再除以 12",
+   "actual": "模块 R_K_W[JC] = 3.729485e-03 K/W, 方法 conduction_plus_contact",
+   "passed": true
+  },
+  {
+   "name": "步骤1 R_CR 按热管网络",
+   "expected": "R_CR = 四个热管网络平均热阻 / 4 = 5.330458e-03 K/W; 上方网络: 传输段 0.00575, 连接段 0.00835, 集热管与分支热管及翅片 0.00755 K/W, k_eff 160513 W/mK",
+   "actual": "模块 R_K_W[CR] = 5.330458e-03 K/W, 方法 equivalent_total, 各网络 Top_p 0.02164, Top_n 0.02164, Bot_p 0.02100, Bot_n 0.02100 K/W",
+   "passed": true
+  },
+  {
+   "name": "步骤1 散热板表面与光学性质",
+   "expected": "四个面 1.56816 m2, 法向 +Y 与 -Y, 吸收率 0.25, 发射率 0.85 取自 geometry_spec OPT_WHITEPAINT",
+   "actual": "RadiatorTop_p 1.56816 m2 n (0.0, 1.0, 0.0) a 0.25 e 0.85; RadiatorTop_n 1.56816 m2 n (0.0, -1.0, 0.0) a 0.25 e 0.85; RadiatorBot_p 1.56816 m2 n (0.0, 1.0, 0.0) a 0.25 e 0.85; RadiatorBot_n 1.56816 m2 n (0.0, -1.0, 0.0) a 0.25 e 0.85",
+   "passed": true
+  },
+  {
+   "name": "步骤1 SR BR DR 测试配置",
+   "expected": "有限元无太阳翼支架导热, 无电池与独立电源设备: SR, BR, DR 取 1e+12 K/W, 按第 9.4 节记录",
+   "actual": "SR 1e+12, BR 1e+12, DR 1e+12 K/W; 来源 FE-004 test configuration recorded per thermal design 9.4: the FE solar wings ar",
+   "passed": true
+  },
+  {
+   "name": "步骤1 参数来源记录",
+   "expected": "每个材料份额, 连接与表面在 provenance 中记录来源",
+   "actual": "21 条来源均已记录",
+   "passed": true
+  },
+  {
+   "name": "步骤2 caseA main 运行五圈",
+   "expected": "运行到 5 P = 27870.968 s 完成, 无报错, 无温度范围警告",
+   "actual": "状态 completed, 终点 27870.968 s, 报错 None, 范围警告 0, 已接受步 1005, 拒绝步 0, 函数调用 6550, 墙钟 70.6 s",
+   "passed": true
+  },
+  {
+   "name": "步骤2 caseA bus_D 运行五圈",
+   "expected": "运行到 5 P = 27870.968 s 完成, 无报错, 无温度范围警告",
+   "actual": "状态 completed, 终点 27870.968 s, 报错 None, 范围警告 0, 已接受步 1005, 拒绝步 0, 函数调用 6550, 墙钟 70.8 s",
+   "passed": true
+  },
+  {
+   "name": "步骤2 caseA 功率时程与有限元相同",
+   "expected": "P_load_W = 12 x heat_per_gpu_w + heat_platform_w, 与有限元 P_sources_W 在 252 个输出时刻相差 <= 0.01 W; 归档 P_load_W 等于给定时程",
+   "actual": "最大差 9.09e-13 W; 归档最大差 0.00e+00 W; 第四、五圈平均 2279.9 W; 声明的功率阶跃 16 个",
+   "passed": true
+  },
+  {
+   "name": "步骤2 caseA 轨道与姿态与有限元相同",
+   "expected": "28 个时刻 6 个表面的入射余弦等于 OrbitWiz 本体系太阳分量, 差 <= 0.0001; GCRS 位置模长等于 TEME 轨迹模长, 相对差 <= 1e-6",
+   "actual": "入射余弦最大差 2.00e-05; 位置模长最大相对差 1.99e-08",
+   "passed": true
+  },
+  {
+   "name": "步骤2 caseA 日食进出时刻",
+   "expected": "模块日食边界与独立二分结果相差 <= 0.002 s; 与有限元事件次数与类型相同, 时刻差不超过有限元的日食分辨率 120.0 s (REPORT.md section 5 simplifications: 120 s strict steps, eclipse edges resolved to +/-120 s)",
+   "actual": "模块 10 个边界, 与独立二分最大差 2.47e-07 s; 有限元 10 个事件; 模块减有限元 -2.30, -1.96, -1.98, -4.22, -2.33, -2.14, -2.24, -2.53, -2.05, -4.24 s",
+   "passed": true
+  },
+  {
+   "name": "步骤2 caseA 环境吸热按 T4",
+   "expected": "28 个输出时刻 Q_env 与独立 T4 计算相对差 <= 0.001: 直射用 OrbitWiz 本体系太阳分量, 反照与红外用地心积分",
+   "actual": "太阳能板最大相对差 3.22e-05, 散热板最大相对差 2.48e-05",
+   "passed": true
+  },
+  {
+   "name": "步骤2 caseA 热流, 表面辐射与温度导数",
+   "expected": "28 个输出时刻: q 与手算 T2 相对差 <= 1e-12, Q_emit 与手算 T4 相对差 <= 1e-12, dT/dt 与手算 T3 相对差 <= 1e-09",
+   "actual": "热流 0.00e+00, 表面辐射 0.00e+00, 温度导数 2.26e-16",
+   "passed": true
+  },
+  {
+   "name": "步骤2 caseB main 运行五圈",
+   "expected": "运行到 5 P = 27870.968 s 完成, 无报错, 无温度范围警告",
+   "actual": "状态 completed, 终点 27870.968 s, 报错 None, 范围警告 0, 已接受步 1001, 拒绝步 0, 函数调用 6522, 墙钟 71.8 s",
+   "passed": true
+  },
+  {
+   "name": "步骤2 caseB bus_D 运行五圈",
+   "expected": "运行到 5 P = 27870.968 s 完成, 无报错, 无温度范围警告",
+   "actual": "状态 completed, 终点 27870.968 s, 报错 None, 范围警告 0, 已接受步 1001, 拒绝步 0, 函数调用 6522, 墙钟 71.2 s",
+   "passed": true
+  },
+  {
+   "name": "步骤2 caseB 功率时程与有限元相同",
+   "expected": "P_load_W = 12 x heat_per_gpu_w + heat_platform_w, 与有限元 P_sources_W 在 252 个输出时刻相差 <= 0.01 W; 归档 P_load_W 等于给定时程",
+   "actual": "最大差 3.02e-08 W; 归档最大差 0.00e+00 W; 第四、五圈平均 3023.9 W; 声明的功率阶跃 14 个",
+   "passed": true
+  },
+  {
+   "name": "步骤2 caseB 轨道与姿态与有限元相同",
+   "expected": "28 个时刻 6 个表面的入射余弦等于 OrbitWiz 本体系太阳分量, 差 <= 0.0001; GCRS 位置模长等于 TEME 轨迹模长, 相对差 <= 1e-6",
+   "actual": "入射余弦最大差 2.00e-05; 位置模长最大相对差 1.99e-08",
+   "passed": true
+  },
+  {
+   "name": "步骤2 caseB 日食进出时刻",
+   "expected": "模块日食边界与独立二分结果相差 <= 0.002 s; 与有限元事件次数与类型相同, 时刻差不超过有限元的日食分辨率 120.0 s (REPORT.md section 5 simplifications: 120 s strict steps, eclipse edges resolved to +/-120 s)",
+   "actual": "模块 10 个边界, 与独立二分最大差 2.47e-07 s; 有限元 10 个事件; 模块减有限元 -2.30, -1.96, -1.98, -4.22, -2.33, -2.14, -2.24, -2.53, -2.05, -4.24 s",
+   "passed": true
+  },
+  {
+   "name": "步骤2 caseB 环境吸热按 T4",
+   "expected": "28 个输出时刻 Q_env 与独立 T4 计算相对差 <= 0.001: 直射用 OrbitWiz 本体系太阳分量, 反照与红外用地心积分",
+   "actual": "太阳能板最大相对差 3.22e-05, 散热板最大相对差 2.48e-05",
+   "passed": true
+  },
+  {
+   "name": "步骤2 caseB 热流, 表面辐射与温度导数",
+   "expected": "28 个输出时刻: q 与手算 T2 相对差 <= 1e-12, Q_emit 与手算 T4 相对差 <= 1e-12, dT/dt 与手算 T3 相对差 <= 1e-09",
+   "actual": "热流 0.00e+00, 表面辐射 0.00e+00, 温度导数 2.15e-16",
+   "passed": true
+  },
+  {
+   "name": "验收 caseA 第4圈 GPU 基板平均温度",
+   "expected": "12 块 V100 第4圈计算节点平均温度与有限元 GPU 基板平均温度之差绝对值 <= 5.0 K",
+   "actual": "模块 T_J 66.69 °C, 有限元基板 58.77 °C, 差 +7.92 K (10 s 稠密平均 T_J 66.69 °C)",
+   "passed": false
+  },
+  {
+   "name": "验收 caseA 第4圈散热板平均温度",
+   "expected": "12 块 V100 第4圈散热板平均温度与有限元散热板面积加权平均温度之差绝对值 <= 5.0 K",
+   "actual": "模块 T_R 45.67 °C, 有限元散热板 39.81 °C, 差 +5.86 K (10 s 稠密平均 T_R 45.67 °C)",
+   "passed": false
+  },
+  {
+   "name": "验收 caseA 第5圈 GPU 基板平均温度",
+   "expected": "12 块 V100 第5圈计算节点平均温度与有限元 GPU 基板平均温度之差绝对值 <= 5.0 K",
+   "actual": "模块 T_J 68.13 °C, 有限元基板 59.61 °C, 差 +8.52 K (10 s 稠密平均 T_J 68.13 °C)",
+   "passed": false
+  },
+  {
+   "name": "验收 caseA 第5圈散热板平均温度",
+   "expected": "12 块 V100 第5圈散热板平均温度与有限元散热板面积加权平均温度之差绝对值 <= 5.0 K",
+   "actual": "模块 T_R 46.86 °C, 有限元散热板 40.60 °C, 差 +6.26 K (10 s 稠密平均 T_R 46.87 °C)",
+   "passed": false
+  },
+  {
+   "name": "预期 caseA 第4圈计算设备到散热板温差",
+   "expected": "链路复现计算设备与散热板之间的温差: 模块 T_J - T_R 与有限元基板减散热板之差绝对值 <= 5.0 K (与验收判据相同的容差)",
+   "actual": "模块 21.02 K, 有限元 18.96 K, 差 +2.06 K",
+   "passed": true
+  },
+  {
+   "name": "预期 caseA 第5圈计算设备到散热板温差",
+   "expected": "链路复现计算设备与散热板之间的温差: 模块 T_J - T_R 与有限元基板减散热板之差绝对值 <= 5.0 K (与验收判据相同的容差)",
+   "actual": "模块 21.27 K, 有限元 19.01 K, 差 +2.26 K",
+   "passed": true
+  },
+  {
+   "name": "预期 caseA 单节点模型比 GPU 基板低 12 至 15 °C",
+   "expected": "第四、五圈 OrbitWiz 单节点平均温度比有限元 GPU 基板低 12 至 15 °C, 按整数精度判断 (FE-004 expected result: the single-node model is 12 to 15 degC below the GPU baseplate in the same comparison (REPORT.md section 7.8: +12.5 and +15.1 degC); the statement is checked at its integer precision)",
+   "actual": "单节点 46.78 °C, 基板 59.23 °C, 低 12.46 °C",
+   "passed": true
+  },
+  {
+   "name": "验收 caseB 第4圈 GPU 基板平均温度",
+   "expected": "12 块 A100 第4圈计算节点平均温度与有限元 GPU 基板平均温度之差绝对值 <= 5.0 K",
+   "actual": "模块 T_J 90.08 °C, 有限元基板 78.33 °C, 差 +11.75 K (10 s 稠密平均 T_J 90.08 °C)",
+   "passed": false
+  },
+  {
+   "name": "验收 caseB 第4圈散热板平均温度",
+   "expected": "12 块 A100 第4圈散热板平均温度与有限元散热板面积加权平均温度之差绝对值 <= 5.0 K",
+   "actual": "模块 T_R 62.52 °C, 有限元散热板 53.91 °C, 差 +8.61 K (10 s 稠密平均 T_R 62.52 °C)",
+   "passed": false
+  },
+  {
+   "name": "验收 caseB 第5圈 GPU 基板平均温度",
+   "expected": "12 块 A100 第5圈计算节点平均温度与有限元 GPU 基板平均温度之差绝对值 <= 5.0 K",
+   "actual": "模块 T_J 90.67 °C, 有限元基板 78.15 °C, 差 +12.52 K (10 s 稠密平均 T_J 90.68 °C)",
+   "passed": false
+  },
+  {
+   "name": "验收 caseB 第5圈散热板平均温度",
+   "expected": "12 块 A100 第5圈散热板平均温度与有限元散热板面积加权平均温度之差绝对值 <= 5.0 K",
+   "actual": "模块 T_R 63.09 °C, 有限元散热板 53.94 °C, 差 +9.15 K (10 s 稠密平均 T_R 63.09 °C)",
+   "passed": false
+  },
+  {
+   "name": "预期 caseB 第4圈计算设备到散热板温差",
+   "expected": "链路复现计算设备与散热板之间的温差: 模块 T_J - T_R 与有限元基板减散热板之差绝对值 <= 5.0 K (与验收判据相同的容差)",
+   "actual": "模块 27.55 K, 有限元 24.42 K, 差 +3.14 K",
+   "passed": true
+  },
+  {
+   "name": "预期 caseB 第5圈计算设备到散热板温差",
+   "expected": "链路复现计算设备与散热板之间的温差: 模块 T_J - T_R 与有限元基板减散热板之差绝对值 <= 5.0 K (与验收判据相同的容差)",
+   "actual": "模块 27.58 K, 有限元 24.21 K, 差 +3.37 K",
+   "passed": true
+  },
+  {
+   "name": "预期 caseB 单节点模型比 GPU 基板低 12 至 15 °C",
+   "expected": "第四、五圈 OrbitWiz 单节点平均温度比有限元 GPU 基板低 12 至 15 °C, 按整数精度判断 (FE-004 expected result: the single-node model is 12 to 15 degC below the GPU baseplate in the same comparison (REPORT.md section 7.8: +12.5 and +15.1 degC); the statement is checked at its integer precision)",
+   "actual": "单节点 63.21 °C, 基板 78.27 °C, 低 15.06 °C",
+   "passed": false
+  },
+  {
+   "name": "test_step3_compare_orbits_4_5 call",
+   "expected": "test function completes",
+   "actual": ">       assert all(ok), f\"FE-004 acceptance or expected-result checks failed: {failed}\" | E       AssertionError: FE-004 acceptance or expected-result checks failed: ['验收 caseA 第4圈 GPU 基板平均温度', '验收 caseA 第4圈散热板平均温度', '验收 caseA 第5圈 GPU 基板平均温度', '验收 caseA 第5圈散热板平均温度', '验收 caseB 第4圈 GPU 基板平均温度', '验收 caseB 第4圈散热板平均温度', '验收 caseB 第5圈 GPU 基板平均温度', '验收 caseB 第5圈散热板平均温度'] | E       assert False | E        +  where False = all([False, False, False, False, True, True, ...]) |  | tests\\test_fe_004_whole_satellite_chain.py:737: AssertionError",
+   "passed": false
+  },
+  {
+   "name": "机身表示 caseA 机身并入计算节点与改为电源设备节点的影响",
+   "expected": "两种表示均完成五圈运行; 记录第四、五圈计算节点与散热板相对有限元的差",
+   "actual": "第4圈 并入J: J +7.92 K, R +5.86 K, J 比有限元机身 +1.17 K; 改为D: J +3.67 K, R +6.64 K, D 比有限元机身 -11.30 K; 第5圈 并入J: J +8.52 K, R +6.26 K, J 比有限元机身 +1.37 K; 改为D: J +3.70 K, R +6.69 K, D 比有限元机身 -11.56 K",
+   "passed": true
+  },
+  {
+   "name": "机身表示 caseB 机身并入计算节点与改为电源设备节点的影响",
+   "expected": "两种表示均完成五圈运行; 记录第四、五圈计算节点与散热板相对有限元的差",
+   "actual": "第4圈 并入J: J +11.75 K, R +8.61 K, J 比有限元机身 +5.65 K; 改为D: J +7.72 K, R +9.41 K, D 比有限元机身 -13.52 K; 第5圈 并入J: J +12.52 K, R +9.15 K, J 比有限元机身 +5.74 K; 改为D: J +7.54 K, R +9.51 K, D 比有限元机身 -13.40 K",
+   "passed": true
+  }
+ ],
+ "metrics": {
+  "parameters": {
+   "masses_kg": {
+    "packages": 13.752616026239993,
+    "blades": 146.3668820640001,
+    "bus": 100.17818222878081,
+    "hp_transport": 8.885420938800006,
+    "radiator_panels": 13.799808000000006,
+    "hp_condenser": 28.508981691599978,
+    "wings": 131.60136140550003
+   },
+   "C_J_K": {
+    "S": 118441.22526495003,
+    "J": 234267.91228711884,
+    "C": 7996.878844920006,
+    "B": 2000.0,
+    "D": 1800.0,
+    "R": 38077.910722439985
+   },
+   "R_K_W": {
+    "SR": 1000000000000.0,
+    "JC": 0.0037294847277768773,
+    "CR": 0.005330457862104879,
+    "BR": 1000000000000.0,
+    "DR": 1000000000000.0
+   },
+   "R_JC_parts_K_W": {
+    "contact_TIM": 1.272194320456386e-05,
+    "blade_conduction": 0.0037167627845723136,
+    "effective_area_m2": 0.13226473335774913,
+    "length_m": 0.117
+   },
+   "blade_grid": {
+    "4.0mm": {
+     "gpu_baseplate_K_W": 0.045007199034107,
+     "gpu_package_K_W": 0.04556610927842178,
+     "bus_baseplate_K_W": 0.04196322497895818,
+     "bus_spine_contact_K_W": 0.09644865354293541,
+     "cells": 85572
+    },
+    "3.0mm": {
+     "gpu_baseplate_K_W": 0.04471882090431532,
+     "gpu_package_K_W": 0.04526837677862675,
+     "bus_baseplate_K_W": 0.04167898241667408,
+     "bus_spine_contact_K_W": 0.0965074776517843,
+     "cells": 202076
+    },
+    "2.5mm": {
+     "gpu_baseplate_K_W": 0.04460115341486776,
+     "gpu_package_K_W": 0.045146379552206226,
+     "bus_baseplate_K_W": 0.041563389416510374,
+     "bus_spine_contact_K_W": 0.09656602099120351,
+     "cells": 345655
+    }
+   },
+   "R_CR_networks_K_W": {
+    "Top_p": {
+     "R_net_K_W": 0.021643509935539547,
+     "bundle_mean_rise_K_W": 0.005749114556069323,
+     "bundle_area_m2": 0.00080645,
+     "contact_distances_m": [
+      0.6536000000000002,
+      0.8165000000000002,
+      0.9803000000000002
+     ],
+     "R_connector_K_W": 0.008345821139577476,
+     "connector_length_m": 0.21606666666666668,
+     "connector_area_m2": 0.00016129,
+     "R_header_spreaders_fins_K_W": 0.007548574239892748,
+     "R_spreader_K_W": 0.025338747304363585,
+     "spreader_length_m": 1.9680000000000002,
+     "spreader_area_m2": 0.00016128999999999997,
+     "spreader_heat_split": [
+      0.08391908297618149,
+      0.08899251564767251,
+      0.1058722497665591,
+      0.13308729650097165,
+      0.17329440506013627,
+      0.157539458476089,
+      0.13242216685176664,
+      0.1248728247206235
+     ]
+    },
+    "Top_n": {
+     "R_net_K_W": 0.021643509935539547,
+     "bundle_mean_rise_K_W": 0.005749114556069323,
+     "bundle_area_m2": 0.00080645,
+     "contact_distances_m": [
+      0.6536000000000002,
+      0.8165000000000002,
+      0.9803000000000002
+     ],
+     "R_connector_K_W": 0.008345821139577478,
+     "connector_length_m": 0.2160666666666667,
+     "connector_area_m2": 0.00016129,
+     "R_header_spreaders_fins_K_W": 0.007548574239892748,
+     "R_spreader_K_W": 0.025338747304363585,
+     "spreader_length_m": 1.9680000000000002,
+     "spreader_area_m2": 0.00016128999999999997,
+     "spreader_heat_split": [
+      0.08391908297618149,
+      0.08899251564767251,
+      0.1058722497665591,
+      0.13308729650097165,
+      0.17329440506013627,
+      0.157539458476089,
+      0.13242216685176664,
+      0.1248728247206235
+     ]
+    },
+    "Bot_p": {
+     "R_net_K_W": 0.021000152961299486,
+     "bundle_mean_rise_K_W": 0.005105757581829262,
+     "bundle_area_m2": 0.00080645,
+     "contact_distances_m": [
+      0.5697200000000001,
+      0.7338800000000001,
+      0.8980400000000002
+     ],
+     "R_connector_K_W": 0.008345821139577476,
+     "connector_length_m": 0.21606666666666668,
+     "connector_area_m2": 0.00016129,
+     "R_header_spreaders_fins_K_W": 0.007548574239892748,
+     "R_spreader_K_W": 0.025338747304363585,
+     "spreader_length_m": 1.9680000000000002,
+     "spreader_area_m2": 0.00016128999999999997,
+     "spreader_heat_split": [
+      0.08391908297618149,
+      0.08899251564767251,
+      0.1058722497665591,
+      0.13308729650097165,
+      0.17329440506013627,
+      0.157539458476089,
+      0.13242216685176664,
+      0.1248728247206235
+     ]
+    },
+    "Bot_n": {
+     "R_net_K_W": 0.021000152961299486,
+     "bundle_mean_rise_K_W": 0.005105757581829262,
+     "bundle_area_m2": 0.00080645,
+     "contact_distances_m": [
+      0.5697200000000001,
+      0.7338800000000001,
+      0.8980400000000002
+     ],
+     "R_connector_K_W": 0.008345821139577478,
+     "connector_length_m": 0.2160666666666667,
+     "connector_area_m2": 0.00016129,
+     "R_header_spreaders_fins_K_W": 0.007548574239892748,
+     "R_spreader_K_W": 0.025338747304363585,
+     "spreader_length_m": 1.9680000000000002,
+     "spreader_area_m2": 0.00016128999999999997,
+     "spreader_heat_split": [
+      0.08391908297618149,
+      0.08899251564767251,
+      0.1058722497665591,
+      0.13308729650097165,
+      0.17329440506013627,
+      0.157539458476089,
+      0.13242216685176664,
+      0.1248728247206235
+     ]
+    }
+   },
+   "radiator_face_exposed_fraction": 0.8674548451688604,
+   "R_DR_bus_sensitivity_K_W": 0.013377626278038506
+  },
+  "run": {
+   "caseA": {
+    "eclipse_minus_fe_s": [
+     -2.3018010225441117,
+     -1.9552940176008633,
+     -1.980358401324338,
+     -4.223572984820748,
+     -2.326176860209671,
+     -2.13657961374156,
+     -2.2384273732423026,
+     -2.5302757484387257,
+     -2.052482908275124,
+     -4.23873942622231
+    ],
+    "power_diff_W": 9.094947017729282e-13,
+    "incidence_diff": 1.9965159661516907e-05,
+    "env_rel": {
+     "S": 3.224305564579738e-05,
+     "R": 2.4844994387975815e-05
+    },
+    "wall_s": {
+     "main": 70.6247541000048,
+     "bus_D": 70.7743860000046
+    },
+    "statistics": {
+     "main": {
+      "accepted_steps": 1005,
+      "bridge_steps": 0,
+      "accepted_states": 1032,
+      "rejected_steps": 0,
+      "event_aborted_attempts": 0,
+      "discarded_event_search_steps": 0,
+      "discarded_event_search_rejections": 0,
+      "rejected_steps_total": 0,
+      "attempt_count_anomalies": 0,
+      "function_evaluations": 6550,
+      "solver_construction_evaluations": 54,
+      "power_calls": 0,
+      "solver_instances": 27,
+      "solver_nfev": 6084,
+      "solver_njev": 0,
+      "solver_nlu": 0,
+      "segments": 27,
+      "eclipse_boundaries": 10,
+      "event_searches": 0,
+      "located_events": 0,
+      "unconfirmed_event_searches": 0,
+      "bisection_iterations": 0,
+      "applied_events": 0,
+      "charge_limit_transitions": 0,
+      "charge_limit_searches": 0,
+      "charge_limit_bisection_iterations": 0,
+      "charge_limit_splits": 0,
+      "charge_limit_reason_reuses": 0,
+      "range_excursions_accepted_states": 0,
+      "output_samples": 466,
+      "invalid_output_samples": 0,
+      "wall_time_s": 70.62289410000085
+     },
+     "bus_D": {
+      "accepted_steps": 1005,
+      "bridge_steps": 0,
+      "accepted_states": 1032,
+      "rejected_steps": 0,
+      "event_aborted_attempts": 0,
+      "discarded_event_search_steps": 0,
+      "discarded_event_search_rejections": 0,
+      "rejected_steps_total": 0,
+      "attempt_count_anomalies": 0,
+      "function_evaluations": 6550,
+      "solver_construction_evaluations": 54,
+      "power_calls": 0,
+      "solver_instances": 27,
+      "solver_nfev": 6084,
+      "solver_njev": 0,
+      "solver_nlu": 0,
+      "segments": 27,
+      "eclipse_boundaries": 10,
+      "event_searches": 0,
+      "located_events": 0,
+      "unconfirmed_event_searches": 0,
+      "bisection_iterations": 0,
+      "applied_events": 0,
+      "charge_limit_transitions": 0,
+      "charge_limit_searches": 0,
+      "charge_limit_bisection_iterations": 0,
+      "charge_limit_splits": 0,
+      "charge_limit_reason_reuses": 0,
+      "range_excursions_accepted_states": 0,
+      "output_samples": 466,
+      "invalid_output_samples": 0,
+      "wall_time_s": 70.77238029999717
+     }
+    }
+   },
+   "caseB": {
+    "eclipse_minus_fe_s": [
+     -2.3018010225441117,
+     -1.9552940176008633,
+     -1.980358401324338,
+     -4.223572984820748,
+     -2.326176860209671,
+     -2.13657961374156,
+     -2.2384273732423026,
+     -2.5302757484387257,
+     -2.052482908275124,
+     -4.23873942622231
+    ],
+    "power_diff_W": 3.01588443107903e-08,
+    "incidence_diff": 1.9965159661516907e-05,
+    "env_rel": {
+     "S": 3.224305564579738e-05,
+     "R": 2.4844994387975815e-05
+    },
+    "wall_s": {
+     "main": 71.7685427999968,
+     "bus_D": 71.1517143999954
+    },
+    "statistics": {
+     "main": {
+      "accepted_steps": 1001,
+      "bridge_steps": 0,
+      "accepted_states": 1026,
+      "rejected_steps": 0,
+      "event_aborted_attempts": 0,
+      "discarded_event_search_steps": 0,
+      "discarded_event_search_rejections": 0,
+      "rejected_steps_total": 0,
+      "attempt_count_anomalies": 0,
+      "function_evaluations": 6522,
+      "solver_construction_evaluations": 50,
+      "power_calls": 0,
+      "solver_instances": 25,
+      "solver_nfev": 6056,
+      "solver_njev": 0,
+      "solver_nlu": 0,
+      "segments": 25,
+      "eclipse_boundaries": 10,
+      "event_searches": 0,
+      "located_events": 0,
+      "unconfirmed_event_searches": 0,
+      "bisection_iterations": 0,
+      "applied_events": 0,
+      "charge_limit_transitions": 0,
+      "charge_limit_searches": 0,
+      "charge_limit_bisection_iterations": 0,
+      "charge_limit_splits": 0,
+      "charge_limit_reason_reuses": 0,
+      "range_excursions_accepted_states": 0,
+      "output_samples": 466,
+      "invalid_output_samples": 0,
+      "wall_time_s": 71.7670250999945
+     },
+     "bus_D": {
+      "accepted_steps": 1001,
+      "bridge_steps": 0,
+      "accepted_states": 1026,
+      "rejected_steps": 0,
+      "event_aborted_attempts": 0,
+      "discarded_event_search_steps": 0,
+      "discarded_event_search_rejections": 0,
+      "rejected_steps_total": 0,
+      "attempt_count_anomalies": 0,
+      "function_evaluations": 6522,
+      "solver_construction_evaluations": 50,
+      "power_calls": 0,
+      "solver_instances": 25,
+      "solver_nfev": 6056,
+      "solver_njev": 0,
+      "solver_nlu": 0,
+      "segments": 25,
+      "eclipse_boundaries": 10,
+      "event_searches": 0,
+      "located_events": 0,
+      "unconfirmed_event_searches": 0,
+      "bisection_iterations": 0,
+      "applied_events": 0,
+      "charge_limit_transitions": 0,
+      "charge_limit_searches": 0,
+      "charge_limit_bisection_iterations": 0,
+      "charge_limit_splits": 0,
+      "charge_limit_reason_reuses": 0,
+      "range_excursions_accepted_states": 0,
+      "output_samples": 466,
+      "invalid_output_samples": 0,
+      "wall_time_s": 71.15019680000842
+     }
+    }
+   }
+  },
+  "orbit_means_K": {
+   "caseA": {
+    "4": {
+     "fe_baseplate_K": 331.92344785946744,
+     "fe_radiator_K": 312.9637464826516,
+     "fe_bus_K": 338.6763874075157,
+     "fe_blades_K": 331.67150898865884,
+     "fe_packages_K": 331.9917601246631,
+     "fe_wing_K": 260.8527345261681,
+     "orbitwiz_node_K": 319.57544240886483,
+     "J_K": 339.84158842205,
+     "C_K": 331.18797762031795,
+     "R_K": 318.8225932230927,
+     "S_K": 260.36412442838673,
+     "J_dense_K": 339.8398561209884,
+     "R_dense_K": 318.8194588453336,
+     "busD_J_K": 335.59691637168567,
+     "busD_R_K": 319.5991450802013,
+     "busD_D_K": 327.37832318759735
+    },
+    "5": {
+     "fe_baseplate_K": 332.7610053031226,
+     "fe_radiator_K": 313.7505200741438,
+     "fe_bus_K": 339.910726665412,
+     "fe_blades_K": 332.5500956506495,
+     "fe_packages_K": 332.82422053104307,
+     "fe_wing_K": 261.09305100150215,
+     "orbitwiz_node_K": 320.1371847125565,
+     "J_K": 341.2821792409289,
+     "C_K": 332.53517567642126,
+     "R_K": 320.0119359353458,
+     "S_K": 260.62937872559405,
+     "J_dense_K": 341.2832092185978,
+     "R_dense_K": 320.016021528287,
+     "busD_J_K": 336.4635230293207,
+     "busD_R_K": 320.4381419861004,
+     "busD_D_K": 328.3531225268546
+    },
+    "report_window": {
+     "orbitwiz_node_C": 46.77631024892554,
+     "fe_baseplate_C": 59.23329201726966
+    }
+   },
+   "caseB": {
+    "4": {
+     "fe_baseplate_K": 351.47890243120156,
+     "fe_radiator_K": 327.06389429490923,
+     "fe_bus_K": 357.5795572704623,
+     "fe_blades_K": 351.0345656538347,
+     "fe_packages_K": 351.57582050288835,
+     "fe_wing_K": 260.88681946948464,
+     "orbitwiz_node_K": 336.72650961809285,
+     "J_K": 363.2260917499779,
+     "C_K": 351.8793538784935,
+     "R_K": 335.6715097012179,
+     "S_K": 260.36411847304555,
+     "J_dense_K": 363.2260515222461,
+     "R_dense_K": 335.66910810274686,
+     "busD_J_K": 359.19835079427224,
+     "busD_R_K": 336.4772121555659,
+     "busD_D_K": 344.0590803565611
+    },
+    "5": {
+     "fe_baseplate_K": 351.29808284929055,
+     "fe_radiator_K": 327.0885873839897,
+     "fe_bus_K": 358.08470675201227,
+     "fe_blades_K": 350.9078317857901,
+     "fe_packages_K": 351.3888902796982,
+     "fe_wing_K": 261.12730189042674,
+     "orbitwiz_node_K": 335.892126294268,
+     "J_K": 363.82258418595535,
+     "C_K": 352.4750363106651,
+     "R_K": 336.2398188795754,
+     "S_K": 260.6293596946697,
+     "J_dense_K": 363.8253673058199,
+     "R_dense_K": 336.2448873332204,
+     "busD_J_K": 358.83731665678164,
+     "busD_R_K": 336.6022598125986,
+     "busD_D_K": 344.6821062860529
+    },
+    "report_window": {
+     "orbitwiz_node_C": 63.20829372206009,
+     "fe_baseplate_C": 78.27263375452623
+    }
+   }
+  },
+  "bus_and_heat_paths": {
+   "caseA": {
+    "4": {
+     "fe_budget": {
+      "P_sources_W": 2351.9318070833897,
+      "emitted_faces_W": 2902.8715549931458,
+      "absorbed_probe_W": 680.5264231277962,
+      "absorbed_faces_W": 784.5093343104489,
+      "storage_radiator_W": 1.4771522462999003,
+      "heat_to_radiator_W": 2119.8393729289965,
+      "storage_bus_blades_pipes_W": 25.556642207273875,
+      "heat_other_surfaces_W": 206.53579194711935,
+      "baseplate_minus_radiator_K": 18.95970137681587,
+      "chain_resistance_K_W": 0.008943933025745778
+     },
+     "module_Q_emit_R_W": 3125.31560507611,
+     "module_Q_env_R_W": 808.8201323104827,
+     "module_q_CR_W": 2319.2107364366634,
+     "module_chain_resistance_K_W": 0.009059942589881756,
+     "estimate_without_other_surfaces": {
+      "dT_R_K": -5.267330175792131,
+      "dT_J_K": -7.1385325935887955,
+      "J_minus_baseplate_K": 0.779607968993755,
+      "R_minus_radiator_K": 0.5915165646490204
+     },
+     "bus_on_J": {
+      "J_minus_baseplate_K": 7.9181405625825505,
+      "R_minus_radiator_K": 5.858846740441152,
+      "J_minus_fe_bus_K": 1.1652010145343183
+     },
+     "bus_on_D": {
+      "J_minus_baseplate_K": 3.6734685122182213,
+      "R_minus_radiator_K": 6.635398597549738,
+      "D_minus_fe_bus_K": -11.29806421991833
+     }
+    },
+    "5": {
+     "fe_budget": {
+      "P_sources_W": 2207.8916732034445,
+      "emitted_faces_W": 2930.823034120147,
+      "absorbed_probe_W": 679.6854251669132,
+      "absorbed_faces_W": 783.5398337473167,
+      "storage_radiator_W": -21.550848893276076,
+      "heat_to_radiator_W": 2125.7323514795544,
+      "storage_bus_blades_pipes_W": -146.16552728262954,
+      "heat_other_surfaces_W": 228.32484900651966,
+      "baseplate_minus_radiator_K": 19.01048522897878,
+      "chain_resistance_K_W": 0.00894302860646924
+     },
+     "module_Q_emit_R_W": 3171.8144341900374,
+     "module_Q_env_R_W": 812.6871492633767,
+     "module_q_CR_W": 2345.768790532553,
+     "module_chain_resistance_K_W": 0.009059942589881756,
+     "estimate_without_other_surfaces": {
+      "dT_R_K": -5.759059874776404,
+      "dT_J_K": -7.827669898618892,
+      "J_minus_baseplate_K": 0.6935040391873892,
+      "R_minus_radiator_K": 0.5023559864255498
+     },
+     "bus_on_J": {
+      "J_minus_baseplate_K": 8.521173937806282,
+      "R_minus_radiator_K": 6.261415861201954,
+      "J_minus_fe_bus_K": 1.3714525755168552
+     },
+     "bus_on_D": {
+      "J_minus_baseplate_K": 3.7025177261980957,
+      "R_minus_radiator_K": 6.687621911956569,
+      "D_minus_fe_bus_K": -11.557604138557451
+     }
+    },
+    "ir_probe_coverage": {
+     "fe_probe_IR_W": 307.7314616921247,
+     "unobstructed_whole_faces_IR_W": 360.166893707542,
+     "ratio": 0.8544135151466886,
+     "exposed_fraction": 0.8674548451688604,
+     "fe_planet_discretisation_IR_change": -0.015
+    }
+   },
+   "caseB": {
+    "4": {
+     "fe_budget": {
+      "P_sources_W": 3107.6696655865517,
+      "emitted_faces_W": 3462.249975684481,
+      "absorbed_probe_W": 680.5264231277962,
+      "absorbed_faces_W": 784.5093343104489,
+      "storage_radiator_W": 4.842014765873514,
+      "heat_to_radiator_W": 2682.5826561399053,
+      "storage_bus_blades_pipes_W": 49.856526290074555,
+      "heat_other_surfaces_W": 375.2304831565718,
+      "baseplate_minus_radiator_K": 24.41500813629233,
+      "chain_resistance_K_W": 0.00910130693658634
+     },
+     "module_Q_emit_R_W": 3840.1381403848095,
+     "module_Q_env_R_W": 808.8201323104827,
+     "module_q_CR_W": 3040.0181510290863,
+     "module_chain_resistance_K_W": 0.009059942589881756,
+     "estimate_without_other_surfaces": {
+      "dT_R_K": -8.199847125451477,
+      "dT_J_K": -11.59941376082361,
+      "J_minus_baseplate_K": 0.14777555795273933,
+      "R_minus_radiator_K": 0.4077682808571623
+     },
+     "bus_on_J": {
+      "J_minus_baseplate_K": 11.74718931877635,
+      "R_minus_radiator_K": 8.60761540630864,
+      "J_minus_fe_bus_K": 5.646534479515594
+     },
+     "bus_on_D": {
+      "J_minus_baseplate_K": 7.719448363070683,
+      "R_minus_radiator_K": 9.413317860656662,
+      "D_minus_fe_bus_K": -13.520476913901234
+     }
+    },
+    "5": {
+     "fe_budget": {
+      "P_sources_W": 2940.199789880483,
+      "emitted_faces_W": 3461.933750535648,
+      "absorbed_probe_W": 679.6854251669132,
+      "absorbed_faces_W": 783.5398337473167,
+      "storage_radiator_W": -16.162675372583358,
+      "heat_to_radiator_W": 2662.231241415748,
+      "storage_bus_blades_pipes_W": -108.47392347813187,
+      "heat_other_surfaces_W": 386.44247194286663,
+      "baseplate_minus_radiator_K": 24.209495465300847,
+      "chain_resistance_K_W": 0.009093686186488623
+     },
+     "module_Q_emit_R_W": 3866.0813488560957,
+     "module_Q_env_R_W": 812.6871492633767,
+     "module_q_CR_W": 3042.752596704578,
+     "module_chain_resistance_K_W": 0.009059942589881756,
+     "estimate_without_other_surfaces": {
+      "dT_R_K": -8.402393473425683,
+      "dT_J_K": -11.903540083520046,
+      "J_minus_baseplate_K": 0.6209612531447526,
+      "R_minus_radiator_K": 0.7488380221600224
+     },
+     "bus_on_J": {
+      "J_minus_baseplate_K": 12.524501336664798,
+      "R_minus_radiator_K": 9.151231495585705,
+      "J_minus_fe_bus_K": 5.737877433943083
+     },
+     "bus_on_D": {
+      "J_minus_baseplate_K": 7.539233807491087,
+      "R_minus_radiator_K": 9.513672428608913,
+      "D_minus_fe_bus_K": -13.402600465959381
+     }
+    },
+    "ir_probe_coverage": {
+     "fe_probe_IR_W": 307.7314616921247,
+     "unobstructed_whole_faces_IR_W": 360.166893707542,
+     "ratio": 0.8544135151466886,
+     "exposed_fraction": 0.8674548451688604,
+     "fe_planet_discretisation_IR_change": -0.015
+    }
+   }
+  },
+  "series_file": "tests/results/FE-004_series.json"
+ },
+ "summary_cn": "按整星有限元模型的几何、材料、导热垫与热管参数，用式 T5 装配计算节点、冷板与公共散热板。整星模型的机身在设计报告的热网络中没有对应组件，本用例把机身质量与 570 W 平台热量并入计算节点。计算节点由 12 个 GPU 封装、12 块刀片与机身组成，热容 234.3 kJ/K；冷板为 4 束传热热管与 4 段连接热管，热容 8.0 kJ/K；公共散热板为两块板与板面上的集管热管和分支热管，热容 38.1 kJ/K，四个板面共 6.273 m²，吸收率 0.25，发射率 0.85。R_JC 为 0.00373 K/W，由导热垫接触热阻与刀片三维稳态导热解组成；R_CR 为 0.00533 K/W，由热管各段按式 T5 计算的热阻与散热板翅片导热组成。以与有限元相同的轨道、姿态与 1 s 功率时程运行五圈，日食进出时刻比有限元早 2.0 s 至 4.2 s，环境吸热、热流与温度导数与独立手算一致，与散热板脱开的太阳能板平均温度与有限元太阳能板相差不超过 0.53 K。12 块 V100 算例第四、五圈计算节点平均温度比有限元 GPU 基板分别高 7.9 K 与高 8.5 K，散热板平均温度比有限元分别高 5.9 K 与高 6.3 K，均超过 5 K 的验收判据；计算节点与散热板之差为 21.0 K 与 21.3 K，有限元基板与散热板之差为 19.0 K 与 19.0 K。12 块 A100 算例第四、五圈计算节点平均温度比有限元 GPU 基板分别高 11.7 K 与高 12.5 K，散热板平均温度比有限元分别高 8.6 K 与高 9.2 K，均超过 5 K 的验收判据；计算节点与散热板之差为 27.6 K 与 27.6 K，有限元基板与散热板之差为 24.4 K 与 24.2 K。有限元能量收支在扣除四个散热板主表面后仍有 207 W 至 386 W 的剩余项，占热源的 9% 至 13%。该剩余项同时包含散热板侧面、集管与分支热管外表面，以及机身、刀片与封装等未纳入这四个主表面的贡献。这些表面分别属于不同节点，现有导出数据不能分离各自热量。因而不能把整个剩余项归因于计算节点与冷板没有外露表面，也不能用整个剩余项修正计算节点温度或认定热阻已得到验证。当前装配的 R_JC 加 R_CR 为 0.00906 K/W。有限元与集总模型的表面范围不完全一致，需要在相同表面范围下重新比较后才能确认偏差的主因。机身并入计算节点时，其平台热量与有限元一样经 JC 与 CR 传到散热板；改由电源设备节点经单独的 DR 连接表示时，计算节点降低 4.0 K 至 5.0 K，散热板升高 0.4 K 至 0.8 K，仍比有限元高 6.6 K 至 9.5 K。",
+ "anomalies_cn": "12 块 V100 算例第四圈计算节点平均温度比 GPU 基板高 7.9 K，散热板平均温度比有限元高 5.9 K。12 块 V100 算例第五圈计算节点平均温度比 GPU 基板高 8.5 K，散热板平均温度比有限元高 6.3 K。12 块 A100 算例第四圈计算节点平均温度比 GPU 基板高 11.7 K，散热板平均温度比有限元高 8.6 K。12 块 A100 算例第五圈计算节点平均温度比 GPU 基板高 12.5 K，散热板平均温度比有限元高 9.2 K。以上 8 项均超过 5 K 的验收判据。步骤 3 的测试函数在记录上述验收检查后以断言失败结束，这一项是验收未通过的结果。其余未通过的检查为 预期 caseB 单节点模型比 GPU 基板低 12 至 15 °C。有限元能量收支中四个散热板主表面以外的剩余项为 207 W 至 386 W，包含多个节点的表面贡献。目前只确认两种模型的表面范围不同，尚未分离各表面对温差的贡献，不能据此排除实现或参数装配问题。式 T2、T3 与 T4 的独立手算检查通过，整星温度验收仍未通过。",
+ "environment": {
+  "python": "3.11.9",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "astropy": "8.0.1",
+  "pytest": "9.1.1",
+  "ntu_space_dynamics": "0.1.0",
+  "usd": "0.26.8"
+ },
+ "execution": {
+  "started_utc": "2026-10-05T23:17:02.838518+00:00",
+  "recorded_utc": "2026-10-05T23:40:12.168800+00:00",
+  "collected_functions": 5,
+  "finished_functions": 5,
+  "unexecuted_functions": [],
+  "source_sha256": {
+   "thermal/__init__.py": "ffb342305704801c8871a2af365af61877f7e6485b07ec381e0f777da9d294f5",
+   "thermal/environment.py": "5c3eba796dd28d41a4f1b6fa637ada3c0b8d2942ebc5f65b1e55f1384fa99f41",
+   "thermal/model.py": "9f758d46ea25844878e8cac7ccc402c31610548d255ded7d8d980ae95a965b9e",
+   "thermal/parameters.py": "792e7f5d1175e3564b7486a230039cf026fbad78074cfc8de4fbf352d9c946f9",
+   "thermal/types.py": "2c76359dfa9555ef7d51df83009a5985964c66080dc9062746815451e827a794",
+   "sdtwin_sim/__init__.py": "e2c3bee5849391a86fa79109339d001a75779dd93835d9e829f5f1591de81a31",
+   "sdtwin_sim/coupled.py": "f05e19e220284ad3a0c1e4188eb405fa66b6777f4226decfe95d2c559bca1dff",
+   "sdtwin_sim/earth_flux.py": "03b0d340d77e583cf73a3f0ec31ca0d9830c3bdc5f824903adae266b82a853a2",
+   "sdtwin_sim/power_stand_in.py": "3229251cdd2834bc2df18177c079e651f53a0827fb57cba21527ebdbf281c58f",
+   "sdtwin_sim/scene.py": "b7b1ad5328e6f6278354249e3087d47197895294af8607d21c7dcce354c7ab9b",
+   "tests/conftest.py": "345e7f788242083755505607636fa4af3e88cbf303a6a1728e4ab327e106d11e",
+   "tests/data/dm_001/reference.py": "3bba4938e76134c73272c00250517cc01c519da62f881382ddb42daa9c79fe2c",
+   "tests/data/en_001/en001_reference.py": "73370bd0a9fdc7e7c373e8dda1b5aa0c9a6970dc047fba3cf8a7c3fd808e6ea4",
+   "tests/data/en_003/earth_reference.py": "880154b92405e9af399b772296148219ca78f8ac62e9fcbeaeef67bb45ce117f",
+   "tests/data/en_003/fe_explore.py": "0cceaffd85c2d15b11fee6c7e6b5bbb00a17d94e63940b45a2db1863dfecd473",
+   "tests/data/en_003/fe_export.py": "b33fc7276138dc59e944c5cbfed73acc0d1f1ec2ce7d458b90eed62790aa8f85",
+   "tests/data/en_003/fe_refine.py": "6ad00122cb8f7a65d0f5c23f7c139b20e92d6f75fa0f472b16d2d97628995c43",
+   "tests/data/en_003/fe_refine_ladder.py": "587ffe012aa40955c6b615f68d6e257314ac0bc418765aaa358e17dc848e0580",
+   "tests/data/en_003/ladder_compare.py": "fdf7d4d74fb0f099934f5ef3c3bbdef67df6f7cf3605a5ad1984cb48450cc3ab",
+   "tests/data/fe_001/fe001_support.py": "d1bd978ad70120cf974e46cd996a8367bd5efc08e4d8755405c2a3a21be41051",
+   "tests/data/fe_002/fe002_support.py": "2c27a76b1fd972625293b26b8e1a07d0850ba78254c4457782607279205c4f7c",
+   "tests/data/fe_003/fe003_support.py": "00d548cb2c513707bfeb16f81bf130eded88fb09a87ba8785ad27ee341a985f2",
+   "tests/data/fe_004/fe004_support.py": "54a7d7d8ce2fa0e4f9b054f596a927f8531c0cc0b77a783dcd7ab6973c1f6e44",
+   "tests/data/ht_001/t2_reference.py": "2098ccd9080957ab24ff44712b3b8e688d2b41cfa077e95460a96c82f3d27f89",
+   "tests/data/ht_002/ht002_reference.py": "076d20dec2f98fb84bbbcda17b3a0313de6c8ffb44f4c2121282eb01387bd7e7",
+   "tests/data/ht_003/analytic.py": "5ee9b0e8d1c4e06067e44754c2dd2393218e4d2a6a3d91d64064d726cb06a3a5",
+   "tests/data/ni_001/ni001_support.py": "fc84c2b085ace6fa38819195dd85f0ae47846dbd8505432ef469dd19a276b0c7",
+   "tests/data/ni_002/ni002_reference.py": "b263602b77beb5b57e4b7360db586394228e18381b8f1e40abf20f1c3295665b",
+   "tests/data/ni_003/make_ni003_data.py": "d03cfe33141adc1f8288763c42009504dcdf076ba5e46d9539ddedca64eedce7",
+   "tests/data/ni_003/ni003_support.py": "bc563f0d0b9d56e461eac3e8db7c76b37ce1431468dd4b51d257a4a551257616",
+   "tests/data/ni_003/payload/ni003_payload.py": "4755abecf85fc0e3ee9006954b933ff3e1728e8647f725a0cb05e0bff654d433",
+   "tests/data/ni_003/probe_no_exec.py": "a2d7e9613788aa4f5eb24af6c8b5dac16a234a28b96df880b7a0bfef6672cc32",
+   "tests/data/ni_003/run_alone.py": "932a1b32033842df026eac9a1496ccd301c89291e980e969fbb3a5022acee0f6",
+   "tests/data/pa_001/pa001_inputs.py": "f1b685263ff6770efd7dd01f2f9b378230ab7fab12800b3e5a697d4cf17fc4b4",
+   "tests/data/simready/make_geometry.py": "2a4c7a5b278c7ddcbe2b673950b13c7bdaaf03921f8883693bc30e28c254094c",
+   "tests/data/simready/make_scene_variants.py": "994ca8d44a44023f7d778c0337ad5403420eea194bc8202194c440a28d1f1247",
+   "tests/test_dm_001_data_objects.py": "44d85eac05803a2bb04c5e1d0c2fea1c0c572c60299ee6f28eb7cb4986f897a8",
+   "tests/test_ec_001_power_ports.py": "cdb8dac627ff5e5bd56a852fd6344996658d8dc2df56beebb8efdd5a159c7f67",
+   "tests/test_en_001_surface_environment.py": "1b0f11127159690d57558aedcdece9c11559b2b6dda75637714d26090c0dd679",
+   "tests/test_en_002_surface_heat.py": "c45ab4a04ceaa6211d5aaf72befbf5d95e8e9c7be5b86454ccc4a6b5cae39e34",
+   "tests/test_en_003_earth_flux.py": "eaa1527e9722b6feb07abc9289f43680b60c59791ce838e072a5e24b90e62c79",
+   "tests/test_fe_001_solar_array_fe.py": "f23d462dbbd432308214db7d5634689b059f5e5b1bb4f46251c0836d139f3cd7",
+   "tests/test_fe_002_radiator_fe.py": "f1be285404e242cc6394363eac2ed1345233e1497ed83fff5f4e3dde09260aa1",
+   "tests/test_fe_003_compute_cold_plate_fe.py": "3a9bfdd73afca2fb2257235348b85702707b5c390b1814a3d15621fba39bafce",
+   "tests/test_fe_004_whole_satellite_chain.py": "6aaeec63a82a4031d916d063694f2aa9a6b750c1712ce2bb7ba036497f1e9a66",
+   "tests/test_ht_001_heat_flows.py": "2d91f41677820f09cdb4e6edac6582be56c9647cea59bfaa629e30da1e759049",
+   "tests/test_ht_002_derivative_balance.py": "728e57be7630d1be877a265ad0206e9ab0cef1374a9bd74f20f438f18a0d144b",
+   "tests/test_ht_003_analytic.py": "a66ffc2613929fbd9bb44a0f2a8f1d41879069d1b2d9584f8fb2041f1545e832",
+   "tests/test_ni_001_numerics_eclipse.py": "1f4cba777b1aba392d09bb130ec6652d2b04004a3ac97ea4e49a88424aacdf47",
+   "tests/test_ni_002_end_to_end.py": "fb33ca9517ced5761c63ae7d68cefc72e98c3c3e36c7a8665b0d89fc9d3c696e",
+   "tests/test_ni_003_scene_assembly.py": "2ce365771b66f67e78334bbb3358a210d8eabed0753d82b7abeb4f3e900e6226",
+   "tests/test_pa_001_t5_assembly.py": "fa1b1edba0b491daf8a6e06ecd6d3a1e8baa9307daf94b5d885659a0620e3293"
+  }
+ }
+}

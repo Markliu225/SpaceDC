@@ -1,0 +1,99 @@
+{
+ "case_id": "FE-004",
+ "description": "Computing node J, cold plate C and common radiator R with the JC and CR connections against the whole-satellite COMSOL model of 30 August 2026 (OrbitWiz vs COMSOL 6.3 full twin). Parameters are derived from the FE model definition files by T5; the FE temperatures are used only as the comparison reference.",
+ "fe": {
+  "dir": "space-compute-demo/tools/comsol_benchmark/full_twin",
+  "report": "REPORT.md",
+  "parameters": "PHASE1_PARAMETERS.md",
+  "addendum": "PHASE1_ADDENDUM_materials.md",
+  "geometry_spec": "geometry_spec.py",
+  "build_script": "build_comsol.py",
+  "solve_and_probe": "solve_and_probe.py",
+  "source": "Whole-satellite FE model: COMSOL 6.3 solid heat transfer with surface-to-surface radiation and orbital thermal loads, strict BDF-1 steps of 120 s over 5 orbits (3 orbits plus a verified 2-orbit continuation), REPORT.md sections 5 to 7.8"
+ },
+ "cases": {
+  "caseA": {"gpu": "V100", "label_cn": "12 块 V100", "trace": "out/orbitwiz/caseA_V100_1s.csv", "probes": "out/comsol/caseA_probes.csv", "solve_log": "out/comsol/caseA_solve_log.json",
+            "report_o45_C": {"radiator_mean": 40.2, "baseplate_mean": 59.2, "bus_mean": 66.2, "orbitwiz_node": 46.8}},
+  "caseB": {"gpu": "A100", "label_cn": "12 块 A100", "trace": "out/orbitwiz/caseB_A100_1s.csv", "probes": "out/comsol/caseB_probes.csv", "solve_log": "out/comsol/caseB_solve_log.json",
+            "report_o45_C": {"radiator_mean": 53.9, "baseplate_mean": 78.3, "bus_mean": 84.7, "orbitwiz_node": 63.2}}
+ },
+ "report_o45_source": "REPORT.md section 7.8 table, orbits 4 to 5 cyclic means (sample mean of the 120 s probe output over 3P <= tau <= 5P, as computed by compare_report.py)",
+ "gpu_count": 12,
+ "environment": {
+  "albedo": 0.30,
+  "olr_W_m2": 237.0,
+  "earth_radius_m": 6378000.0,
+  "solar_irradiance_rule": "mean of the trace column solar_flux_w_m2 over T0_HOT_S - 120 s <= t_s <= T0_HOT_S + 3 P + 60 s, rounded to 0.01 W/m2, exactly as build_comsol.write_inputs set the COMSOL parameter S_sun (the 2-orbit continuation reused the model and its S_sun)",
+  "source": "PHASE1_ADDENDUM_materials.md rows Albedo / Earth IR (geodyn.py:34, 33: 0.30 and 237 W/m2), Earth radius for view factors (COMSOL Earth preset 6378 km), solar irradiance in COMSOL (1361/d_AU^2 on the date); build_comsol.py lines 166, 213-221; deep-space 2.7 K of the FE is not represented (thermal design 4.4 has no background term; its emission at 2.7 K is below 1e-6 W)"
+ },
+ "attitude_source": "build_comsol.py lines 222-223 (spacecraft axes primary z to nadir, secondary y to velocity) and run_orbitwiz.py sample(): body +X = r x v (orbit normal, solar cell normal), +Y = z x x (ram, radiator faces), +Z = -r (nadir)",
+ "orbit_source": "build_comsol.py write_inputs: COMSOL orbit = the OrbitWiz SGP4 positions of the 1 s trace (TEME), Sun = the OrbitWiz analytic Sun direction of the trace (TEME); tau = t_s - T0_HOT_S",
+ "power_source": "build_comsol.py lines 175-181 and write_inputs: per-package heat rate Pgpu = trace heat_per_gpu_w (0.95 times the per-card draw), platform heat Pplat = trace heat_platform_w (0.95 x 600 W) spread over the bus, both linearly interpolated in tau from the 1 s table",
+ "components": {
+  "SolarArray01": {"node_id": "S", "asset_id": "fe004_full_twin_solar_wings", "asset_version": "full_twin-2026-08-30", "material_id": "SolarArray01_wing_sheet",
+                   "front": {"surface_id": "SolarArray01_cells", "normal_body": [1.0, 0.0, 0.0], "absorptivity": 0.60, "emissivity": 0.85},
+                   "back": {"surface_id": "SolarArray01_back", "normal_body": [-1.0, 0.0, 0.0], "absorptivity": 0.80, "emissivity": 0.85},
+                   "ports": ["P_pv_W"],
+                   "source": "geometry_spec.py wings() (7 clusters per wing, 2 wings, cluster 2.560 m x 1.469 m), SOL_AREAL_KG_M2 2.5 kg/m2 with aluminium cp 900 J/kgK, OPT_CELL_FRONT alpha 0.80 - 0.20 = 0.60 eps 0.85 and OPT_CELL_BACK alpha 0.80 eps 0.85; the FE folds the electrical output into the cell absorptivity, so P_pv_W = 0 keeps the same energy balance"},
+  "Compute01": {"node_id": "J", "asset_id": "fe004_full_twin_gpu_blades_and_bus", "asset_version": "full_twin-2026-08-30", "ports": ["P_load_W"],
+                "materials": {"packages": "Compute01_gpu_packages", "blades": "Compute01_blades", "bus": "Compute01_bus_structure"},
+                "source": "geometry_spec.py blades() (12 blade boxes extended to the spine face, 12 package boxes), BUS (spine, two thrusters, two tanks), aluminium rho 2700 kg/m3 and cp 900 J/kgK of the COMSOL library (PHASE1_ADDENDUM_materials.md row 1); union volumes of the FE blocks"},
+  "ColdPlate01": {"node_id": "C", "asset_id": "fe004_full_twin_heat_pipe_transport", "asset_version": "full_twin-2026-08-30", "ports": [],
+                  "material_id": "ColdPlate01_hp_transport",
+                  "source": "geometry_spec.py heat_pipe_blocks(400 x 0.95) as called by build_comsol.py line 111: four transport bundles of 5 pipes and four connectors, solid aluminium capacity (build_comsol.py line 198)"},
+  "Radiator01": {"node_id": "R", "asset_id": "fe004_full_twin_radiator", "asset_version": "full_twin-2026-08-30", "ports": [],
+                 "materials": {"panels": "Radiator01_panels", "condenser": "Radiator01_hp_headers_spreaders"},
+                 "absorptivity": 0.25, "emissivity": 0.85,
+                 "source": "geometry_spec.py radiators() (2 panels 1.98 m x 0.792 m, faces +Y and -Y), RAD_AREAL_KG_M2 4.4 kg/m2, OPT_WHITEPAINT alpha 0.25 eps 0.85 (state_engine.py:180 WhitePaint, user decision A), headers and spreaders of heat_pipe_blocks with solid aluminium capacity; radiating area of the FE = both faces of both panels 6.273 m2 (REPORT.md section 6 check 3)"}
+ },
+ "auxiliary_nodes": {
+  "note": "The FE model has no battery and no separate power equipment (REPORT.md section 5 simplifications: battery not modelled; platform heat uniform over the bus). B and D are auxiliary nodes with explicit test values, carry zero heat and are decoupled from R by a very large resistance; they are not compared.",
+  "temperature_range_K": [150.0, 450.0],
+  "components": [
+   {"instance_id": "Battery01", "node_id": "B", "mass_kg": 2.0, "cp_J_kgK": 1000.0, "ports": ["Q_B_W"]},
+   {"instance_id": "Controller01", "node_id": "D", "mass_kg": 1.0, "cp_J_kgK": 900.0, "ports": []},
+   {"instance_id": "PDU01", "node_id": "D", "mass_kg": 1.0, "cp_J_kgK": 900.0, "ports": ["Q_D_W"]}
+  ],
+  "source": "FE-004 auxiliary node, not compared; explicit test value"
+ },
+ "decoupling": {
+  "resistance_K_W": 1.0e12,
+  "SR_source": "FE-004 test configuration recorded per thermal design 9.4: the FE solar wings are separate, non-touching domains without booms (PHASE1_ADDENDUM_materials.md geometry simplification 4), so SR takes a very large resistance that represents no conduction",
+  "BR_source": "FE-004 test configuration recorded per thermal design 9.4: the FE model has no battery, so BR takes a very large resistance and Q_B_W is zero",
+  "DR_source": "FE-004 test configuration recorded per thermal design 9.4: the FE model has no separate power equipment, so DR takes a very large resistance and Q_D_W is zero in the main configuration"
+ },
+ "temperature_range_K": [150.0, 450.0],
+ "temperature_range_source": "declared applicability range of the constant FE material and optical values; the FE uses constant properties and its temperatures lie in 255 K to 380 K",
+ "blade_grid_m": [0.004, 0.003, 0.0025],
+ "blade_grid_used_m": 0.0025,
+ "solver": {
+  "method": "RK45",
+  "rtol": 1.0e-6,
+  "atol_T_K": 1.0e-4,
+  "max_step_s": 30.0,
+  "output_step_s": 60.0,
+  "environment_step_s": 10.0,
+  "event_time_tol_s": 1.0e-3,
+  "power_step_threshold_W": 2.0,
+  "source": "thermal design table 8: adaptive RK45, relative tolerance, temperature absolute tolerance in K and maximum step in s as scene settings, output on the accepted solution every 60 s; the maximum step stays below the RK45 stability limit of the cold plate node (time constant about 18 s); power steps above 2 W per GPU are declared as input discontinuities"
+ },
+ "criteria": {
+  "acceptance_K": 5.0,
+  "report_match_K": 0.05,
+  "fe_eclipse_resolution_s": 120.0,
+  "fe_eclipse_resolution_source": "REPORT.md section 5 simplifications: 120 s strict steps, eclipse edges resolved to +/-120 s",
+  "eclipse_reference_tol_s": 2.0e-3,
+  "power_match_W": 0.01,
+  "relative_tol_exact": 1.0e-12,
+  "derivative_tol_rel": 1.0e-9,
+  "incidence_tol": 1.0e-4,
+  "env_tol_rel": 1.0e-3,
+  "grid_change_max_rel": 0.02,
+  "single_node_range_C": [12.0, 15.0],
+  "single_node_precision_C": 0.5,
+  "single_node_source": "FE-004 expected result: the single-node model is 12 to 15 degC below the GPU baseplate in the same comparison (REPORT.md section 7.8: +12.5 and +15.1 degC); the statement is checked at its integer precision",
+  "check_samples": 24
+ },
+ "reference_quadrature": {"n_psi": 300, "n_phi": 720,
+  "method": "Earth-centred Gauss-Legendre quadrature in the central angle and midpoint rule in azimuth over the visible spherical cap of a Lambertian Earth; independent of sdtwin_sim.earth_flux, which integrates over the satellite sky"}
+}

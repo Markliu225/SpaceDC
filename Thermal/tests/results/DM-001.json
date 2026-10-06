@@ -1,0 +1,1905 @@
+{
+ "case_id": "DM-001",
+ "status": "pass",
+ "checks": [
+  {
+   "name": "步骤1 ThermalParameters 字段名称与顺序符合表 6",
+   "expected": "C_J_K、R_K_W、surfaces、instance_map、provenance",
+   "actual": "C_J_K、R_K_W、surfaces、instance_map、provenance；读取 5 个字段",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalParameters 为构造后不可赋值的记录",
+   "expected": "dataclass frozen=True",
+   "actual": "frozen=True",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalState 字段名称与顺序符合表 6",
+   "expected": "run_id、time_s、temperature_K",
+   "actual": "run_id、time_s、temperature_K；读取 3 个字段",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalState 为构造后不可赋值的记录",
+   "expected": "dataclass frozen=True",
+   "actual": "frozen=True",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalInputs 字段名称与顺序符合表 6",
+   "expected": "run_id、time_s、environment、P_pv_W、P_load_W、Q_B_W、Q_D_W",
+   "actual": "run_id、time_s、environment、P_pv_W、P_load_W、Q_B_W、Q_D_W；读取 7 个字段",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalInputs 为构造后不可赋值的记录",
+   "expected": "dataclass frozen=True",
+   "actual": "frozen=True",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalEvaluation 字段名称与顺序符合表 6",
+   "expected": "run_id、time_s、dT_dt_K_s、q_W、Q_env_W、Q_emit_W、T_B_K、T_J_K",
+   "actual": "run_id、time_s、dT_dt_K_s、q_W、Q_env_W、Q_emit_W、T_B_K、T_J_K；读取 8 个字段",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalEvaluation 为构造后不可赋值的记录",
+   "expected": "dataclass frozen=True",
+   "actual": "frozen=True",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalParameters.C_J_K 维数",
+   "expected": "float64 数组，形状 (6,)，全部有限",
+   "actual": "ndarray，dtype float64，形状 (6,)，值 [3600.0, 400.0, 1080.0, 1000.0, 720.0, 2700.0]",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalParameters.R_K_W 维数",
+   "expected": "float64 数组，形状 (5,)，全部有限",
+   "actual": "ndarray，dtype float64，形状 (5,)，值 [3.0, 0.1, 0.25, 0.5, 0.75]",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalState.temperature_K 维数",
+   "expected": "float64 数组，形状 (6,)，全部有限",
+   "actual": "ndarray，dtype float64，形状 (6,)，值 [320.0, 330.0, 310.0, 303.0, 305.0, 300.0]",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalEvaluation.dT_dt_K_s 维数",
+   "expected": "float64 数组，形状 (6,)，全部有限",
+   "actual": "ndarray，dtype float64，形状 (6,)，值 [-0.024095083700606652, -0.125, 0.14814814814814814, 0.004, -0.002314814814814815, -0.07002254400189444]",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalEvaluation.q_W 维数",
+   "expected": "float64 数组，形状 (5,)，全部有限",
+   "actual": "ndarray，dtype float64，形状 (5,)，值 [6.666666666666667, 200.0, 40.0, 6.0, 6.666666666666667]",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalEvaluation.Q_env_W 维数",
+   "expected": "float64 数组，形状 (2,)，全部有限",
+   "actual": "ndarray，dtype float64，形状 (2,)，值 [2182.0444791810064, 566.8638799532766]",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalEvaluation.Q_emit_W 维数",
+   "expected": "float64 数组，形状 (2,)，全部有限",
+   "actual": "ndarray，dtype float64，形状 (2,)，值 [1962.1201138365236, 815.258082091725]",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalParameters.C_J_K 全部为正",
+   "expected": "全部 > 0 J/K",
+   "actual": "[3600.0, 400.0, 1080.0, 1000.0, 720.0, 2700.0]",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalParameters.R_K_W 全部为正",
+   "expected": "全部 > 0 K/W",
+   "actual": "[3.0, 0.1, 0.25, 0.5, 0.75]",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalState.temperature_K 全部为正",
+   "expected": "全部 > 0 K",
+   "actual": "[320.0, 330.0, 310.0, 303.0, 305.0, 300.0]",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalState run_id 与 time_s",
+   "expected": "run_id 'dm001'，time_s 120.0 s 浮点数",
+   "actual": "run_id 'dm001'，time_s 120.0 float",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalInputs run_id 与 time_s",
+   "expected": "run_id 'dm001'，time_s 120.0 s 浮点数",
+   "actual": "run_id 'dm001'，time_s 120.0 float",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalEvaluation run_id 与 time_s",
+   "expected": "run_id 'dm001'，time_s 120.0 s 浮点数",
+   "actual": "run_id 'dm001'，time_s 120.0 float",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalInputs 四个功率字段",
+   "expected": "浮点数 {'P_pv_W': 300.0, 'P_load_W': 150.0, 'Q_B_W': 10.0, 'Q_D_W': 5.0}",
+   "actual": "{'P_pv_W': '300.0 float', 'P_load_W': '150.0 float', 'Q_B_W': '10.0 float', 'Q_D_W': '5.0 float'}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalInputs 环境与四个功率取同一时刻",
+   "expected": "environment run_id 'dm001'、time_s 120.0 s 与 ThermalInputs 相同，表面数组长度 4",
+   "actual": "environment run_id 'dm001'，time_s 120.0，长度 [4, 4, 4, 4]",
+   "passed": true
+  },
+  {
+   "name": "步骤1 ThermalEvaluation T_B_K 与 T_J_K 为温度标量",
+   "expected": "浮点数，单位 K",
+   "actual": "T_B_K 303.0 float，T_J_K 330.0 float",
+   "passed": true
+  },
+  {
+   "name": "步骤1 surfaces 为记录元组",
+   "expected": "tuple，4 条记录",
+   "actual": "tuple，4 条",
+   "passed": true
+  },
+  {
+   "name": "步骤1 surfaces 记录 R_space",
+   "expected": "字段 surface_id、node_id、area_m2、normal_body、absorptivity、emissivity；node_id R，area_m2 1.5，normal_body[3] [1.0, 0.0, 0.0] 单位长度，absorptivity 0.2，emissivity 0.9",
+   "actual": "字段 surface_id、node_id、area_m2、normal_body、absorptivity、emissivity；node_id R，area_m2 1.5，normal_body [1.0, 0.0, 0.0] 形状 (3,)，absorptivity 0.2，emissivity 0.9",
+   "passed": true
+  },
+  {
+   "name": "步骤1 surfaces 记录 R_side",
+   "expected": "字段 surface_id、node_id、area_m2、normal_body、absorptivity、emissivity；node_id R，area_m2 0.5，normal_body[3] [0.0, 1.0, 0.0] 单位长度，absorptivity 0.25，emissivity 0.85",
+   "actual": "字段 surface_id、node_id、area_m2、normal_body、absorptivity、emissivity；node_id R，area_m2 0.5，normal_body [0.0, 1.0, 0.0] 形状 (3,)，absorptivity 0.25，emissivity 0.85",
+   "passed": true
+  },
+  {
+   "name": "步骤1 surfaces 记录 S_front",
+   "expected": "字段 surface_id、node_id、area_m2、normal_body、absorptivity、emissivity；node_id S，area_m2 2.0，normal_body[3] [0.0, 0.0, 1.0] 单位长度，absorptivity 0.8，emissivity 0.85",
+   "actual": "字段 surface_id、node_id、area_m2、normal_body、absorptivity、emissivity；node_id S，area_m2 2.0，normal_body [0.0, 0.0, 1.0] 形状 (3,)，absorptivity 0.8，emissivity 0.85",
+   "passed": true
+  },
+  {
+   "name": "步骤1 surfaces 记录 S_back",
+   "expected": "字段 surface_id、node_id、area_m2、normal_body、absorptivity、emissivity；node_id S，area_m2 2.0，normal_body[3] [0.0, 0.0, -1.0] 单位长度，absorptivity 0.3，emissivity 0.8",
+   "actual": "字段 surface_id、node_id、area_m2、normal_body、absorptivity、emissivity；node_id S，area_m2 2.0，normal_body [0.0, 0.0, -1.0] 形状 (3,)，absorptivity 0.3，emissivity 0.8",
+   "passed": true
+  },
+  {
+   "name": "步骤1 太阳能板正反面分开登记",
+   "expected": "节点 S 有两条记录，法向相反",
+   "actual": "节点 S 记录 ['S_front', 'S_back']，法向 [[0.0, 0.0, 1.0], [0.0, 0.0, -1.0]]",
+   "passed": true
+  },
+  {
+   "name": "步骤1 instance_map 节点对应",
+   "expected": "{'S': ['SolarArray01'], 'J': ['Compute01'], 'C': ['ColdPlate01'], 'B': ['Battery01'], 'D': ['Controller01', 'PDU01'], 'R': ['Radiator01']}；D 对应两个设备实例",
+   "actual": "{'S': ['SolarArray01'], 'J': ['Compute01'], 'C': ['ColdPlate01'], 'B': ['Battery01'], 'D': ['Controller01', 'PDU01'], 'R': ['Radiator01']}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 instance_map 四个功率端口实例",
+   "expected": "{'P_pv_W': 'SolarArray01', 'P_load_W': 'Compute01', 'Q_B_W': 'Battery01', 'Q_D_W': 'PDU01'}",
+   "actual": "{'P_pv_W': 'SolarArray01', 'P_load_W': 'Compute01', 'Q_B_W': 'Battery01', 'Q_D_W': 'PDU01'}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 provenance 记录顺序与单位",
+   "expected": "node_order ('S', 'J', 'C', 'B', 'D', 'R')，path_order ('SR', 'JC', 'CR', 'BR', 'DR')，C_J_K 单位 J/K，R_K_W 单位 K/W",
+   "actual": "node_order ('S', 'J', 'C', 'B', 'D', 'R')，path_order ('SR', 'JC', 'CR', 'BR', 'DR')，units {'C_J_K': 'J/K', 'R_K_W': 'K/W', 'area_m2': 'm^2', 'temperature': 'K'}",
+   "passed": true
+  },
+  {
+   "name": "步骤2 C_J_K 按 S、J、C、B、D、R 保存 T5 热容",
+   "expected": "手算 [3600.0, 400.0, 1080.0, 1000.0, 720.0, 2700.0] J/K，相对误差 <= 1e-12；组件输入顺序 ['Radiator01', 'Battery01', 'PDU01', 'SolarArray01', 'Controller01', 'ColdPlate01', 'Compute01']",
+   "actual": "[3600.0, 400.0, 1080.0, 1000.0, 720.0, 2700.0]，相对误差 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 R_K_W 按 SR、JC、CR、BR、DR 保存 T5 热阻",
+   "expected": "手算 [3.0, 0.1, 0.25, 0.5, 0.75] K/W，相对误差 <= 1e-12；连接输入顺序 ['DR', 'BR', 'CR', 'JC', 'SR']",
+   "actual": "[3.0, 0.1, 0.25, 0.5, 0.75]，相对误差 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 temperature_K 按 S、J、C、B、D、R 保存",
+   "expected": "[320.0, 330.0, 310.0, 303.0, 305.0, 300.0] K",
+   "actual": "[320.0, 330.0, 310.0, 303.0, 305.0, 300.0]",
+   "passed": true
+  },
+  {
+   "name": "步骤2 calculate_heat_flows 按 S、J、C、B、D、R 读取温度并按路径顺序给出 q_W",
+   "expected": "T2 手算 [6.666666666666667, 200.0, 40.0, 6.0, 6.666666666666667] W，相对误差 <= 1e-12",
+   "actual": "[6.666666666666667, 200.0, 40.0, 6.0, 6.666666666666667]，相对误差 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 环境数组按资产表面顺序",
+   "expected": "('R_space', 'R_side', 'S_front', 'S_back')",
+   "actual": "('R_space', 'R_side', 'S_front', 'S_back')",
+   "passed": true
+  },
+  {
+   "name": "步骤2 cos_incidence 按资产表面顺序与独立计算一致",
+   "expected": "[0.6000217485997466, 0.0, 0.7999836880882651, -0.7999836880882651]，绝对误差 <= 1e-12",
+   "actual": "[0.6000217485997466, 0.0, 0.7999836880882651, -0.7999836880882651]，绝对误差 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 S 与 R 的吸热和辐射功率可区分",
+   "expected": "两节点相差 > 1 W，顺序互换可被发现",
+   "actual": "Q_env 相差 1615.181 W，Q_emit 相差 1146.862 W",
+   "passed": true
+  },
+  {
+   "name": "步骤2 ThermalEvaluation Q_env_W 按 S、R 排列",
+   "expected": "T4 手算 S 2182.0444791810064 W，R 566.8638799532766 W，相对误差 <= 1e-12",
+   "actual": "[2182.0444791810064, 566.8638799532766]，相对误差 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 calculate_surface_heat Q_env_W 按 S、R 排列",
+   "expected": "T4 手算 S 2182.0444791810064 W，R 566.8638799532766 W，相对误差 <= 1e-12",
+   "actual": "[2182.0444791810064, 566.8638799532766]，相对误差 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 ThermalEvaluation Q_emit_W 按 S、R 排列",
+   "expected": "T4 手算 S 1962.1201138365236 W，R 815.258082091725 W，相对误差 <= 1e-12",
+   "actual": "[1962.1201138365236, 815.258082091725]，相对误差 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 calculate_surface_heat Q_emit_W 按 S、R 排列",
+   "expected": "T4 手算 S 1962.1201138365236 W，R 815.258082091725 W，相对误差 <= 1e-12",
+   "actual": "[1962.1201138365236, 815.258082091725]，相对误差 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 ThermalEvaluation.q_W 按 SR、JC、CR、BR、DR 排列",
+   "expected": "T2 手算 [6.666666666666667, 200.0, 40.0, 6.0, 6.666666666666667] W，相对误差 <= 1e-12",
+   "actual": "[6.666666666666667, 200.0, 40.0, 6.0, 6.666666666666667]，相对误差 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 dT_dt_K_s 按 S、J、C、B、D、R 给出 T3 导数",
+   "expected": "T3 手算 [-0.024095083700606652, -0.125, 0.14814814814814814, 0.004, -0.002314814814814815, -0.07002254400189444] K/s，误差除以各节点功率项绝对值之和与热容之比 <= 1e-12",
+   "actual": "[-0.024095083700606652, -0.125, 0.14814814814814814, 0.004, -0.002314814814814815, -0.07002254400189444]，归一误差 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 T_B_K 等于 temperature_K 中节点 B 的温度",
+   "expected": "303.0 K",
+   "actual": "303.0 K",
+   "passed": true
+  },
+  {
+   "name": "步骤2 T_J_K 等于 temperature_K 中节点 J 的温度",
+   "expected": "330.0 K",
+   "actual": "330.0 K",
+   "passed": true
+  },
+  {
+   "name": "步骤3 电池参数取第 4.3 节算例",
+   "expected": "C_B 1000.0 J/K，R_BR 0.5 K/W，T_B 303.0 K，T_R 300.0 K",
+   "actual": "C_B np.float64(1000.0) J/K，R_BR np.float64(0.5) K/W，T_B 303.0 K，T_R 300.0 K",
+   "passed": true
+  },
+  {
+   "name": "步骤3 Q_B_W 取 10 W 时与第 4.3 节电池算例一致",
+   "expected": "第 4.3 节算例 q_BR = 3/0.5 = 6.0 W，电池温度导数 = 4/1000 = 0.004 K/s，误差 <= 1e-15 K/s",
+   "actual": "q_BR 6.0 W，电池温度导数 0.004 K/s",
+   "passed": true
+  },
+  {
+   "name": "步骤3 Q_B_W 取 10 W 时保留符号",
+   "expected": "10.0 W 浮点数",
+   "actual": "10.0 float",
+   "passed": true
+  },
+  {
+   "name": "步骤3 Q_B_W 取 10 W 时电池温度导数",
+   "expected": "式 T3 (Q_B − q_BR)/C_B = (10 − 6)/1000 = 0.004 K/s，误差 <= 1e-15 K/s",
+   "actual": "0.004 K/s，q_BR 6.0 W",
+   "passed": true
+  },
+  {
+   "name": "步骤3 Q_B_W 取 −10 W 时保留符号",
+   "expected": "-10.0 W 浮点数",
+   "actual": "-10.0 float",
+   "passed": true
+  },
+  {
+   "name": "步骤3 Q_B_W 取 −10 W 时电池温度导数",
+   "expected": "式 T3 (Q_B − q_BR)/C_B = (−10 − 6)/1000 = -0.016 K/s，误差 <= 1e-15 K/s",
+   "actual": "-0.016 K/s，q_BR 6.0 W",
+   "passed": true
+  },
+  {
+   "name": "步骤3 Q_B_W 只进入电池节点",
+   "expected": "两次导数之差 B 为 -0.02 K/s，其余节点为 0",
+   "actual": "[0.0, 0.0, 0.0, -0.02, 0.0, 0.0]",
+   "passed": true
+  },
+  {
+   "name": "步骤4 对照：ThermalParameters 正常构造成功",
+   "expected": "构造成功，异常只由注入的字段引起",
+   "actual": "构造成功 ThermalParameters",
+   "passed": true
+  },
+  {
+   "name": "步骤4 对照：ThermalState 正常构造成功",
+   "expected": "构造成功，异常只由注入的字段引起",
+   "actual": "构造成功 ThermalState",
+   "passed": true
+  },
+  {
+   "name": "步骤4 对照：ThermalInputs 正常构造成功",
+   "expected": "构造成功，异常只由注入的字段引起",
+   "actual": "构造成功 ThermalInputs",
+   "passed": true
+  },
+  {
+   "name": "步骤4 对照：ThermalEvaluation 正常构造成功",
+   "expected": "构造成功，异常只由注入的字段引起",
+   "actual": "构造成功 ThermalEvaluation",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalParameters.C_J_K 5 个值",
+   "expected": "ThermalConfigurationError，报错含 ThermalParameters、C_J_K，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.C_J_K must have shape (6,) with one value per node in the order ('S', 'J', 'C', 'B', 'D', 'R'), got shape (5,)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalParameters.C_J_K 7 个值",
+   "expected": "ThermalConfigurationError，报错含 ThermalParameters、C_J_K，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.C_J_K must have shape (6,) with one value per node in the order ('S', 'J', 'C', 'B', 'D', 'R'), got shape (7,)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalParameters.C_J_K 形状 2×3",
+   "expected": "ThermalConfigurationError，报错含 ThermalParameters、C_J_K，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.C_J_K must have shape (6,) with one value per node in the order ('S', 'J', 'C', 'B', 'D', 'R'), got shape (2, 3)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalParameters.C_J_K 为标量",
+   "expected": "ThermalConfigurationError，报错含 ThermalParameters、C_J_K，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.C_J_K must have shape (6,) with one value per node in the order ('S', 'J', 'C', 'B', 'D', 'R'), got shape ()；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalParameters.R_K_W 4 个值",
+   "expected": "ThermalConfigurationError，报错含 ThermalParameters、R_K_W，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.R_K_W must have shape (5,) with one value per path in the order ('SR', 'JC', 'CR', 'BR', 'DR'), got shape (4,)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalParameters.R_K_W 6 个值",
+   "expected": "ThermalConfigurationError，报错含 ThermalParameters、R_K_W，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.R_K_W must have shape (5,) with one value per path in the order ('SR', 'JC', 'CR', 'BR', 'DR'), got shape (6,)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalParameters.R_K_W 形状 5×1",
+   "expected": "ThermalConfigurationError，报错含 ThermalParameters、R_K_W，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.R_K_W must have shape (5,) with one value per path in the order ('SR', 'JC', 'CR', 'BR', 'DR'), got shape (5, 1)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalParameters.C_J_K 含 NaN",
+   "expected": "ThermalConfigurationError，报错含 ThermalParameters、C_J_K，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.C_J_K must contain only finite values, got np.float64(nan) at index 2；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalParameters.C_J_K 含 +inf",
+   "expected": "ThermalConfigurationError，报错含 ThermalParameters、C_J_K，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.C_J_K must contain only finite values, got np.float64(inf) at index 0；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalParameters.C_J_K 为非数值",
+   "expected": "ThermalConfigurationError，报错含 ThermalParameters、C_J_K，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.C_J_K must be a numeric array of shape (6,), got ['a', 'a', 'a', 'a', 'a', 'a']；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalParameters.R_K_W 含 NaN",
+   "expected": "ThermalConfigurationError，报错含 ThermalParameters、R_K_W，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.R_K_W must contain only finite values, got np.float64(nan) at index 1；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalParameters.R_K_W 含 −inf",
+   "expected": "ThermalConfigurationError，报错含 ThermalParameters、R_K_W，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.R_K_W must contain only finite values, got np.float64(-inf) at index 4；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalParameters.C_J_K 节点 C 热容为 0",
+   "expected": "ThermalConfigurationError，报错含 ThermalParameters、C_J_K，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.C_J_K[2] (node C) must be > 0, got np.float64(0.0)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalParameters.C_J_K 节点 B 热容为负",
+   "expected": "ThermalConfigurationError，报错含 ThermalParameters、C_J_K，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.C_J_K[3] (node B) must be > 0, got np.float64(-1000.0)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalParameters.R_K_W 路径 BR 热阻为 0",
+   "expected": "ThermalConfigurationError，报错含 ThermalParameters、R_K_W，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.R_K_W[3] (path BR) must be > 0, got np.float64(0.0)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalParameters.R_K_W 路径 DR 热阻为负",
+   "expected": "ThermalConfigurationError，报错含 ThermalParameters、R_K_W，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.R_K_W[4] (path DR) must be > 0, got np.float64(-0.75)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：provenance 节点顺序颠倒",
+   "expected": "ThermalConfigurationError，报错含 provenance、node_order，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.provenance['node_order'] must be ('S', 'J', 'C', 'B', 'D', 'R'), got ('R', 'D', 'B', 'C', 'J', 'S')；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：provenance 路径顺序错位",
+   "expected": "ThermalConfigurationError，报错含 provenance、path_order，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.provenance['path_order'] must be ('SR', 'JC', 'CR', 'BR', 'DR'), got ('JC', 'SR', 'CR', 'BR', 'DR')；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：provenance 热容单位写成 kJ/K",
+   "expected": "ThermalConfigurationError，报错含 provenance、units，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.provenance['units'] must be {'C_J_K': 'J/K', 'R_K_W': 'K/W', 'area_m2': 'm^2', 'temperature': 'K'}, got {'C_J_K': 'kJ/K', 'R_K_W': 'K/W', 'area_m2': 'm^2', 'temperature': 'K'}；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：instance_map 把 Q_B_W 连到 PDU01",
+   "expected": "ThermalConfigurationError，报错含 instance_map、Q_B_W，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.instance_map['ports']['Q_B_W'] is instance 'PDU01' on node 'D'; Q_B_W must come from an instance of node 'B' (design 5.1)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：surfaces 在电池节点登记外露表面",
+   "expected": "ThermalConfigurationError，报错含 B_top、node_id，重复注入报错相同",
+   "actual": "ThermalConfigurationError: SurfaceRecord 'B_top': node_id must be one of ('S', 'R') (exposed surfaces belong only to S or R), got 'B'；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：surfaces 重复登记 R_space",
+   "expected": "ThermalConfigurationError，报错含 surfaces、R_space，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.surfaces: surface_id 'R_space' appears more than once；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：instance_map 节点 D 缺少 Controller01",
+   "expected": "ThermalConfigurationError，报错含 instance_map、Controller01，重复注入报错相同",
+   "actual": "ThermalConfigurationError: ThermalParameters.instance_map['nodes']['D'] must contain instance 'Controller01', which is missing; node 'D' holds ('Controller01', 'PDU01') (design 3.2, 9.3)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalState.temperature_K 5 个值",
+   "expected": "ThermalInputError，报错含 ThermalState、temperature_K，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalState.temperature_K must have shape (6,) with one value per node in the order ('S', 'J', 'C', 'B', 'D', 'R'), got shape (5,)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalState.temperature_K 7 个值",
+   "expected": "ThermalInputError，报错含 ThermalState、temperature_K，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalState.temperature_K must have shape (6,) with one value per node in the order ('S', 'J', 'C', 'B', 'D', 'R'), got shape (7,)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalState.temperature_K 形状 6×1",
+   "expected": "ThermalInputError，报错含 ThermalState、temperature_K，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalState.temperature_K must have shape (6,) with one value per node in the order ('S', 'J', 'C', 'B', 'D', 'R'), got shape (6, 1)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalState.temperature_K 含 NaN",
+   "expected": "ThermalInputError，报错含 ThermalState、temperature_K，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalState.temperature_K must contain only finite values, got np.float64(nan) at index 2；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalState.temperature_K 含 +inf",
+   "expected": "ThermalInputError，报错含 ThermalState、temperature_K，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalState.temperature_K must contain only finite values, got np.float64(inf) at index 5；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalState.temperature_K 节点 D 为 0 K",
+   "expected": "ThermalInputError，报错含 ThermalState、temperature_K，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalState.temperature_K[4] (node D) must be > 0, got np.float64(0.0)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalState.temperature_K 节点 S 为负",
+   "expected": "ThermalInputError，报错含 ThermalState、temperature_K，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalState.temperature_K[0] (node S) must be > 0, got np.float64(-5.0)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalState.run_id 为空串",
+   "expected": "ThermalInputError，报错含 ThermalState、run_id，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalState.run_id must be a non-empty string, got ''；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalState.run_id 为 None",
+   "expected": "ThermalInputError，报错含 ThermalState、run_id，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalState.run_id must be a non-empty string, got None；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalState.time_s 为 NaN",
+   "expected": "ThermalInputError，报错含 ThermalState、time_s，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalState.time_s must be finite, got nan；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalState.time_s 为 +inf",
+   "expected": "ThermalInputError，报错含 ThermalState、time_s，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalState.time_s must be finite, got inf；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalInputs 与环境运行标识不一致",
+   "expected": "ThermalInputError，报错含 ThermalInputs、run_id，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalInputs.environment.run_id 'dm001' differs from ThermalInputs.run_id 'dm001_other'；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalInputs 与环境时刻不一致",
+   "expected": "ThermalInputError，报错含 ThermalInputs、time_s，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalInputs.environment.time_s 120.0 differs from ThermalInputs.time_s 120.5；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalInputs.P_pv_W 为 NaN",
+   "expected": "ThermalInputError，报错含 ThermalInputs、P_pv_W，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalInputs.P_pv_W must be finite, got nan；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalInputs.P_load_W 为 +inf",
+   "expected": "ThermalInputError，报错含 ThermalInputs、P_load_W，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalInputs.P_load_W must be finite, got inf；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalInputs.Q_B_W 为 NaN",
+   "expected": "ThermalInputError，报错含 ThermalInputs、Q_B_W，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalInputs.Q_B_W must be finite, got nan；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalInputs.Q_D_W 为 −inf",
+   "expected": "ThermalInputError，报错含 ThermalInputs、Q_D_W，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalInputs.Q_D_W must be finite, got -inf；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalInputs.Q_B_W 缺失为 None",
+   "expected": "ThermalInputError，报错含 ThermalInputs、Q_B_W，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalInputs.Q_B_W is missing (None); an invalid Power result or one that requires an event provides no ports and must not reach the thermal derivative (design 5.6)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalInputs 环境 cos_incidence 3 个值对 4 个表面",
+   "expected": "ThermalInputError，报错含 environment、cos_incidence，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalInputs.environment.cos_incidence has 3 value(s) for the 4 surface(s) ('R_space', 'R_side', 'S_front', 'S_back'); every surface needs its own record；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalInputs 环境缺少 infrared_W_m2",
+   "expected": "ThermalInputError，报错含 environment、infrared_W_m2，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalInputs.environment is missing field(s) ['infrared_W_m2']；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalInputs 环境 albedo_W_m2 含 NaN",
+   "expected": "ThermalInputError，报错含 environment、albedo_W_m2，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalInputs.environment.albedo_W_m2 for surface 'R_space' must be finite, got nan；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalInputs.run_id 为空串",
+   "expected": "ThermalInputError，报错含 ThermalInputs、run_id，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalInputs.run_id must be a non-empty string, got ''；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalInputs.time_s 为 NaN",
+   "expected": "ThermalInputError，报错含 ThermalInputs、time_s，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalInputs.time_s must be finite, got nan；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalEvaluation.dT_dt_K_s 5 个值",
+   "expected": "ThermalInputError，报错含 ThermalEvaluation、dT_dt_K_s，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalEvaluation.dT_dt_K_s must have shape (6,) with one value per node in the order ('S', 'J', 'C', 'B', 'D', 'R'), got shape (5,)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalEvaluation.q_W 4 个值",
+   "expected": "ThermalInputError，报错含 ThermalEvaluation、q_W，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalEvaluation.q_W must have shape (5,) with one value per path in the order ('SR', 'JC', 'CR', 'BR', 'DR'), got shape (4,)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalEvaluation.q_W 6 个值",
+   "expected": "ThermalInputError，报错含 ThermalEvaluation、q_W，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalEvaluation.q_W must have shape (5,) with one value per path in the order ('SR', 'JC', 'CR', 'BR', 'DR'), got shape (6,)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalEvaluation.Q_env_W 3 个值",
+   "expected": "ThermalInputError，报错含 ThermalEvaluation、Q_env_W，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalEvaluation.Q_env_W must have shape (2,) with one value per exposed node in the order ('S', 'R'), got shape (3,)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalEvaluation.Q_emit_W 1 个值",
+   "expected": "ThermalInputError，报错含 ThermalEvaluation、Q_emit_W，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalEvaluation.Q_emit_W must have shape (2,) with one value per exposed node in the order ('S', 'R'), got shape (1,)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalEvaluation.dT_dt_K_s 含 NaN",
+   "expected": "ThermalInputError，报错含 ThermalEvaluation、dT_dt_K_s，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalEvaluation.dT_dt_K_s must contain only finite values, got np.float64(nan) at index 1；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalEvaluation.q_W 含 +inf",
+   "expected": "ThermalInputError，报错含 ThermalEvaluation、q_W，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalEvaluation.q_W must contain only finite values, got np.float64(inf) at index 2；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalEvaluation.Q_env_W 含 NaN",
+   "expected": "ThermalInputError，报错含 ThermalEvaluation、Q_env_W，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalEvaluation.Q_env_W must contain only finite values, got np.float64(nan) at index 0；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalEvaluation.Q_emit_W 含 −inf",
+   "expected": "ThermalInputError，报错含 ThermalEvaluation、Q_emit_W，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalEvaluation.Q_emit_W must contain only finite values, got np.float64(-inf) at index 1；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalEvaluation.T_B_K 为 NaN",
+   "expected": "ThermalInputError，报错含 ThermalEvaluation、T_B_K，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalEvaluation.T_B_K must be finite, got nan；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalEvaluation.T_J_K 为 0 K",
+   "expected": "ThermalInputError，报错含 ThermalEvaluation、T_J_K，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalEvaluation.T_J_K must be > 0, got 0.0；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalEvaluation.run_id 为空串",
+   "expected": "ThermalInputError，报错含 ThermalEvaluation、run_id，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalEvaluation.run_id must be a non-empty string, got ''；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：ThermalEvaluation.time_s 为 +inf",
+   "expected": "ThermalInputError，报错含 ThermalEvaluation、time_s，重复注入报错相同",
+   "actual": "ThermalInputError: ThermalEvaluation.time_s must be finite, got inf；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：thermal_derivative 状态与输入运行标识不一致",
+   "expected": "ThermalInputError，报错含 run_id，重复注入报错相同",
+   "actual": "ThermalInputError: inputs.run_id 'dm001' differs from state.run_id 'dm001_other'；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：thermal_derivative 状态与输入时刻不一致",
+   "expected": "ThermalInputError，报错含 time_s，重复注入报错相同",
+   "actual": "ThermalInputError: inputs.time_s 120.0 differs from state.time_s 121.0；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：thermal_derivative 收到 5 个温度的状态",
+   "expected": "ThermalInputError，报错含 state、temperature_K，重复注入报错相同",
+   "actual": "ThermalInputError: state.temperature_K must have shape (6,) with one value per node in the order ('S', 'J', 'C', 'B', 'D', 'R'), got shape (5,)；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常构造被拒绝：calculate_heat_flows 收到含 NaN 的状态",
+   "expected": "ThermalInputError，报错含 state、temperature_K，重复注入报错相同",
+   "actual": "ThermalInputError: state.temperature_K must contain only finite values, got np.float64(nan) at index 1；重复注入报错相同",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：给 C_J_K 赋新数组",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "FrozenInstanceError: cannot assign to field 'C_J_K'",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：删除 R_K_W 字段",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "FrozenInstanceError: cannot delete field 'R_K_W'",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：新增属性",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "FrozenInstanceError: cannot assign to field 'extra_field'",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：C_J_K 元素赋值",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: assignment destination is read-only",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：R_K_W 切片赋值",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: assignment destination is read-only",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：C_J_K 就地乘 2",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: output array is read-only",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：np.copyto 写入 R_K_W",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: assignment destination is read-only",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：C_J_K.fill",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: assignment destination is read-only",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：C_J_K 设为可写",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: cannot set WRITEABLE flag to True of this array",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：R_K_W 视图设为可写",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: cannot set WRITEABLE flag to True of this array",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：C_J_K 经底层数组设为可写后写入",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: cannot set WRITEABLE flag to True of this array",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：instance_map 端口改连",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "TypeError: 'mappingproxy' object does not support item assignment",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：instance_map 新增节点",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "TypeError: 'mappingproxy' object does not support item assignment",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：instance_map 节点 D 追加实例",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "AttributeError: 'tuple' object has no attribute 'append'",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：provenance 单位改写",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "TypeError: 'mappingproxy' object does not support item assignment",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：provenance 热容值改写",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "TypeError: 'mappingproxy' object does not support item assignment",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：provenance 材料质量改写",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "TypeError: 'mappingproxy' object does not support item assignment",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：provenance 覆盖记录追加",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "AttributeError: 'tuple' object has no attribute 'append'",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：provenance 删除单位",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "TypeError: 'mappingproxy' object does not support item deletion",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：surfaces 元素替换",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "TypeError: 'tuple' object does not support item assignment",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：表面面积改写",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "FrozenInstanceError: cannot assign to field 'area_m2'",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：表面法向元素赋值",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: assignment destination is read-only",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：表面法向设为可写",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: cannot set WRITEABLE flag to True of this array",
+   "passed": true
+  },
+  {
+   "name": "步骤5 参数修改尝试被拒绝：表面法向经底层数组设为可写后写入",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: cannot set WRITEABLE flag to True of this array",
+   "passed": true
+  },
+  {
+   "name": "步骤5 修改尝试后参数逐位不变",
+   "expected": "C_J_K、R_K_W、surfaces、instance_map、provenance 全部不变",
+   "actual": "变化字段 []",
+   "passed": true
+  },
+  {
+   "name": "步骤5 修改尝试后温度导数逐位不变",
+   "expected": "[-0.024095083700606652, -0.125, 0.14814814814814814, 0.004, -0.002314814814814815, -0.07002254400189444] K/s",
+   "actual": "[-0.024095083700606652, -0.125, 0.14814814814814814, 0.004, -0.002314814814814815, -0.07002254400189444]",
+   "passed": true
+  },
+  {
+   "name": "步骤5 provenance_as_dict 返回独立副本",
+   "expected": "改写副本后 provenance 单位仍为 J/K，电池热容仍为 1000 J/K",
+   "actual": "单位 J/K，电池热容 1000.0",
+   "passed": true
+  },
+  {
+   "name": "步骤5 构造后改写来源数组不影响参数",
+   "expected": "C_J_K [3600.0, 400.0, 1080.0, 1000.0, 720.0, 2700.0]，R_K_W [3.0, 0.1, 0.25, 0.5, 0.75]",
+   "actual": "C_J_K [3600.0, 400.0, 1080.0, 1000.0, 720.0, 2700.0]，R_K_W [3.0, 0.1, 0.25, 0.5, 0.75]，共享内存 False",
+   "passed": true
+  },
+  {
+   "name": "步骤5 装配后改写输入记录不影响参数",
+   "expected": "质量、表面与接触热阻改写后参数逐位不变",
+   "actual": "参数不变 True",
+   "passed": true
+  },
+  {
+   "name": "步骤5 函数不修改输入状态、输入与参数",
+   "expected": "调用 prepare_surface_environment、calculate_surface_heat、calculate_heat_flows、thermal_derivative 后逐位不变",
+   "actual": "已接受状态不变 True，ThermalInputs 不变 True，参数不变 True，orbit_input 不变 True，earth_flux 不变 True",
+   "passed": true
+  },
+  {
+   "name": "步骤5 试算状态是独立记录",
+   "expected": "试算状态与已接受状态为不同对象，不共享温度数组",
+   "actual": "同一对象 False，共享内存 False，同值新状态共享内存 False",
+   "passed": true
+  },
+  {
+   "name": "步骤5 建立并计算试算状态后已接受状态不变",
+   "expected": "time_s 120.0 s，temperature_K [320.0, 330.0, 310.0, 303.0, 305.0, 300.0] K",
+   "actual": "time_s 120.0 s，temperature_K [320.0, 330.0, 310.0, 303.0, 305.0, 300.0] K；试算 time_s 130.0 s，T_B_K 303.04 K",
+   "passed": true
+  },
+  {
+   "name": "步骤5 构造后改写来源数组不影响状态",
+   "expected": "[320.0, 330.0, 310.0, 303.0, 305.0, 300.0] K",
+   "actual": "[320.0, 330.0, 310.0, 303.0, 305.0, 300.0]",
+   "passed": true
+  },
+  {
+   "name": "步骤5 构造后改写来源环境不影响 ThermalInputs",
+   "expected": "改写调用方环境字典中的 cos_incidence、albedo_W_m2 与 G_W_m2 后 ThermalInputs.environment 逐位不变",
+   "actual": "不变 True，G_W_m2 1361.0 W/m²",
+   "passed": true
+  },
+  {
+   "name": "步骤5 记录写入尝试被拒绝：已接受状态温度元素赋值",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: assignment destination is read-only",
+   "passed": true
+  },
+  {
+   "name": "步骤5 记录写入尝试被拒绝：已接受状态温度整体写入试算值",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: assignment destination is read-only",
+   "passed": true
+  },
+  {
+   "name": "步骤5 记录写入尝试被拒绝：已接受状态温度设为可写",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: cannot set WRITEABLE flag to True of this array",
+   "passed": true
+  },
+  {
+   "name": "步骤5 记录写入尝试被拒绝：已接受状态温度经底层数组设为可写后写入",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: cannot set WRITEABLE flag to True of this array",
+   "passed": true
+  },
+  {
+   "name": "步骤5 记录写入尝试被拒绝：已接受状态字段替换为试算数组",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "FrozenInstanceError: cannot assign to field 'temperature_K'",
+   "passed": true
+  },
+  {
+   "name": "步骤5 记录写入尝试被拒绝：已接受状态时刻改写",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "FrozenInstanceError: cannot assign to field 'time_s'",
+   "passed": true
+  },
+  {
+   "name": "步骤5 记录写入尝试被拒绝：ThermalEvaluation 导数元素赋值",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: assignment destination is read-only",
+   "passed": true
+  },
+  {
+   "name": "步骤5 记录写入尝试被拒绝：ThermalEvaluation T_B_K 改写",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "FrozenInstanceError: cannot assign to field 'T_B_K'",
+   "passed": true
+  },
+  {
+   "name": "步骤5 记录写入尝试被拒绝：ThermalInputs 环境数组元素赋值",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: assignment destination is read-only",
+   "passed": true
+  },
+  {
+   "name": "步骤5 记录写入尝试被拒绝：ThermalInputs 环境键改写",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "TypeError: 'mappingproxy' object does not support item assignment",
+   "passed": true
+  },
+  {
+   "name": "步骤5 多次写入尝试后已接受状态与输入逐位不变",
+   "expected": "不变",
+   "actual": "已接受状态不变 True，ThermalInputs 不变 True",
+   "passed": true
+  },
+  {
+   "name": "步骤5 T_B_K 与 T_J_K 是输入温度的数值副本",
+   "expected": "浮点数，等于 temperature_K 中节点 B 与节点 J 的温度，ThermalEvaluation 不含 temperature_K 状态字段",
+   "actual": "T_B_K 303.0 float，T_J_K 330.0，含 temperature_K False",
+   "passed": true
+  },
+  {
+   "name": "步骤5 运行开始后的修改尝试全部执行",
+   "expected": "第一个带试算 ThermalState 的试算记录上执行 11 种尝试：ThermalParameters 7 种，TrialRecord 与试算 ThermalState 4 种",
+   "actual": "执行 11 种，所在试算记录 {'time_s': 0.0, 'context': 'integration', 'solver_id': 0}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 运行开始后修改尝试被拒绝：运行中 C_J_K 元素赋值",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: assignment destination is read-only",
+   "passed": true
+  },
+  {
+   "name": "步骤5 运行开始后修改尝试被拒绝：运行中 R_K_W 设为可写",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: cannot set WRITEABLE flag to True of this array",
+   "passed": true
+  },
+  {
+   "name": "步骤5 运行开始后修改尝试被拒绝：运行中 R_K_W 经底层数组设为可写后写入",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: cannot set WRITEABLE flag to True of this array",
+   "passed": true
+  },
+  {
+   "name": "步骤5 运行开始后修改尝试被拒绝：运行中给 R_K_W 赋新数组",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "FrozenInstanceError: cannot assign to field 'R_K_W'",
+   "passed": true
+  },
+  {
+   "name": "步骤5 运行开始后修改尝试被拒绝：运行中 provenance 单位改写",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "TypeError: 'mappingproxy' object does not support item assignment",
+   "passed": true
+  },
+  {
+   "name": "步骤5 运行开始后修改尝试被拒绝：运行中 instance_map 端口改连",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "TypeError: 'mappingproxy' object does not support item assignment",
+   "passed": true
+  },
+  {
+   "name": "步骤5 运行开始后修改尝试被拒绝：运行中表面吸收率改写",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "FrozenInstanceError: cannot assign to field 'absorptivity'",
+   "passed": true
+  },
+  {
+   "name": "步骤5 运行开始后修改尝试被拒绝：trial_hook 改写试算状态数组",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: assignment destination is read-only",
+   "passed": true
+  },
+  {
+   "name": "步骤5 运行开始后修改尝试被拒绝：trial_hook 改写试算 ThermalState 温度",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "ValueError: assignment destination is read-only",
+   "passed": true
+  },
+  {
+   "name": "步骤5 运行开始后修改尝试被拒绝：trial_hook 替换试算 ThermalState 温度",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "FrozenInstanceError: cannot assign to field 'temperature_K'",
+   "passed": true
+  },
+  {
+   "name": "步骤5 运行开始后修改尝试被拒绝：trial_hook 替换 TrialRecord 状态",
+   "expected": "抛出 AttributeError、TypeError 或 ValueError",
+   "actual": "FrozenInstanceError: cannot assign to field 'state'",
+   "passed": true
+  },
+  {
+   "name": "步骤5 联合计算后参数逐位不变",
+   "expected": "C_J_K、R_K_W、surfaces、instance_map、provenance 全部不变",
+   "actual": "变化字段 []",
+   "passed": true
+  },
+  {
+   "name": "步骤5 归档的参数记录与运行开始前一致",
+   "expected": "archive.provenance['thermal_parameters'] 等于运行前的 provenance",
+   "actual": "一致 True",
+   "passed": true
+  },
+  {
+   "name": "步骤5 带修改尝试的计算与未设置 trial_hook 的计算逐位相同",
+   "expected": "已接受状态、步长与输出全部相同",
+   "actual": "比较 ['time_s', 'temperature_K', 'dT_dt_K_s', 'q_W', 'Q_env_W', 'Q_emit_W', 'accepted.time_s', 'accepted.state', 'steps.t_old_s', 'steps.t_new_s']、accepted.kind、ports_W；相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤5 联合计算出现被拒绝的积分步",
+   "expected": "first_step_s 80.0 s 大于计算节点时间常数 40 s，rejected_steps >= 1",
+   "actual": "rejected_steps 2，accepted_steps 52，函数计算 346 次",
+   "passed": true
+  },
+  {
+   "name": "步骤5 试算记录可按 RK45 尝试分组",
+   "expected": "每个求解器 1 次初始计算加每次尝试 6 次计算，初始计算取上一已接受状态",
+   "actual": "分组成立 True，尝试 54 次，起点时刻最大偏差 1.1368683772161603e-13 s，说明 []",
+   "passed": true
+  },
+  {
+   "name": "步骤5 由试算记录判定的被拒绝积分步数等于归档统计",
+   "expected": "rejected_steps 2，accepted_steps 52",
+   "actual": "被拒绝 2，被接受 52",
+   "passed": true
+  },
+  {
+   "name": "步骤5 归档的已接受状态只含被接受积分步的终点状态",
+   "expected": "accepted 中 52 个积分状态依次逐位等于被接受积分步的终点试算状态",
+   "actual": "归档积分状态 52 个，逐位一致 True",
+   "passed": true
+  },
+  {
+   "name": "步骤5 被拒绝积分步的终点试算状态未进入归档的已接受状态",
+   "expected": "0 个被拒绝积分步的终点试算状态出现在 accepted 中，且至少有 1 个被拒绝积分步",
+   "actual": "0 个，终点时刻 [80.0, 16.0] s",
+   "passed": true
+  },
+  {
+   "name": "步骤5 重试从上一已接受状态出发",
+   "expected": "每次重试的第 2 级状态等于 y_start + Δt f(t_start, y_start)，偏差 <= 1e-09 K",
+   "actual": "重试 2 次，起点时刻 [0.0, 0.0] s，最大偏差 0.0 K，起点与被拒绝积分步终点状态相距 [5.579102, 2.008325] K；全部尝试最大偏差 0.0 K",
+   "passed": true
+  },
+  {
+   "name": "步骤5 已接受状态与独立参考解一致",
+   "expected": "53 个已接受状态与 DOP853 参考解最大偏差 <= 1e-05 K",
+   "actual": "最大偏差 1.413e-07 K，输出采样最大偏差 1.328e-07 K，参考解状态 0",
+   "passed": true
+  },
+  {
+   "name": "步骤5 被拒绝积分步的终点试算状态可与参考解区分",
+   "expected": "每个终点试算状态偏离参考解超过局部容限 atol + rtol max|T| = 3.453e-07 K",
+   "actual": "偏离 ['2.062e+00', '7.325e-05'] K，最小 7.325198663465926e-05 K",
+   "passed": true
+  },
+  {
+   "name": "步骤5 试算记录与归档的已接受状态只读且分开保存",
+   "expected": "TrialRecord.state、试算 ThermalState 与归档 accepted 数组均只读；final_thermal_state 等于最后已接受状态",
+   "actual": "只读 True；final_thermal_state 为 ThermalState True，time_s 1200.0 s，等于最后已接受状态 True",
+   "passed": true
+  },
+  {
+   "name": "步骤5 含 Power 的联合计算完成",
+   "expected": "status completed",
+   "actual": "status completed，无报错",
+   "passed": true
+  },
+  {
+   "name": "步骤5 含 Power 的联合计算中电池温度在 Battery01 声明温区内",
+   "expected": "全部已接受状态与输出采样的电池温度为有限值，并在 253.15 K 至 333.15 K 内",
+   "actual": "已接受状态 14 个，输出采样 6 个，非有限值 0 个，电池温度 301.5033290247622 K 至 303.0911687252304 K",
+   "passed": true
+  },
+  {
+   "name": "步骤5 Power 读取的电池温度来自同次试算的 ThermalState",
+   "expected": "每次 solve_power_allocation 的 T_B_K 等于同一次计算的试算温度 temperature_K 中节点 B 的温度，锂占比等于同次试算状态",
+   "actual": "配对 87 次，不一致 0 次，调用与记录交替 True，归档 power_calls 87，按计算场合 {'boundary': 1, 'integration': 80, 'output': 6}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 电池初始温度只由 ThermalState 提供",
+   "expected": "第一次 Power 调用的 T_B_K 等于 ThermalState 初值 303.0 K，不取 Power 场景记录的 293.15 K",
+   "actual": "第一次 T_B_K 303.0 K",
+   "passed": true
+  },
+  {
+   "name": "步骤5 已接受状态含六个温度与两个锂占比",
+   "expected": "accepted.state 每行 8 个值；final_thermal_state 与 final_power_state 取最后已接受状态",
+   "actual": "形状 (14, 8)；温度一致 True，x_n 一致 True，x_p 一致 True",
+   "passed": true
+  },
+  {
+   "name": "步骤5 已接受状态取自试算后被接受的状态，其余试算状态不归档",
+   "expected": "每个积分已接受状态都曾作为试算状态被计算，且存在未归档的试算状态",
+   "actual": "积分已接受状态 13 个，全部出现在试算记录中 True；不同的积分试算状态 80 个，未归档 66 个",
+   "passed": true
+  },
+  {
+   "name": "步骤5 注入已确认的供电能力不足判定后事件被定位并应用",
+   "expected": "status completed，恰有 1 个 supply_loss 事件，时刻在 150.0 s 至 150.001 s 内",
+   "actual": "status completed，无报错，事件 [(150.000836, 'supply_loss', 'located')]，event_searches 1，bisection_iterations 13",
+   "passed": true
+  },
+  {
+   "name": "步骤5 保护状态只在已接受的事件边界改变",
+   "expected": "恰有 1 个事件，事件记录中负载由接通变为断开；事件时刻及之前至少 1 个已接受状态且全部接通，之后至少 1 个已接受状态且全部断开",
+   "actual": "事件 1 个，事件记录中负载由接通变为断开 True；事件时刻及之前 23 个，全部接通 True；之后 9 个，全部断开 True；load_connected 与 accepted 长度一致 True",
+   "passed": true
+  },
+  {
+   "name": "步骤5 要求事件的试算状态未进入归档的已接受状态",
+   "expected": "integration 与 event_location 场合中 Power 要求事件的试算状态均不在 accepted 中，且至少有 1 个",
+   "actual": "要求事件的试算状态 6 个，其中写入 0 个，时刻 [150.000836, 150.007733, 150.035322, 150.090498, 150.531912, 152.297567] s",
+   "passed": true
+  },
+  {
+   "name": "步骤5 定位事件时被舍弃的积分未进入归档的已接受状态",
+   "expected": "遇到事件的积分除起点外的试算状态均不在 accepted 中，accepted 中的 event_location 状态全部来自未遇到事件的积分",
+   "actual": "定位积分 13 段，舍弃 5 段，其试算状态写入 0 个；accepted 中 event_location 状态 12 个，来自保留的积分 True",
+   "passed": true
+  },
+  {
+   "name": "步骤5 事件判定使用已接受的边界状态",
+   "expected": "确认事件的 boundary 判定与 accepted 中的 event_bridge 状态时刻相同、状态逐位相同",
+   "actual": "event_bridge [150.000836] s，boundary 判定 [(150.000836, True), (150.000836, True)]",
+   "passed": true
+  },
+  {
+   "name": "步骤6 thermal 包文件符合第 3.2 节",
+   "expected": "__init__.py、environment.py、model.py、parameters.py、types.py",
+   "actual": "__init__.py、environment.py、model.py、parameters.py、types.py",
+   "passed": true
+  },
+  {
+   "name": "步骤6 导出数据类型 ThermalParameters",
+   "expected": "在 __all__ 中，为 types.py 定义的数据类",
+   "actual": "在 __all__ True，类 True，数据类 True，模块 thermal.types",
+   "passed": true
+  },
+  {
+   "name": "步骤6 导出数据类型 ThermalState",
+   "expected": "在 __all__ 中，为 types.py 定义的数据类",
+   "actual": "在 __all__ True，类 True，数据类 True，模块 thermal.types",
+   "passed": true
+  },
+  {
+   "name": "步骤6 导出数据类型 ThermalInputs",
+   "expected": "在 __all__ 中，为 types.py 定义的数据类",
+   "actual": "在 __all__ True，类 True，数据类 True，模块 thermal.types",
+   "passed": true
+  },
+  {
+   "name": "步骤6 导出数据类型 ThermalEvaluation",
+   "expected": "在 __all__ 中，为 types.py 定义的数据类",
+   "actual": "在 __all__ True，类 True，数据类 True，模块 thermal.types",
+   "passed": true
+  },
+  {
+   "name": "步骤6 导出函数 assemble_thermal_parameters",
+   "expected": "在 __all__ 中，定义于 parameters.py，参数 ('components', 'connections', 'overrides')",
+   "actual": "在 __all__ True，函数 True，模块 thermal.parameters，参数 ('components', 'connections', 'overrides')",
+   "passed": true
+  },
+  {
+   "name": "步骤6 导出函数 prepare_surface_environment",
+   "expected": "在 __all__ 中，定义于 environment.py，参数 ('orbit_input', 'earth_flux', 'parameters')",
+   "actual": "在 __all__ True，函数 True，模块 thermal.environment，参数 ('orbit_input', 'earth_flux', 'parameters')",
+   "passed": true
+  },
+  {
+   "name": "步骤6 导出函数 calculate_surface_heat",
+   "expected": "在 __all__ 中，定义于 environment.py，参数 ('state', 'environment', 'parameters')",
+   "actual": "在 __all__ True，函数 True，模块 thermal.environment，参数 ('state', 'environment', 'parameters')",
+   "passed": true
+  },
+  {
+   "name": "步骤6 导出函数 calculate_heat_flows",
+   "expected": "在 __all__ 中，定义于 model.py，参数 ('state', 'parameters')",
+   "actual": "在 __all__ True，函数 True，模块 thermal.model，参数 ('state', 'parameters')",
+   "passed": true
+  },
+  {
+   "name": "步骤6 导出函数 thermal_derivative",
+   "expected": "在 __all__ 中，定义于 model.py，参数 ('state', 'inputs', 'parameters')",
+   "actual": "在 __all__ True，函数 True，模块 thermal.model，参数 ('state', 'inputs', 'parameters')",
+   "passed": true
+  },
+  {
+   "name": "步骤6 包命名空间的公共名称与 __all__ 一致",
+   "expected": "__all__ 中的名称均已绑定且不重复；命名空间中除模块对象外的公共名称均列入 __all__",
+   "actual": "__all__ 13 个，未绑定 []，重复 []；命名空间公共名称 13 个，未列入 __all__ 的 []；模块对象 ['environment', 'model', 'parameters', 'types']",
+   "passed": true
+  },
+  {
+   "name": "步骤6 公共导出与附录 A 一致",
+   "expected": "__all__ 与命名空间的公共名称为附录 A 的 9 个名称 ['ThermalParameters', 'ThermalState', 'ThermalInputs', 'ThermalEvaluation', 'assemble_thermal_parameters', 'prepare_surface_environment', 'calculate_surface_heat', 'calculate_heat_flows', 'thermal_derivative']，另外只允许 IMPLEMENTATION.md 约定 __init__.py 在附录 A 之外导出的错误与警告类 ['ThermalError', 'ThermalConfigurationError', 'ThermalInputError', 'ThermalRangeWarning']",
+   "actual": "公共名称 13 个；附录 A 缺少 []；错误与警告类 ['ThermalConfigurationError', 'ThermalError', 'ThermalInputError', 'ThermalRangeWarning']，不合要求 []；附录 A 与约定之外 0 个 {}",
+   "passed": true
+  },
+  {
+   "name": "步骤6 热模块未重新实现 Power 接口",
+   "expected": "thermal 的 5 个源文件不定义、不赋值、不导入 Power 报告附录 A 的 13 个公共名称，也不导入 sdtwin_sim 或名称含 power 的模块；包与 4 个子模块均无这些属性",
+   "actual": "源文件发现 []；属性 []；扫描文件 ['__init__.py', 'environment.py', 'model.py', 'parameters.py', 'types.py']",
+   "passed": true
+  },
+  {
+   "name": "汇总 summary_cn 与 anomalies_cn 符合报告文字规则",
+   "expected": "不含括号、破折号、问号、科学计数法、上标字符与排版标记；负号为 U+2212；10 的幂写作 1×10^{−n}",
+   "actual": "summary_cn 问题 无，anomalies_cn 问题 无",
+   "passed": true
+  }
+ ],
+ "metrics": {
+  "table6_field_lists": {
+   "ThermalParameters": [
+    "C_J_K",
+    "R_K_W",
+    "surfaces",
+    "instance_map",
+    "provenance"
+   ],
+   "ThermalState": [
+    "run_id",
+    "time_s",
+    "temperature_K"
+   ],
+   "ThermalInputs": [
+    "run_id",
+    "time_s",
+    "environment",
+    "P_pv_W",
+    "P_load_W",
+    "Q_B_W",
+    "Q_D_W"
+   ],
+   "ThermalEvaluation": [
+    "run_id",
+    "time_s",
+    "dT_dt_K_s",
+    "q_W",
+    "Q_env_W",
+    "Q_emit_W",
+    "T_B_K",
+    "T_J_K"
+   ]
+  },
+  "C_J_K_J_per_K": [
+   3600.0,
+   400.0,
+   1080.0,
+   1000.0,
+   720.0,
+   2700.0
+  ],
+  "R_K_W_K_per_W": [
+   3.0,
+   0.1,
+   0.25,
+   0.5,
+   0.75
+  ],
+  "surface_records": 4,
+  "step1_checks": 33,
+  "order_max_errors": {
+   "relative": {
+    "C_J_K": 0.0,
+    "R_K_W": 0.0,
+    "q_W": 0.0,
+    "Q_env_W": 0.0,
+    "Q_emit_W": 0.0
+   },
+   "dT_dt_scaled": 0.0,
+   "cos_incidence_abs": 0.0
+  },
+  "hand_Q_env_W_S_R": [
+   2182.0444791810064,
+   566.8638799532766
+  ],
+  "hand_Q_emit_W_S_R": [
+   1962.1201138365236,
+   815.258082091725
+  ],
+  "hand_dT_dt_K_s": [
+   -0.024095083700606652,
+   -0.125,
+   0.14814814814814814,
+   0.004,
+   -0.002314814814814815,
+   -0.07002254400189444
+  ],
+  "input_orders": {
+   "components": [
+    "Radiator01",
+    "Battery01",
+    "PDU01",
+    "SolarArray01",
+    "Controller01",
+    "ColdPlate01",
+    "Compute01"
+   ],
+   "connections": [
+    "DR",
+    "BR",
+    "CR",
+    "JC",
+    "SR"
+   ]
+  },
+  "step2_checks": 15,
+  "dT_B_dt_K_s_by_Q_B_W": {
+   "+10": 0.004,
+   "-10": -0.016
+  },
+  "design_4_3_example": {
+   "q_BR_W": 6.0,
+   "dT_B_dt_K_s": 0.004
+  },
+  "dT_dt_difference_K_s": [
+   0.0,
+   0.0,
+   0.0,
+   -0.02,
+   0.0,
+   0.0
+  ],
+  "step3_checks": 7,
+  "invalid_constructions": {
+   "total": 63,
+   "rejected_as_specified": 63,
+   "by_object": {
+    "参数": {
+     "total": 23,
+     "rejected": 23
+    },
+    "状态": {
+     "total": 11,
+     "rejected": 11
+    },
+    "输入": {
+     "total": 12,
+     "rejected": 12
+    },
+    "结果": {
+     "total": 13,
+     "rejected": 13
+    },
+    "函数": {
+     "total": 4,
+     "rejected": 4
+    }
+   }
+  },
+  "step4_checks": 67,
+  "parameter_modification_attempts": {
+   "total": 24,
+   "refused": 24
+  },
+  "step5_read_only_checks": 29,
+  "module_write_attempts": {
+   "total": 10,
+   "refused": 10
+  },
+  "step5_module_state_checks": 17,
+  "coupled_thermal_only_run": {
+   "run_id": "dm001_trial",
+   "t_end_s": 1200.0,
+   "solver": {
+    "method": "RK45",
+    "rtol": 1e-09,
+    "atol_T_K": 1e-09,
+    "max_step_s": 80.0,
+    "first_step_s": 80.0,
+    "output_step_s": 60.0,
+    "environment_step_s": 30.0,
+    "event_time_tol_s": 0.001
+   },
+   "accepted_states": 53,
+   "accepted_steps": 52,
+   "archived_integration_states": 52,
+   "rejected_steps_archive": 2,
+   "rejected_attempts_trial_log": 2,
+   "accepted_attempts_trial_log": 52,
+   "trial_records_all_contexts": 346,
+   "integration_trial_records": 325,
+   "integration_trial_states_not_stored": 272,
+   "function_evaluations": 346,
+   "max_deviation_accepted_K": 1.412707320014306e-07,
+   "max_deviation_outputs_K": 1.3276155641506193e-07,
+   "rejected_candidate_times_s": [
+    80.0,
+    16.0
+   ],
+   "rejected_candidate_deviation_K": [
+    2.0617398129110143,
+    7.325198663465926e-05
+   ],
+   "local_tolerance_K": 3.452652234531785e-07,
+   "retries": 2,
+   "retry_stage2_max_mismatch_K": 0.0,
+   "all_attempts_stage2_max_mismatch_K": 0.0,
+   "attempt_start_time_max_mismatch_s": 1.1368683772161603e-13,
+   "retry_distance_to_rejected_candidate_K": [
+    5.579101916963168,
+    2.0083254201333602
+   ],
+   "in_run_attempt_record": {
+    "time_s": 0.0,
+    "context": "integration",
+    "solver_id": 0
+   },
+   "in_run_parameter_attempts": 7,
+   "in_run_parameter_refused": 7,
+   "in_run_trial_record_attempts": 4,
+   "in_run_trial_record_refused": 4,
+   "range_warnings_emitted": 0,
+   "status": "completed"
+  },
+  "step5_coupled_checks": 24,
+  "coupled_power_run": {
+   "run_id": "dm001_power",
+   "t_end_s": 300.0,
+   "request_W": 100.0,
+   "status": "completed",
+   "power_calls": 87,
+   "paired_calls": 87,
+   "T_B_K_mismatches": 0,
+   "first_T_B_K": 303.0,
+   "power_scene_record_T_B_K": 293.15,
+   "accepted_states": 14,
+   "integration_trial_states": 80,
+   "integration_trial_states_not_stored": 66,
+   "T_B_range_K": [
+    301.5033290247622,
+    303.0911687252304
+   ],
+   "T_B_samples": {
+    "accepted_states": 14,
+    "output_samples": 6,
+    "nonfinite": 0
+   },
+   "battery_declared_range_K": [
+    253.15,
+    333.15
+   ],
+   "x_n_range": [
+    0.6,
+    0.664913095495126
+   ],
+   "x_n_nonfinite": 0,
+   "Q_B_W_range": [
+    10.94740705551644,
+    11.190746843512615
+   ],
+   "Q_B_W_nonfinite": 0,
+   "range_warnings_emitted": 0
+  },
+  "step5_power_checks": 6,
+  "coupled_power_event_run": {
+   "run_id": "dm001_event",
+   "forced_shortfall_from_s": 150.0,
+   "event_time_tol_s": 0.001,
+   "status": "completed",
+   "event_time_s": 150.0008362424516,
+   "events": 1,
+   "accepted_states": 32,
+   "accepted_before_event": 23,
+   "accepted_after_event": 9,
+   "event_searches": 1,
+   "bisection_iterations": 13,
+   "event_aborted_attempts": 6,
+   "discarded_event_search_steps": 0,
+   "search_sub_integrations": 13,
+   "discarded_sub_integrations": 5,
+   "event_required_trial_states": 6,
+   "event_required_trial_states_stored": 0,
+   "discarded_trial_states_stored": 0,
+   "injected_decisions": 8
+  },
+  "step5_event_checks": 5,
+  "exports": {
+   "__all__": [
+    "ThermalConfigurationError",
+    "ThermalError",
+    "ThermalEvaluation",
+    "ThermalInputError",
+    "ThermalInputs",
+    "ThermalParameters",
+    "ThermalRangeWarning",
+    "ThermalState",
+    "assemble_thermal_parameters",
+    "calculate_heat_flows",
+    "calculate_surface_heat",
+    "prepare_surface_environment",
+    "thermal_derivative"
+   ],
+   "public_names": [
+    "ThermalConfigurationError",
+    "ThermalError",
+    "ThermalEvaluation",
+    "ThermalInputError",
+    "ThermalInputs",
+    "ThermalParameters",
+    "ThermalRangeWarning",
+    "ThermalState",
+    "assemble_thermal_parameters",
+    "calculate_heat_flows",
+    "calculate_surface_heat",
+    "prepare_surface_environment",
+    "thermal_derivative"
+   ],
+   "namespace_public_names": [
+    "ThermalConfigurationError",
+    "ThermalError",
+    "ThermalEvaluation",
+    "ThermalInputError",
+    "ThermalInputs",
+    "ThermalParameters",
+    "ThermalRangeWarning",
+    "ThermalState",
+    "assemble_thermal_parameters",
+    "calculate_heat_flows",
+    "calculate_surface_heat",
+    "prepare_surface_environment",
+    "thermal_derivative"
+   ],
+   "module_objects": [
+    "environment",
+    "model",
+    "parameters",
+    "types"
+   ],
+   "appendix_A": [
+    "ThermalParameters",
+    "ThermalState",
+    "ThermalInputs",
+    "ThermalEvaluation",
+    "assemble_thermal_parameters",
+    "prepare_surface_environment",
+    "calculate_surface_heat",
+    "calculate_heat_flows",
+    "thermal_derivative"
+   ],
+   "contract_error_classes": [
+    "ThermalError",
+    "ThermalConfigurationError",
+    "ThermalInputError",
+    "ThermalRangeWarning"
+   ],
+   "contract_error_classes_exported": [
+    "ThermalConfigurationError",
+    "ThermalError",
+    "ThermalInputError",
+    "ThermalRangeWarning"
+   ],
+   "beyond_appendix_A_and_contract": {},
+   "missing_from_exports": [],
+   "package_files": [
+    "__init__.py",
+    "environment.py",
+    "model.py",
+    "parameters.py",
+    "types.py"
+   ]
+  },
+  "power_interface_scan": {
+   "names": [
+    "BatteryResponse",
+    "PowerEnvironment",
+    "PowerEvent",
+    "PowerInputs",
+    "PowerParameters",
+    "PowerResult",
+    "PowerState",
+    "SolarPowerResult",
+    "apply_power_event",
+    "battery_response",
+    "load_power_parameters",
+    "solar_power",
+    "solve_power_allocation"
+   ],
+   "files_scanned": [
+    "__init__.py",
+    "environment.py",
+    "model.py",
+    "parameters.py",
+    "types.py"
+   ],
+   "modules_checked": [
+    "thermal",
+    "thermal.environment",
+    "thermal.model",
+    "thermal.parameters",
+    "thermal.types"
+   ],
+   "source_findings": [],
+   "attributes": []
+  },
+  "step6_checks": 13,
+  "summary_support": {
+   "fields": {
+    "function": "test_step1_fields_and_shapes",
+    "subject": "表 6 字段名称、顺序与不可赋值的检查",
+    "checks": 8,
+    "failed": 0,
+    "function_completed": true,
+    "state": "ok"
+   },
+   "shapes": {
+    "function": "test_step1_fields_and_shapes",
+    "subject": "数组维数、正值、运行标识、时刻与功率字段的检查",
+    "checks": 16,
+    "failed": 0,
+    "function_completed": true,
+    "state": "ok"
+   },
+   "records": {
+    "function": "test_step1_fields_and_shapes",
+    "subject": "表面记录、实例对应与来源记录的检查",
+    "checks": 9,
+    "failed": 0,
+    "function_completed": true,
+    "state": "ok"
+   },
+   "orders": {
+    "function": "test_step2_orders",
+    "subject": "数组顺序与独立手算的检查",
+    "checks": 15,
+    "failed": 0,
+    "function_completed": true,
+    "state": "ok"
+   },
+   "q_b_sign": {
+    "function": "test_step3_q_b_sign",
+    "subject": "电池热源符号与第 4.3 节算例的检查",
+    "checks": 7,
+    "failed": 0,
+    "function_completed": true,
+    "state": "ok"
+   },
+   "invalid": {
+    "function": "test_step4_invalid_constructions",
+    "subject": "异常构造的检查",
+    "checks": 67,
+    "failed": 0,
+    "function_completed": true,
+    "state": "ok"
+   },
+   "read_only": {
+    "function": "test_step5_parameters_read_only",
+    "subject": "参数只读的检查",
+    "checks": 29,
+    "failed": 0,
+    "function_completed": true,
+    "state": "ok"
+   },
+   "state_module": {
+    "function": "test_step5_trial_and_accepted_states_module",
+    "subject": "函数调用中试算状态与已接受状态分离的检查",
+    "checks": 17,
+    "failed": 0,
+    "function_completed": true,
+    "state": "ok"
+   },
+   "in_run_params": {
+    "function": "test_step5_coupled_trial_and_accepted_records",
+    "subject": "运行开始后参数只读的检查",
+    "checks": 11,
+    "failed": 0,
+    "function_completed": true,
+    "state": "ok"
+   },
+   "in_run_trial": {
+    "function": "test_step5_coupled_trial_and_accepted_records",
+    "subject": "试算记录写入尝试的检查",
+    "checks": 4,
+    "failed": 0,
+    "function_completed": true,
+    "state": "ok"
+   },
+   "trials": {
+    "function": "test_step5_coupled_trial_and_accepted_records",
+    "subject": "仅含热模型的联合计算中试算状态与已接受状态分离的检查",
+    "checks": 9,
+    "failed": 0,
+    "function_completed": true,
+    "state": "ok"
+   },
+   "power": {
+    "function": "test_step5_power_coupled_trial_states",
+    "subject": "含 Power 的联合计算的检查",
+    "checks": 6,
+    "failed": 0,
+    "function_completed": true,
+    "state": "ok"
+   },
+   "event": {
+    "function": "test_step5_event_search_trial_states",
+    "subject": "事件定位联合计算的检查",
+    "checks": 5,
+    "failed": 0,
+    "function_completed": true,
+    "state": "ok"
+   },
+   "package": {
+    "function": "test_step6_package_exports",
+    "subject": "包文件与附录 A 名称导出的检查",
+    "checks": 10,
+    "failed": 0,
+    "function_completed": true,
+    "state": "ok"
+   },
+   "namespace": {
+    "function": "test_step6_package_exports",
+    "subject": "包命名空间与 __all__ 的检查",
+    "checks": 1,
+    "failed": 0,
+    "function_completed": true,
+    "state": "ok"
+   },
+   "appendix_exact": {
+    "function": "test_step6_package_exports",
+    "subject": "公共导出与附录 A 一致的检查",
+    "checks": 1,
+    "failed": 0,
+    "function_completed": true,
+    "state": "ok"
+   },
+   "power_names": {
+    "function": "test_step6_package_exports",
+    "subject": "热模块未重新实现 Power 接口的检查",
+    "checks": 1,
+    "failed": 0,
+    "function_completed": true,
+    "state": "ok"
+   }
+  }
+ },
+ "summary_cn": "本用例按设计报告第 3.2 节、第 5.1 节表 6、第 6.1 节与附录 A 执行六个步骤。第 1 步用正常输入构造 ThermalParameters、ThermalState、ThermalInputs 与 ThermalEvaluation 并读取全部字段，四个对象的字段名称与顺序与表 6 一致，均为构造后不能赋值的记录；C_J_K、R_K_W、temperature_K、dT_dt_K_s、q_W、Q_env_W 与 Q_emit_W 依次为含 6、5、6、6、5、2、2 个有限值的数组，热容、热阻与温度均为正值，ThermalState、ThermalInputs 与 ThermalEvaluation 带本次的运行标识与时刻，ThermalInputs 的环境与四个功率取同一时刻，四个功率字段为浮点数，T_B_K 与 T_J_K 为温度标量；surfaces 只为太阳能板与散热板登记 4 条外露表面记录，太阳能板正反面分开登记，instance_map 中电源设备节点 D 对应 Controller01 与 PDU01，四个功率端口依次对应 SolarArray01、Compute01、Battery01 与 PDU01，provenance 记录节点顺序、路径顺序与单位。第 2 步组件与连接按打乱的顺序输入，C_J_K 仍按 S、J、C、B、D、R 依次为 3600、400、1080、1000、720、2700 J/K，R_K_W 按 SR、JC、CR、BR、DR 依次为 3、0.1、0.25、0.5、0.75 K/W，temperature_K 与 dT_dt_K_s 按 S、J、C、B、D、R 排列，q_W 按路径顺序排列，Q_env_W 与 Q_emit_W 按 S、R 排列，环境数组按资产表面顺序排列；热容与热阻按式 T5、热流按式 T2、吸热与辐射功率按式 T4 与独立手算相比，最大相对误差为 0，温度导数与按式 T3 的手算值相比，以该节点各功率项绝对值之和除以热容为尺度的最大误差为 0，cos_incidence 的最大绝对误差为 0，判据均为不超过 1×10^{−12}；T_B_K 与 T_J_K 分别等于本次输入的电池温度 303 K 与计算节点温度 330 K。第 3 步电池参数取第 4.3 节算例的 C_B 1000 J/K、R_BR 0.5 K/W、T_B 303 K 与 T_R 300 K，Q_B_W 取 10 W 与 −10 W 时 ThermalInputs 保留数值与符号，电池温度导数分别为 0.004 K/s 与 −0.016 K/s，与按式 T3 由 Q_B 减 q_BR 再除以 C_B 的手算值之差不超过 1×10^{−15} K/s；第 4.3 节算例只给出 Q_B 为 10 W 的情形，本次该情形的 q_BR 为 6 W，电池温度导数为 0.004 K/s，与算例相同，−10 W 的结果由同一组参数按式 T3 得到；两次计算只有电池节点的导数不同，差值为 −0.02 K/s。第 4 步四个对象的正常构造作为对照均成功，随后逐项注入 63 项异常构造，涵盖数组维数不符、非有限值、热容或热阻非正、运行标识或时刻不一致，以及顺序、单位、端口实例、节点实例与表面记录错误，63 项均以规定的 ThermalConfigurationError 或 ThermalInputError 被拒绝，报错均含出错字段的名称，重复注入的报错相同。第 5 步参数装配后对 ThermalParameters 进行 24 种修改尝试，均被拒绝，参数与温度导数逐位不变，provenance_as_dict 返回独立副本，构造后改写来源数组或装配后改写输入记录均不影响参数。在模块层面，prepare_surface_environment、calculate_surface_heat、calculate_heat_flows 与 thermal_derivative 不修改输入状态、输入与参数，试算状态是不与已接受状态共享温度数组的独立记录，建立并计算试算状态后已接受状态不变，构造后改写来源数组或来源环境不影响状态与输入，对已接受状态、ThermalEvaluation 与 ThermalInputs 的 10 种写入尝试均被拒绝，已接受状态与输入逐位不变，T_B_K 与 T_J_K 是输入温度的数值副本。在仅含热模型的 1200 s 联合计算中，运行开始后在 trial_hook 中再对 ThermalParameters 进行 7 种修改尝试，均被拒绝，与装配后的尝试合计 31 种，运行后参数逐位不变，归档的参数记录与运行前一致，带修改尝试的计算与未设置 trial_hook 的计算逐位相同；trial_hook 中另对 TrialRecord 的状态与试算 ThermalState 的温度进行 4 种写入尝试，均被拒绝。该联合计算出现 2 次被拒绝的积分步，trial_hook 收到积分过程中的 325 个试算状态，其中 272 个未进入归档的已接受状态；由试算记录判定的被拒绝与被接受积分步数等于归档统计，归档中由积分得到的 52 个已接受状态依次逐位等于被接受积分步的终点试算状态，被拒绝积分步的终点试算状态偏离独立参考解 2.06 K 与 7.33×10^{−5} K，均超过局部容限 3.5×10^{−7} K，且未进入归档，2 次重试均从上一已接受状态出发，第 2 级试算状态与按该状态推算的值最大相差 0 K，判据为 1×10^{−9} K；53 个已接受状态与按同一组方程用 SciPy DOP853 求得的独立参考解最大偏差为 1.4×10^{−7} K，判据为 1×10^{−5} K。含 Power 的 300 s 联合计算状态为 completed，87 次 Power 调用读取的电池温度均等于同次试算状态的电池温度，锂占比也取自同次试算状态，首次读取的电池温度为 ThermalState 初值 303 K，不取 Power 场景记录中的 293.15 K，已接受状态含 6 个温度与 2 个锂占比，80 个不同的积分试算状态中 66 个未归档，14 个已接受状态与 6 个输出采样的电池温度在 301.503 K 至 303.091 K 之间，处于 Battery01 资产给出的适用温区 253.15 K 至 333.15 K 内。另一次联合计算从 150 s 起把 Power 结果替换为已确认供电能力不足的判定，计算状态为 completed，事件定位于 150.0008 s，比 150 s 晚 0.00084 s，在 event_time_tol_s 规定的 0.001 s 内，6 个要求事件的试算状态与定位事件时被舍弃的 5 段积分的试算状态均未进入归档的已接受状态，事件判定使用归档的边界状态，事件时刻及之前的 23 个已接受状态负载接通，之后的 9 个已接受状态负载断开。第 6 步检查包文件与公共导出，thermal 包由第 3.2 节的 5 个源文件组成，附录 A 的 4 个数据类型由 types.py 定义并由 __init__.py 导出，5 个函数由第 3.2 节所列文件定义并导出，参数与第 5 章一致，包命名空间中除模块对象外的公共名称与 __all__ 一致；公共名称在附录 A 之外只增加 IMPLEMENTATION.md 允许的 4 个错误与警告类，公共导出与附录 A 一致；thermal 包的 5 个源文件与 4 个子模块均未定义、赋值或导入 Power 报告附录 A 的 13 个公共名称，也未导入 Power 模块。全部检查通过，满足验收判据。",
+ "anomalies_cn": "无",
+ "environment": {
+  "python": "3.11.9",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "astropy": "8.0.1",
+  "pytest": "9.1.1",
+  "ntu_space_dynamics": "0.1.0",
+  "usd": "0.26.8"
+ },
+ "execution": {
+  "started_utc": "2026-10-05T23:17:02.838518+00:00",
+  "recorded_utc": "2026-10-05T23:40:12.037292+00:00",
+  "collected_functions": 11,
+  "finished_functions": 11,
+  "unexecuted_functions": [],
+  "source_sha256": {
+   "thermal/__init__.py": "ffb342305704801c8871a2af365af61877f7e6485b07ec381e0f777da9d294f5",
+   "thermal/environment.py": "5c3eba796dd28d41a4f1b6fa637ada3c0b8d2942ebc5f65b1e55f1384fa99f41",
+   "thermal/model.py": "9f758d46ea25844878e8cac7ccc402c31610548d255ded7d8d980ae95a965b9e",
+   "thermal/parameters.py": "792e7f5d1175e3564b7486a230039cf026fbad78074cfc8de4fbf352d9c946f9",
+   "thermal/types.py": "2c76359dfa9555ef7d51df83009a5985964c66080dc9062746815451e827a794",
+   "sdtwin_sim/__init__.py": "e2c3bee5849391a86fa79109339d001a75779dd93835d9e829f5f1591de81a31",
+   "sdtwin_sim/coupled.py": "f05e19e220284ad3a0c1e4188eb405fa66b6777f4226decfe95d2c559bca1dff",
+   "sdtwin_sim/earth_flux.py": "03b0d340d77e583cf73a3f0ec31ca0d9830c3bdc5f824903adae266b82a853a2",
+   "sdtwin_sim/power_stand_in.py": "3229251cdd2834bc2df18177c079e651f53a0827fb57cba21527ebdbf281c58f",
+   "sdtwin_sim/scene.py": "b7b1ad5328e6f6278354249e3087d47197895294af8607d21c7dcce354c7ab9b",
+   "tests/conftest.py": "345e7f788242083755505607636fa4af3e88cbf303a6a1728e4ab327e106d11e",
+   "tests/data/dm_001/reference.py": "3bba4938e76134c73272c00250517cc01c519da62f881382ddb42daa9c79fe2c",
+   "tests/data/en_001/en001_reference.py": "73370bd0a9fdc7e7c373e8dda1b5aa0c9a6970dc047fba3cf8a7c3fd808e6ea4",
+   "tests/data/en_003/earth_reference.py": "880154b92405e9af399b772296148219ca78f8ac62e9fcbeaeef67bb45ce117f",
+   "tests/data/en_003/fe_explore.py": "0cceaffd85c2d15b11fee6c7e6b5bbb00a17d94e63940b45a2db1863dfecd473",
+   "tests/data/en_003/fe_export.py": "b33fc7276138dc59e944c5cbfed73acc0d1f1ec2ce7d458b90eed62790aa8f85",
+   "tests/data/en_003/fe_refine.py": "6ad00122cb8f7a65d0f5c23f7c139b20e92d6f75fa0f472b16d2d97628995c43",
+   "tests/data/en_003/fe_refine_ladder.py": "587ffe012aa40955c6b615f68d6e257314ac0bc418765aaa358e17dc848e0580",
+   "tests/data/en_003/ladder_compare.py": "fdf7d4d74fb0f099934f5ef3c3bbdef67df6f7cf3605a5ad1984cb48450cc3ab",
+   "tests/data/fe_001/fe001_support.py": "d1bd978ad70120cf974e46cd996a8367bd5efc08e4d8755405c2a3a21be41051",
+   "tests/data/fe_002/fe002_support.py": "2c27a76b1fd972625293b26b8e1a07d0850ba78254c4457782607279205c4f7c",
+   "tests/data/fe_003/fe003_support.py": "00d548cb2c513707bfeb16f81bf130eded88fb09a87ba8785ad27ee341a985f2",
+   "tests/data/fe_004/fe004_support.py": "54a7d7d8ce2fa0e4f9b054f596a927f8531c0cc0b77a783dcd7ab6973c1f6e44",
+   "tests/data/ht_001/t2_reference.py": "2098ccd9080957ab24ff44712b3b8e688d2b41cfa077e95460a96c82f3d27f89",
+   "tests/data/ht_002/ht002_reference.py": "076d20dec2f98fb84bbbcda17b3a0313de6c8ffb44f4c2121282eb01387bd7e7",
+   "tests/data/ht_003/analytic.py": "5ee9b0e8d1c4e06067e44754c2dd2393218e4d2a6a3d91d64064d726cb06a3a5",
+   "tests/data/ni_001/ni001_support.py": "fc84c2b085ace6fa38819195dd85f0ae47846dbd8505432ef469dd19a276b0c7",
+   "tests/data/ni_002/ni002_reference.py": "b263602b77beb5b57e4b7360db586394228e18381b8f1e40abf20f1c3295665b",
+   "tests/data/ni_003/make_ni003_data.py": "d03cfe33141adc1f8288763c42009504dcdf076ba5e46d9539ddedca64eedce7",
+   "tests/data/ni_003/ni003_support.py": "bc563f0d0b9d56e461eac3e8db7c76b37ce1431468dd4b51d257a4a551257616",
+   "tests/data/ni_003/payload/ni003_payload.py": "4755abecf85fc0e3ee9006954b933ff3e1728e8647f725a0cb05e0bff654d433",
+   "tests/data/ni_003/probe_no_exec.py": "a2d7e9613788aa4f5eb24af6c8b5dac16a234a28b96df880b7a0bfef6672cc32",
+   "tests/data/ni_003/run_alone.py": "932a1b32033842df026eac9a1496ccd301c89291e980e969fbb3a5022acee0f6",
+   "tests/data/pa_001/pa001_inputs.py": "f1b685263ff6770efd7dd01f2f9b378230ab7fab12800b3e5a697d4cf17fc4b4",
+   "tests/data/simready/make_geometry.py": "2a4c7a5b278c7ddcbe2b673950b13c7bdaaf03921f8883693bc30e28c254094c",
+   "tests/data/simready/make_scene_variants.py": "994ca8d44a44023f7d778c0337ad5403420eea194bc8202194c440a28d1f1247",
+   "tests/test_dm_001_data_objects.py": "44d85eac05803a2bb04c5e1d0c2fea1c0c572c60299ee6f28eb7cb4986f897a8",
+   "tests/test_ec_001_power_ports.py": "cdb8dac627ff5e5bd56a852fd6344996658d8dc2df56beebb8efdd5a159c7f67",
+   "tests/test_en_001_surface_environment.py": "1b0f11127159690d57558aedcdece9c11559b2b6dda75637714d26090c0dd679",
+   "tests/test_en_002_surface_heat.py": "c45ab4a04ceaa6211d5aaf72befbf5d95e8e9c7be5b86454ccc4a6b5cae39e34",
+   "tests/test_en_003_earth_flux.py": "eaa1527e9722b6feb07abc9289f43680b60c59791ce838e072a5e24b90e62c79",
+   "tests/test_fe_001_solar_array_fe.py": "f23d462dbbd432308214db7d5634689b059f5e5b1bb4f46251c0836d139f3cd7",
+   "tests/test_fe_002_radiator_fe.py": "f1be285404e242cc6394363eac2ed1345233e1497ed83fff5f4e3dde09260aa1",
+   "tests/test_fe_003_compute_cold_plate_fe.py": "3a9bfdd73afca2fb2257235348b85702707b5c390b1814a3d15621fba39bafce",
+   "tests/test_fe_004_whole_satellite_chain.py": "6aaeec63a82a4031d916d063694f2aa9a6b750c1712ce2bb7ba036497f1e9a66",
+   "tests/test_ht_001_heat_flows.py": "2d91f41677820f09cdb4e6edac6582be56c9647cea59bfaa629e30da1e759049",
+   "tests/test_ht_002_derivative_balance.py": "728e57be7630d1be877a265ad0206e9ab0cef1374a9bd74f20f438f18a0d144b",
+   "tests/test_ht_003_analytic.py": "a66ffc2613929fbd9bb44a0f2a8f1d41879069d1b2d9584f8fb2041f1545e832",
+   "tests/test_ni_001_numerics_eclipse.py": "1f4cba777b1aba392d09bb130ec6652d2b04004a3ac97ea4e49a88424aacdf47",
+   "tests/test_ni_002_end_to_end.py": "fb33ca9517ced5761c63ae7d68cefc72e98c3c3e36c7a8665b0d89fc9d3c696e",
+   "tests/test_ni_003_scene_assembly.py": "2ce365771b66f67e78334bbb3358a210d8eabed0753d82b7abeb4f3e900e6226",
+   "tests/test_pa_001_t5_assembly.py": "fa1b1edba0b491daf8a6e06ecd6d3a1e8baa9307daf94b5d885659a0620e3293"
+  }
+ }
+}

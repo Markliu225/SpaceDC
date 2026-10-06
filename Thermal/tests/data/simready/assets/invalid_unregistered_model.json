@@ -1,0 +1,28 @@
+{
+  "asset_id": "sdtwin.example.power_controller_unregistered",
+  "asset_version": "0.1.0",
+  "description": "Invalid on purpose: the thermal model_id is not in the registry and looks like a code hook; loading must reject it without executing anything.",
+  "geometry_uri": "../geometry/power_controller.usda",
+  "capabilities": [
+    {
+      "domain": "thermal",
+      "model_id": "user.plugins.thermal:exec_python",
+      "parameter_set": {
+        "materials": [
+          {"material_id": "housing_al", "mass_kg": 0.42, "cp_J_kgK": 896.0,
+           "source": "illustrative test value: aluminium housing"}
+        ],
+        "surfaces": [],
+        "temperature_range_K": [243.15, 343.15]
+      }
+    }
+  ],
+  "ports": [
+    {"name": "T_D_K", "kind": "temperature", "unit": "K", "description": "shared power equipment temperature of node D"}
+  ],
+  "provenance": {
+    "status": "illustrative_test_value",
+    "note": "Invalid test asset for the unregistered model_id check.",
+    "references": []
+  }
+}

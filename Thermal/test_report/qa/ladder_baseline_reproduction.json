@@ -1,0 +1,34 @@
+{
+  "saw_back_albedo": {
+    "max_abs_W_m2": 0.0,
+    "max_rel_with_1W_floor": 0.0
+  },
+  "saw_back_infrared": {
+    "max_abs_W_m2": 0.0,
+    "max_rel_with_1W_floor": 0.0
+  },
+  "saw_cells_albedo": {
+    "max_abs_W_m2": 0.0,
+    "max_rel_with_1W_floor": 0.0
+  },
+  "saw_cells_infrared": {
+    "max_abs_W_m2": 0.0,
+    "max_rel_with_1W_floor": 0.0
+  },
+  "radiator_up_albedo": {
+    "max_abs_W_m2": 2.524354896707238e-29,
+    "max_rel_with_1W_floor": 2.524354896707238e-29
+  },
+  "radiator_up_infrared": {
+    "max_abs_W_m2": 0.0,
+    "max_rel_with_1W_floor": 0.0
+  },
+  "radiator_down_albedo": {
+    "max_abs_W_m2": 3.126388037344441e-13,
+    "max_rel_with_1W_floor": 4.238369868127932e-15
+  },
+  "radiator_down_infrared": {
+    "max_abs_W_m2": 1.0516032489249483e-12,
+    "max_rel_with_1W_floor": 4.289778417841621e-15
+  }
+}

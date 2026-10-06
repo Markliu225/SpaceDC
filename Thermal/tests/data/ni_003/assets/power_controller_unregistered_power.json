@@ -1,0 +1,71 @@
+{
+  "asset_id": "ni003.power_controller_unregistered_power",
+  "asset_version": "0.1.0",
+  "description": "Invalid on purpose: the power model_id names a version that is not in the registry.",
+  "geometry_uri": "../../simready/geometry/power_controller.usda",
+  "capabilities": [
+    {
+      "domain": "thermal",
+      "model_id": "sdtwin.thermal.power_equipment/1",
+      "parameter_set": {
+        "materials": [
+          {
+            "material_id": "housing_al",
+            "mass_kg": 0.42,
+            "cp_J_kgK": 896.0,
+            "source": "illustrative test value: aluminium housing"
+          },
+          {
+            "material_id": "electronics_pcb",
+            "mass_kg": 0.18,
+            "cp_J_kgK": 1100.0,
+            "source": "illustrative test value: populated control boards"
+          }
+        ],
+        "surfaces": [],
+        "temperature_range_K": [
+          243.15,
+          343.15
+        ]
+      }
+    },
+    {
+      "domain": "power",
+      "model_id": "sdtwin.power.controller.ideal_mppt/2",
+      "parameter_set": {
+        "control_rule": "ideal quasi-static MPPT with charge limiting and supply-loss protection; own losses neglected"
+      }
+    }
+  ],
+  "ports": [
+    {
+      "name": "solar_in",
+      "kind": "electrical",
+      "unit": "W",
+      "description": "input from SolarArray01"
+    },
+    {
+      "name": "battery_port",
+      "kind": "electrical",
+      "unit": "W",
+      "description": "bidirectional port to Battery01"
+    },
+    {
+      "name": "pdu_out",
+      "kind": "electrical",
+      "unit": "W",
+      "description": "bus output to PDU01"
+    },
+    {
+      "name": "T_D_K",
+      "kind": "temperature",
+      "unit": "K",
+      "description": "shared power equipment temperature of node D"
+    }
+  ],
+  "provenance": {
+    "status": "illustrative_test_value",
+    "note": "NI-003 test asset. Unregistered power model_id.",
+    "references": []
+  }
+}

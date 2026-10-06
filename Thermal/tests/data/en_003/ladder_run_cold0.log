@@ -1,0 +1,2 @@
+09:20:32 cold0 4x12 loaded 18.5 s
+09:20:34 cold0 4x12 activate ['ht', 'on', 'htlsh', 'on', 'ge', 'on', 'otl_body', 'off', 'otl_hrs', 'on', 'otl_sarj', 'off', 'otl_saw', 'on', 'frame:spatial1', 'on', 'frame:material1', 'on'] tlist range(10920,360,16560)

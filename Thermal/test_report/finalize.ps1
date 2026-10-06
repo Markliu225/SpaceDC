@@ -34,9 +34,8 @@ $job = Start-Job -ScriptBlock {
     } finally { $w.Quit() }
 } -ArgumentList $copy, $pdf
 if (Wait-Job $job -Timeout 120) { Receive-Job $job } else {
-    "pdf export timed out"
-    Get-CimInstance Win32_Process -Filter "Name='WINWORD.EXE'" | Where-Object { $_.CommandLine -like '*Automation*' } |
-        ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+    Stop-Job $job
+    throw "PDF export timed out for $Name; existing Word processes were left untouched."
 }
 Remove-Job $job -Force
 Remove-Item $copy -Force -ErrorAction SilentlyContinue

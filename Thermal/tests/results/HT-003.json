@@ -1,0 +1,452 @@
+{
+ "case_id": "HT-003",
+ "status": "pass",
+ "checks": [
+  {
+   "name": "前置条件 HT-002 已通过",
+   "expected": "HT-002 的状态为 pass 且全部检查通过; 取本次 pytest 会话中的 HT-002 记录, 本次会话未运行 HT-002 时取 tests/results/HT-002.json, 该文件须晚于热模块 thermal 全部源代码的最近修改",
+   "actual": "本次 pytest 会话中的 HT-002 记录: status pass, 检查 21 项, 未通过 无",
+   "passed": true
+  },
+  {
+   "name": "前置条件 积分方法与容限按第8章配置并记入归档",
+   "expected": "三次运行均为 RK45, rtol 1e-08, atol_T_K 1e-08 K, max_step_s 10.0 s, output_step_s 1.0 s",
+   "actual": "{'step': {'method': 'RK45', 'rtol': 1e-08, 'atol_T_K': 1e-08, 'max_step_s': 10.0, 'output_step_s': 1.0}, 'series': {'method': 'RK45', 'rtol': 1e-08, 'atol_T_K': 1e-08, 'max_step_s': 10.0, 'output_step_s': 1.0}, 'radiation': {'method': 'RK45', 'rtol': 1e-08, 'atol_T_K': 1e-08, 'max_step_s': 10.0, 'output_step_s': 1.0}}",
+   "passed": true
+  },
+  {
+   "name": "前置条件 最大步长约束全部已接受步",
+   "expected": "每个已接受步长度不超过 10.0 s, 相对舍入 1e-12",
+   "actual": "{'step': '10 s', 'series': '10.0000000000001 s', 'radiation': '10.0000000000001 s'}",
+   "passed": true
+  },
+  {
+   "name": "输入 装配所得热容热阻与表面参数与用例输入一致",
+   "expected": "C_J_K 与 R_K_W 与质量乘比热及给定热阻的相对误差不超过 1e-12; 四个外露表面的节点、面积、吸收率与发射率等于用例输入, 太阳能板全部算例与散热板前两个算例为零; 解析参照所用 C_J 500 J/K, R_JC 0.1 K/W 等与装配记录一致",
+   "actual": "{'step': {'C_J_K': [1000.0, 500.0, 1000000000000.0, 1000.0, 1000.0, 1000.0], 'R_K_W': [1000000000000.0, 0.1, 1000000000000.0, 1000000000000.0, 1000000000000.0], 'worst_relative_C': 0.0, 'worst_relative_R': 0.0, 'analytic_inputs_tied': True, 'surface_absorptivity_emissivity': {'SolarArray01_front': [0.0, 0.0], 'SolarArray01_back': [0.0, 0.0], 'Radiator01_front': [0.0, 0.0], 'Radiator01_back': [0.0, 0.0]}, 'surfaces_equal_case_input': True, 'radiator_surfaces_ok': True}, 'series': {'C_J_K': [1000.0, 500.0, 1000.0, 1000.0, 1000.0, 1000000000000.0], 'R_K_W': [1000000000000.0, 0.1, 0.05, 1000000000000.0, 1000000000000.0], 'worst_relative_C': 0.0, 'worst_relative_R': 0.0, 'analytic_inputs_tied': True, 'surface_absorptivity_emissivity': {'SolarArray01_front': [0.0, 0.0], 'SolarArray01_back': [0.0, 0.0], 'Radiator01_front': [0.0, 0.0], 'Radiator01_back': [0.0, 0.0]}, 'surfaces_equal_case_input': True, 'radiator_surfaces_ok': True}, 'radiation': {'C_J_K': [1000.0, 500.0, 1000.0, 1000.0, 1000.0, 1000.0], 'R_K_W': [1000000000000.0, 0.1, 1000000000000.0, 1000000000000.0, 1000000000000.0], 'worst_relative_C': 0.0, 'worst_relative_R': 0.0, 'analytic_inputs_tied': True, 'surface_absorptivity_emissivity': {'SolarArray01_front': [0.0, 0.0], 'SolarArray01_back': [0.0, 0.0], 'Radiator01_front': [0.6, 0.8], 'Radiator01_back': [0.6, 0.8]}, 'surfaces_equal_case_input': True, 'radiator_surfaces_ok': True}}",
+   "passed": true
+  },
+  {
+   "name": "配置 地球反照与红外按第9.4节记录后关闭",
+   "expected": "三次运行的归档 notes 各含一条 'Earth albedo and infrared switched off: HT-003 analytic cases: Earth albedo and infrared are switched off so that the only environmental input is the stated direct sunlight (thermal design 9.4 teaching simplification, recorded here)'; 归档 provenance 的 earth_flux 记录同一关闭原因, albedo、olr_W_m2 与 solar_constant_W_m2 均无数值",
+   "actual": "{'step': {'notes': ['Earth albedo and infrared switched off: HT-003 analytic cases: Earth albedo and infrared are switched off so that the only environmental input is the stated direct sunlight (thermal design 9.4 teaching simplification, recorded here)'], 'provenance_earth_flux': {'albedo': None, 'olr_W_m2': None, 'solar_constant_W_m2': None, 'earth_radius_m': 6378137.0, 'resolution': [240, 360], 'disabled_reason': 'HT-003 analytic cases: Earth albedo and infrared are switched off so that the only environmental input is the stated direct sunlight (thermal design 9.4 teaching simplification, recorded here)'}, 'ok': True}, 'series': {'notes': ['Earth albedo and infrared switched off: HT-003 analytic cases: Earth albedo and infrared are switched off so that the only environmental input is the stated direct sunlight (thermal design 9.4 teaching simplification, recorded here)'], 'provenance_earth_flux': {'albedo': None, 'olr_W_m2': None, 'solar_constant_W_m2': None, 'earth_radius_m': 6378137.0, 'resolution': [240, 360], 'disabled_reason': 'HT-003 analytic cases: Earth albedo and infrared are switched off so that the only environmental input is the stated direct sunlight (thermal design 9.4 teaching simplification, recorded here)'}, 'ok': True}, 'radiation': {'notes': ['Earth albedo and infrared switched off: HT-003 analytic cases: Earth albedo and infrared are switched off so that the only environmental input is the stated direct sunlight (thermal design 9.4 teaching simplification, recorded here)'], 'provenance_earth_flux': {'albedo': None, 'olr_W_m2': None, 'solar_constant_W_m2': None, 'earth_radius_m': 6378137.0, 'resolution': [240, 360], 'disabled_reason': 'HT-003 analytic cases: Earth albedo and infrared are switched off so that the only environmental input is the stated direct sunlight (thermal design 9.4 teaching simplification, recorded here)'}, 'ok': True}}",
+   "passed": true
+  },
+  {
+   "name": "核对 归档中初始时刻与阶跃时刻的温度导数与式T3手算一致",
+   "expected": "{'step 0 s': 'dT_J/dt 0.0 K/s at 0.0 s, relative 1e-12; other nodes |dT/dt| <= 1e-12 K/s', 'step at the step time': 'dT_J/dt 0.6 K/s at 100.0 s, relative 1e-12; other nodes |dT/dt| <= 1e-12 K/s', 'series 0 s': 'dT_J/dt 0.6 K/s at 0.0 s, relative 1e-12; other nodes |dT/dt| <= 1e-12 K/s', 'radiation 0 s': 'dT_R/dt -0.35133096428448257 K/s at 0.0 s, relative 1e-12; other nodes |dT/dt| <= 1e-12 K/s'}",
+   "actual": "{'step 0 s': {'time_s': 0.0, 'dT_dt_K_s': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, 'step at the step time': {'time_s': 100.0, 'dT_dt_K_s': [0.0, 0.6, 0.0, 0.0, 0.0, 0.0]}, 'series 0 s': {'time_s': 0.0, 'dT_dt_K_s': [0.0, 0.6, 0.0, 0.0, 0.0, 0.0]}, 'radiation 0 s': {'time_s': 0.0, 'dT_dt_K_s': [2.6850000000000023e-14, 0.0, 2.6850000000000023e-14, 2.6850000000000023e-14, 2.6850000000000023e-14, -0.35133096428448257]}}",
+   "passed": true
+  },
+  {
+   "name": "核对 斯忒藩玻尔兹曼常数与CODATA一致",
+   "expected": "设计表5 5.670374419e-08 W/(m2 K4) 与 scipy.constants 相对差不超过 1e-9",
+   "actual": "CODATA 5.6703744191844314e-08, relative 3.253e-11",
+   "passed": true
+  },
+  {
+   "name": "步骤1 单节点阶跃运行完成",
+   "expected": "status completed, 无错误记录",
+   "actual": "status completed; error None; wall 0.44 s",
+   "passed": true
+  },
+  {
+   "name": "步骤1 冷板温度保持不变",
+   "expected": "冷板温度变化不超过 1e-05 K; 手算上界 1.500e-07 K, 手算终值 1.350e-07 K",
+   "actual": "最大变化 1.350e-07 K",
+   "passed": true
+  },
+  {
+   "name": "步骤1 其余节点保持初值",
+   "expected": "S B D R 温度变化不超过 1e-06 K",
+   "actual": "{'S': '0.000e+00 K', 'B': '0.000e+00 K', 'D': '0.000e+00 K', 'R': '0.000e+00 K'}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 负载功率阶跃按设定施加",
+   "expected": "100 s 前 P_load 0 W, 100 s 起 300 W, 其余端口 0 W",
+   "actual": "P_load before [0.0] W, from 100.0 s [300.0] W; other ports zero True",
+   "passed": true
+  },
+  {
+   "name": "步骤1 阶跃时刻为积分分段边界",
+   "expected": "积分在 100 s 前后分段, 没有已接受步跨越 100 s",
+   "actual": "spanning steps 0; last accepted before 99.99999999999999 s, first after 100.00000000000001 s; segments [(0.0, 99.99999999999999), (100.00000000000001, 600.0)]",
+   "passed": true
+  },
+  {
+   "name": "步骤1 阶跃响应全程误差",
+   "expected": "输出点 已接受状态 加密点上与指数解之差均不超过 0.001 K",
+   "actual": "max 1.786e-06 K; output 1.768e-06 K at 601 samples, accepted 9.565e-07 K at 72 states, grid 1.786e-06 K at 12001 points, worst at 108.30000000000001 s",
+   "passed": true
+  },
+  {
+   "name": "步骤2 串联算例运行完成",
+   "expected": "status completed, 无错误记录",
+   "actual": "status completed; error None; wall 2.11 s",
+   "passed": true
+  },
+  {
+   "name": "步骤2 散热板温度保持不变",
+   "expected": "散热板温度变化不超过 1e-05 K; 手算上界 9.000e-07 K",
+   "actual": "最大变化 8.625e-07 K",
+   "passed": true
+  },
+  {
+   "name": "步骤2 其余节点保持初值",
+   "expected": "S B D 温度变化不超过 1e-06 K",
+   "actual": "{'S': '0.000e+00 K', 'B': '0.000e+00 K', 'D': '0.000e+00 K'}",
+   "passed": true
+  },
+  {
+   "name": "步骤2 积分到稳态",
+   "expected": "终点 J 与 C 的温度变化率乘最慢时间常数 100 s 不超过 0.001 K",
+   "actual": "t_end 3000.0 s = 30.0 个最慢时间常数; dT_J/dt 3.000e-10 K/s, dT_C/dt 3.000e-10 K/s; 乘积 3.000e-08 K",
+   "passed": true
+  },
+  {
+   "name": "步骤2 计算节点与散热板稳态温差",
+   "expected": "T_J - T_R = P (R_JC + R_CR) = 45.00000000000001 K, 误差不超过 0.001 K",
+   "actual": "数值解 44.99999996249596 K, 误差 3.750e-08 K",
+   "passed": true
+  },
+  {
+   "name": "步骤2 冷板与散热板稳态温差",
+   "expected": "T_C - T_R = P R_CR = 15.0 K, 误差不超过 0.001 K",
+   "actual": "数值解 14.999999977497964 K, 误差 2.250e-08 K",
+   "passed": true
+  },
+  {
+   "name": "步骤2 过渡过程与双节点解析解一致",
+   "expected": "输出点与已接受状态上 T_J T_C 与解析解之差不超过 0.001 K",
+   "actual": "最大差 1.170e-06 K, 3001 个输出点, 307 个已接受状态",
+   "passed": true
+  },
+  {
+   "name": "步骤3 辐射平衡运行完成",
+   "expected": "status completed, 无错误记录",
+   "actual": "status completed; error None; wall 2.74 s",
+   "passed": true
+  },
+  {
+   "name": "步骤3 散热板只有固定输入功率与自身表面辐射",
+   "expected": "Q_env_R 全程等于手算 600.0 W, 四条连接流入散热板的热流之和不超过 1e-09 W",
+   "actual": "Q_env_R 600.0 至 600.0 W, 相对差 0.000e+00; 最大连接热流之和 1.074e-10 W",
+   "passed": true
+  },
+  {
+   "name": "步骤3 其余节点保持初值",
+   "expected": "S J C B D 温度变化不超过 1e-06 K",
+   "actual": "{'S': '2.007e-11 K', 'J': '2.024e-11 K', 'C': '2.046e-11 K', 'B': '2.007e-11 K', 'D': '2.007e-11 K'}",
+   "passed": true
+  },
+  {
+   "name": "步骤3 JC 热阻保持不变且没有热流",
+   "expected": "JC 不参与本算例, 装配热阻保持用例值 0.1 K/W; 计算节点与冷板温度相同, 输出点上 |q_JC| 不超过 1e-09 W",
+   "actual": "装配 R_JC 0.1 K/W; 最大 |q_JC| 4.547e-12 W; 最大 |T_J - T_C| 输出点 4.547e-13 K, 已接受状态 4.547e-13 K",
+   "passed": true
+  },
+  {
+   "name": "步骤3 积分到稳态",
+   "expected": "终点散热板温度变化率乘线性化时间常数 118.821 s 不超过 0.001 K",
+   "actual": "t_end 4000.0 s = 33.7 个时间常数; dT_R/dt -2.615e-15 K/s; 乘积 3.107e-13 K",
+   "passed": true
+  },
+  {
+   "name": "步骤3 稳态温度满足辐射平衡",
+   "expected": "T_R^4 = P / (eps sigma A), T_R = 285.1706875884867 K, 误差不超过 0.001 K",
+   "actual": "数值解 285.1706875884908 K, 误差 4.093e-12 K; eps sigma A T^4 = 600.0000000000346 W, 与输入功率相对差 5.760e-14",
+   "passed": true
+  },
+  {
+   "name": "步骤3 过渡过程与辐射冷却解析解一致",
+   "expected": "输出点与已接受状态上与隐式解析解之差不超过 0.001 K",
+   "actual": "最大差 3.282e-07 K, 4001 个输出点, 404 个已接受状态",
+   "passed": true
+  }
+ ],
+ "metrics": {
+  "precondition_HT-002": {
+   "newest_thermal_source": "thermal/__init__.py",
+   "newest_thermal_source_time": "2026-10-06T06:57:29+08:00",
+   "error": null,
+   "source": "this pytest session",
+   "case_id": "HT-002",
+   "status": "pass",
+   "evidence_time": null,
+   "newer_than_sources": true,
+   "n_checks": 21,
+   "failed": [],
+   "passed": true
+  },
+  "solver_method": "RK45",
+  "solver_rtol": 1e-08,
+  "solver_atol_T_K": 1e-08,
+  "solver_max_step_s": 10.0,
+  "solver_output_step_s": 1.0,
+  "max_accepted_step_s": {
+   "step": 10.000000000000028,
+   "series": 10.000000000000114,
+   "radiation": 10.000000000000057
+  },
+  "assembled_parameters": {
+   "step": {
+    "C_J_K": [
+     1000.0,
+     500.0,
+     1000000000000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "R_K_W": [
+     1000000000000.0,
+     0.1,
+     1000000000000.0,
+     1000000000000.0,
+     1000000000000.0
+    ],
+    "worst_relative_C": 0.0,
+    "worst_relative_R": 0.0,
+    "analytic_inputs_tied": true,
+    "surface_absorptivity_emissivity": {
+     "SolarArray01_front": [
+      0.0,
+      0.0
+     ],
+     "SolarArray01_back": [
+      0.0,
+      0.0
+     ],
+     "Radiator01_front": [
+      0.0,
+      0.0
+     ],
+     "Radiator01_back": [
+      0.0,
+      0.0
+     ]
+    },
+    "surfaces_equal_case_input": true,
+    "radiator_surfaces_ok": true
+   },
+   "series": {
+    "C_J_K": [
+     1000.0,
+     500.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000000000000.0
+    ],
+    "R_K_W": [
+     1000000000000.0,
+     0.1,
+     0.05,
+     1000000000000.0,
+     1000000000000.0
+    ],
+    "worst_relative_C": 0.0,
+    "worst_relative_R": 0.0,
+    "analytic_inputs_tied": true,
+    "surface_absorptivity_emissivity": {
+     "SolarArray01_front": [
+      0.0,
+      0.0
+     ],
+     "SolarArray01_back": [
+      0.0,
+      0.0
+     ],
+     "Radiator01_front": [
+      0.0,
+      0.0
+     ],
+     "Radiator01_back": [
+      0.0,
+      0.0
+     ]
+    },
+    "surfaces_equal_case_input": true,
+    "radiator_surfaces_ok": true
+   },
+   "radiation": {
+    "C_J_K": [
+     1000.0,
+     500.0,
+     1000.0,
+     1000.0,
+     1000.0,
+     1000.0
+    ],
+    "R_K_W": [
+     1000000000000.0,
+     0.1,
+     1000000000000.0,
+     1000000000000.0,
+     1000000000000.0
+    ],
+    "worst_relative_C": 0.0,
+    "worst_relative_R": 0.0,
+    "analytic_inputs_tied": true,
+    "surface_absorptivity_emissivity": {
+     "SolarArray01_front": [
+      0.0,
+      0.0
+     ],
+     "SolarArray01_back": [
+      0.0,
+      0.0
+     ],
+     "Radiator01_front": [
+      0.6,
+      0.8
+     ],
+     "Radiator01_back": [
+      0.6,
+      0.8
+     ]
+    },
+    "surfaces_equal_case_input": true,
+    "radiator_surfaces_ok": true
+   }
+  },
+  "earth_flux_disabled_reason": "HT-003 analytic cases: Earth albedo and infrared are switched off so that the only environmental input is the stated direct sunlight (thermal design 9.4 teaching simplification, recorded here)",
+  "sigma_design_W_m2K4": 5.670374419e-08,
+  "sigma_codata_W_m2K4": 5.6703744191844314e-08,
+  "isolation_resistance_K_W": 1000000000000.0,
+  "heat_sink_capacitance_J_K": 1000000000000.0,
+  "step_status": "completed",
+  "step_error": null,
+  "step_accepted_steps": 70,
+  "step_rejected_steps": 0,
+  "step_function_evaluations": 1025,
+  "step_output_samples": 601,
+  "step_wall_time_s": 0.44354290000046603,
+  "step_cold_plate_drift_K": 1.350005618405703e-07,
+  "step_cold_plate_drift_hand_bound_K": 1.5e-07,
+  "step_cold_plate_drift_hand_end_K": 1.3500068099894644e-07,
+  "step_time_constant_s": 50.0,
+  "step_steady_rise_K": 30.0,
+  "step_error_max_K": 1.7860335788100201e-06,
+  "step_error_output_samples_K": 1.7680488326732302e-06,
+  "step_error_accepted_states_K": 9.56486019276781e-07,
+  "step_error_dense_grid_K": 1.7860335788100201e-06,
+  "step_dense_grid_points": 12001,
+  "step_T_J_end_K": 323.1486381205046,
+  "step_T_J_end_analytic_K": 323.1486380021071,
+  "series_status": "completed",
+  "series_error": null,
+  "series_accepted_steps": 306,
+  "series_rejected_steps": 0,
+  "series_function_evaluations": 4839,
+  "series_output_samples": 3001,
+  "series_wall_time_s": 2.1093721999932313,
+  "series_radiator_drift_K": 8.62503554799332e-07,
+  "series_radiator_drift_hand_bound_K": 9e-07,
+  "series_time_constants_s": [
+   100.00000000000003,
+   24.999999999999996
+  ],
+  "series_remaining_change_K": 3.0004002837813466e-08,
+  "series_dT_JR_numerical_K": 44.99999996249596,
+  "series_dT_JR_analytic_K": 45.00000000000001,
+  "series_dT_JR_error_K": 3.750404431457355e-08,
+  "series_dT_CR_numerical_K": 14.999999977497964,
+  "series_dT_CR_error_K": 2.250203579023946e-08,
+  "series_transient_error_K": 1.1698376738422667e-06,
+  "radiation_status": "completed",
+  "radiation_error": null,
+  "radiation_accepted_steps": 403,
+  "radiation_rejected_steps": 0,
+  "radiation_function_evaluations": 6421,
+  "radiation_output_samples": 4001,
+  "radiation_wall_time_s": 2.7367231999960495,
+  "radiation_input_power_hand_W": 600.0,
+  "radiation_T_eq_analytic_K": 285.1706875884867,
+  "radiation_time_constant_s": 118.82111982853611,
+  "radiation_Q_env_R_relative_error": 0.0,
+  "radiation_max_isolation_inflow_W": 1.0740000000000009e-10,
+  "radiation_R_JC_K_W": 0.1,
+  "radiation_max_abs_q_JC_W": 4.547473508864641e-12,
+  "radiation_max_abs_T_J_minus_T_C_K": 4.547473508864641e-13,
+  "radiation_remaining_change_K": 3.1069313946049197e-13,
+  "radiation_T_end_numerical_K": 285.1706875884908,
+  "radiation_T_error_K": 4.092726157978177e-12,
+  "radiation_fourth_power_relative_error": 5.760133111228546e-14,
+  "radiation_Q_emit_R_end_W": 600.0000000000346,
+  "radiation_transient_error_K": 3.2818263662193203e-07
+ },
+ "summary_cn": "本用例按第 8 章表 8 的数值设置，经 sdtwin_sim.coupled 单独运行热模块，积分三个解析算例，四个功率端口取设定值。前置条件要求 HT-002 已通过，本次测试会话中 HT-002 的 21 项检查全部通过。积分方法为 RK45，相对容限 1×10^{−8}，温度绝对容限 1×10^{−8} K，最大步长 10 s，输出间隔 1 s，归档记录了这些设置，全部已接受步的长度在舍入误差内不超过最大步长。不参与算例的连接中，单节点阶跃与辐射平衡算例的 SR、CR、BR 与 DR 以及串联算例的 SR、BR 与 DR 取 1×10^{12} K/W。辐射平衡算例中 JC 也不参与算例，热阻保持 0.1 K/W，两端的计算节点与冷板温度保持相同，JC 不传热，实测温差最大为 4.5×10^{−13} K，热流最大为 4.5×10^{−12} W。不参与算例的功率端口取 0 W，太阳能板以及前两个算例中散热板的外露表面吸收率与发射率取零。单节点阶跃算例的冷板与串联算例的散热板需要保持温度不变，热容取 1×10^{12} J/K。装配所得的热容、热阻与外露表面参数与这些输入一致。地球反照与红外按第 9.4 节记录后关闭，三次运行的归档均记有关闭原因。核对了归档中初始时刻与阶跃时刻的温度导数，与式 T3 手算一致。单节点阶跃算例中计算节点热容 500 J/K，JC 热阻 0.1 K/W，计算节点功率在 100 s 时由 0 W 阶跃到 300 W，时间常数为 50 s，积分到 600 s，积分在阶跃时刻分段。在 1 s 输出点、全部已接受状态以及按 0.05 s 间隔加密的时刻上与指数解比较，全程最大误差为 1.8×10^{−6} K，判据为 0.001 K，冷板温度变化为 1.4×10^{−7} K。串联算例中计算节点热容 500 J/K，JC 热阻 0.1 K/W，计算节点功率 300 W，冷板热容 1000 J/K，CR 热阻 0.05 K/W，积分 3000 s，约为 30 个最慢时间常数，散热板温度变化为 8.6×10^{−7} K。计算节点与散热板温差为 44.99999996 K，解析值为 45 K，误差为 3.8×10^{−8} K，判据为 0.001 K，冷板与散热板温差的误差为 2.3×10^{−8} K，过渡过程与双节点解析解之差为 1.2×10^{−6} K。辐射平衡算例中散热板正面吸收率 0.6，正面面积 1 m^{2}，正面朝向太阳，受 1000 W/m^{2} 太阳直射，吸收固定功率 600 W，两面发射率 0.8，辐射面积 2 m^{2}。散热板全程只有这一固定输入功率与自身表面辐射，SR、CR、BR 与 DR 流入散热板的热流绝对值之和最大为 1.1×10^{−10} W。斯忒藩玻尔兹曼常数取第 4.4 节表 5 的值 5.670374419×10^{−8} W·m^{−2}·K^{−4}，与 CODATA 推荐值一致。散热板由 320 K 积分 4000 s，约为 34 个线性化时间常数，稳态温度为 285.170688 K，解析值为 285.170688 K，误差低于 1×10^{−9} K，判据为 0.001 K，过渡过程与隐式解析解之差为 3.3×10^{−7} K。三个算例的数值解与解析解一致。",
+ "anomalies_cn": "无",
+ "environment": {
+  "python": "3.11.9",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "astropy": "8.0.1",
+  "pytest": "9.1.1",
+  "ntu_space_dynamics": "0.1.0",
+  "usd": "0.26.8"
+ },
+ "execution": {
+  "started_utc": "2026-10-05T23:17:02.838518+00:00",
+  "recorded_utc": "2026-10-05T23:40:12.095029+00:00",
+  "collected_functions": 6,
+  "finished_functions": 6,
+  "unexecuted_functions": [],
+  "source_sha256": {
+   "thermal/__init__.py": "ffb342305704801c8871a2af365af61877f7e6485b07ec381e0f777da9d294f5",
+   "thermal/environment.py": "5c3eba796dd28d41a4f1b6fa637ada3c0b8d2942ebc5f65b1e55f1384fa99f41",
+   "thermal/model.py": "9f758d46ea25844878e8cac7ccc402c31610548d255ded7d8d980ae95a965b9e",
+   "thermal/parameters.py": "792e7f5d1175e3564b7486a230039cf026fbad78074cfc8de4fbf352d9c946f9",
+   "thermal/types.py": "2c76359dfa9555ef7d51df83009a5985964c66080dc9062746815451e827a794",
+   "sdtwin_sim/__init__.py": "e2c3bee5849391a86fa79109339d001a75779dd93835d9e829f5f1591de81a31",
+   "sdtwin_sim/coupled.py": "f05e19e220284ad3a0c1e4188eb405fa66b6777f4226decfe95d2c559bca1dff",
+   "sdtwin_sim/earth_flux.py": "03b0d340d77e583cf73a3f0ec31ca0d9830c3bdc5f824903adae266b82a853a2",
+   "sdtwin_sim/power_stand_in.py": "3229251cdd2834bc2df18177c079e651f53a0827fb57cba21527ebdbf281c58f",
+   "sdtwin_sim/scene.py": "b7b1ad5328e6f6278354249e3087d47197895294af8607d21c7dcce354c7ab9b",
+   "tests/conftest.py": "345e7f788242083755505607636fa4af3e88cbf303a6a1728e4ab327e106d11e",
+   "tests/data/dm_001/reference.py": "3bba4938e76134c73272c00250517cc01c519da62f881382ddb42daa9c79fe2c",
+   "tests/data/en_001/en001_reference.py": "73370bd0a9fdc7e7c373e8dda1b5aa0c9a6970dc047fba3cf8a7c3fd808e6ea4",
+   "tests/data/en_003/earth_reference.py": "880154b92405e9af399b772296148219ca78f8ac62e9fcbeaeef67bb45ce117f",
+   "tests/data/en_003/fe_explore.py": "0cceaffd85c2d15b11fee6c7e6b5bbb00a17d94e63940b45a2db1863dfecd473",
+   "tests/data/en_003/fe_export.py": "b33fc7276138dc59e944c5cbfed73acc0d1f1ec2ce7d458b90eed62790aa8f85",
+   "tests/data/en_003/fe_refine.py": "6ad00122cb8f7a65d0f5c23f7c139b20e92d6f75fa0f472b16d2d97628995c43",
+   "tests/data/en_003/fe_refine_ladder.py": "587ffe012aa40955c6b615f68d6e257314ac0bc418765aaa358e17dc848e0580",
+   "tests/data/en_003/ladder_compare.py": "fdf7d4d74fb0f099934f5ef3c3bbdef67df6f7cf3605a5ad1984cb48450cc3ab",
+   "tests/data/fe_001/fe001_support.py": "d1bd978ad70120cf974e46cd996a8367bd5efc08e4d8755405c2a3a21be41051",
+   "tests/data/fe_002/fe002_support.py": "2c27a76b1fd972625293b26b8e1a07d0850ba78254c4457782607279205c4f7c",
+   "tests/data/fe_003/fe003_support.py": "00d548cb2c513707bfeb16f81bf130eded88fb09a87ba8785ad27ee341a985f2",
+   "tests/data/fe_004/fe004_support.py": "54a7d7d8ce2fa0e4f9b054f596a927f8531c0cc0b77a783dcd7ab6973c1f6e44",
+   "tests/data/ht_001/t2_reference.py": "2098ccd9080957ab24ff44712b3b8e688d2b41cfa077e95460a96c82f3d27f89",
+   "tests/data/ht_002/ht002_reference.py": "076d20dec2f98fb84bbbcda17b3a0313de6c8ffb44f4c2121282eb01387bd7e7",
+   "tests/data/ht_003/analytic.py": "5ee9b0e8d1c4e06067e44754c2dd2393218e4d2a6a3d91d64064d726cb06a3a5",
+   "tests/data/ni_001/ni001_support.py": "fc84c2b085ace6fa38819195dd85f0ae47846dbd8505432ef469dd19a276b0c7",
+   "tests/data/ni_002/ni002_reference.py": "b263602b77beb5b57e4b7360db586394228e18381b8f1e40abf20f1c3295665b",
+   "tests/data/ni_003/make_ni003_data.py": "d03cfe33141adc1f8288763c42009504dcdf076ba5e46d9539ddedca64eedce7",
+   "tests/data/ni_003/ni003_support.py": "bc563f0d0b9d56e461eac3e8db7c76b37ce1431468dd4b51d257a4a551257616",
+   "tests/data/ni_003/payload/ni003_payload.py": "4755abecf85fc0e3ee9006954b933ff3e1728e8647f725a0cb05e0bff654d433",
+   "tests/data/ni_003/probe_no_exec.py": "a2d7e9613788aa4f5eb24af6c8b5dac16a234a28b96df880b7a0bfef6672cc32",
+   "tests/data/ni_003/run_alone.py": "932a1b32033842df026eac9a1496ccd301c89291e980e969fbb3a5022acee0f6",
+   "tests/data/pa_001/pa001_inputs.py": "f1b685263ff6770efd7dd01f2f9b378230ab7fab12800b3e5a697d4cf17fc4b4",
+   "tests/data/simready/make_geometry.py": "2a4c7a5b278c7ddcbe2b673950b13c7bdaaf03921f8883693bc30e28c254094c",
+   "tests/data/simready/make_scene_variants.py": "994ca8d44a44023f7d778c0337ad5403420eea194bc8202194c440a28d1f1247",
+   "tests/test_dm_001_data_objects.py": "44d85eac05803a2bb04c5e1d0c2fea1c0c572c60299ee6f28eb7cb4986f897a8",
+   "tests/test_ec_001_power_ports.py": "cdb8dac627ff5e5bd56a852fd6344996658d8dc2df56beebb8efdd5a159c7f67",
+   "tests/test_en_001_surface_environment.py": "1b0f11127159690d57558aedcdece9c11559b2b6dda75637714d26090c0dd679",
+   "tests/test_en_002_surface_heat.py": "c45ab4a04ceaa6211d5aaf72befbf5d95e8e9c7be5b86454ccc4a6b5cae39e34",
+   "tests/test_en_003_earth_flux.py": "eaa1527e9722b6feb07abc9289f43680b60c59791ce838e072a5e24b90e62c79",
+   "tests/test_fe_001_solar_array_fe.py": "f23d462dbbd432308214db7d5634689b059f5e5b1bb4f46251c0836d139f3cd7",
+   "tests/test_fe_002_radiator_fe.py": "f1be285404e242cc6394363eac2ed1345233e1497ed83fff5f4e3dde09260aa1",
+   "tests/test_fe_003_compute_cold_plate_fe.py": "3a9bfdd73afca2fb2257235348b85702707b5c390b1814a3d15621fba39bafce",
+   "tests/test_fe_004_whole_satellite_chain.py": "6aaeec63a82a4031d916d063694f2aa9a6b750c1712ce2bb7ba036497f1e9a66",
+   "tests/test_ht_001_heat_flows.py": "2d91f41677820f09cdb4e6edac6582be56c9647cea59bfaa629e30da1e759049",
+   "tests/test_ht_002_derivative_balance.py": "728e57be7630d1be877a265ad0206e9ab0cef1374a9bd74f20f438f18a0d144b",
+   "tests/test_ht_003_analytic.py": "a66ffc2613929fbd9bb44a0f2a8f1d41879069d1b2d9584f8fb2041f1545e832",
+   "tests/test_ni_001_numerics_eclipse.py": "1f4cba777b1aba392d09bb130ec6652d2b04004a3ac97ea4e49a88424aacdf47",
+   "tests/test_ni_002_end_to_end.py": "fb33ca9517ced5761c63ae7d68cefc72e98c3c3e36c7a8665b0d89fc9d3c696e",
+   "tests/test_ni_003_scene_assembly.py": "2ce365771b66f67e78334bbb3358a210d8eabed0753d82b7abeb4f3e900e6226",
+   "tests/test_pa_001_t5_assembly.py": "fa1b1edba0b491daf8a6e06ecd6d3a1e8baa9307daf94b5d885659a0620e3293"
+  }
+ }
+}

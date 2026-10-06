@@ -1,0 +1,42 @@
+{
+  "asset_id": "sdtwin.example.compute_board",
+  "asset_version": "0.1.0",
+  "description": "Whole-board equivalent computing node: laminate, system-on-module package and copper heat spreader. Geometry authored in millimetres.",
+  "geometry_uri": "../geometry/compute_board.usda",
+  "capabilities": [
+    {
+      "domain": "thermal",
+      "model_id": "sdtwin.thermal.compute_board/1",
+      "parameter_set": {
+        "materials": [
+          {"material_id": "pcb_laminate", "density_kg_m3": 1900.0, "geometry_prim": "Board",
+           "volume_basis": "extent_box", "solid_fraction": 1.0, "cp_J_kgK": 1100.0,
+           "source": "illustrative test value: FR-4 class laminate density and specific heat"},
+          {"material_id": "copper_spreader", "density_kg_m3": 8960.0, "geometry_prim": "Spreader",
+           "volume_basis": "extent_box", "solid_fraction": 1.0, "cp_J_kgK": 385.0,
+           "source": "illustrative test value: copper density and specific heat"},
+          {"material_id": "soc_module_package", "mass_kg": 0.28, "cp_J_kgK": 700.0,
+           "source": "illustrative test value: system-on-module with lid and memory"}
+        ],
+        "surfaces": [],
+        "temperature_range_K": [253.15, 358.15]
+      }
+    },
+    {
+      "domain": "power",
+      "model_id": "sdtwin.power.load.compute_request/1",
+      "parameter_set": {"rated_power_W": 60.0}
+    }
+  ],
+  "ports": [
+    {"name": "P_load_W", "kind": "power_port", "unit": "W", "description": "actual electrical consumption converted to heat in node J"},
+    {"name": "bus_in", "kind": "electrical", "unit": "W", "description": "supply from PDU01"},
+    {"name": "T_J_K", "kind": "temperature", "unit": "K", "description": "equivalent computing node temperature returned to Compute"},
+    {"name": "cold_plate_link", "kind": "thermal_interface", "unit": "W", "description": "interface path JC"}
+  ],
+  "provenance": {
+    "status": "illustrative_test_value",
+    "note": "All values are illustrative test values for a small computing satellite; no device has been selected.",
+    "references": []
+  }
+}

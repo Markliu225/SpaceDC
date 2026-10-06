@@ -1,0 +1,105 @@
+{
+ "case_id": "EN-001",
+ "description": "Inputs of test case EN-001, surface environment preparation (thermal design 5.3 and 6.1). Asset values are illustrative test values; only the surface normals, their order and the Orbit inputs matter for this case.",
+ "run_id": "EN-001-orbit",
+ "components": [
+  {"instance_id": "SolarArray01", "node_id": "S", "asset_id": "en001_solar_array", "asset_version": "1.0.0",
+   "materials": [
+    {"material_id": "sa_cells", "mass_kg": 6.0, "cp_J_kgK": 800.0, "source": "EN-001 illustrative test value"},
+    {"material_id": "sa_substrate", "mass_kg": 4.0, "cp_J_kgK": 900.0, "source": "EN-001 illustrative test value"}],
+   "surfaces": [
+    {"surface_id": "SA_front_pX", "area_m2": 1.2, "normal_body": [1.0, 0.0, 0.0], "absorptivity": 0.91, "emissivity": 0.85, "source": "EN-001 illustrative test value"},
+    {"surface_id": "SA_back_mX", "area_m2": 1.2, "normal_body": [-1.0, 0.0, 0.0], "absorptivity": 0.45, "emissivity": 0.80, "source": "EN-001 illustrative test value"}],
+   "temperature_range_K": [150.0, 400.0], "ports": ["P_pv_W"]},
+  {"instance_id": "Compute01", "node_id": "J", "asset_id": "en001_compute_board", "asset_version": "1.0.0",
+   "materials": [{"material_id": "board", "mass_kg": 1.5, "cp_J_kgK": 600.0, "source": "EN-001 illustrative test value"}],
+   "temperature_range_K": [250.0, 370.0], "ports": ["P_load_W"]},
+  {"instance_id": "ColdPlate01", "node_id": "C", "asset_id": "en001_cold_plate", "asset_version": "1.0.0",
+   "materials": [{"material_id": "plate_al", "mass_kg": 3.0, "cp_J_kgK": 900.0, "source": "EN-001 illustrative test value"}],
+   "temperature_range_K": [230.0, 360.0], "ports": []},
+  {"instance_id": "Battery01", "node_id": "B", "asset_id": "en001_battery", "asset_version": "1.0.0",
+   "materials": [{"material_id": "cells", "mass_kg": 2.5, "cp_J_kgK": 1000.0, "source": "EN-001 illustrative test value"}],
+   "temperature_range_K": [253.15, 333.15], "ports": ["Q_B_W"]},
+  {"instance_id": "Controller01", "node_id": "D", "asset_id": "en001_controller", "asset_version": "1.0.0",
+   "materials": [{"material_id": "controller_box", "mass_kg": 1.0, "cp_J_kgK": 900.0, "source": "EN-001 illustrative test value"}],
+   "temperature_range_K": [240.0, 350.0], "ports": []},
+  {"instance_id": "PDU01", "node_id": "D", "asset_id": "en001_pdu", "asset_version": "1.0.0",
+   "materials": [{"material_id": "pdu_box", "mass_kg": 1.0, "cp_J_kgK": 900.0, "source": "EN-001 illustrative test value"},
+                 {"material_id": "harness", "mass_kg": 0.5, "cp_J_kgK": 385.0, "source": "EN-001 illustrative test value"}],
+   "temperature_range_K": [230.0, 340.0], "ports": ["Q_D_W"]},
+  {"instance_id": "Radiator01", "node_id": "R", "asset_id": "en001_radiator", "asset_version": "1.0.0",
+   "materials": [{"material_id": "radiator_panel", "mass_kg": 8.0, "cp_J_kgK": 900.0, "source": "EN-001 illustrative test value"}],
+   "surfaces": [
+    {"surface_id": "RAD_skew", "area_m2": 0.3, "normal_body": [0.2857142857142857, -0.42857142857142855, 0.8571428571428571], "absorptivity": 0.20, "emissivity": 0.88, "source": "EN-001 arbitrary direction (2, -3, 6)/7"},
+    {"surface_id": "RAD_pZ", "area_m2": 0.8, "normal_body": [0.0, 0.0, 1.0], "absorptivity": 0.20, "emissivity": 0.88, "source": "EN-001 illustrative test value"},
+    {"surface_id": "RAD_mY", "area_m2": 0.5, "normal_body": [0.0, -1.0, 0.0], "absorptivity": 0.20, "emissivity": 0.88, "source": "EN-001 illustrative test value"},
+    {"surface_id": "RAD_mZ", "area_m2": 0.8, "normal_body": [0.0, 0.0, -1.0], "absorptivity": 0.20, "emissivity": 0.88, "source": "EN-001 illustrative test value"},
+    {"surface_id": "RAD_pY", "area_m2": 0.5, "normal_body": [0.0, 1.0, 0.0], "absorptivity": 0.20, "emissivity": 0.88, "source": "EN-001 illustrative test value"}],
+   "temperature_range_K": [150.0, 360.0], "ports": []}
+ ],
+ "connections": [
+  {"path": "SR", "length_m": 0.5, "conductivity_W_mK": 160.0, "area_m2": 1e-4, "contact_resistance_K_W": 2.0, "source": "EN-001 illustrative test value"},
+  {"path": "JC", "equivalent_total_resistance_K_W": 0.1, "includes_contact": true, "source": "EN-001 illustrative test value"},
+  {"path": "CR", "equivalent_total_resistance_K_W": 0.05, "includes_contact": false, "contact_resistance_K_W": 0.01, "source": "EN-001 illustrative test value"},
+  {"path": "BR", "equivalent_total_resistance_K_W": 0.5, "includes_contact": true, "source": "EN-001 illustrative test value"},
+  {"path": "DR", "length_m": 0.2, "conductivity_W_mK": 200.0, "area_m2": 2e-3, "contact_resistance_K_W": 0.3, "source": "EN-001 illustrative test value"}
+ ],
+ "asset_surface_order": ["SA_front_pX", "SA_back_mX", "RAD_skew", "RAD_pZ", "RAD_mY", "RAD_mZ", "RAD_pY"],
+ "orbit": {
+  "epoch_utc": "2026-03-20T12:00:00+00:00",
+  "earth_radius_m": 6378137.0,
+  "altitude_m": 400000.0,
+  "eccentricity": 0.0,
+  "inclination_deg": 51.6,
+  "raan_deg": 0.0,
+  "argument_of_periapsis_deg": 0.0,
+  "true_anomaly_deg": 0.0,
+  "step_s": 1.0,
+  "sun_ephemeris": "builtin",
+  "sun_radius_m": 695700000.0,
+  "note": "Two-body circular orbit near the March equinox with RAAN 0, so the beta angle is close to 0 deg and one revolution holds the longest eclipse."
+ },
+ "constructed_attitudes": {
+  "identity": {"quaternion_xyzw": [0.0, 0.0, 0.0, 1.0], "hand_matrix": [[1, 0, 0], [0, 1, 0], [0, 0, 1]]},
+  "rot_x_90": {"axis": [1.0, 0.0, 0.0], "angle_deg": 90.0, "hand_matrix": [[1, 0, 0], [0, 0, -1], [0, 1, 0]]},
+  "rot_y_90": {"axis": [0.0, 1.0, 0.0], "angle_deg": 90.0, "hand_matrix": [[0, 0, 1], [0, 1, 0], [-1, 0, 0]]},
+  "rot_z_90": {"axis": [0.0, 0.0, 1.0], "angle_deg": 90.0, "hand_matrix": [[0, -1, 0], [1, 0, 0], [0, 0, 1]]},
+  "composite_zyx": {"sequence": [["z", 37.0], ["y", -52.0], ["x", 128.0]], "note": "q = qz(37 deg) * qy(-52 deg) * qx(128 deg), R = Rz Ry Rx"},
+  "random": {"seed": 20261005, "note": "normal random 4-vector divided by its length"},
+  "random_negated": {"negate_of": "random", "note": "-q describes the same rotation as q"}
+ },
+ "euler_attitude": {
+  "inertia_kg_m2": [12.0, 15.0, 9.0],
+  "initial_quaternion_xyzw": [0.1, -0.2, 0.3, 0.9273618495495703],
+  "initial_rate_rad_s": [0.002, -0.001, 0.0011314],
+  "note": "Torque-free tumbling body from ntu_space_dynamics EulerDynamics, sampled at the orbit times."
+ },
+ "earth_flux_model": {"albedo": 0.31, "olr_W_m2": 241.0, "solar_constant_W_m2": 1361.0, "resolution": [60, 120]},
+ "synthetic_earth_flux": {
+  "albedo_W_m2": {"SA_front_pX": 101.5, "SA_back_mX": 102.25, "RAD_skew": 103.125, "RAD_pZ": 104.0625, "RAD_mY": 105.75, "RAD_mZ": 106.375, "RAD_pY": 107.875},
+  "infrared_W_m2": {"SA_front_pX": 201.5, "SA_back_mX": 202.25, "RAD_skew": 203.125, "RAD_pZ": 204.0625, "RAD_mY": 205.75, "RAD_mZ": 206.375, "RAD_pY": 207.875},
+  "note": "Distinct value per surface, so a permutation of the surface arrays cannot go unnoticed."
+ },
+ "hand_geometry": {
+  "difference": {
+   "position_m": [7000000.0, -1500000.0, 250000.0],
+   "sun_position_m": [7000000.0, -1499997.0, 250004.0],
+   "attitude": "identity",
+   "note": "sun_position_m - position_m = (0, 3, 4) m exactly, so the satellite-to-Sun direction is (0, 0.6, 0.8), while the Earth-to-Sun direction is about (0.98, -0.21, 0.035).",
+   "expected_cos": ["0", "0", "3/7", "4/5", "-3/5", "-4/5", "3/5"]
+  },
+  "sun_axes": {
+   "position_m": [7000000.0, 0.0, 0.0],
+   "sun_positions_m": {"+X": [150000000000.0, 0.0, 0.0], "+Y": [7000000.0, 150000000000.0, 0.0], "+Z": [7000000.0, 0.0, 150000000000.0]},
+   "expected_cos": {
+    "+X": {"identity": ["1", "-1", "2/7", "0", "0", "0", "0"], "rot_x_90": ["1", "-1", "2/7", "0", "0", "0", "0"],
+           "rot_y_90": ["0", "0", "6/7", "1", "0", "-1", "0"], "rot_z_90": ["0", "0", "3/7", "0", "1", "0", "-1"]},
+    "+Y": {"identity": ["0", "0", "-3/7", "0", "-1", "0", "1"], "rot_x_90": ["0", "0", "-6/7", "-1", "0", "1", "0"],
+           "rot_y_90": ["0", "0", "-3/7", "0", "-1", "0", "1"], "rot_z_90": ["1", "-1", "2/7", "0", "0", "0", "0"]},
+    "+Z": {"identity": ["0", "0", "6/7", "1", "0", "-1", "0"], "rot_x_90": ["0", "0", "-3/7", "0", "-1", "0", "1"],
+           "rot_y_90": ["-1", "1", "-2/7", "0", "0", "0", "0"], "rot_z_90": ["0", "0", "6/7", "1", "0", "-1", "0"]}
+   },
+   "note": "Hand values from the axis permutations: Rx90 maps (x, y, z) to (x, -z, y), Ry90 to (z, y, -x), Rz90 to (-y, x, z); the arbitrary normal is (2, -3, 6)/7."
+  }
+ }
+}

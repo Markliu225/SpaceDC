@@ -1,0 +1,665 @@
+{
+ "case_id": "EN-001",
+ "status": "pass",
+ "checks": [
+  {
+   "name": "step1 precondition: independent quaternion and vector program self-consistent",
+   "expected": "matrix formula vs hand 90 deg matrices, vs Rz*Ry*Rx, vs Rodrigues, Shepperd round trip over the orbit: all <= 1e-13",
+   "actual": "hand 2.22e-16, composite 3.89e-16, Rodrigues 3.33e-16, Shepperd round trip 7.77e-16",
+   "passed": true
+  },
+  {
+   "name": "step1 satellite-to-Sun direction from sun_position_m - position_m, normalized",
+   "expected": "sun - r = (0, 3, 4) m with identity attitude: cos_incidence = (0, 0, 3/7, 4/5, -3/5, -4/5, 3/5) within 1e-12; negative values kept",
+   "actual": "cos_incidence [0.0, 0.0, 0.428571428571429, 0.8, -0.6, -0.8, 0.6], max error 5.55e-17; an Earth-centred direction would differ by 0.977, an unnormalized difference by 3.200; negatives kept True",
+   "passed": true
+  },
+  {
+   "name": "step1 constructed attitudes vs hand axis permutations, Sun along +X, +Y, +Z",
+   "expected": "12 cases, max |cos_incidence - hand value| <= 1e-12; every facing-away surface negative",
+   "actual": "max error 2.22e-16, worst Sun +X rot_x_90; facing-away values 17, not negative 0",
+   "passed": true
+  },
+  {
+   "name": "step1 whole orbit cos_incidence, constructed attitude identity",
+   "expected": "5555 calls without error; max |module - reference| <= 1e-12 against the quaternion matrix formula and against the hand matrix",
+   "actual": "calls 5555, errors 0; max error vs matrix formula 1.11e-16, vs hand matrix 1.11e-16; q = [0.0, 0.0, 0.0, 1.0]",
+   "passed": true
+  },
+  {
+   "name": "step1 whole orbit cos_incidence, constructed attitude rot_x_90",
+   "expected": "5555 calls without error; max |module - reference| <= 1e-12 against the quaternion matrix formula and against the hand matrix",
+   "actual": "calls 5555, errors 0; max error vs matrix formula 2.22e-16, vs hand matrix 2.22e-16; q = [0.707106781187, 0.0, 0.0, 0.707106781187]",
+   "passed": true
+  },
+  {
+   "name": "step1 whole orbit cos_incidence, constructed attitude rot_y_90",
+   "expected": "5555 calls without error; max |module - reference| <= 1e-12 against the quaternion matrix formula and against the hand matrix",
+   "actual": "calls 5555, errors 0; max error vs matrix formula 2.22e-16, vs hand matrix 4.44e-16; q = [0.0, 0.707106781187, 0.0, 0.707106781187]",
+   "passed": true
+  },
+  {
+   "name": "step1 whole orbit cos_incidence, constructed attitude rot_z_90",
+   "expected": "5555 calls without error; max |module - reference| <= 1e-12 against the quaternion matrix formula and against the hand matrix",
+   "actual": "calls 5555, errors 0; max error vs matrix formula 2.22e-16, vs hand matrix 2.22e-16; q = [0.0, 0.0, 0.707106781187, 0.707106781187]",
+   "passed": true
+  },
+  {
+   "name": "step1 whole orbit cos_incidence, constructed attitude composite_zyx",
+   "expected": "5555 calls without error; max |module - reference| <= 1e-12 against the quaternion matrix formula and against the Rz*Ry*Rx",
+   "actual": "calls 5555, errors 0; max error vs matrix formula 3.33e-16, vs Rz*Ry*Rx 4.44e-16; q = [0.827061199686, 0.07408979737, 0.498664359809, 0.248624878393]",
+   "passed": true
+  },
+  {
+   "name": "step1 whole orbit cos_incidence, constructed attitude random",
+   "expected": "5555 calls without error; max |module - reference| <= 1e-12 against the quaternion matrix formula and against the Rodrigues",
+   "actual": "calls 5555, errors 0; max error vs matrix formula 2.22e-16, vs Rodrigues 3.33e-16; q = [0.534683980093, -0.18994644058, -0.736591524757, -0.36805749116]",
+   "passed": true
+  },
+  {
+   "name": "step1 whole orbit cos_incidence, constructed attitude random_negated",
+   "expected": "5555 calls without error; max |module - reference| <= 1e-12 against the quaternion matrix formula and against the Rodrigues",
+   "actual": "calls 5555, errors 0; max error vs matrix formula 2.22e-16, vs Rodrigues 2.22e-16; q = [-0.534683980093, 0.18994644058, 0.736591524757, 0.36805749116]",
+   "passed": true
+  },
+  {
+   "name": "step1 q and -q give the same cos_incidence over the whole orbit",
+   "expected": "max |cos(q) - cos(-q)| <= 1e-12",
+   "actual": "max difference 0.00e+00",
+   "passed": true
+  },
+  {
+   "name": "step1 surfaces facing away from the Sun get negative cos_incidence, no clipping",
+   "expected": "constructed attitudes over the whole orbit: every reference value below -1e-12 is negative in the module output; at least one such value",
+   "actual": "facing-away values over the orbit 127765, not negative 0, smallest of these module values -0.999974031712849",
+   "passed": true
+  },
+  {
+   "name": "step2 input: one full revolution of the 400 km circular Orbit output in GCRS",
+   "expected": "Ephemeris frame GCRS; radius = R_E + 400 km within 1 mm; span = period within 1e-5 s; steps <= 1.0 s; end position back at the start within 1 m",
+   "actual": "frame GCRS, radius deviation 3.73e-09 m, altitude 400000.000 m, span 5553.624271 s vs period 5553.624271 s, 5555 samples, max step 1.000000 s, closure 1.934e-03 m",
+   "passed": true
+  },
+  {
+   "name": "step2 input: Orbit attitude ephemeris on the orbit times with unit quaternions",
+   "expected": "AttitudeEphemeris.times_s equal to orbit time_s; | |q| - 1 | <= 1e-9",
+   "actual": "times equal True; max | |q| - 1 | 2.22e-16",
+   "passed": true
+  },
+  {
+   "name": "step2 every whole-orbit call returns a result",
+   "expected": "49995 calls over 9 attitude profiles without error",
+   "actual": "calls 49995, errors 0",
+   "passed": true
+  },
+  {
+   "name": "step2 returned dictionary has exactly the seven design fields",
+   "expected": "keys ['G_W_m2', 'albedo_W_m2', 'cos_incidence', 'infrared_W_m2', 'run_id', 'surface_ids', 'time_s'] in every call",
+   "actual": "calls with other keys 0 of 49995",
+   "passed": true
+  },
+  {
+   "name": "step2 run_id and time_s equal the orbit_input of the same instant",
+   "expected": "run_id and time_s bitwise equal to the inputs in every call",
+   "actual": "calls with a different run_id or time_s 0 of 49995",
+   "passed": true
+  },
+  {
+   "name": "step2 surface_ids follow the asset surface order",
+   "expected": "surface_ids == ['SA_front_pX', 'SA_back_mX', 'RAD_skew', 'RAD_pZ', 'RAD_mY', 'RAD_mZ', 'RAD_pY'], the asset listing order, which differs from the sorted order ['RAD_mY', 'RAD_mZ', 'RAD_pY', 'RAD_pZ', 'RAD_skew', 'SA_back_mX', 'SA_front_pX']",
+   "actual": "calls with another order 0 of 49995; ThermalParameters order ['SA_front_pX', 'SA_back_mX', 'RAD_skew', 'RAD_pZ', 'RAD_mY', 'RAD_mZ', 'RAD_pY']",
+   "passed": true
+  },
+  {
+   "name": "step2 surface arrays have equal lengths",
+   "expected": "cos_incidence, albedo_W_m2 and infrared_W_m2 each of length 7 = len(surface_ids)",
+   "actual": "calls with another length 0 of 49995",
+   "passed": true
+  },
+  {
+   "name": "step2 albedo_W_m2 and infrared_W_m2 stay attached to their surface_id",
+   "expected": "a distinct value per surface lands at its own surface_id; every call equals its earth_flux record bitwise",
+   "actual": "sample {'SA_front_pX': (101.5, 201.5), 'SA_back_mX': (102.25, 202.25), 'RAD_skew': (103.125, 203.125), 'RAD_pZ': (104.0625, 204.0625), 'RAD_mY': (105.75, 205.75), 'RAD_mZ': (106.375, 206.375), 'RAD_pY': (107.875, 207.875)}; calls not equal to their record 0 of 49995",
+   "passed": true
+  },
+  {
+   "name": "step2 whole orbit cos_incidence with the Orbit EulerDynamics attitude",
+   "expected": "max |module - reference| <= 1e-12 against the matrix formula and Rodrigues",
+   "actual": "max error 7.77e-16; cos range -0.999674 to 0.999674",
+   "passed": true
+  },
+  {
+   "name": "step2 whole orbit cos_incidence with the nadir-pointing attitude (body +Z to the zenith, +X along the horizontal projection of the Sun direction), closed form p nx + c nz",
+   "expected": "max |module - closed form| and |module - matrix formula| <= 1e-12",
+   "actual": "max error 6.66e-16; solar array front cos 0.003399 to 1.000000, not facing the Sun except where the Sun lies in the local horizontal plane",
+   "passed": true
+  },
+  {
+   "name": "step2 facing-away surfaces negative with the two orbit attitudes",
+   "expected": "every reference value below -1e-12 is negative in the module output",
+   "actual": "facing-away values 31402, not negative 0, smallest of these module values -0.999999994096141",
+   "passed": true
+  },
+  {
+   "name": "step3 input: the orbit holds an eclipse, independent conical shadow agrees with Orbit",
+   "expected": "umbra and penumbra samples present; independent class equals the Orbit eclipse_fraction class at every sample",
+   "actual": "umbra 2159, penumbra 16, sunlit 3380 of 5555; disagreements 0; umbra from 1692 s to 3850 s",
+   "passed": true
+  },
+  {
+   "name": "step3 G_W_m2 bitwise equal to the Orbit sun_intensity output at every point",
+   "expected": "49995 returned G_W_m2 values identical to sun_intensity(..., include_eclipse=True)",
+   "actual": "compared 49995, different 0",
+   "passed": true
+  },
+  {
+   "name": "step3 G_W_m2 is zero in the umbra",
+   "expected": "G_W_m2 = 0 W/m2 at every umbra sample of every profile",
+   "actual": "umbra samples 2159, profiles 9, nonzero 0",
+   "passed": true
+  },
+  {
+   "name": "step3 penumbra: G_W_m2 equals the Orbit value, no second eclipse factor",
+   "expected": "0 < G < G without eclipse, returned G equal to Orbit G; a second factor f would change G by (1 - f) G",
+   "actual": "penumbra samples 16, G 29.138 to 1354.128 W/m2, eclipse fraction 0.0212 to 0.9868, failing samples 0, a second factor would shift G by up to 341.8 W/m2",
+   "passed": true
+  },
+  {
+   "name": "step3 sunlit: G_W_m2 equals the full Orbit irradiance",
+   "expected": "returned G equal to Orbit G, which equals the no-eclipse value and is > 0",
+   "actual": "sunlit samples 3380, G 1372.193 to 1372.393 W/m2, failing 0",
+   "passed": true
+  },
+  {
+   "name": "step3 G_W_m2 is taken only from orbit_input, eclipse counted once by Orbit",
+   "expected": "returned G equals the supplied G whatever the geometry: no shadow or eclipse factor inside the function",
+   "actual": "umbra sample with the no-eclipse G t=2771 s: in 1372.119, out 1372.119 W/m2; umbra sample with the Orbit G t=2771 s: in 0.000, out 0.000 W/m2; sunlit sample with G = 0 t=0 s: in 0.000, out 0.000 W/m2",
+   "passed": true
+  },
+  {
+   "name": "step4 control: the unmodified input is accepted",
+   "expected": "no error; cos_incidence within 1e-12 of the reference",
+   "actual": "keys ['G_W_m2', 'albedo_W_m2', 'cos_incidence', 'infrared_W_m2', 'run_id', 'surface_ids', 'time_s']; max error 2.22e-16",
+   "passed": true
+  },
+  {
+   "name": "step4 control: duck-typed parameters with unit normals are accepted",
+   "expected": "same cos_incidence as with ThermalParameters within 1e-12",
+   "actual": "max difference 0.00e+00",
+   "passed": true
+  },
+  {
+   "name": "step4 control: a TEME position transformed back to GCRS by Orbit is accepted",
+   "expected": "accepted with frame GCRS; cos_incidence within 1e-12 of the original GCRS input",
+   "actual": "TEME offset from GCRS 43357.9 m, round trip error 9.32e-10 m, cos difference 2.22e-16",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: quaternion scaled to |q| = 1.000001",
+   "expected": "ThermalInputError naming ['quaternion_xyzw'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.quaternion_xyzw must be a unit quaternion (| |q| - 1 | <= 1e-09), got |q| = 1.000001; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: quaternion rounded to four decimals, |q| = 0.99999041",
+   "expected": "ThermalInputError naming ['quaternion_xyzw'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.quaternion_xyzw must be a unit quaternion (| |q| - 1 | <= 1e-09), got |q| = 0.9999904099540154; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: zero quaternion",
+   "expected": "ThermalInputError naming ['quaternion_xyzw'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.quaternion_xyzw must be a unit quaternion (| |q| - 1 | <= 1e-09), got |q| = 0.0; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: surface normal |n| = 1.001 in the parameters passed to the function",
+   "expected": "ThermalConfigurationError naming ['normal_body', 'RAD_pZ'], identical on a repeated call",
+   "actual": "ThermalConfigurationError: SurfaceRecord 'RAD_pZ': normal_body must be a unit vector (| |n| - 1 | <= 1e-09), got |n| = 1.001; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: unnormalized normal (2, -3, 6) at parameter assembly",
+   "expected": "ThermalConfigurationError naming ['normal_body', 'RAD_skew'], identical on a repeated call",
+   "actual": "ThermalConfigurationError: component 'Radiator01': SurfaceRecord 'RAD_skew': normal_body must be a unit vector (| |n| - 1 | <= 1e-09), got |n| = 7.0; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: sun_position_m equal to position_m",
+   "expected": "ThermalInputError naming ['sun_position_m', 'position_m'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input: sun_position_m - position_m is zero, so the satellite-to-Sun direction is undefined; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: untransformed TEME position labelled TEME",
+   "expected": "ThermalInputError naming ['frame', 'TEME'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.frame is 'TEME'; transform position_m and sun_position_m to GCRS before this call, because relabelling a TEME vector as GCRS is not a frame transformation; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: ITRS position labelled ITRS",
+   "expected": "ThermalInputError naming ['frame', 'ITRS'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.frame must be 'GCRS', got 'ITRS'; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: frame MOD",
+   "expected": "ThermalInputError naming ['frame', 'MOD'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.frame must be 'GCRS', got 'MOD'; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: frame J2000",
+   "expected": "ThermalInputError naming ['frame', 'J2000'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.frame must be 'GCRS', got 'J2000'; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: frame None",
+   "expected": "ThermalInputError naming ['frame'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.frame must be 'GCRS', got None; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux surface_ids with the first two swapped",
+   "expected": "ThermalInputError naming ['surface_ids'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux.surface_ids ('SA_back_mX', 'SA_front_pX', 'RAD_skew', 'RAD_pZ', 'RAD_mY', 'RAD_mZ', 'RAD_pY') are not in the asset surface order ('SA_front_pX', 'SA_back_mX', 'RAD_skew', 'RAD_pZ', 'RAD_mY', 'RAD_mZ', 'RAD_pY'); repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux surface_ids reversed",
+   "expected": "ThermalInputError naming ['surface_ids'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux.surface_ids ('RAD_pY', 'RAD_mZ', 'RAD_mY', 'RAD_pZ', 'RAD_skew', 'SA_back_mX', 'SA_front_pX') are not in the asset surface order ('SA_front_pX', 'SA_back_mX', 'RAD_skew', 'RAD_pZ', 'RAD_mY', 'RAD_mZ', 'RAD_pY'); repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux with an unknown surface id in place of RAD_skew",
+   "expected": "ThermalInputError naming ['RAD_skew'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux has no record for surface(s) ['RAD_skew'] of the asset surfaces ('SA_front_pX', 'SA_back_mX', 'RAD_skew', 'RAD_pZ', 'RAD_mY', 'RAD_mZ', 'RAD_pY'); repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux with RAD_pY twice and no RAD_mY",
+   "expected": "ThermalInputError naming ['RAD_pY'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux.surface_ids repeats identifier(s) ['RAD_pY']; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux with an extra surface",
+   "expected": "ThermalInputError naming ['RAD_extra'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux lists unknown surface(s) ['RAD_extra']; the asset surfaces are ('SA_front_pX', 'SA_back_mX', 'RAD_skew', 'RAD_pZ', 'RAD_mY', 'RAD_mZ', 'RAD_pY'); repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux None",
+   "expected": "ThermalInputError naming ['earth_flux'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux must be a mapping, got NoneType; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux empty mapping",
+   "expected": "ThermalInputError naming ['earth_flux'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux is missing field(s) ['run_id', 'time_s', 'surface_ids', 'albedo_W_m2', 'infrared_W_m2']; albedo and infrared are environment data that cannot be inferred from the solar irradiance (design 5.3); repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux without the RAD_mZ record",
+   "expected": "ThermalInputError naming ['RAD_mZ'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux has no record for surface(s) ['RAD_mZ'] of the asset surfaces ('SA_front_pX', 'SA_back_mX', 'RAD_skew', 'RAD_pZ', 'RAD_mY', 'RAD_mZ', 'RAD_pY'); repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux without albedo_W_m2",
+   "expected": "ThermalInputError naming ['albedo_W_m2'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux is missing field(s) ['albedo_W_m2']; albedo and infrared are environment data that cannot be inferred from the solar irradiance (design 5.3); repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux without infrared_W_m2",
+   "expected": "ThermalInputError naming ['infrared_W_m2'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux is missing field(s) ['infrared_W_m2']; albedo and infrared are environment data that cannot be inferred from the solar irradiance (design 5.3); repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux albedo None for RAD_pZ",
+   "expected": "ThermalInputError naming ['albedo_W_m2', 'RAD_pZ'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux.albedo_W_m2 for surface 'RAD_pZ' is not configured (None); a missing environment value is not taken as zero; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux infrared with six values for seven surfaces",
+   "expected": "ThermalInputError naming ['infrared_W_m2'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux.infrared_W_m2 has 6 value(s) for the 7 surface(s) ('SA_front_pX', 'SA_back_mX', 'RAD_skew', 'RAD_pZ', 'RAD_mY', 'RAD_mZ', 'RAD_pY'); every surface needs its own record; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux run_id differs",
+   "expected": "ThermalInputError naming ['run_id'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux.run_id 'EN-001-other' differs from orbit_input.run_id 'EN-001-orbit'; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux time_s one second later",
+   "expected": "ThermalInputError naming ['time_s'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux.time_s 1.0 differs from orbit_input.time_s 0.0; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: position_m with six values, position and velocity stacked",
+   "expected": "ThermalInputError naming ['orbit_input.position_m', 'got shape (6,)'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.position_m must have shape (3,), got shape (6,); repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: sun_position_m as a (1, 3) row sliced from the Sun ephemeris",
+   "expected": "ThermalInputError naming ['orbit_input.sun_position_m', 'got shape (1, 3)'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.sun_position_m must have shape (3,), got shape (1, 3); repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: quaternion_xyzw with the vector part only",
+   "expected": "ThermalInputError naming ['orbit_input.quaternion_xyzw', 'got shape (3,)'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.quaternion_xyzw must have shape (4,), got shape (3,); repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: quaternion_xyzw given as its 3x3 rotation matrix",
+   "expected": "ThermalInputError naming ['orbit_input.quaternion_xyzw', 'got shape (3, 3)'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.quaternion_xyzw must have shape (4,), got shape (3, 3); repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux albedo_W_m2 as a (7, 1) column",
+   "expected": "ThermalInputError naming ['earth_flux.albedo_W_m2', 'one value per surface'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux.albedo_W_m2 must be a sequence with one value per surface ('SA_front_pX', 'SA_back_mX', 'RAD_skew', 'RAD_pZ', 'RAD_mY', 'RAD_mZ', 'RAD_pY'), got array([[101.5   ],\n       [102.25  ],\n       [103.125 ],\n       [104.0625],\n       [105.75  ],\n       [106.375 ],\n       [107.875 ]]); repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: orbit_input time_s NaN",
+   "expected": "ThermalInputError naming ['orbit_input.time_s', 'finite'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.time_s must be finite, got nan; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: position_m with NaN in y",
+   "expected": "ThermalInputError naming ['orbit_input.position_m', 'finite', 'nan'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.position_m must contain only finite values, got np.float64(nan) at index 1; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: position_m with +inf in z",
+   "expected": "ThermalInputError naming ['orbit_input.position_m', 'finite', 'inf'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.position_m must contain only finite values, got np.float64(inf) at index 2; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: sun_position_m with NaN in x",
+   "expected": "ThermalInputError naming ['orbit_input.sun_position_m', 'finite', 'nan'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.sun_position_m must contain only finite values, got np.float64(nan) at index 0; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: sun_position_m with +inf in y",
+   "expected": "ThermalInputError naming ['orbit_input.sun_position_m', 'finite', 'inf'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.sun_position_m must contain only finite values, got np.float64(inf) at index 1; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: quaternion_xyzw with NaN in w",
+   "expected": "ThermalInputError naming ['orbit_input.quaternion_xyzw', 'finite', 'nan'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.quaternion_xyzw must contain only finite values, got np.float64(nan) at index 3; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: quaternion_xyzw with +inf in x",
+   "expected": "ThermalInputError naming ['orbit_input.quaternion_xyzw', 'finite', 'inf'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.quaternion_xyzw must contain only finite values, got np.float64(inf) at index 0; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: G_W_m2 NaN",
+   "expected": "ThermalInputError naming ['orbit_input.G_W_m2', 'finite', 'nan'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.G_W_m2 must be finite, got nan; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: G_W_m2 +inf",
+   "expected": "ThermalInputError naming ['orbit_input.G_W_m2', 'finite', 'inf'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.G_W_m2 must be finite, got inf; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux albedo_W_m2 NaN for RAD_mY",
+   "expected": "ThermalInputError naming ['earth_flux.albedo_W_m2', 'RAD_mY', 'finite'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux.albedo_W_m2 for surface 'RAD_mY' must be finite, got nan; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux albedo_W_m2 +inf for SA_front_pX",
+   "expected": "ThermalInputError naming ['earth_flux.albedo_W_m2', 'SA_front_pX', 'finite'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux.albedo_W_m2 for surface 'SA_front_pX' must be finite, got inf; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux infrared_W_m2 NaN for RAD_skew",
+   "expected": "ThermalInputError naming ['earth_flux.infrared_W_m2', 'RAD_skew', 'finite'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux.infrared_W_m2 for surface 'RAD_skew' must be finite, got nan; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux infrared_W_m2 +inf for SA_back_mX",
+   "expected": "ThermalInputError naming ['earth_flux.infrared_W_m2', 'SA_back_mX', 'finite'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux.infrared_W_m2 for surface 'SA_back_mX' must be finite, got inf; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: G_W_m2 negative, -1372.393 W/m2",
+   "expected": "ThermalInputError naming ['orbit_input.G_W_m2', '>= 0'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.G_W_m2 must be >= 0, got -1372.3933871004624; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux albedo_W_m2 -5 W/m2 for RAD_pY",
+   "expected": "ThermalInputError naming ['earth_flux.albedo_W_m2', 'RAD_pY', '>= 0'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux.albedo_W_m2 for surface 'RAD_pY' must be >= 0, got -5.0; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: earth_flux infrared_W_m2 -5 W/m2 for RAD_pZ",
+   "expected": "ThermalInputError naming ['earth_flux.infrared_W_m2', 'RAD_pZ', '>= 0'], identical on a repeated call",
+   "actual": "ThermalInputError: earth_flux.infrared_W_m2 for surface 'RAD_pZ' must be >= 0, got -5.0; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: epoch naive datetime without tzinfo",
+   "expected": "ThermalInputError naming ['orbit_input.epoch', 'timezone-aware'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.epoch must be a timezone-aware UTC datetime, got datetime.datetime(2026, 3, 20, 12, 0); repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: epoch as the ISO 8601 string",
+   "expected": "ThermalInputError naming ['orbit_input.epoch', 'datetime'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.epoch must be a timezone-aware UTC datetime, got '2026-03-20T12:00:00+00:00'; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: epoch as POSIX seconds",
+   "expected": "ThermalInputError naming ['orbit_input.epoch', 'datetime'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.epoch must be a timezone-aware UTC datetime, got 1774008000.0; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: epoch as numpy datetime64",
+   "expected": "ThermalInputError naming ['orbit_input.epoch', 'datetime'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input.epoch must be a timezone-aware UTC datetime, got np.datetime64('2026-03-20T12:00:00.000000'); repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 abnormal input rejected: orbit_input without the epoch field",
+   "expected": "ThermalInputError naming ['orbit_input', 'missing', 'epoch'], identical on a repeated call",
+   "actual": "ThermalInputError: orbit_input is missing field(s) ['epoch']; repeated call identical True",
+   "passed": true
+  },
+  {
+   "name": "step4 the function changes no input and produces no temperature",
+   "expected": "orbit_input, earth_flux and ThermalParameters unchanged after all calls; caller arrays stay writeable; signature (orbit_input, earth_flux, parameters) without a state; no temperature field returned",
+   "actual": "inputs unchanged True, arrays writeable True, parameters unchanged True, signature ['orbit_input', 'earth_flux', 'parameters'], temperature fields []",
+   "passed": true
+  },
+  {
+   "name": "acceptance: cos_incidence error <= 1e-12",
+   "expected": "largest error of steps 1 and 2 <= 1e-12; a missing or NaN error fails",
+   "actual": "largest error 7.77e-16 (step 1 4.44e-16, step 2 7.77e-16)",
+   "passed": true
+  },
+  {
+   "name": "expected result: every surface facing away from the Sun gets a negative cos_incidence",
+   "expected": "hand cases, constructed attitudes over the whole orbit and the two orbit attitudes together: every reference value below -1e-12 is negative in the module output",
+   "actual": "hand 19, constructed attitudes over the orbit 127765, orbit attitudes 31402, total 159186, not negative 0, smallest of these module values -1.000000000000000",
+   "passed": true
+  },
+  {
+   "name": "acceptance: G over the whole orbit identical to the Orbit output point by point",
+   "expected": "every returned G_W_m2 bitwise equal to sun_intensity with include_eclipse=True; no own eclipse factor",
+   "actual": "compared 49995 of 49995, different 0, only from Orbit True",
+   "passed": true
+  },
+  {
+   "name": "acceptance: every abnormal input gives a deterministic error",
+   "expected": "all injected abnormal inputs rejected with the same error on a repeated call",
+   "actual": "rejected 51 of 51",
+   "passed": true
+  }
+ ],
+ "metrics": {
+  "step1_reference_self_check_max": 7.771561172376096e-16,
+  "step1_hand_difference_max_error": 5.551115123125783e-17,
+  "step1_hand_axes_max_error": 2.220446049250313e-16,
+  "step1_orbit_constructed_max_error": {
+   "identity": 1.1102230246251565e-16,
+   "rot_x_90": 2.220446049250313e-16,
+   "rot_y_90": 4.440892098500626e-16,
+   "rot_z_90": 2.220446049250313e-16,
+   "composite_zyx": 4.440892098500626e-16,
+   "random": 3.3306690738754696e-16,
+   "random_negated": 2.220446049250313e-16
+  },
+  "step1_facing_away_values_hand": 19,
+  "step1_facing_away_values_constructed_orbit": 127765,
+  "step1_min_cos_incidence_hand": -1.0000000000000002,
+  "step1_min_cos_incidence_constructed_orbit": -0.9999740317128487,
+  "step1_earth_vs_satellite_sun_direction_max_cos_difference": 3.565419438348802e-05,
+  "orbit_samples": 5555,
+  "orbit_period_s": 5553.624271252228,
+  "orbit_altitude_m": 400000.0,
+  "orbit_radius_deviation_m": 3.725290298461914e-09,
+  "whole_orbit_calls": 49995,
+  "whole_orbit_call_errors": 0,
+  "step2_orbit_euler_max_error": 7.771561172376096e-16,
+  "step2_sun_nadir_max_error": 6.661338147750939e-16,
+  "step2_nadir_solar_array_front_cos_range": [
+   0.0033987582789511287,
+   0.9999999940961407
+  ],
+  "step2_facing_away_values_orbit_attitudes": 31402,
+  "step2_min_cos_incidence_orbit_attitudes": -0.9999999940961407,
+  "umbra_samples": 2159,
+  "penumbra_samples": 16,
+  "sunlit_samples": 3380,
+  "umbra_start_end_s": [
+   1692.0,
+   3850.0
+  ],
+  "g_compared": 49995,
+  "g_mismatches": 0,
+  "sunlit_G_range_W_m2": [
+   1372.1928735752938,
+   1372.3933871004624
+  ],
+  "penumbra_G_range_W_m2": [
+   29.137583531636647,
+   1354.128389818602
+  ],
+  "abnormal_inputs": 51,
+  "abnormal_rejected_deterministically": 51,
+  "teme_position_offset_m": 43357.92162102198,
+  "teme_round_trip_error_m": 9.3240453716226e-10,
+  "series_file": "tests/results/EN-001_series.json",
+  "max_cos_incidence_error": 7.771561172376096e-16,
+  "facing_away_values_total": 159186,
+  "facing_away_values_not_negative": 0,
+  "min_cos_incidence_facing_away": -1.0000000000000002
+ },
+ "summary_cn": "在高度 400 km 的二体圆轨道上取一整圈 5553.6 s，按 1 s 间隔取样并包含周期末时刻，共 5555 个时刻，卫星位置、地心至太阳向量与 G 均取自 Orbit 输出，其中日食本影 2159 个时刻，半影 16 个时刻。对单位四元数、绕三个轴各转 90°、任意组合旋转、随机单位四元数及其相反数共 7 个构造姿态，以及 Orbit 姿态动力学 EulerDynamics 给出的无外力矩刚体转动姿态和按轨道位置逐时刻构造的对地定向姿态，逐时刻调用 prepare_surface_environment 共 49995 次，另做 13 组手算几何算例。对地定向姿态的星体 Z 轴指向当地天顶，散热板 RAD_mZ 面朝向地心；太阳能板正面法向即星体 X 轴，取卫星指向太阳方向在当地水平面上的投影，整圈中太阳能板正面的入射余弦为 0.003399 至 1.000000。cos_incidence 与独立编写的四元数旋转矩阵公式、按坐标轴置换的手算结果、三个基本旋转矩阵的乘积、罗德里格旋转公式以及对地定向姿态的解析式相比，最大误差 7.8×10^{−16}，满足不超过 1×10^{−12} 的判据。背向太阳的表面全部得到负值，手算算例 19 个、构造姿态整圈 127765 个、两种轨道姿态整圈 31402 个，共 159186 个值，最小为 −1.000000。按地心至太阳方向计算的入射余弦与按卫星指向太阳方向计算的结果最多相差 3.6×10^{−5}，远大于判据，说明比较能够区分两种太阳方向。返回字典含 run_id、time_s、surface_ids、G_W_m2、cos_incidence、albedo_W_m2 与 infrared_W_m2 七个字段，运行标识与时刻同输入一致，七个表面的数组长度一致，顺序与资产表面顺序相同，反照与红外输入逐表面对应。G_W_m2 在全部 49995 次调用中均与 sun_intensity 输出逐位相同，本影时刻为 0 W/m^{2}，半影时刻为 29.1 至 1354.1 W/m^{2} 并与 Orbit 输出相同，函数没有再乘日食系数；本影时刻输入不计日食的 1372.1 W/m^{2} 时函数原样返回，日食只由 Orbit 计入一次。注入 51 项异常输入。用例列出的异常输入包括未归一的四元数与法向、卫星位置与太阳向量之差为零、未经转换的 TEME 位置、不支持的坐标系、表面编号错位与缺少 earth_flux 记录；按第 6.1 节通用约定另加运行标识或时刻不一致，维数错误的卫星位置、地心至太阳向量、四元数与反照数组，时刻、卫星位置、地心至太阳向量、四元数、G、反照与红外中的非有限值，以及缺少时区、缺少字段或不是 datetime 类型的 epoch；另加为负的 G、反照与红外辐照度。这些异常输入全部被拒绝并给出确定的报错，报错指出具体字段，重复调用的报错相同；调用前后输入数据与参数不变，函数不产生温度。",
+ "anomalies_cn": "无",
+ "environment": {
+  "python": "3.11.9",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "astropy": "8.0.1",
+  "pytest": "9.1.1",
+  "ntu_space_dynamics": "0.1.0",
+  "usd": "0.26.8"
+ },
+ "execution": {
+  "started_utc": "2026-10-05T23:17:02.838518+00:00",
+  "recorded_utc": "2026-10-05T23:40:12.051377+00:00",
+  "collected_functions": 5,
+  "finished_functions": 5,
+  "unexecuted_functions": [],
+  "source_sha256": {
+   "thermal/__init__.py": "ffb342305704801c8871a2af365af61877f7e6485b07ec381e0f777da9d294f5",
+   "thermal/environment.py": "5c3eba796dd28d41a4f1b6fa637ada3c0b8d2942ebc5f65b1e55f1384fa99f41",
+   "thermal/model.py": "9f758d46ea25844878e8cac7ccc402c31610548d255ded7d8d980ae95a965b9e",
+   "thermal/parameters.py": "792e7f5d1175e3564b7486a230039cf026fbad78074cfc8de4fbf352d9c946f9",
+   "thermal/types.py": "2c76359dfa9555ef7d51df83009a5985964c66080dc9062746815451e827a794",
+   "sdtwin_sim/__init__.py": "e2c3bee5849391a86fa79109339d001a75779dd93835d9e829f5f1591de81a31",
+   "sdtwin_sim/coupled.py": "f05e19e220284ad3a0c1e4188eb405fa66b6777f4226decfe95d2c559bca1dff",
+   "sdtwin_sim/earth_flux.py": "03b0d340d77e583cf73a3f0ec31ca0d9830c3bdc5f824903adae266b82a853a2",
+   "sdtwin_sim/power_stand_in.py": "3229251cdd2834bc2df18177c079e651f53a0827fb57cba21527ebdbf281c58f",
+   "sdtwin_sim/scene.py": "b7b1ad5328e6f6278354249e3087d47197895294af8607d21c7dcce354c7ab9b",
+   "tests/conftest.py": "345e7f788242083755505607636fa4af3e88cbf303a6a1728e4ab327e106d11e",
+   "tests/data/dm_001/reference.py": "3bba4938e76134c73272c00250517cc01c519da62f881382ddb42daa9c79fe2c",
+   "tests/data/en_001/en001_reference.py": "73370bd0a9fdc7e7c373e8dda1b5aa0c9a6970dc047fba3cf8a7c3fd808e6ea4",
+   "tests/data/en_003/earth_reference.py": "880154b92405e9af399b772296148219ca78f8ac62e9fcbeaeef67bb45ce117f",
+   "tests/data/en_003/fe_explore.py": "0cceaffd85c2d15b11fee6c7e6b5bbb00a17d94e63940b45a2db1863dfecd473",
+   "tests/data/en_003/fe_export.py": "b33fc7276138dc59e944c5cbfed73acc0d1f1ec2ce7d458b90eed62790aa8f85",
+   "tests/data/en_003/fe_refine.py": "6ad00122cb8f7a65d0f5c23f7c139b20e92d6f75fa0f472b16d2d97628995c43",
+   "tests/data/en_003/fe_refine_ladder.py": "587ffe012aa40955c6b615f68d6e257314ac0bc418765aaa358e17dc848e0580",
+   "tests/data/en_003/ladder_compare.py": "fdf7d4d74fb0f099934f5ef3c3bbdef67df6f7cf3605a5ad1984cb48450cc3ab",
+   "tests/data/fe_001/fe001_support.py": "d1bd978ad70120cf974e46cd996a8367bd5efc08e4d8755405c2a3a21be41051",
+   "tests/data/fe_002/fe002_support.py": "2c27a76b1fd972625293b26b8e1a07d0850ba78254c4457782607279205c4f7c",
+   "tests/data/fe_003/fe003_support.py": "00d548cb2c513707bfeb16f81bf130eded88fb09a87ba8785ad27ee341a985f2",
+   "tests/data/fe_004/fe004_support.py": "54a7d7d8ce2fa0e4f9b054f596a927f8531c0cc0b77a783dcd7ab6973c1f6e44",
+   "tests/data/ht_001/t2_reference.py": "2098ccd9080957ab24ff44712b3b8e688d2b41cfa077e95460a96c82f3d27f89",
+   "tests/data/ht_002/ht002_reference.py": "076d20dec2f98fb84bbbcda17b3a0313de6c8ffb44f4c2121282eb01387bd7e7",
+   "tests/data/ht_003/analytic.py": "5ee9b0e8d1c4e06067e44754c2dd2393218e4d2a6a3d91d64064d726cb06a3a5",
+   "tests/data/ni_001/ni001_support.py": "fc84c2b085ace6fa38819195dd85f0ae47846dbd8505432ef469dd19a276b0c7",
+   "tests/data/ni_002/ni002_reference.py": "b263602b77beb5b57e4b7360db586394228e18381b8f1e40abf20f1c3295665b",
+   "tests/data/ni_003/make_ni003_data.py": "d03cfe33141adc1f8288763c42009504dcdf076ba5e46d9539ddedca64eedce7",
+   "tests/data/ni_003/ni003_support.py": "bc563f0d0b9d56e461eac3e8db7c76b37ce1431468dd4b51d257a4a551257616",
+   "tests/data/ni_003/payload/ni003_payload.py": "4755abecf85fc0e3ee9006954b933ff3e1728e8647f725a0cb05e0bff654d433",
+   "tests/data/ni_003/probe_no_exec.py": "a2d7e9613788aa4f5eb24af6c8b5dac16a234a28b96df880b7a0bfef6672cc32",
+   "tests/data/ni_003/run_alone.py": "932a1b32033842df026eac9a1496ccd301c89291e980e969fbb3a5022acee0f6",
+   "tests/data/pa_001/pa001_inputs.py": "f1b685263ff6770efd7dd01f2f9b378230ab7fab12800b3e5a697d4cf17fc4b4",
+   "tests/data/simready/make_geometry.py": "2a4c7a5b278c7ddcbe2b673950b13c7bdaaf03921f8883693bc30e28c254094c",
+   "tests/data/simready/make_scene_variants.py": "994ca8d44a44023f7d778c0337ad5403420eea194bc8202194c440a28d1f1247",
+   "tests/test_dm_001_data_objects.py": "44d85eac05803a2bb04c5e1d0c2fea1c0c572c60299ee6f28eb7cb4986f897a8",
+   "tests/test_ec_001_power_ports.py": "cdb8dac627ff5e5bd56a852fd6344996658d8dc2df56beebb8efdd5a159c7f67",
+   "tests/test_en_001_surface_environment.py": "1b0f11127159690d57558aedcdece9c11559b2b6dda75637714d26090c0dd679",
+   "tests/test_en_002_surface_heat.py": "c45ab4a04ceaa6211d5aaf72befbf5d95e8e9c7be5b86454ccc4a6b5cae39e34",
+   "tests/test_en_003_earth_flux.py": "eaa1527e9722b6feb07abc9289f43680b60c59791ce838e072a5e24b90e62c79",
+   "tests/test_fe_001_solar_array_fe.py": "f23d462dbbd432308214db7d5634689b059f5e5b1bb4f46251c0836d139f3cd7",
+   "tests/test_fe_002_radiator_fe.py": "f1be285404e242cc6394363eac2ed1345233e1497ed83fff5f4e3dde09260aa1",
+   "tests/test_fe_003_compute_cold_plate_fe.py": "3a9bfdd73afca2fb2257235348b85702707b5c390b1814a3d15621fba39bafce",
+   "tests/test_fe_004_whole_satellite_chain.py": "6aaeec63a82a4031d916d063694f2aa9a6b750c1712ce2bb7ba036497f1e9a66",
+   "tests/test_ht_001_heat_flows.py": "2d91f41677820f09cdb4e6edac6582be56c9647cea59bfaa629e30da1e759049",
+   "tests/test_ht_002_derivative_balance.py": "728e57be7630d1be877a265ad0206e9ab0cef1374a9bd74f20f438f18a0d144b",
+   "tests/test_ht_003_analytic.py": "a66ffc2613929fbd9bb44a0f2a8f1d41879069d1b2d9584f8fb2041f1545e832",
+   "tests/test_ni_001_numerics_eclipse.py": "1f4cba777b1aba392d09bb130ec6652d2b04004a3ac97ea4e49a88424aacdf47",
+   "tests/test_ni_002_end_to_end.py": "fb33ca9517ced5761c63ae7d68cefc72e98c3c3e36c7a8665b0d89fc9d3c696e",
+   "tests/test_ni_003_scene_assembly.py": "2ce365771b66f67e78334bbb3358a210d8eabed0753d82b7abeb4f3e900e6226",
+   "tests/test_pa_001_t5_assembly.py": "fa1b1edba0b491daf8a6e06ecd6d3a1e8baa9307daf94b5d885659a0620e3293"
+  }
+ }
+}

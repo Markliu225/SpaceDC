@@ -1,0 +1,873 @@
+{
+ "case_id": "PA-001",
+ "status": "pass",
+ "checks": [
+  {
+   "name": "前置条件 components 含实例与温度节点对应、材料质量、比热与表面记录",
+   "expected": "实例与节点 {'SolarArray01': 'S', 'Compute01': 'J', 'ColdPlate01': 'C', 'Battery01': 'B', 'Controller01': 'D', 'PDU01': 'D', 'Radiator01': 'R'}；每份材料有质量与比热；表面只在 S 与 R",
+   "actual": "实例与节点 {'SolarArray01': 'S', 'Compute01': 'J', 'ColdPlate01': 'C', 'Battery01': 'B', 'Controller01': 'D', 'PDU01': 'D', 'Radiator01': 'R'}；材料完整 True；表面所在节点 ['R', 'S']",
+   "passed": true
+  },
+  {
+   "name": "前置条件 connections 给出五条连接的固体路径参数或等效总热阻",
+   "expected": "SR、JC、BR 为长度、导热系数、截面积与接触热阻；CR 为热管等效总热阻；DR 为液冷等效总热阻",
+   "actual": "{'SR': 'solid', 'JC': 'solid', 'CR': 'equivalent_total', 'BR': 'solid', 'DR': 'equivalent_total'}",
+   "passed": true
+  },
+  {
+   "name": "前置条件 MBSU 方块尺寸、密度与比热取自国际空间站模型参数表",
+   "expected": "0.94 m×0.84 m×0.51 m，密度 300 kg/m³，比热 900 J/(kg K)",
+   "actual": "['MBSU_1', 'MBSU_4', 'MBSU_2', 'MBSU_3'] 尺寸 (0.94, 0.84, 0.51) m，材料类别 ['box']，密度 300 kg/m³，比热 900 J/(kg K)",
+   "passed": true
+  },
+  {
+   "name": "前置条件 散热器面板面密度、比热与面板尺寸取自国际空间站模型参数表",
+   "expected": "面密度 8 kg/m²，比热 900 J/(kg K)，面板 3.4 m×2.705 m，相对误差不超过 1e-12",
+   "actual": "面密度 3200×0.0025 = 8 kg/m²，比热 900 J/(kg K)，面板 3.4 m×2.705 m",
+   "passed": true
+  },
+  {
+   "name": "前置条件 手算表 baseline 与按同一组输入的精确有理数 T5 计算一致",
+   "expected": "手算表 11 项：C_S 2047.1、C_J 1000、C_C 2902.8、C_B 3910.4、C_D 109924.12、C_R 66218.4、R_SR 7169/3340、R_JC 37/240、R_CR 0.085、R_BR 1301/4175、R_DR 0.066，与精确计算逐项相等",
+   "actual": "精确有理数 T5：C_S 2047.1、C_J 1000、C_C 2902.8、C_B 3910.4、C_D 109924.12、C_R 66218.4、R_SR 7169/3340、R_JC 37/240、R_CR 0.085、R_BR 1301/4175、R_DR 0.066；逐项相等",
+   "passed": true
+  },
+  {
+   "name": "前置条件 手算表 override 与按同一组输入的精确有理数 T5 计算一致",
+   "expected": "手算表 11 项：C_S 2047.1、C_J 1000、C_C 2902.8、C_B 4170.4、C_D 109924.12、C_R 66218.4、R_SR 7169/3340、R_JC 37/240、R_CR 0.085、R_BR 1134/4175、R_DR 0.066，与精确计算逐项相等",
+   "actual": "精确有理数 T5：C_S 2047.1、C_J 1000、C_C 2902.8、C_B 4170.4、C_D 109924.12、C_R 66218.4、R_SR 7169/3340、R_JC 37/240、R_CR 0.085、R_BR 1134/4175、R_DR 0.066；逐项相等",
+   "passed": true
+  },
+  {
+   "name": "前置条件 手算表验收值与案例给定值一致",
+   "expected": "第 4.5 节算例 1000 J/K，MBSU 方块 108727.92 J/K 约 108.7 kJ/K，散热器面板 7200 J/(m² K)",
+   "actual": "算例 1000 J/K，MBSU 108727.92 J/K，面板 7200 J/(m² K)",
+   "passed": true
+  },
+  {
+   "name": "步骤1 C_J_K 与 R_K_W 的维数和顺序",
+   "expected": "C_J_K 形状 (6,) 按 ('S', 'J', 'C', 'B', 'D', 'R')，R_K_W 形状 (5,) 按 ('SR', 'JC', 'CR', 'BR', 'DR')",
+   "actual": "C_J_K 形状 (6,)，R_K_W 形状 (5,)，provenance 节点顺序 ('S', 'J', 'C', 'B', 'D', 'R')，路径顺序 ('SR', 'JC', 'CR', 'BR', 'DR')",
+   "passed": true
+  },
+  {
+   "name": "步骤1 基准装配 热容 C_S 与手算表比较",
+   "expected": "2047.1 J/K，相对误差不超过 1e-12",
+   "actual": "2047.1 J/K，相对误差 4.44e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤1 基准装配 热容 C_J 与手算表比较",
+   "expected": "1000 J/K，相对误差不超过 1e-12",
+   "actual": "1000 J/K，相对误差 0.00e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤1 基准装配 热容 C_C 与手算表比较",
+   "expected": "2902.8 J/K，相对误差不超过 1e-12",
+   "actual": "2902.8 J/K，相对误差 6.27e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤1 基准装配 热容 C_B 与手算表比较",
+   "expected": "3910.4 J/K，相对误差不超过 1e-12",
+   "actual": "3910.4 J/K，相对误差 2.33e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤1 基准装配 热容 C_D 与手算表比较",
+   "expected": "109924.12 J/K，相对误差不超过 1e-12",
+   "actual": "109924.12 J/K，相对误差 4.24e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤1 基准装配 热容 C_R 与手算表比较",
+   "expected": "66218.4 J/K，相对误差不超过 1e-12",
+   "actual": "66218.4 J/K，相对误差 8.79e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤1 基准装配 热阻 R_SR 与手算表比较",
+   "expected": "2.14640718562874 K/W，相对误差不超过 1e-12",
+   "actual": "2.14640718562874 K/W，相对误差 1.78e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤1 基准装配 热阻 R_JC 与手算表比较",
+   "expected": "0.154166666666667 K/W，相对误差不超过 1e-12",
+   "actual": "0.154166666666667 K/W，相对误差 4.80e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤1 基准装配 热阻 R_CR 与手算表比较",
+   "expected": "0.085 K/W，相对误差不超过 1e-12",
+   "actual": "0.085 K/W，相对误差 7.18e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤1 基准装配 热阻 R_BR 与手算表比较",
+   "expected": "0.311616766467066 K/W，相对误差不超过 1e-12",
+   "actual": "0.311616766467066 K/W，相对误差 2.31e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤1 基准装配 热阻 R_DR 与手算表比较",
+   "expected": "0.066 K/W，相对误差不超过 1e-12",
+   "actual": "0.066 K/W，相对误差 4.71e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤1 第 4.5 节算例热容",
+   "expected": "1000 J/K，相对误差不超过 1e-12",
+   "actual": "C_J 1000 J/K，相对误差 0.00e+00，节点 J 材料 [('cb01_design_example', 1.0, 1000.0)]",
+   "passed": true
+  },
+  {
+   "name": "步骤1 MBSU 方块热容",
+   "expected": "108727.92 J/K，即 108.7 kJ/K，相对误差不超过 1e-12",
+   "actual": "PDU01 材料 ['pdu01_mbsu_block'] 热容 108727.92 J/K，即 108.7 kJ/K，相对误差 1.61e-17；节点 D 由 ['Controller01/pc01_al_chassis', 'Controller01/pc01_fr4_boards', 'PDU01/pdu01_mbsu_block'] 组成，C_D 109924.12 J/K",
+   "passed": true
+  },
+  {
+   "name": "步骤1 散热器面板单位面积热容",
+   "expected": "7200 J/(m² K)，即 7.2 kJ/(m² K)，相对误差不超过 1e-12",
+   "actual": "C_R 66218.4 J/K，面板面积 9.197 m²，单位面积热容 7200 J/(m² K)，即 7.2 kJ/(m² K)，相对误差 0.00e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤1 表面参数按资产表面顺序装配",
+   "expected": "[('sa01_front', 'S', 1.2, (0.6, 0.0, 0.8), 0.91, 0.85), ('sa01_back', 'S', 1.2, (-0.6, 0.0, -0.8), 0.3, 0.8), ('rd01_front', 'R', 9.197, (0.0, 1.0, 0.0), 0.2, 0.91), ('rd01_back', 'R', 9.197, (0.0, -1.0, 0.0), 0.2, 0.91)]",
+   "actual": "[('sa01_front', 'S', 1.2, (0.6, 0.0, 0.8), 0.91, 0.85), ('sa01_back', 'S', 1.2, (-0.6, 0.0, -0.8), 0.3, 0.8), ('rd01_front', 'R', 9.197, (0.0, 1.0, 0.0), 0.2, 0.91), ('rd01_back', 'R', 9.197, (0.0, -1.0, 0.0), 0.2, 0.91)]",
+   "passed": true
+  },
+  {
+   "name": "步骤2 覆盖后装配 热容 C_S 与手算表比较",
+   "expected": "2047.1 J/K，相对误差不超过 1e-12",
+   "actual": "2047.1 J/K，相对误差 4.44e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤2 覆盖后装配 热容 C_J 与手算表比较",
+   "expected": "1000 J/K，相对误差不超过 1e-12",
+   "actual": "1000 J/K，相对误差 0.00e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 覆盖后装配 热容 C_C 与手算表比较",
+   "expected": "2902.8 J/K，相对误差不超过 1e-12",
+   "actual": "2902.8 J/K，相对误差 6.27e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤2 覆盖后装配 热容 C_B 与手算表比较",
+   "expected": "4170.4 J/K，相对误差不超过 1e-12",
+   "actual": "4170.4 J/K，相对误差 8.72e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤2 覆盖后装配 热容 C_D 与手算表比较",
+   "expected": "109924.12 J/K，相对误差不超过 1e-12",
+   "actual": "109924.12 J/K，相对误差 4.24e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤2 覆盖后装配 热容 C_R 与手算表比较",
+   "expected": "66218.4 J/K，相对误差不超过 1e-12",
+   "actual": "66218.4 J/K，相对误差 8.79e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤2 覆盖后装配 热阻 R_SR 与手算表比较",
+   "expected": "2.14640718562874 K/W，相对误差不超过 1e-12",
+   "actual": "2.14640718562874 K/W，相对误差 1.78e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤2 覆盖后装配 热阻 R_JC 与手算表比较",
+   "expected": "0.154166666666667 K/W，相对误差不超过 1e-12",
+   "actual": "0.154166666666667 K/W，相对误差 4.80e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤2 覆盖后装配 热阻 R_CR 与手算表比较",
+   "expected": "0.085 K/W，相对误差不超过 1e-12",
+   "actual": "0.085 K/W，相对误差 7.18e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤2 覆盖后装配 热阻 R_BR 与手算表比较",
+   "expected": "0.271616766467066 K/W，相对误差不超过 1e-12",
+   "actual": "0.271616766467066 K/W，相对误差 1.00e-16",
+   "passed": true
+  },
+  {
+   "name": "步骤2 覆盖后装配 热阻 R_DR 与手算表比较",
+   "expected": "0.066 K/W，相对误差不超过 1e-12",
+   "actual": "0.066 K/W，相对误差 4.71e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤2 材料质量覆盖值优先于资产参数集",
+   "expected": "电池单体质量 3.2 kg 改为 3.45 kg，C_B 由 3910.4 J/K 变为 4170.4 J/K",
+   "actual": "C_B 由 3910.4 J/K 变为 4170.4 J/K，相对误差 2.33e-17 与 8.72e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤2 接触热阻覆盖值优先于资产参数集",
+   "expected": "BR 接触热阻 0.12 K/W 改为 0.08 K/W，R_BR 由 0.311616766467066 K/W 变为 0.271616766467066 K/W",
+   "actual": "R_BR 由 0.311616766467066 K/W 变为 0.271616766467066 K/W，相对误差 2.31e-17 与 1.00e-16",
+   "passed": true
+  },
+  {
+   "name": "步骤2 未覆盖的热容与热阻保持资产参数集的值",
+   "expected": "C_S、C_J、C_C、C_D、C_R 与 R_SR、R_JC、R_CR、R_DR 与基准装配逐位相同",
+   "actual": "覆盖后与基准装配：C_S 2047.1 与 2047.1 J/K、C_J 1000 与 1000 J/K、C_C 2902.8 与 2902.8 J/K、C_D 109924.12 与 109924.12 J/K、C_R 66218.4 与 66218.4 J/K、R_SR 2.14640718562874 与 2.14640718562874 K/W、R_JC 0.154166666666667 与 0.154166666666667 K/W、R_CR 0.085 与 0.085 K/W、R_DR 0.066 与 0.066 K/W；逐位相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤2 provenance 记录已应用的覆盖值",
+   "expected": "[{'target': 'components/Battery01/materials/bt01_li_ion_cells', 'field': 'mass_kg', 'old': 3.2, 'new': 3.45, 'source': 'PA-001 scene override: battery revision B cells and a thinner BR interface filler'}, {'target': 'connections/BR', 'field': 'contact_resistance_K_W', 'old': 0.12, 'new': 0.08, 'source': 'PA-001 scene override: battery revision B cells and a thinner BR interface filler'}]；基准装配没有覆盖记录",
+   "actual": "[{'target': 'components/Battery01/materials/bt01_li_ion_cells', 'field': 'mass_kg', 'old': 3.2, 'new': 3.45, 'source': 'PA-001 scene override: battery revision B cells and a thinner BR interface filler'}, {'target': 'connections/BR', 'field': 'contact_resistance_K_W', 'old': 0.12, 'new': 0.08, 'source': 'PA-001 scene override: battery revision B cells and a thinner BR interface filler'}]；基准装配覆盖记录 []",
+   "passed": true
+  },
+  {
+   "name": "步骤2 provenance 记录覆盖后的解析值",
+   "expected": "电池单体质量 3.45 kg，BR 接触热阻 0.08 K/W",
+   "actual": "电池单体质量 [3.45] kg，BR 接触热阻 0.08 K/W",
+   "passed": true
+  },
+  {
+   "name": "步骤2 装配不修改输入的 components、connections 与 overrides",
+   "expected": "调用后电池单体质量仍为 3.2 kg，BR 接触热阻仍为 0.12 K/W，overrides 不变，调用前后输入记录逐项相同",
+   "actual": "调用后 Battery01/bt01_li_ion_cells mass_kg 3.2 kg，BR contact_resistance_K_W 0.12 K/W，overrides {'components': {'Battery01': {'materials': {'bt01_li_ion_cells': {'mass_kg': 3.45}}}}, 'connections': {'BR': {'contact_resistance_K_W': 0.08}}, 'source': 'PA-001 scene override: battery revision B cells and a thinner BR interface filler'}；输入摘要 SHA-256 调用前 39151a5046cd97a6，调用后 39151a5046cd97a6；逐项相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤2 覆盖值把材料质量改为负值",
+   "expected": "ThermalConfigurationError，报错指出记录 Battery01、bt01_li_ion_cells 与字段 mass_kg，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'Battery01' material 'bt01_li_ion_cells': mass_kg (set by override) must be > 0, got -3.45；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤2 覆盖值指向不存在的实例",
+   "expected": "ThermalConfigurationError，报错指出记录 Battery02，两次调用报错相同",
+   "actual": "ThermalConfigurationError: overrides['components'] names unknown instance 'Battery02'；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤2 覆盖值指向不存在的材料",
+   "expected": "ThermalConfigurationError，报错指出记录 Battery01、bt01_cells，两次调用报错相同",
+   "actual": "ThermalConfigurationError: overrides for components/Battery01/materials name unknown material_id 'bt01_cells'；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤2 覆盖值指向不存在的连接",
+   "expected": "ThermalConfigurationError，报错指出记录 BX，两次调用报错相同",
+   "actual": "ThermalConfigurationError: overrides['connections'] names unknown path 'BX'; the paths are ('SR', 'JC', 'CR', 'BR', 'DR')；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤2 覆盖值没有数据来源",
+   "expected": "ThermalConfigurationError，报错指出记录 overrides 与字段 source，两次调用报错相同",
+   "actual": "ThermalConfigurationError: overrides['source'] must be a non-empty string, got None；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤3 热管等效路径 CR 直接读取总热阻",
+   "expected": "0.085 K/W，等效总热阻已含接触热阻，不再叠加，相对误差不超过 1e-12",
+   "actual": "R_CR 0.085 K/W，相对误差 7.18e-17，方法 equivalent_total，输入 {'equivalent_total_resistance_K_W': 0.085, 'includes_contact': True}",
+   "passed": true
+  },
+  {
+   "name": "步骤3 液冷等效路径 DR 的总热阻不含接触部分时叠加安装接触热阻",
+   "expected": "0.045 K/W 加 0.021 K/W 等于 0.066 K/W，相对误差不超过 1e-12",
+   "actual": "R_DR 0.066 K/W，相对误差 4.71e-17，方法 equivalent_total，输入 {'equivalent_total_resistance_K_W': 0.045, 'includes_contact': False, 'contact_resistance_K_W': 0.021}",
+   "passed": true
+  },
+  {
+   "name": "步骤3 液冷等效路径 DR 的总热阻已含接触部分时直接读取",
+   "expected": "0.066 K/W，不再叠加接触热阻，相对误差不超过 1e-12",
+   "actual": "R_DR 0.066 K/W，相对误差 4.71e-17，方法 equivalent_total，输入 {'equivalent_total_resistance_K_W': 0.066, 'includes_contact': True}",
+   "passed": true
+  },
+  {
+   "name": "步骤3 覆盖值给已含接触热阻的热管路径 CR 再加接触热阻",
+   "expected": "ThermalConfigurationError，报错指出记录 CR 与字段 contact_resistance_K_W，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection 'CR': equivalent_total_resistance_K_W already includes the contact resistance (includes_contact is true), so contact_resistance_K_W must not be given; adding it again would count the contact part twice (design 4.5)；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 质量为零",
+   "expected": "ThermalConfigurationError，报错指出记录 Battery01、bt01_li_ion_cells 与字段 mass_kg，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'Battery01' material 'bt01_li_ion_cells': mass_kg must be > 0, got 0.0；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 质量为负",
+   "expected": "ThermalConfigurationError，报错指出记录 Battery01、bt01_li_ion_cells 与字段 mass_kg，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'Battery01' material 'bt01_li_ion_cells': mass_kg must be > 0, got -3.2；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 比热为零",
+   "expected": "ThermalConfigurationError，报错指出记录 ColdPlate01、cp01_al6061_plate 与字段 cp_J_kgK，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'ColdPlate01' material 'cp01_al6061_plate': cp_J_kgK must be > 0, got 0.0；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 比热为负",
+   "expected": "ThermalConfigurationError，报错指出记录 ColdPlate01、cp01_al6061_plate 与字段 cp_J_kgK，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'ColdPlate01' material 'cp01_al6061_plate': cp_J_kgK must be > 0, got -896.0；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 长度为零",
+   "expected": "ThermalConfigurationError，报错指出记录 SR 与字段 length_m，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection 'SR': length_m must be > 0, got 0.0；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 长度为负",
+   "expected": "ThermalConfigurationError，报错指出记录 SR 与字段 length_m，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection 'SR': length_m must be > 0, got -0.12；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 导热系数为零",
+   "expected": "ThermalConfigurationError，报错指出记录 BR 与字段 conductivity_W_mK，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection 'BR': conductivity_W_mK must be > 0, got 0.0；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 导热系数为负",
+   "expected": "ThermalConfigurationError，报错指出记录 BR 与字段 conductivity_W_mK，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection 'BR': conductivity_W_mK must be > 0, got -167.0；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 截面积为零",
+   "expected": "ThermalConfigurationError，报错指出记录 JC 与字段 area_m2，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection 'JC': area_m2 must be > 0, got 0.0；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 截面积为负",
+   "expected": "ThermalConfigurationError，报错指出记录 JC 与字段 area_m2，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection 'JC': area_m2 must be > 0, got -0.0064；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 固体路径接触热阻为负",
+   "expected": "ThermalConfigurationError，报错指出记录 JC 与字段 contact_resistance_K_W，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection 'JC': contact_resistance_K_W must be >= 0, got -0.05；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 液冷等效路径接触热阻为负",
+   "expected": "ThermalConfigurationError，报错指出记录 DR 与字段 contact_resistance_K_W，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection 'DR': contact_resistance_K_W must be >= 0, got -0.021；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 同一份材料归入计算节点与冷板两个组件",
+   "expected": "ThermalConfigurationError，报错指出记录 cp01_al6061_plate、Compute01、ColdPlate01，两次调用报错相同",
+   "actual": "ThermalConfigurationError: material 'cp01_al6061_plate' is assigned to both 'Compute01' and 'ColdPlate01'; a material portion belongs to one component and its mass is counted once (design 4.5)；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 同一份材料归入共用节点 D 的 Controller01 与 PDU01",
+   "expected": "ThermalConfigurationError，报错指出记录 pc01_al_chassis、Controller01、PDU01，两次调用报错相同",
+   "actual": "ThermalConfigurationError: material 'pc01_al_chassis' is assigned to both 'Controller01' and 'PDU01'; a material portion belongs to one component and its mass is counted once (design 4.5)；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 同一组件内重复表面",
+   "expected": "ThermalConfigurationError，报错指出记录 Radiator01、rd01_front，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'Radiator01' surface 'rd01_front': surface_id 'rd01_front' is already used by component 'Radiator01'; duplicate surfaces are rejected；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 太阳能板与散热板使用同一表面",
+   "expected": "ThermalConfigurationError，报错指出记录 Radiator01、SolarArray01、sa01_back，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'Radiator01' surface 'sa01_back': surface_id 'sa01_back' is already used by component 'SolarArray01'; duplicate surfaces are rejected；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 未定义连接 DR",
+   "expected": "ThermalConfigurationError，报错指出记录 DR，不指向 SR、JC、CR、BR，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection(s) ['DR'] are not defined; every path of ('SR', 'JC', 'CR', 'BR', 'DR') needs its conducting structure or a supported equivalent resistance (design 5.2, 5.5)；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 连接使用设计之外的路径名称",
+   "expected": "ThermalConfigurationError，报错指出记录 SC，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connections[5]: unknown path 'SC'; the paths are ('SR', 'JC', 'CR', 'BR', 'DR')；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 异常输入 等效总热阻已含接触热阻又再给出接触热阻",
+   "expected": "ThermalConfigurationError，报错指出记录 CR 与字段 contact_resistance_K_W，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection 'CR': equivalent_total_resistance_K_W already includes the contact resistance (includes_contact is true), so contact_resistance_K_W must not be given; adding it again would count the contact part twice (design 4.5)；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 材料缺少质量，不生成默认值",
+   "expected": "ThermalConfigurationError，报错指出记录 SolarArray01、sa01_cfrp_substrate 与字段 mass_kg，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'SolarArray01' material 'sa01_cfrp_substrate' is missing field(s) ['mass_kg']; no default device value is supplied；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 材料缺少比热，不生成默认值",
+   "expected": "ThermalConfigurationError，报错指出记录 Battery01、bt01_al_case 与字段 cp_J_kgK，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'Battery01' material 'bt01_al_case' is missing field(s) ['cp_J_kgK']; no default device value is supplied；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 固体路径缺少接触热阻，不按零处理",
+   "expected": "ThermalConfigurationError，报错指出记录 SR 与字段 contact_resistance_K_W，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection 'SR' is missing field(s) ['contact_resistance_K_W']; no default device value is supplied；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 等效总热阻不含接触部分却缺少接触热阻，不按零处理",
+   "expected": "ThermalConfigurationError，报错指出记录 DR 与字段 contact_resistance_K_W，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection 'DR': includes_contact is false, so contact_resistance_K_W of the installation must be given; it is not assumed to be zero；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 等效路径缺少 includes_contact",
+   "expected": "ThermalConfigurationError，报错指出记录 CR 与字段 includes_contact，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection 'CR' is missing field 'includes_contact'; it states whether the total holds the contact part；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 太阳能板表面缺少面积，不生成默认值",
+   "expected": "ThermalConfigurationError，报错指出记录 SolarArray01、sa01_front 与字段 area_m2，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'SolarArray01' surface 'sa01_front' is missing field(s) ['area_m2']; no default device value is supplied；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 太阳能板表面缺少吸收率，不生成默认值",
+   "expected": "ThermalConfigurationError，报错指出记录 SolarArray01、sa01_back 与字段 absorptivity，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'SolarArray01' surface 'sa01_back' is missing field(s) ['absorptivity']; no default device value is supplied；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 散热板表面缺少发射率，不生成默认值",
+   "expected": "ThermalConfigurationError，报错指出记录 Radiator01、rd01_back 与字段 emissivity，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'Radiator01' surface 'rd01_back' is missing field(s) ['emissivity']; no default device value is supplied；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 散热板表面缺少法向，不生成默认值",
+   "expected": "ThermalConfigurationError，报错指出记录 Radiator01、rd01_front 与字段 normal_body，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'Radiator01' surface 'rd01_front' is missing field(s) ['normal_body']; no default device value is supplied；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 计算节点没有任何材料",
+   "expected": "ThermalConfigurationError，报错指出记录 J、Compute01，两次调用报错相同",
+   "actual": "ThermalConfigurationError: node 'J' (instances ['Compute01']) has no material portion; C_J needs the masses and specific heats of T5；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 质量为非有限值",
+   "expected": "ThermalConfigurationError，报错指出记录 Battery01、bt01_li_ion_cells 与字段 mass_kg，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'Battery01' material 'bt01_li_ion_cells': mass_kg must be finite, got nan；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 比热为无穷大",
+   "expected": "ThermalConfigurationError，报错指出记录 ColdPlate01、cp01_coolant_water 与字段 cp_J_kgK，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'ColdPlate01' material 'cp01_coolant_water': cp_J_kgK must be finite, got inf；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 长度为非有限值",
+   "expected": "ThermalConfigurationError，报错指出记录 SR 与字段 length_m，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection 'SR': length_m must be finite, got nan；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 导热系数为无穷大",
+   "expected": "ThermalConfigurationError，报错指出记录 BR 与字段 conductivity_W_mK，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection 'BR': conductivity_W_mK must be finite, got inf；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 截面积为无穷大",
+   "expected": "ThermalConfigurationError，报错指出记录 JC 与字段 area_m2，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection 'JC': area_m2 must be finite, got inf；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 固体路径接触热阻为非有限值",
+   "expected": "ThermalConfigurationError，报错指出记录 BR 与字段 contact_resistance_K_W，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection 'BR': contact_resistance_K_W must be finite, got nan；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 表面面积为零",
+   "expected": "ThermalConfigurationError，报错指出记录 Radiator01、rd01_front 与字段 area_m2，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'Radiator01' surface 'rd01_front': area_m2 must be > 0, got 0.0；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 表面面积为负",
+   "expected": "ThermalConfigurationError，报错指出记录 SolarArray01、sa01_front 与字段 area_m2，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'SolarArray01' surface 'sa01_front': area_m2 must be > 0, got -1.2；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 表面面积为非有限值",
+   "expected": "ThermalConfigurationError，报错指出记录 SolarArray01、sa01_back 与字段 area_m2，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'SolarArray01' surface 'sa01_back': area_m2 must be finite, got nan；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 吸收率大于 1",
+   "expected": "ThermalConfigurationError，报错指出记录 SolarArray01、sa01_front 与字段 absorptivity，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'SolarArray01' surface 'sa01_front': absorptivity must lie in [0, 1], got 1.2；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 吸收率小于 0",
+   "expected": "ThermalConfigurationError，报错指出记录 Radiator01、rd01_back 与字段 absorptivity，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'Radiator01' surface 'rd01_back': absorptivity must lie in [0, 1], got -0.2；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 吸收率为非有限值",
+   "expected": "ThermalConfigurationError，报错指出记录 Radiator01、rd01_front 与字段 absorptivity，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'Radiator01' surface 'rd01_front': absorptivity must be finite, got nan；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 发射率大于 1",
+   "expected": "ThermalConfigurationError，报错指出记录 Radiator01、rd01_front 与字段 emissivity，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'Radiator01' surface 'rd01_front': emissivity must lie in [0, 1], got 1.05；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 发射率小于 0",
+   "expected": "ThermalConfigurationError，报错指出记录 SolarArray01、sa01_back 与字段 emissivity，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'SolarArray01' surface 'sa01_back': emissivity must lie in [0, 1], got -0.8；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 法向长度不为 1",
+   "expected": "ThermalConfigurationError，报错指出记录 SolarArray01、sa01_front 与字段 normal_body，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'SolarArray01': SurfaceRecord 'sa01_front': normal_body must be a unit vector (| |n| - 1 | <= 1e-09), got |n| = 2.0；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 法向为零向量",
+   "expected": "ThermalConfigurationError，报错指出记录 Radiator01、rd01_back 与字段 normal_body，两次调用报错相同",
+   "actual": "ThermalConfigurationError: component 'Radiator01': SurfaceRecord 'rd01_back': normal_body must be a unit vector (| |n| - 1 | <= 1e-09), got |n| = 0.0；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 补充异常输入 同一路径定义两次",
+   "expected": "ThermalConfigurationError，报错指出记录 BR，两次调用报错相同",
+   "actual": "ThermalConfigurationError: connection 'BR' is defined more than once; each path is defined exactly once；两次调用报错相同 True",
+   "passed": true
+  },
+  {
+   "name": "步骤4 吸收率与发射率取边界值 0 与 1 时正常装配",
+   "expected": "四种输入均正常装配，SurfaceRecord 与 provenance 保存给定值；T4 规定吸收率与发射率取值为 0 至 1",
+   "actual": "SolarArray01/sa01_back absorptivity 0：装配完成，SurfaceRecord 0，provenance 0；SolarArray01/sa01_front absorptivity 1：装配完成，SurfaceRecord 1，provenance 1；Radiator01/rd01_back emissivity 0：装配完成，SurfaceRecord 0，provenance 0；Radiator01/rd01_front emissivity 1：装配完成，SurfaceRecord 1，provenance 1",
+   "passed": true
+  },
+  {
+   "name": "步骤5 provenance 记录节点顺序、路径顺序与单位",
+   "expected": "node_order ('S', 'J', 'C', 'B', 'D', 'R')，path_order ('SR', 'JC', 'CR', 'BR', 'DR')，units {'C_J_K': 'J/K', 'R_K_W': 'K/W', 'area_m2': 'm^2', 'temperature': 'K'}",
+   "actual": "node_order ('S', 'J', 'C', 'B', 'D', 'R')，path_order ('SR', 'JC', 'CR', 'BR', 'DR')，units {'C_J_K': 'J/K', 'R_K_W': 'K/W', 'area_m2': 'm^2', 'temperature': 'K'}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 provenance 记录节点 S 的热容、材料份额、解析后的质量与比热及数据来源",
+   "expected": "value_J_K 等于 C_J_K[0]，与手算表 2047.1 J/K 的相对误差不超过 1e-12；材料份额 SolarArray01/sa01_cells_coverglass 0.62 kg×712 J/(kg K) = 441.44 J/K，来源 'PA-001 test value: cells with coverglass'；SolarArray01/sa01_cfrp_substrate 1.35 kg×1050 J/(kg K) = 1417.5 J/K，来源 'PA-001 test value: CFRP honeycomb substrate'；SolarArray01/sa01_hinge_bracket 0.21 kg×896 J/(kg K) = 188.16 J/K，来源 'PA-001 test value: Al 6061 hinge bracket'；每份热容等于质量乘比热，相对误差不超过 1e-12",
+   "actual": "value_J_K 2047.1 J/K，C_J_K[0] 2047.1 J/K，相对误差 4.44e-17；材料份额 SolarArray01/sa01_cells_coverglass 0.62 kg×712 J/(kg K) = 441.44 J/K，来源 'PA-001 test value: cells with coverglass'；SolarArray01/sa01_cfrp_substrate 1.35 kg×1050 J/(kg K) = 1417.5 J/K，来源 'PA-001 test value: CFRP honeycomb substrate'；SolarArray01/sa01_hinge_bracket 0.21 kg×896 J/(kg K) = 188.16 J/K，来源 'PA-001 test value: Al 6061 hinge bracket'；每份热容最大相对误差 1.81e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤5 provenance 记录节点 J 的热容、材料份额、解析后的质量与比热及数据来源",
+   "expected": "value_J_K 等于 C_J_K[1]，与手算表 1000 J/K 的相对误差不超过 1e-12；材料份额 Compute01/cb01_design_example 1 kg×1000 J/(kg K) = 1000 J/K，来源 'design report 4.5 example: 1 kg of material at 1000 J/(kg K)'；每份热容等于质量乘比热，相对误差不超过 1e-12",
+   "actual": "value_J_K 1000 J/K，C_J_K[1] 1000 J/K，相对误差 0.00e+00；材料份额 Compute01/cb01_design_example 1 kg×1000 J/(kg K) = 1000 J/K，来源 'design report 4.5 example: 1 kg of material at 1000 J/(kg K)'；每份热容最大相对误差 0.00e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤5 provenance 记录节点 C 的热容、材料份额、解析后的质量与比热及数据来源",
+   "expected": "value_J_K 等于 C_J_K[2]，与手算表 2902.8 J/K 的相对误差不超过 1e-12；材料份额 ColdPlate01/cp01_al6061_plate 2.4 kg×896 J/(kg K) = 2150.4 J/K，来源 'PA-001 test value: Al 6061 plate'；ColdPlate01/cp01_coolant_water 0.18 kg×4180 J/(kg K) = 752.4 J/K，来源 'PA-001 test value: coolant inventory in the plate'；每份热容等于质量乘比热，相对误差不超过 1e-12",
+   "actual": "value_J_K 2902.8 J/K，C_J_K[2] 2902.8 J/K，相对误差 6.27e-17；材料份额 ColdPlate01/cp01_al6061_plate 2.4 kg×896 J/(kg K) = 2150.4 J/K，来源 'PA-001 test value: Al 6061 plate'；ColdPlate01/cp01_coolant_water 0.18 kg×4180 J/(kg K) = 752.4 J/K，来源 'PA-001 test value: coolant inventory in the plate'；每份热容最大相对误差 4.23e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤5 provenance 记录节点 B 的热容、材料份额、解析后的质量与比热及数据来源",
+   "expected": "value_J_K 等于 C_J_K[3]，与手算表 4170.4 J/K 的相对误差不超过 1e-12；材料份额 Battery01/bt01_li_ion_cells 3.45 kg×1040 J/(kg K) = 3588 J/K，来源 'PA-001 test value: lithium-ion cells'；Battery01/bt01_al_case 0.65 kg×896 J/(kg K) = 582.4 J/K，来源 'PA-001 test value: aluminium case'；每份热容等于质量乘比热，相对误差不超过 1e-12",
+   "actual": "value_J_K 4170.4 J/K，C_J_K[3] 4170.4 J/K，相对误差 8.72e-17；材料份额 Battery01/bt01_li_ion_cells 3.45 kg×1040 J/(kg K) = 3588 J/K，来源 'PA-001 test value: lithium-ion cells'；Battery01/bt01_al_case 0.65 kg×896 J/(kg K) = 582.4 J/K，来源 'PA-001 test value: aluminium case'；每份热容最大相对误差 3.90e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤5 provenance 记录节点 D 的热容、材料份额、解析后的质量与比热及数据来源",
+   "expected": "value_J_K 等于 C_J_K[4]，与手算表 109924.12 J/K 的相对误差不超过 1e-12；材料份额 Controller01/pc01_al_chassis 0.95 kg×896 J/(kg K) = 851.2 J/K，来源 'PA-001 test value: aluminium chassis'；Controller01/pc01_fr4_boards 0.3 kg×1150 J/(kg K) = 345 J/K，来源 'PA-001 test value: FR4 boards'；PDU01/pdu01_mbsu_block 120.8088 kg×900 J/(kg K) = 108727.92 J/K，来源 'ISS FE parameter table iss_spec.py: ORU_BOXES MBSU 0.94 m x 0.84 m x 0.51 m, oru_eq rho 300 kg/m3, cp 900 J/(kg K)'；每份热容等于质量乘比热，相对误差不超过 1e-12",
+   "actual": "value_J_K 109924.12 J/K，C_J_K[4] 109924.12 J/K，相对误差 4.24e-17；材料份额 Controller01/pc01_al_chassis 0.95 kg×896 J/(kg K) = 851.2 J/K，来源 'PA-001 test value: aluminium chassis'；Controller01/pc01_fr4_boards 0.3 kg×1150 J/(kg K) = 345 J/K，来源 'PA-001 test value: FR4 boards'；PDU01/pdu01_mbsu_block 120.8088 kg×900 J/(kg K) = 108727.92 J/K，来源 'ISS FE parameter table iss_spec.py: ORU_BOXES MBSU 0.94 m x 0.84 m x 0.51 m, oru_eq rho 300 kg/m3, cp 900 J/(kg K)'；每份热容最大相对误差 8.01e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤5 provenance 记录节点 R 的热容、材料份额、解析后的质量与比热及数据来源",
+   "expected": "value_J_K 等于 C_J_K[5]，与手算表 66218.4 J/K 的相对误差不超过 1e-12；材料份额 Radiator01/rd01_hrs_panel 73.576 kg×900 J/(kg K) = 66218.4 J/K，来源 'ISS FE parameter table iss_spec.py: hrs_pan rho 3200 kg/m3 x t 2.5 mm = 8 kg/m2, HRS panel 3.4 m x 2.705 m, cp 900 J/(kg K)'；每份热容等于质量乘比热，相对误差不超过 1e-12",
+   "actual": "value_J_K 66218.4 J/K，C_J_K[5] 66218.4 J/K，相对误差 8.79e-17；材料份额 Radiator01/rd01_hrs_panel 73.576 kg×900 J/(kg K) = 66218.4 J/K，来源 'ISS FE parameter table iss_spec.py: hrs_pan rho 3200 kg/m3 x t 2.5 mm = 8 kg/m2, HRS panel 3.4 m x 2.705 m, cp 900 J/(kg K)'；每份热容最大相对误差 8.79e-17",
+   "passed": true
+  },
+  {
+   "name": "步骤5 provenance 记录路径 SR 的热阻、计算方法、解析后的输入与数据来源",
+   "expected": "value_K_W 等于 R_K_W[0]，与手算表 2.14640718562874 K/W 的相对误差不超过 1e-12；方法 conduction_plus_contact；输入 {'length_m': 0.12, 'conductivity_W_mK': 167.0, 'area_m2': 0.0004, 'contact_resistance_K_W': 0.35}；导热部分 conduction_K_W 等于 l/(κA) 1.79640718562874 K/W；来源 'PA-001 test value: Al 6061-T6 hinge bracket and its bolted interface'",
+   "actual": "value_K_W 2.14640718562874 K/W，R_K_W[0] 2.14640718562874 K/W，相对误差 1.78e-17；方法 conduction_plus_contact；输入 {'length_m': 0.12, 'conductivity_W_mK': 167.0, 'area_m2': 0.0004, 'contact_resistance_K_W': 0.35, 'conduction_K_W': 1.7964071856287425}；导热部分相对误差 2.81e-17；来源 'PA-001 test value: Al 6061-T6 hinge bracket and its bolted interface'",
+   "passed": true
+  },
+  {
+   "name": "步骤5 provenance 记录路径 JC 的热阻、计算方法、解析后的输入与数据来源",
+   "expected": "value_K_W 等于 R_K_W[1]，与手算表 0.154166666666667 K/W 的相对误差不超过 1e-12；方法 conduction_plus_contact；输入 {'length_m': 0.002, 'conductivity_W_mK': 3.0, 'area_m2': 0.0064, 'contact_resistance_K_W': 0.05}；导热部分 conduction_K_W 等于 l/(κA) 0.104166666666667 K/W；来源 'PA-001 test value: 2 mm gap pad between board and cold plate'",
+   "actual": "value_K_W 0.154166666666667 K/W，R_K_W[1] 0.154166666666667 K/W，相对误差 4.80e-17；方法 conduction_plus_contact；输入 {'length_m': 0.002, 'conductivity_W_mK': 3.0, 'area_m2': 0.0064, 'contact_resistance_K_W': 0.05, 'conduction_K_W': 0.10416666666666666}；导热部分相对误差 8.88e-17；来源 'PA-001 test value: 2 mm gap pad between board and cold plate'",
+   "passed": true
+  },
+  {
+   "name": "步骤5 provenance 记录路径 CR 的热阻、计算方法、解析后的输入与数据来源",
+   "expected": "value_K_W 等于 R_K_W[2]，与手算表 0.085 K/W 的相对误差不超过 1e-12；方法 equivalent_total；输入 {'equivalent_total_resistance_K_W': 0.085, 'includes_contact': True}；等效路径不记录导热部分；来源 'PA-001 test value: heat-pipe equivalent total from a thermal vacuum test, contact included'",
+   "actual": "value_K_W 0.085 K/W，R_K_W[2] 0.085 K/W，相对误差 7.18e-17；方法 equivalent_total；输入 {'equivalent_total_resistance_K_W': 0.085, 'includes_contact': True}；来源 'PA-001 test value: heat-pipe equivalent total from a thermal vacuum test, contact included'",
+   "passed": true
+  },
+  {
+   "name": "步骤5 provenance 记录路径 BR 的热阻、计算方法、解析后的输入与数据来源",
+   "expected": "value_K_W 等于 R_K_W[3]，与手算表 0.271616766467066 K/W 的相对误差不超过 1e-12；方法 conduction_plus_contact；输入 {'length_m': 0.08, 'conductivity_W_mK': 167.0, 'area_m2': 0.0025, 'contact_resistance_K_W': 0.08}；导热部分 conduction_K_W 等于 l/(κA) 0.191616766467066 K/W；来源 'PA-001 test value: battery mounting plate and filler'",
+   "actual": "value_K_W 0.271616766467066 K/W，R_K_W[3] 0.271616766467066 K/W，相对误差 1.00e-16；方法 conduction_plus_contact；输入 {'length_m': 0.08, 'conductivity_W_mK': 167.0, 'area_m2': 0.0025, 'contact_resistance_K_W': 0.08, 'conduction_K_W': 0.19161676646706588}；导热部分相对误差 6.07e-17；来源 'PA-001 test value: battery mounting plate and filler'",
+   "passed": true
+  },
+  {
+   "name": "步骤5 provenance 记录路径 DR 的热阻、计算方法、解析后的输入与数据来源",
+   "expected": "value_K_W 等于 R_K_W[4]，与手算表 0.066 K/W 的相对误差不超过 1e-12；方法 equivalent_total；输入 {'equivalent_total_resistance_K_W': 0.045, 'includes_contact': False, 'contact_resistance_K_W': 0.021}；等效路径不记录导热部分；来源 'PA-001 test value: liquid-cooling loop equivalent from a loop test, contact separate'",
+   "actual": "value_K_W 0.066 K/W，R_K_W[4] 0.066 K/W，相对误差 4.71e-17；方法 equivalent_total；输入 {'equivalent_total_resistance_K_W': 0.045, 'includes_contact': False, 'contact_resistance_K_W': 0.021}；来源 'PA-001 test value: liquid-cooling loop equivalent from a loop test, contact separate'",
+   "passed": true
+  },
+  {
+   "name": "步骤5 provenance 记录七个实例的资产标识、资产版本与适用温区",
+   "expected": "{'SolarArray01': ['pa001.solar_array_panel', '1.2.0', 'S', [173.15, 393.15]], 'Compute01': ['pa001.compute_board', '2.0.1', 'J', [233.15, 358.15]], 'ColdPlate01': ['pa001.cold_plate', '1.0.0', 'C', [253.15, 343.15]], 'Battery01': ['pa001.battery_pack', '1.1.0', 'B', [253.15, 333.15]], 'Controller01': ['pa001.power_controller', '1.0.0', 'D', [233.15, 358.15]], 'PDU01': ['pa001.mbsu_block', '3.0.2', 'D', [233.15, 343.15]], 'Radiator01': ['pa001.radiator_panel', '1.4.0', 'R', [173.15, 343.15]]}",
+   "actual": "{'SolarArray01': ['pa001.solar_array_panel', '1.2.0', 'S', [173.15, 393.15]], 'Compute01': ['pa001.compute_board', '2.0.1', 'J', [233.15, 358.15]], 'ColdPlate01': ['pa001.cold_plate', '1.0.0', 'C', [253.15, 343.15]], 'Battery01': ['pa001.battery_pack', '1.1.0', 'B', [253.15, 333.15]], 'Controller01': ['pa001.power_controller', '1.0.0', 'D', [233.15, 358.15]], 'PDU01': ['pa001.mbsu_block', '3.0.2', 'D', [233.15, 343.15]], 'Radiator01': ['pa001.radiator_panel', '1.4.0', 'R', [173.15, 343.15]]}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 provenance 记录表面所属实例、解析后的表面参数与数据来源",
+   "expected": "{'sa01_front': {'instance_id': 'SolarArray01', 'node_id': 'S', 'area_m2': 1.2, 'normal_body': [0.6, 0.0, 0.8], 'absorptivity': 0.91, 'emissivity': 0.85, 'source': 'PA-001 test value: cell side'}, 'sa01_back': {'instance_id': 'SolarArray01', 'node_id': 'S', 'area_m2': 1.2, 'normal_body': [-0.6, 0.0, -0.8], 'absorptivity': 0.3, 'emissivity': 0.8, 'source': 'PA-001 test value: substrate side'}, 'rd01_front': {'instance_id': 'Radiator01', 'node_id': 'R', 'area_m2': 9.197, 'normal_body': [0.0, 1.0, 0.0], 'absorptivity': 0.2, 'emissivity': 0.91, 'source': 'ISS FE parameter table iss_spec.py: OPTICS z93 nominal aged'}, 'rd01_back': {'instance_id': 'Radiator01', 'node_id': 'R', 'area_m2': 9.197, 'normal_body': [0.0, -1.0, 0.0], 'absorptivity': 0.2, 'emissivity': 0.91, 'source': 'ISS FE parameter table iss_spec.py: OPTICS z93 nominal aged'}}",
+   "actual": "{'sa01_front': {'instance_id': 'SolarArray01', 'node_id': 'S', 'area_m2': 1.2, 'normal_body': [0.6, 0.0, 0.8], 'absorptivity': 0.91, 'emissivity': 0.85, 'source': 'PA-001 test value: cell side'}, 'sa01_back': {'instance_id': 'SolarArray01', 'node_id': 'S', 'area_m2': 1.2, 'normal_body': [-0.6, 0.0, -0.8], 'absorptivity': 0.3, 'emissivity': 0.8, 'source': 'PA-001 test value: substrate side'}, 'rd01_front': {'instance_id': 'Radiator01', 'node_id': 'R', 'area_m2': 9.197, 'normal_body': [0.0, 1.0, 0.0], 'absorptivity': 0.2, 'emissivity': 0.91, 'source': 'ISS FE parameter table iss_spec.py: OPTICS z93 nominal aged'}, 'rd01_back': {'instance_id': 'Radiator01', 'node_id': 'R', 'area_m2': 9.197, 'normal_body': [0.0, -1.0, 0.0], 'absorptivity': 0.2, 'emissivity': 0.91, 'source': 'ISS FE parameter table iss_spec.py: OPTICS z93 nominal aged'}}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 instance_map 记录实例与温度节点对应及功率端口来源",
+   "expected": "{'nodes': {'S': ['SolarArray01'], 'J': ['Compute01'], 'C': ['ColdPlate01'], 'B': ['Battery01'], 'D': ['Controller01', 'PDU01'], 'R': ['Radiator01']}, 'ports': {'P_pv_W': 'SolarArray01', 'P_load_W': 'Compute01', 'Q_B_W': 'Battery01', 'Q_D_W': 'PDU01'}}",
+   "actual": "{'nodes': {'S': ['SolarArray01'], 'J': ['Compute01'], 'C': ['ColdPlate01'], 'B': ['Battery01'], 'D': ['Controller01', 'PDU01'], 'R': ['Radiator01']}, 'ports': {'P_pv_W': 'SolarArray01', 'P_load_W': 'Compute01', 'Q_B_W': 'Battery01', 'Q_D_W': 'PDU01'}}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 provenance 记录覆盖值的目标、新旧值与来源",
+   "expected": "[{'target': 'components/Battery01/materials/bt01_li_ion_cells', 'field': 'mass_kg', 'old': 3.2, 'new': 3.45, 'source': 'PA-001 scene override: battery revision B cells and a thinner BR interface filler'}, {'target': 'connections/BR', 'field': 'contact_resistance_K_W', 'old': 0.12, 'new': 0.08, 'source': 'PA-001 scene override: battery revision B cells and a thinner BR interface filler'}]",
+   "actual": "[{'target': 'components/Battery01/materials/bt01_li_ion_cells', 'field': 'mass_kg', 'old': 3.2, 'new': 3.45, 'source': 'PA-001 scene override: battery revision B cells and a thinner BR interface filler'}, {'target': 'connections/BR', 'field': 'contact_resistance_K_W', 'old': 0.12, 'new': 0.08, 'source': 'PA-001 scene override: battery revision B cells and a thinner BR interface filler'}]",
+   "passed": true
+  },
+  {
+   "name": "步骤5 函数没有创建或更新运行温度",
+   "expected": "ThermalParameters 字段为 ('C_J_K', 'R_K_W', 'surfaces', 'instance_map', 'provenance')；函数参数只有 components、connections、overrides；装配期间创建 ThermalState 0 个；字段与其余内部属性中没有 ThermalState，也没有状态温度字段；与温度有关的条目只有温度单位 K 与各实例声明的适用温区边界，节点温区为实例温区的交集",
+   "actual": "字段 ('C_J_K', 'R_K_W', 'surfaces', 'instance_map', 'provenance')；参数 ('components', 'connections', 'overrides')；扫描的属性 ['C_J_K', 'R_K_W', 'surfaces', 'instance_map', 'provenance', '_resolved_snapshot']，其中内部属性 ['_resolved_snapshot']；创建 ThermalState 0 个；状态记录 []；状态字段 []；温度相关条目 ['parameters.provenance.units.temperature', 'parameters.provenance.assets.SolarArray01.temperature_range_K', 'parameters.provenance.assets.Compute01.temperature_range_K', 'parameters.provenance.assets.ColdPlate01.temperature_range_K', 'parameters.provenance.assets.Battery01.temperature_range_K', 'parameters.provenance.assets.Controller01.temperature_range_K', 'parameters.provenance.assets.PDU01.temperature_range_K', 'parameters.provenance.assets.Radiator01.temperature_range_K', 'parameters.provenance.temperature_range_K', 'parameters._resolved_snapshot[1].temperature_range_K']；其中可追溯到声明温区边界的数值 38 个，不可追溯的条目 []；节点温区 {'S': [173.15, 393.15], 'J': [233.15, 358.15], 'C': [253.15, 343.15], 'B': [253.15, 333.15], 'D': [233.15, 343.15], 'R': [173.15, 343.15]}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 重复装配得到相同结果，函数不保留运行状态",
+   "expected": "两次装配的 C_J_K、R_K_W、表面与 provenance 逐项相同",
+   "actual": "C_J_K [2047.1, 1000.0, 2902.8, 4170.4, 109924.12, 66218.4] 与 [2047.1, 1000.0, 2902.8, 4170.4, 109924.12, 66218.4]，相同 True；R_K_W [2.1464071856287426, 0.15416666666666667, 0.085, 0.2716167664670659, 0.066] 与 [2.1464071856287426, 0.15416666666666667, 0.085, 0.2716167664670659, 0.066]，相同 True；表面摘要 SHA-256 fcd545246b8153a4 与 fcd545246b8153a4；provenance 摘要 SHA-256 f15b56f9a83e9c32 与 f15b56f9a83e9c32；逐项相同 True",
+   "passed": true
+  }
+ ],
+ "metrics": {
+  "steps_completed": [
+   "前置条件",
+   "步骤1",
+   "步骤2",
+   "步骤3",
+   "步骤4",
+   "步骤5"
+  ],
+  "C_J_K_baseline": [
+   2047.1,
+   1000.0,
+   2902.8,
+   3910.4,
+   109924.12,
+   66218.4
+  ],
+  "R_K_W_baseline": [
+   2.1464071856287426,
+   0.15416666666666667,
+   0.085,
+   0.3116167664670659,
+   0.066
+  ],
+  "C_J_K_hand_table": [
+   2047.1,
+   1000.0,
+   2902.8,
+   3910.4,
+   109924.12,
+   66218.4
+  ],
+  "R_K_W_hand_table": [
+   2.1464071856287426,
+   0.15416666666666667,
+   0.085,
+   0.3116167664670659,
+   0.066
+  ],
+  "max_rel_error_C_baseline": 8.790254810365005e-17,
+  "max_rel_error_R_baseline": 7.18379604169219e-17,
+  "design_4_5_example_C_J_K": 1000.0,
+  "mbsu_block_C_J_K": 108727.92,
+  "radiator_panel_C_per_area_J_m2K": 7200.0,
+  "C_J_K_override": [
+   2047.1,
+   1000.0,
+   2902.8,
+   4170.4,
+   109924.12,
+   66218.4
+  ],
+  "R_K_W_override": [
+   2.1464071856287426,
+   0.15416666666666667,
+   0.085,
+   0.2716167664670659,
+   0.066
+  ],
+  "max_rel_error_C_override": 8.790254810365005e-17,
+  "max_rel_error_R_override": 1.0005713678720547e-16,
+  "C_B_baseline_J_K": 3910.4,
+  "C_B_override_J_K": 4170.4,
+  "R_BR_baseline_K_W": 0.3116167664670659,
+  "R_BR_override_K_W": 0.2716167664670659,
+  "override_abnormal_total": 5,
+  "override_abnormal_rejected": 5,
+  "R_CR_K_W": 0.085,
+  "R_DR_K_W": 0.066,
+  "R_DR_total_included_K_W": 0.066,
+  "abnormal_case_listed_total": 19,
+  "abnormal_case_listed_rejected": 19,
+  "abnormal_supplementary_total": 27,
+  "abnormal_supplementary_rejected": 27,
+  "abnormal_supplementary_groups": {
+   "missing": {
+    "total": 10,
+    "rejected": 10
+   },
+   "nonfinite": {
+    "total": 6,
+    "rejected": 6
+   },
+   "surface": {
+    "total": 10,
+    "rejected": 10
+   },
+   "duplicate": {
+    "total": 1,
+    "rejected": 1
+   }
+  },
+  "optical_boundary_inputs_accepted": 4,
+  "thermal_state_constructions_during_assembly": 0,
+  "scanned_parameter_attributes": [
+   "C_J_K",
+   "R_K_W",
+   "surfaces",
+   "instance_map",
+   "provenance",
+   "_resolved_snapshot"
+  ],
+  "planned_checks_per_step": {
+   "前置条件": 7,
+   "步骤1": 16,
+   "步骤2": 22,
+   "步骤3": 4,
+   "步骤4": 47,
+   "步骤5": 18
+  }
+ },
+ "summary_cn": "以七个组件实例与五条连接为输入调用 assemble_thermal_parameters，组件含第 4.5 节算例材料与国际空间站模型参数表中的 MBSU 方块和散热器面板。前置条件检查确认组件记录含实例与温度节点对应、材料质量、比热与表面记录，五条连接给出固体路径参数或等效总热阻，MBSU 方块与散热器面板参数取自国际空间站模型参数表，手算表与按同一组输入的精确有理数 T5 计算逐项相等。基准装配的六个热容与五个热阻与手算表逐项比较，热容最大相对误差为 8.8×10^{−17}，热阻最大相对误差为 7.2×10^{−17}，验收限值为 1×10^{−12}，十一项全部满足。第 4.5 节算例热容为 1000 J/K，MBSU 方块热容为 108727.92 J/K，即 108.7 kJ/K，散热器面板单位面积热容为 7200 J·m^{−2}·K^{−1}，即 7.2 kJ·m^{−2}·K^{−1}，三项与验收值 1000 J/K、108.7 kJ/K 与 7.2 kJ·m^{−2}·K^{−1} 一致。C_J_K 与 R_K_W 按 S、J、C、B、D、R 与 SR、JC、CR、BR、DR 的顺序保存，太阳能板与散热板的 4 个表面按资产表面顺序装配了面积、法向、吸收率与发射率。overrides 把电池单体质量由 3.2 kg 改为 3.45 kg，把 BR 接触热阻由 0.12 K/W 改为 0.08 K/W，重新装配后电池热容由 3910.4 J/K 变为 4170.4 J/K，BR 热阻由 0.3116 K/W 变为 0.2716 K/W，覆盖后十一项与手算表的最大相对误差为 1.0×10^{−16}，满足验收限值，其余九项保持资产参数集的值，已应用的覆盖值及其新旧值与来源记入 provenance，调用前后输入记录逐项相同。5 项异常覆盖值全部给出 ThermalConfigurationError。热管等效路径 CR 的热阻为 0.085 K/W，液冷等效路径 DR 的总热阻不含接触部分时叠加 0.021 K/W 接触热阻，热阻为 0.066 K/W，已含接触部分时直接取总热阻，热阻为 0.066 K/W，三项均与手算值一致，没有重复叠加已包含的接触热阻，通过覆盖值给 CR 再加接触热阻时给出 ThermalConfigurationError。案例列出的 19 项异常输入全部给出 ThermalConfigurationError。按第 5.2 节补充的 10 项缺失数据、6 项非有限值、10 项表面面积、光学参数或单位法向不符合 T4 与第 5.1 节要求的输入以及 1 项重复连接全部给出 ThermalConfigurationError。吸收率与发射率取边界值 0 与 1 时正常装配，表面记录保存给定值。上述 52 项输入的报错都指出出错的组件、材料、表面、连接或覆盖值记录，其中由字段取值、字段缺失或多余字段引起的 41 项同时指出该字段，其余 11 项属于记录重复、记录缺失或名称无法对应，报错指出相应记录，同一输入两次调用的报错相同，缺失数据时没有生成默认器件参数。ThermalParameters 的 provenance 记录了单位与节点、路径顺序，逐节点记录了热容、材料份额、解析后的质量、比热与数据来源，逐路径记录了热阻、计算方法、解析后的输入与数据来源，并记录了七个实例的资产标识、资产版本与适用温区，表面所属实例、解析后的表面参数与来源，以及覆盖值的目标、新旧值与来源。装配期间创建的 ThermalState 为 0 个，ThermalParameters 的字段与其余内部属性中与温度有关的数值只有各实例声明的适用温区边界，不含运行温度，重复装配得到相同结果。共 114 项检查，全部通过，满足验收判据。",
+ "anomalies_cn": "无",
+ "environment": {
+  "python": "3.11.9",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "astropy": "8.0.1",
+  "pytest": "9.1.1",
+  "ntu_space_dynamics": "0.1.0",
+  "usd": "0.26.8"
+ },
+ "execution": {
+  "started_utc": "2026-10-05T23:17:02.838518+00:00",
+  "recorded_utc": "2026-10-05T23:40:11.994211+00:00",
+  "collected_functions": 7,
+  "finished_functions": 7,
+  "unexecuted_functions": [],
+  "source_sha256": {
+   "thermal/__init__.py": "ffb342305704801c8871a2af365af61877f7e6485b07ec381e0f777da9d294f5",
+   "thermal/environment.py": "5c3eba796dd28d41a4f1b6fa637ada3c0b8d2942ebc5f65b1e55f1384fa99f41",
+   "thermal/model.py": "9f758d46ea25844878e8cac7ccc402c31610548d255ded7d8d980ae95a965b9e",
+   "thermal/parameters.py": "792e7f5d1175e3564b7486a230039cf026fbad78074cfc8de4fbf352d9c946f9",
+   "thermal/types.py": "2c76359dfa9555ef7d51df83009a5985964c66080dc9062746815451e827a794",
+   "sdtwin_sim/__init__.py": "e2c3bee5849391a86fa79109339d001a75779dd93835d9e829f5f1591de81a31",
+   "sdtwin_sim/coupled.py": "f05e19e220284ad3a0c1e4188eb405fa66b6777f4226decfe95d2c559bca1dff",
+   "sdtwin_sim/earth_flux.py": "03b0d340d77e583cf73a3f0ec31ca0d9830c3bdc5f824903adae266b82a853a2",
+   "sdtwin_sim/power_stand_in.py": "3229251cdd2834bc2df18177c079e651f53a0827fb57cba21527ebdbf281c58f",
+   "sdtwin_sim/scene.py": "b7b1ad5328e6f6278354249e3087d47197895294af8607d21c7dcce354c7ab9b",
+   "tests/conftest.py": "345e7f788242083755505607636fa4af3e88cbf303a6a1728e4ab327e106d11e",
+   "tests/data/dm_001/reference.py": "3bba4938e76134c73272c00250517cc01c519da62f881382ddb42daa9c79fe2c",
+   "tests/data/en_001/en001_reference.py": "73370bd0a9fdc7e7c373e8dda1b5aa0c9a6970dc047fba3cf8a7c3fd808e6ea4",
+   "tests/data/en_003/earth_reference.py": "880154b92405e9af399b772296148219ca78f8ac62e9fcbeaeef67bb45ce117f",
+   "tests/data/en_003/fe_explore.py": "0cceaffd85c2d15b11fee6c7e6b5bbb00a17d94e63940b45a2db1863dfecd473",
+   "tests/data/en_003/fe_export.py": "b33fc7276138dc59e944c5cbfed73acc0d1f1ec2ce7d458b90eed62790aa8f85",
+   "tests/data/en_003/fe_refine.py": "6ad00122cb8f7a65d0f5c23f7c139b20e92d6f75fa0f472b16d2d97628995c43",
+   "tests/data/en_003/fe_refine_ladder.py": "587ffe012aa40955c6b615f68d6e257314ac0bc418765aaa358e17dc848e0580",
+   "tests/data/en_003/ladder_compare.py": "fdf7d4d74fb0f099934f5ef3c3bbdef67df6f7cf3605a5ad1984cb48450cc3ab",
+   "tests/data/fe_001/fe001_support.py": "d1bd978ad70120cf974e46cd996a8367bd5efc08e4d8755405c2a3a21be41051",
+   "tests/data/fe_002/fe002_support.py": "2c27a76b1fd972625293b26b8e1a07d0850ba78254c4457782607279205c4f7c",
+   "tests/data/fe_003/fe003_support.py": "00d548cb2c513707bfeb16f81bf130eded88fb09a87ba8785ad27ee341a985f2",
+   "tests/data/fe_004/fe004_support.py": "54a7d7d8ce2fa0e4f9b054f596a927f8531c0cc0b77a783dcd7ab6973c1f6e44",
+   "tests/data/ht_001/t2_reference.py": "2098ccd9080957ab24ff44712b3b8e688d2b41cfa077e95460a96c82f3d27f89",
+   "tests/data/ht_002/ht002_reference.py": "076d20dec2f98fb84bbbcda17b3a0313de6c8ffb44f4c2121282eb01387bd7e7",
+   "tests/data/ht_003/analytic.py": "5ee9b0e8d1c4e06067e44754c2dd2393218e4d2a6a3d91d64064d726cb06a3a5",
+   "tests/data/ni_001/ni001_support.py": "fc84c2b085ace6fa38819195dd85f0ae47846dbd8505432ef469dd19a276b0c7",
+   "tests/data/ni_002/ni002_reference.py": "b263602b77beb5b57e4b7360db586394228e18381b8f1e40abf20f1c3295665b",
+   "tests/data/ni_003/make_ni003_data.py": "d03cfe33141adc1f8288763c42009504dcdf076ba5e46d9539ddedca64eedce7",
+   "tests/data/ni_003/ni003_support.py": "bc563f0d0b9d56e461eac3e8db7c76b37ce1431468dd4b51d257a4a551257616",
+   "tests/data/ni_003/payload/ni003_payload.py": "4755abecf85fc0e3ee9006954b933ff3e1728e8647f725a0cb05e0bff654d433",
+   "tests/data/ni_003/probe_no_exec.py": "a2d7e9613788aa4f5eb24af6c8b5dac16a234a28b96df880b7a0bfef6672cc32",
+   "tests/data/ni_003/run_alone.py": "932a1b32033842df026eac9a1496ccd301c89291e980e969fbb3a5022acee0f6",
+   "tests/data/pa_001/pa001_inputs.py": "f1b685263ff6770efd7dd01f2f9b378230ab7fab12800b3e5a697d4cf17fc4b4",
+   "tests/data/simready/make_geometry.py": "2a4c7a5b278c7ddcbe2b673950b13c7bdaaf03921f8883693bc30e28c254094c",
+   "tests/data/simready/make_scene_variants.py": "994ca8d44a44023f7d778c0337ad5403420eea194bc8202194c440a28d1f1247",
+   "tests/test_dm_001_data_objects.py": "44d85eac05803a2bb04c5e1d0c2fea1c0c572c60299ee6f28eb7cb4986f897a8",
+   "tests/test_ec_001_power_ports.py": "cdb8dac627ff5e5bd56a852fd6344996658d8dc2df56beebb8efdd5a159c7f67",
+   "tests/test_en_001_surface_environment.py": "1b0f11127159690d57558aedcdece9c11559b2b6dda75637714d26090c0dd679",
+   "tests/test_en_002_surface_heat.py": "c45ab4a04ceaa6211d5aaf72befbf5d95e8e9c7be5b86454ccc4a6b5cae39e34",
+   "tests/test_en_003_earth_flux.py": "eaa1527e9722b6feb07abc9289f43680b60c59791ce838e072a5e24b90e62c79",
+   "tests/test_fe_001_solar_array_fe.py": "f23d462dbbd432308214db7d5634689b059f5e5b1bb4f46251c0836d139f3cd7",
+   "tests/test_fe_002_radiator_fe.py": "f1be285404e242cc6394363eac2ed1345233e1497ed83fff5f4e3dde09260aa1",
+   "tests/test_fe_003_compute_cold_plate_fe.py": "3a9bfdd73afca2fb2257235348b85702707b5c390b1814a3d15621fba39bafce",
+   "tests/test_fe_004_whole_satellite_chain.py": "6aaeec63a82a4031d916d063694f2aa9a6b750c1712ce2bb7ba036497f1e9a66",
+   "tests/test_ht_001_heat_flows.py": "2d91f41677820f09cdb4e6edac6582be56c9647cea59bfaa629e30da1e759049",
+   "tests/test_ht_002_derivative_balance.py": "728e57be7630d1be877a265ad0206e9ab0cef1374a9bd74f20f438f18a0d144b",
+   "tests/test_ht_003_analytic.py": "a66ffc2613929fbd9bb44a0f2a8f1d41879069d1b2d9584f8fb2041f1545e832",
+   "tests/test_ni_001_numerics_eclipse.py": "1f4cba777b1aba392d09bb130ec6652d2b04004a3ac97ea4e49a88424aacdf47",
+   "tests/test_ni_002_end_to_end.py": "fb33ca9517ced5761c63ae7d68cefc72e98c3c3e36c7a8665b0d89fc9d3c696e",
+   "tests/test_ni_003_scene_assembly.py": "2ce365771b66f67e78334bbb3358a210d8eabed0753d82b7abeb4f3e900e6226",
+   "tests/test_pa_001_t5_assembly.py": "fa1b1edba0b491daf8a6e06ecd6d3a1e8baa9307daf94b5d885659a0620e3293"
+  }
+ }
+}

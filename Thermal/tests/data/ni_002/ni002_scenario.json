@@ -1,0 +1,127 @@
+{
+  "case_id": "NI-002",
+  "description": "Frozen inputs of test case NI-002 (end-to-end run and result archive, thermal design 3.3, 6.3, chapter 7 and 9.4). One 24 h run of the example Sat01 scene with the Power stand-in, Orbit two-body 400 km orbit, Orbit sun_position_ephemeris builtin and sun_intensity with eclipse, and the earth_flux provider. The scenario contains 15 complete eclipses and the entry of a 16th one, a load stop and start pair, one injected Power result with event_required True (a confirmed supply shortfall in a known window), one physical battery constraint event (a supply shortfall of the stand-in battery under a request ramp in eclipse), refused and accepted restart commands, and, in a separate repeated run, one injected Power result with valid False. Every value is an illustrative test value; no device has been selected or measured.",
+  "provenance": {
+    "status": "illustrative_test_value",
+    "power_model": "sdtwin_sim.power_stand_in, a stand-in written from the Power design report (P1 to P11, valid and event_required of its 5.1 and 5.5, apply_power_event of 5.6); it is not the production Power module",
+    "schedule_note": "Absolute times were fixed once from the eclipse phases of this orbit (exits of eclipses 0, 3, 4 and 9 at 3858.33 s, 20521.81 s, 26076.30 s and 53848.77 s) and end in .5 s so that no scheduled instant falls on the 60 s output grid. The test checks the intended illumination of every scheduled instant against its own cylindrical shadow calculation.",
+    "temperature_note": "The 55 degree Sun tilt and the 60 W request keep the battery temperature inside the stand-in material range [253.15, 333.15] K during the disconnected periods; the injected window lies in eclipse 0 while the satellite is still warm, the stop and start pair follows the exit of eclipse 3, and the physical shortfall is placed in the last 950 s of eclipse 9 so that the dark rest after it is short."
+  },
+  "scene_file": "../simready/sat01_scene.json",
+  "run_id": "ni002.run",
+  "invalid_run_id": "ni002.invalid",
+  "hot_run_id": "ni002.hot",
+  "epoch_utc": "2026-03-20T12:00:00+00:00",
+  "duration_s": 86400.0,
+  "orbit": {
+    "altitude_m": 400000.0,
+    "earth_radius_m": 6378137.0,
+    "eccentricity": 0.0,
+    "inclination_deg": 51.6,
+    "raan_deg": 0.0,
+    "argument_of_perigee_deg": 0.0,
+    "true_anomaly_deg": 0.0,
+    "propagator": "ntu_space_dynamics.TwoBodyPropagator",
+    "ephemeris_step_s": 30.0,
+    "ephemeris_margin_s": 120.0,
+    "sun_ephemeris": "builtin",
+    "sun_step_s": 600.0,
+    "sun_margin_s": 1200.0,
+    "sun_tilt_deg": 55.0,
+    "attitude_comment": "Sun-tracking attitude: body +Z is the orbit normal projected normal to the satellite-to-Sun direction u, body +X = cos(tilt) u - sin(tilt) w with w = Z x u, body +Y = Z x X. The SolarArray01 front (body +X) sees the Sun at the tilt angle.",
+    "earth_flux_model": {
+      "albedo": 0.3,
+      "olr_W_m2": 237.0,
+      "solar_constant_W_m2": 1361.0,
+      "resolution": [
+        24,
+        48
+      ]
+    }
+  },
+  "power": {
+    "initial_x_n": 0.75,
+    "initial_x_n_source": "Sat01 scene; x_p computed from the same cell-pack lithium inventory as the explicitly declared scene initial value.",
+    "record_initial_T_B_K": 293.15,
+    "record_initial_T_B_K_note": "Validation copy of the ThermalState initial temperature; runtime temperature is read from the thermal trial state.",
+    "base_request_W": 60.0,
+    "base_request_source": "rated_power_W of the Compute01 asset sdtwin.example.compute_board 0.1.0",
+    "ramp": {
+      "start_s": 52898.5,
+      "end_s": 53798.5,
+      "start_W": 60.0,
+      "end_W": 250.0,
+      "comment": "Request rises for 900 s and returns to base at end_s, about 50 s before eclipse exit."
+    }
+  },
+  "commands": [
+    {
+      "time_s": 3108.5,
+      "kind": "start",
+      "command_id": "ni002.start.in_window",
+      "expect_connected_after": false
+    },
+    {
+      "time_s": 3408.5,
+      "kind": "start",
+      "command_id": "ni002.start.after_window",
+      "expect_connected_after": true
+    },
+    {
+      "time_s": 20701.5,
+      "kind": "stop",
+      "command_id": "ni002.stop.ops",
+      "expect_connected_after": false
+    },
+    {
+      "time_s": 21301.5,
+      "kind": "start",
+      "command_id": "ni002.start.ops",
+      "expect_connected_after": true
+    },
+    {
+      "time_s": 53598.5,
+      "kind": "start",
+      "command_id": "ni002.start.in_ramp",
+      "expect_connected_after": false
+    },
+    {
+      "time_s": 54148.5,
+      "kind": "start",
+      "command_id": "ni002.start.after_ramp",
+      "expect_connected_after": true
+    }
+  ],
+  "injection": {
+    "event_required": {
+      "window_s": [
+        2958.5,
+        3258.5
+      ],
+      "reason": "supply_shortfall: injected by the NI-002 test through PowerCoupling.solve",
+      "comment": "while the load is connected inside the window the wrapped solve returns valid True, event_required True, can_supply_request False without ports; while it is disconnected inside the window the stand-in result is returned with can_supply_request False; outside the window the stand-in result is returned unchanged"
+    },
+    "invalid": {
+      "from_s": 26976.5,
+      "reason": "numerical_failure: injected by the NI-002 test through PowerCoupling.solve",
+      "comment": "the first Power trial at or after from_s returns valid False without ports; the run must report it and stop"
+    }
+  },
+  "hot_probe": {
+    "duration_s": 600.0,
+    "temperature_K": {
+      "S": 300.0,
+      "J": 365.0,
+      "C": 330.0,
+      "B": 320.0,
+      "D": 300.0,
+      "R": 290.0
+    },
+    "comment": "short coupled run of the same scene and orbit with J above its declared range [253.15, 358.15] K and B above [263.15, 318.15] K but inside the Power material range; Thermal must only report the ranges"
+  },
+  "acceptance": {
+    "repeat_max_abs_difference": 1e-12,
+    "event_time_tol_s_from_power_numerics": true,
+    "eclipse_reference_tolerance_s": 1.0
+  }
+}
