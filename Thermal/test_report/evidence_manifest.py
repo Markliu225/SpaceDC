@@ -82,6 +82,10 @@ def build():
         'comsol_model_files': inventory([ROOT / 'iss_fem' / 'out' / 'comsol' / name for name in
                                         ('iss_nom0_29756.mph', 'iss_cold0_34584.mph', 'iss_hot75_2404.mph')]),
         'evidence_files': inventory(result_paths), 'reports': inventory(reports),
+        'quality_assurance': inventory([ROOT / 'test_report' / 'qa' / name for name in
+                                       ('report_content_audit.json', 'visual_inspection.json',
+                                        'adaptive_reference_validation.json', 'ladder_baseline_reproduction.json',
+                                        'ladder_sampling_validation.json')]),
         'comsol_refinement': {
             'cases': ['cold0', 'nom0', 'hot75'], 'levels': ['2x6', '4x12', '8x24'],
             'requested_tlist': 'range(10920,360,16560)', 'sample_count_per_case': 16,

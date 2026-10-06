@@ -37,11 +37,11 @@
   },
   "EN-003": {
     "case_id": "EN-003",
-    "source_sha256": "75b43f7c7f72fd870de3b8196433bea5a6d6efffbe7ab3d7950043b9c27f9c1a",
-    "summary_cn": "用对地平板解析视角系数、独立地心面元积分和蒙特卡罗积分检查 earth_flux。相对误差判据保持为 1%，仅数值零使用 1×10^{−12} W/m² 绝对容限。有限元对比保留原 2×6 地球离散数据，对相同时刻的热载荷、周期平均值与峰值执行 3% 判据。散热器对比使用不受另一翼遮挡的外侧面，内侧面差异另作诊断。原始参考数据存在超限项，详细数值见后表。另完成 1 个工况的 2×6、4×12 与 8×24 地球离散对比，比较固定采样时刻的平均热载荷。加密结果用于核对参照，不能覆盖原验收结果，也不等同于整段温度计算已收敛。",
-    "summary_en": "earth_flux was checked against the analytic nadir-plate view factor, independent geocentric quadrature and Monte Carlo integration. The relative criterion remains 1%; only numerical zero uses an absolute tolerance of 1×10^{−12} W/m². The original FE comparison retains the 2×6 planet discretisation and applies the 3% criterion to simultaneous loads, orbit means and peaks. Radiator comparisons use the outer faces without obstruction by the other wing; inner faces are diagnostic. Original-reference exceedances remain in the following tables. A further 1 cases compare 2×6, 4×12 and 8×24 planet discretisations using mean loads at fixed sample instants. Refinement verifies the reference; it neither replaces the original acceptance nor establishes convergence of the full temperature simulation.",
-    "anomalies_cn": "本用例未满足全部要求，记录 19 项未通过检查。超限数值及证据范围见实际结果和后续对比表。每项预期值、实际值与判定保存在 tests/results/EN-003.json。",
-    "anomalies_en": "The case does not meet all recorded requirements. The measured exceedances and their evidence limits are stated above and in the comparison tables. Failed check count: 19. See tests/results/EN-003.json for each expected value, actual value and verdict.",
+    "source_sha256": "05765426e05ca2f0542982212b355d562fa72a711fcd3d60973e6ee93fa5c93a",
+    "summary_cn": "用对地平板解析视角系数、独立地心面元积分和蒙特卡罗积分检查 earth_flux。相对误差判据保持为 1%，仅数值零使用 1×10^{−12} W/m² 绝对容限。有限元对比保留原 2×6 地球离散数据，对相同时刻的热载荷、周期平均值与峰值执行 3% 判据。散热器对比使用不受另一翼遮挡的外侧面，内侧面差异另作诊断。原始参考数据存在超限项，详细数值见后表。另完成 3 个工况的 2×6、4×12 与 8×24 地球离散对比，比较固定采样时刻的平均热载荷。加密结果用于核对参照，不能覆盖原验收结果，也不等同于整段温度计算已收敛。",
+    "summary_en": "earth_flux was checked against the analytic nadir-plate view factor, independent geocentric quadrature and Monte Carlo integration. The relative criterion remains 1%; only numerical zero uses an absolute tolerance of 1×10^{−12} W/m². The original FE comparison retains the 2×6 planet discretisation and applies the 3% criterion to simultaneous loads, orbit means and peaks. Radiator comparisons use the outer faces without obstruction by the other wing; inner faces are diagnostic. Original-reference exceedances remain in the following tables. A further 3 cases compare 2×6, 4×12 and 8×24 planet discretisations using mean loads at fixed sample instants. Refinement verifies the reference; it neither replaces the original acceptance nor establishes convergence of the full temperature simulation.",
+    "anomalies_cn": "本用例未满足全部要求，记录 17 项未通过检查。超限数值及证据范围见实际结果和后续对比表。每项预期值、实际值与判定保存在 tests/results/EN-003.json。",
+    "anomalies_en": "The case does not meet all recorded requirements. The measured exceedances and their evidence limits are stated above and in the comparison tables. Failed check count: 17. See tests/results/EN-003.json for each expected value, actual value and verdict.",
     "status": "fail"
   },
   "HT-001": {

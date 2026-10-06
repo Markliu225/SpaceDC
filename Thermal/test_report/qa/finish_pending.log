@@ -3,3 +3,16 @@
 2026-10-06T08:17:24+08:00 Completed refinement levels: ['hot75/4x12', 'hot75/8x24', 'nom0/4x12']
 2026-10-06T09:20:24+08:00 Completed refinement levels: ['hot75/4x12', 'hot75/8x24', 'nom0/4x12', 'nom0/8x24']
 2026-10-06T09:29:54+08:00 Completed refinement levels: ['hot75/4x12', 'hot75/8x24', 'nom0/4x12', 'nom0/8x24', 'cold0/4x12']
+2026-10-06T10:35:25+08:00 Completed refinement levels: ['hot75/4x12', 'hot75/8x24', 'nom0/4x12', 'nom0/8x24', 'cold0/4x12', 'cold0/8x24']
+2026-10-06T10:35:25+08:00 All refinement data are available; starting the final EN-003 rerun.
+2026-10-06T10:36:29+08:00 EN-003 execution complete; acceptance status: fail.
+2026-10-06T10:36:29+08:00 Running C:\Users\markl\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe C:\Workspace\SpaceDC\Thermal\test_report\reviewed_results.py
+2026-10-06T10:36:30+08:00 Running C:\Users\markl\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe C:\Workspace\SpaceDC\Thermal\test_report\figures_results.py
+2026-10-06T10:36:32+08:00 Running C:\Users\markl\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe C:\Workspace\SpaceDC\Thermal\test_report\build_test_report.py cn
+2026-10-06T10:36:33+08:00 Running powershell -NoProfile -ExecutionPolicy Bypass -File C:\Workspace\SpaceDC\Thermal\test_report\finalize.ps1 -Name SDTwin_Thermal_Test_Report_CN
+2026-10-06T10:36:47+08:00 Running C:\Users\markl\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe C:\Workspace\SpaceDC\Thermal\test_report\build_test_report.py en
+2026-10-06T10:36:48+08:00 Running powershell -NoProfile -ExecutionPolicy Bypass -File C:\Workspace\SpaceDC\Thermal\test_report\finalize.ps1 -Name SDTwin_Thermal_Test_Report_EN
+2026-10-06T10:36:57+08:00 Running C:\Users\markl\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe C:\Workspace\SpaceDC\Thermal\test_report\qa\audit_reports.py
+2026-10-06T10:37:00+08:00 Running C:\Workspace\SpaceDC\Thermal\.venv\Scripts\python.exe C:\Workspace\SpaceDC\Thermal\test_report\evidence_manifest.py
+2026-10-06T10:37:02+08:00 Running C:\Users\markl\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe C:\Workspace\SpaceDC\Thermal\test_report\qa\render_review.py C:\Workspace\SpaceDC\Thermal\SDTwin_Thermal_Test_Report_CN.pdf C:\Workspace\SpaceDC\Thermal\SDTwin_Thermal_Test_Report_EN.pdf
+2026-10-06T10:37:11+08:00 Final reports and evidence manifest generated. Final page-image inspection remains required.

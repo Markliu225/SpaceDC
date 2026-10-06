@@ -1,0 +1,183 @@
+{
+  "cases": {
+    "DM-001": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true
+    },
+    "PA-001": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true
+    },
+    "EN-001": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true
+    },
+    "EN-002": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true
+    },
+    "EN-003": {
+      "status": "fail",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true
+    },
+    "HT-001": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true
+    },
+    "HT-002": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true
+    },
+    "HT-003": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true
+    },
+    "EC-001": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true
+    },
+    "FE-001": {
+      "status": "fail",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true
+    },
+    "FE-002": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true
+    },
+    "FE-003": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true
+    },
+    "FE-004": {
+      "status": "fail",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true
+    },
+    "NI-001": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true
+    },
+    "NI-002": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true
+    },
+    "NI-003": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true
+    }
+  },
+  "reports": {
+    "CN": {
+      "pages": 35,
+      "tables": 33,
+      "figures": 3,
+      "page_characters": [
+        164,
+        258,
+        3318,
+        976,
+        827,
+        906,
+        996,
+        1309,
+        1113,
+        1205,
+        1182,
+        1262,
+        1105,
+        1040,
+        973,
+        1131,
+        1049,
+        1177,
+        1239,
+        650,
+        1200,
+        559,
+        1029,
+        1342,
+        679,
+        1115,
+        1251,
+        1292,
+        1016,
+        867,
+        755,
+        806,
+        918,
+        1448,
+        1307
+      ],
+      "sha256": {
+        "docx": "033f8c2f6d6a8bc3dc53b5b34287b5fa0830d7895c79c221bb783a6155eb9a1f",
+        "pdf": "6c5d8b37bfa06090135bcab2f4c45482cdc9d40c201e855efc3efb93f8403df6"
+      }
+    },
+    "EN": {
+      "pages": 39,
+      "tables": 33,
+      "figures": 3,
+      "page_characters": [
+        400,
+        640,
+        3493,
+        2345,
+        2527,
+        1698,
+        2043,
+        2710,
+        3299,
+        2808,
+        2679,
+        2505,
+        2559,
+        2047,
+        2165,
+        2215,
+        2739,
+        2543,
+        2559,
+        2913,
+        2828,
+        1187,
+        2765,
+        1375,
+        1801,
+        2660,
+        3176,
+        987,
+        2781,
+        2598,
+        3219,
+        2354,
+        2078,
+        1878,
+        1479,
+        1925,
+        1611,
+        2761,
+        3068
+      ],
+      "sha256": {
+        "docx": "4b5087c97aaac5f98afef02abd928376b74110a444acf1acd53dfaa0e0082605",
+        "pdf": "7438bda9d0a8182e0737cf28942b96a15a50343086f0c98f020599a4ae981be0"
+      }
+    }
+  },
+  "visual_review": "See rendered page images and separate visual inspection record."
+}

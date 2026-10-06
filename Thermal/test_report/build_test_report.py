@@ -415,6 +415,11 @@ class Writer:
         label(9, 0, lab[11]); wide(9, c['actual'])
         label(10, 0, lab[12]); short(10, 1, ''); label(10, 2, lab[13]); short(10, 3, conclusion_marks(self.lang, c['status']))
         label(11, 0, lab[14]); wide(11, c['anomaly'])
+        # Keep the case identifier with its objective instead of leaving a lone
+        # header row at a page bottom.
+        for cell in t.rows[0].cells:
+            for paragraph in cell.paragraphs:
+                paragraph.paragraph_format.keep_with_next = True
         return self._place(t._tbl)
 
 
@@ -1188,7 +1193,8 @@ def build(lang, out_name=None):
                'correction and repeat testing before reassessment. This report retains the measured results.')
 
     # ------------------------------------------------------------ 5 conditions
-    w.heading(1, t['h'][7])
+    conditions_heading = w.heading(1, t['h'][7])
+    ppr(conditions_heading).append(w_el('w:pageBreakBefore'))
     for line in C['conditions']:
         w.bullet(line)
     if RESULTS:
