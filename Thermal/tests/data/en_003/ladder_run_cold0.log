@@ -1,0 +1,10 @@
+09:20:32 cold0 4x12 loaded 18.5 s
+09:20:34 cold0 4x12 activate ['ht', 'on', 'htlsh', 'on', 'ge', 'on', 'otl_body', 'off', 'otl_hrs', 'on', 'otl_sarj', 'off', 'otl_saw', 'on', 'frame:spatial1', 'on', 'frame:material1', 'on'] tlist range(10920,360,16560)
+09:29:31 cold0 4x12 stdL solved in 536.9 s
+09:29:32 cold0 4x12 exported, total 559.4 s
+09:29:32 written C:\Workspace\SpaceDC\Thermal\tests\data\en_003\fe_loads_ladder_cold0.json 4x12@range(10920,360,16560)
+09:29:39 cold0 8x24 loaded 6.7 s
+09:29:43 cold0 8x24 activate ['ht', 'on', 'htlsh', 'on', 'ge', 'on', 'otl_body', 'off', 'otl_hrs', 'on', 'otl_sarj', 'off', 'otl_saw', 'on', 'frame:spatial1', 'on', 'frame:material1', 'on'] tlist range(10920,360,16560)
+10:35:20 cold0 8x24 stdL solved in 3937.1 s
+10:35:21 cold0 8x24 exported, total 3948.0 s
+10:35:21 written C:\Workspace\SpaceDC\Thermal\tests\data\en_003\fe_loads_ladder_cold0.json 8x24@range(10920,360,16560)

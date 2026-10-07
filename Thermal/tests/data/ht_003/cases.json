@@ -1,0 +1,121 @@
+{
+ "case_id": "HT-003",
+ "title": "解析解对比",
+ "design_basis": "SDTwin thermal design 4.3 equation T3 and chapter 8 table 8; test case HT-003 of the Chinese test report",
+ "description": "Three analytic cases integrated through sdtwin_sim.coupled.run_coupled as thermal-only runs with prescribed Power ports and the RK45 solver. Each case uses its own ThermalParameters assembled with assemble_thermal_parameters from the instance list below. Nodes that take no part in a case are kept out of the way with a path resistance of 1e12 K/W, zero port powers and exposed surfaces with zero absorptivity and zero emissivity. A temperature that the case holds constant is represented by a capacitance of 1e12 J/K.",
+ "epoch_utc": "2026-10-05T00:00:00+00:00",
+ "asset_version": "ht003-test-1",
+ "specific_heat_J_kgK": 1000.0,
+ "specific_heat_source": "HT-003 test configuration: every material portion uses 1000 J/(kg K), so a capacitance C in J/K is a mass of C/1000 kg (design 4.5 T5 first line)",
+ "temperature_range_K": [150.0, 400.0],
+ "temperature_range_source": "HT-003 test configuration: declared range of the constant node parameters, wide enough for every temperature of the three cases",
+ "large_resistance_K_W": 1.0e12,
+ "large_capacitance_J_K": 1.0e12,
+ "isolation_note": "A path of 1e12 K/W carries at most 1e-10 W for a 100 K difference, about 3e-13 of the 300 W case power. A node of 1e12 J/K that receives 300 W changes by 3e-10 K/s, so its drift over a run stays below 1e-6 K, three orders below the 0.001 K acceptance threshold.",
+ "instances": [
+  {"instance_id": "SolarArray01", "node_id": "S", "asset_id": "ht003_solar_array", "ports": ["P_pv_W"]},
+  {"instance_id": "Compute01", "node_id": "J", "asset_id": "ht003_compute", "ports": ["P_load_W"]},
+  {"instance_id": "ColdPlate01", "node_id": "C", "asset_id": "ht003_cold_plate", "ports": []},
+  {"instance_id": "Battery01", "node_id": "B", "asset_id": "ht003_battery", "ports": ["Q_B_W"]},
+  {"instance_id": "Controller01", "node_id": "D", "asset_id": "ht003_controller", "ports": []},
+  {"instance_id": "PDU01", "node_id": "D", "asset_id": "ht003_pdu", "ports": ["Q_D_W"]},
+  {"instance_id": "Radiator01", "node_id": "R", "asset_id": "ht003_radiator", "ports": []}
+ ],
+ "surfaces": {
+  "SolarArray01": [
+   {"surface_id": "SolarArray01_front", "normal_body": [0.0, 1.0, 0.0], "area_m2": 1.0},
+   {"surface_id": "SolarArray01_back", "normal_body": [0.0, -1.0, 0.0], "area_m2": 1.0}
+  ],
+  "Radiator01": [
+   {"surface_id": "Radiator01_front", "normal_body": [1.0, 0.0, 0.0], "area_m2": 1.0},
+   {"surface_id": "Radiator01_back", "normal_body": [-1.0, 0.0, 0.0], "area_m2": 1.0}
+  ]
+ },
+ "environment": {
+  "position_m": [7.0e6, 0.0, 0.0],
+  "sun_position_m": [1.496e11, 0.0, 0.0],
+  "quaternion_xyzw": [0.0, 0.0, 0.0, 1.0],
+  "earth_flux_disabled_reason": "HT-003 analytic cases: Earth albedo and infrared are switched off so that the only environmental input is the stated direct sunlight (thermal design 9.4 teaching simplification, recorded here)",
+  "source": "HT-003 test configuration: fixed GCRS geometry with the satellite-to-Sun direction along +x and the identity body-to-GCRS attitude, so the radiator front normal faces the Sun with cos_incidence 1 and the back normal faces away"
+ },
+ "solver_settings": {
+  "method": "RK45",
+  "rtol": 1.0e-8,
+  "atol_T_K": 1.0e-8,
+  "max_step_s": 10.0,
+  "output_step_s": 1.0,
+  "environment_step_s": 60.0,
+  "event_time_tol_s": 0.001
+ },
+ "solver_settings_source": "Thermal design chapter 8 table 8: adaptive RK45 with a dimensionless relative tolerance, a temperature absolute tolerance in K and a maximum step in s. The values are the tighter of the two settings listed for test case NI-001; output spacing 1 s on the accepted solution. environment_step_s and event_time_tol_s are required by SolverSettings; the constant environment has no eclipse boundary and a thermal-only run has no Power event.",
+ "acceptance": {
+  "step_response_max_error_K": 0.001,
+  "steady_state_error_K": 0.001
+ },
+ "cases": {
+  "step": {
+   "label": "单节点阶跃",
+   "run_id": "HT-003-step",
+   "t_end_s": 600.0,
+   "G_W_m2": 0.0,
+   "mass_kg": {"SolarArray01": 1.0, "Compute01": 0.5, "ColdPlate01": 1.0e9, "Battery01": 1.0, "Controller01": 0.5, "PDU01": 0.5, "Radiator01": 1.0},
+   "mass_source": "HT-003 input: C_J = 500 J/K; the cold plate held at constant temperature is a 1e12 J/K heat sink; other nodes 1000 J/K",
+   "resistance_K_W": {"SR": 1.0e12, "JC": 0.1, "CR": 1.0e12, "BR": 1.0e12, "DR": 1.0e12},
+   "resistance_source": "HT-003 input: R_JC = 0.1 K/W; SR, CR, BR and DR are 1e12 K/W isolation paths",
+   "optical": {
+    "SolarArray01": {"absorptivity": 0.0, "emissivity": 0.0},
+    "Radiator01": {"absorptivity": 0.0, "emissivity": 0.0}
+   },
+   "optical_source": "HT-003 test configuration: exposed surfaces exchange nothing with the environment in this case",
+   "initial_temperature_K": {"S": 293.15, "J": 293.15, "C": 293.15, "B": 293.15, "D": 293.15, "R": 293.15},
+   "ports_W": {"P_pv_W": 0.0, "P_load_W": 0.0, "Q_B_W": 0.0, "Q_D_W": 0.0},
+   "load_step": {"time_s": 100.0, "before_W": 0.0, "after_W": 300.0, "label": "P_load step from 0 W to 300 W"},
+   "analytic_inputs": {"C_J_J_K": 500.0, "R_JC_K_W": 0.1, "P_load_W": 300.0, "step_time_s": 100.0, "T_C_K": 293.15},
+   "dense_grid_step_s": 0.05,
+   "series_decimation": 1,
+   "note": "The load is zero for 100 s, then steps to 300 W; the run ends 10 time constants R_JC C_J = 50 s after the step."
+  },
+  "series": {
+   "label": "串联稳态",
+   "run_id": "HT-003-series",
+   "t_end_s": 3000.0,
+   "G_W_m2": 0.0,
+   "mass_kg": {"SolarArray01": 1.0, "Compute01": 0.5, "ColdPlate01": 1.0, "Battery01": 1.0, "Controller01": 0.5, "PDU01": 0.5, "Radiator01": 1.0e9},
+   "mass_source": "HT-003 series case: C_J = 500 J/K as in the step case, C_C = 1000 J/K chosen for the test; the radiator held at constant temperature is a 1e12 J/K heat sink; other nodes 1000 J/K",
+   "resistance_K_W": {"SR": 1.0e12, "JC": 0.1, "CR": 0.05, "BR": 1.0e12, "DR": 1.0e12},
+   "resistance_source": "HT-003 series case: R_JC = 0.1 K/W as in the step case, R_CR = 0.05 K/W chosen for the test; SR, BR and DR are 1e12 K/W isolation paths",
+   "optical": {
+    "SolarArray01": {"absorptivity": 0.0, "emissivity": 0.0},
+    "Radiator01": {"absorptivity": 0.0, "emissivity": 0.0}
+   },
+   "optical_source": "HT-003 test configuration: exposed surfaces exchange nothing with the environment in this case",
+   "initial_temperature_K": {"S": 293.15, "J": 293.15, "C": 293.15, "B": 293.15, "D": 293.15, "R": 293.15},
+   "ports_W": {"P_pv_W": 0.0, "P_load_W": 300.0, "Q_B_W": 0.0, "Q_D_W": 0.0},
+   "load_step": null,
+   "analytic_inputs": {"C_J_J_K": 500.0, "C_C_J_K": 1000.0, "R_JC_K_W": 0.1, "R_CR_K_W": 0.05, "P_load_W": 300.0, "T_R_K": 293.15, "T_J0_K": 293.15, "T_C0_K": 293.15},
+   "series_decimation": 10,
+   "note": "Hand calculation: the two time constants are 100 s and 25 s, so 3000 s is 30 slow time constants and the remaining transient is below 1e-11 K."
+  },
+  "radiation": {
+   "label": "辐射平衡",
+   "run_id": "HT-003-radiation",
+   "t_end_s": 4000.0,
+   "G_W_m2": 1000.0,
+   "mass_kg": {"SolarArray01": 1.0, "Compute01": 0.5, "ColdPlate01": 1.0, "Battery01": 1.0, "Controller01": 0.5, "PDU01": 0.5, "Radiator01": 1.0},
+   "mass_source": "HT-003 radiation case: C_R = 1000 J/K chosen for the test; other nodes 1000 J/K or 500 J/K",
+   "resistance_K_W": {"SR": 1.0e12, "JC": 0.1, "CR": 1.0e12, "BR": 1.0e12, "DR": 1.0e12},
+   "resistance_source": "HT-003 radiation case: SR, CR, BR and DR are 1e12 K/W isolation paths, so the radiator has only its fixed input power and its own surface radiation; JC carries no flow because J and C stay equal",
+   "optical": {
+    "SolarArray01": {"absorptivity": 0.0, "emissivity": 0.0},
+    "Radiator01": {"absorptivity": 0.6, "emissivity": 0.8}
+   },
+   "optical_source": "HT-003 radiation case: both radiator faces absorptivity 0.6 and emissivity 0.8; only the front face sees the Sun, so the fixed input power is 0.6 x 1000 W/m2 x 1 m2 = 600 W; the solar array exchanges nothing with the environment",
+   "initial_temperature_K": {"S": 293.15, "J": 293.15, "C": 293.15, "B": 293.15, "D": 293.15, "R": 320.0},
+   "ports_W": {"P_pv_W": 0.0, "P_load_W": 0.0, "Q_B_W": 0.0, "Q_D_W": 0.0},
+   "load_step": null,
+   "analytic_inputs": {"absorptivity": 0.6, "G_W_m2": 1000.0, "sunlit_area_m2": 1.0, "cos_incidence": 1.0, "emissivity": 0.8, "radiating_area_m2": 2.0, "C_R_J_K": 1000.0, "T_R0_K": 320.0},
+   "series_decimation": 10,
+   "note": "The radiator starts at 320 K and cools towards its radiation balance; the linearised time constant C_R / (4 eps sigma A T^3) is about 119 s, so 4000 s is about 34 time constants."
+  }
+ }
+}

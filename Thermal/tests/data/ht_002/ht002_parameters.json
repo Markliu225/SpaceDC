@@ -1,0 +1,84 @@
+{
+ "description": "Parameter sets of test case HT-002. Every value is an illustrative test value, not a selected device parameter. 'sat01_like' follows the materials, optical properties and connections of the Sat01 example assets in tests/data/simready with the surface areas and body normals written out directly. 'battery_example' replaces node B and path BR by the battery example of thermal design 4.3: C_B = 1000 J/K from one 1 kg portion at 1000 J/(kg K), the material example of design 4.5, and R_BR = 0.5 K/W.",
+ "sets": {
+  "sat01_like": {
+   "components": [
+    {"instance_id": "SolarArray01", "node_id": "S", "asset_id": "sdtwin.example.solar_array_panel", "asset_version": "0.1.0",
+     "materials": [
+      {"material_id": "S_substrate_honeycomb_cfrp", "mass_kg": 1.65, "cp_J_kgK": 930.0, "source": "illustrative test value for HT-002: honeycomb with CFRP facesheets"},
+      {"material_id": "S_cells_and_coverglass", "mass_kg": 0.72, "cp_J_kgK": 760.0, "source": "illustrative test value for HT-002: cells with coverglass"}
+     ],
+     "surfaces": [
+      {"surface_id": "SolarArray01.front", "area_m2": 0.6, "normal_body": [1.0, 0.0, 0.0], "absorptivity": 0.91, "emissivity": 0.85, "source": "illustrative test value for HT-002: cell side, 1.0 m by 0.6 m, body +X"},
+      {"surface_id": "SolarArray01.back", "area_m2": 0.6, "normal_body": [-1.0, 0.0, 0.0], "absorptivity": 0.88, "emissivity": 0.86, "source": "illustrative test value for HT-002: black CFRP back, body -X"}
+     ],
+     "temperature_range_K": [173.15, 383.15], "ports": ["P_pv_W"]},
+    {"instance_id": "Compute01", "node_id": "J", "asset_id": "sdtwin.example.compute_board", "asset_version": "0.1.0",
+     "materials": [
+      {"material_id": "J_pcb_laminate", "mass_kg": 0.25, "cp_J_kgK": 1100.0, "source": "illustrative test value for HT-002: FR-4 class laminate"},
+      {"material_id": "J_copper_spreader", "mass_kg": 0.40, "cp_J_kgK": 385.0, "source": "illustrative test value for HT-002: copper spreader"},
+      {"material_id": "J_soc_module_package", "mass_kg": 0.28, "cp_J_kgK": 700.0, "source": "illustrative test value for HT-002: system-on-module package"}
+     ],
+     "surfaces": [],
+     "temperature_range_K": [253.15, 358.15], "ports": ["P_load_W"]},
+    {"instance_id": "ColdPlate01", "node_id": "C", "asset_id": "sdtwin.example.cold_plate", "asset_version": "0.1.0",
+     "materials": [
+      {"material_id": "C_plate_al6061", "mass_kg": 0.62, "cp_J_kgK": 896.0, "source": "illustrative test value for HT-002: Al 6061 plate"}
+     ],
+     "surfaces": [],
+     "temperature_range_K": [243.15, 343.15], "ports": []},
+    {"instance_id": "Battery01", "node_id": "B", "asset_id": "sdtwin.example.battery_pack", "asset_version": "0.1.0",
+     "materials": [
+      {"material_id": "B_li_ion_cells", "mass_kg": 0.76, "cp_J_kgK": 1040.0, "source": "illustrative test value for HT-002: sixteen cells, lumped specific heat"},
+      {"material_id": "B_enclosure_al", "mass_kg": 0.32, "cp_J_kgK": 896.0, "source": "illustrative test value for HT-002: aluminium enclosure"}
+     ],
+     "surfaces": [],
+     "temperature_range_K": [263.15, 318.15], "ports": ["Q_B_W"]},
+    {"instance_id": "Controller01", "node_id": "D", "asset_id": "sdtwin.example.power_controller", "asset_version": "0.1.0",
+     "materials": [
+      {"material_id": "D_controller_housing_al", "mass_kg": 0.42, "cp_J_kgK": 896.0, "source": "illustrative test value for HT-002: controller housing"},
+      {"material_id": "D_controller_pcb", "mass_kg": 0.18, "cp_J_kgK": 1100.0, "source": "illustrative test value for HT-002: control boards"}
+     ],
+     "surfaces": [],
+     "temperature_range_K": [243.15, 343.15], "ports": []},
+    {"instance_id": "PDU01", "node_id": "D", "asset_id": "sdtwin.example.pdu", "asset_version": "0.1.0",
+     "materials": [
+      {"material_id": "D_pdu_housing_al", "mass_kg": 0.31, "cp_J_kgK": 896.0, "source": "illustrative test value for HT-002: PDU housing"},
+      {"material_id": "D_pdu_harness_cu", "mass_kg": 0.22, "cp_J_kgK": 385.0, "source": "illustrative test value for HT-002: harness copper assigned to node D"}
+     ],
+     "surfaces": [],
+     "temperature_range_K": [243.15, 343.15], "ports": ["Q_D_W"]},
+    {"instance_id": "Radiator01", "node_id": "R", "asset_id": "sdtwin.example.radiator_panel", "asset_version": "0.1.0",
+     "materials": [
+      {"material_id": "R_facesheet_al6061", "mass_kg": 2.592, "cp_J_kgK": 896.0, "source": "illustrative test value for HT-002: 0.8 m by 0.6 m by 2 mm aluminium facesheet"},
+      {"material_id": "R_embedded_heat_pipes", "mass_kg": 0.36, "cp_J_kgK": 900.0, "source": "illustrative test value for HT-002: embedded heat-pipe sections"}
+     ],
+     "surfaces": [
+      {"surface_id": "Radiator01.front", "area_m2": 0.48, "normal_body": [0.0, -1.0, 0.0], "absorptivity": 0.20, "emissivity": 0.88, "source": "illustrative test value for HT-002: white paint, body -Y"},
+      {"surface_id": "Radiator01.back", "area_m2": 0.48, "normal_body": [0.0, 1.0, 0.0], "absorptivity": 0.30, "emissivity": 0.80, "source": "illustrative test value for HT-002: treated aluminium back, body +Y"}
+     ],
+     "temperature_range_K": [173.15, 343.15], "ports": []}
+   ],
+   "connections": [
+    {"path": "SR", "length_m": 0.15, "conductivity_W_mK": 6.7, "area_m2": 2.0e-4, "contact_resistance_K_W": 2.0, "source": "illustrative test value for HT-002: titanium hinge bracket plus bolted contact"},
+    {"path": "JC", "length_m": 0.003, "conductivity_W_mK": 167.0, "area_m2": 0.0135, "contact_resistance_K_W": 0.05, "source": "illustrative test value for HT-002: aluminium pedestal plus gap pad"},
+    {"path": "CR", "equivalent_total_resistance_K_W": 0.12, "includes_contact": true, "source": "illustrative test value for HT-002: heat-pipe equivalent total including contacts"},
+    {"path": "BR", "length_m": 0.05, "conductivity_W_mK": 167.0, "area_m2": 4.0e-4, "contact_resistance_K_W": 0.3, "source": "illustrative test value for HT-002: aluminium bracket plus contact"},
+    {"path": "DR", "length_m": 0.04, "conductivity_W_mK": 167.0, "area_m2": 6.0e-4, "contact_resistance_K_W": 0.25, "source": "illustrative test value for HT-002: shared mounting deck plus contact"}
+   ]
+  },
+  "battery_example": {
+   "base": "sat01_like",
+   "replace_components": {
+    "Battery01": {
+     "materials": [
+      {"material_id": "B_example_portion", "mass_kg": 1.0, "cp_J_kgK": 1000.0, "source": "thermal design report 4.5 example: 1 kg at 1000 J/(kg K) gives 1000 J/K, the C_B of the battery example of 4.3"}
+     ]
+    }
+   },
+   "replace_connections": {
+    "BR": {"path": "BR", "equivalent_total_resistance_K_W": 0.5, "includes_contact": true, "source": "thermal design report 4.3 battery example: R_BR = 0.5 K/W"}
+   }
+  }
+ }
+}

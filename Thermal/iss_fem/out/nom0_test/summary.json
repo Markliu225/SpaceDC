@@ -1,0 +1,79 @@
+{
+ "tag": "nom0_test",
+ "case": "nom0",
+ "mesh": {
+  "tri": 17748,
+  "tet": 19907
+ },
+ "orbit": {
+  "period": 5553.624271252228,
+  "funcs": {
+   "rx": "6778137.0*cos((2*pi*t/5553.6243+0.000000))",
+   "ry": "6778137.0*sin((2*pi*t/5553.6243+0.000000))*cos(0.90128803)",
+   "rz": "6778137.0*sin((2*pi*t/5553.6243+0.000000))*sin(0.90128803)"
+  },
+  "rays": [
+   "-1.00000000",
+   "0.00000000",
+   "-0.00000000"
+  ],
+  "sun_ecs": [
+   1.0,
+   -0.0,
+   0.0
+  ],
+  "eclipse_deg": 140.43586256254395,
+  "R": 6778137.0
+ },
+ "probe_only": true,
+ "datasets": [
+  [
+   "dset4",
+   "sol4"
+  ],
+  [
+   "dset5",
+   "sol5"
+  ]
+ ],
+ "temperature_dataset": "dset4",
+ "loops": {
+  "A": {
+   "Q_pickup_lastorbit_mean_W": 23314.207383872923,
+   "Q_rad_lastorbit_mean_W": 23933.585374204486,
+   "f_min": 0.07198093828723162,
+   "f_max": 0.2388168902960188
+  },
+  "B": {
+   "Q_pickup_lastorbit_mean_W": 17621.26406643228,
+   "Q_rad_lastorbit_mean_W": 18595.422909953828,
+   "f_min": 0.03947896567054387,
+   "f_max": 0.20787543912710132
+  },
+  "PVP4": {
+   "Q_pickup_lastorbit_mean_W": 2896.3476399138626,
+   "Q_rad_lastorbit_mean_W": 4125.269726164727,
+   "f_min": 0.020009244084165136,
+   "f_max": 0.29999995288257
+  },
+  "PVP6": {
+   "Q_pickup_lastorbit_mean_W": 2898.2413569654186,
+   "Q_rad_lastorbit_mean_W": 4126.890370396251,
+   "f_min": 0.020035735903788723,
+   "f_max": 0.29999995288257
+  },
+  "PVS4": {
+   "Q_pickup_lastorbit_mean_W": 2948.199371095104,
+   "Q_rad_lastorbit_mean_W": 4160.911173061849,
+   "f_min": 0.020372180183686948,
+   "f_max": 0.29999995288257
+  },
+  "PVS6": {
+   "Q_pickup_lastorbit_mean_W": 2956.7244134369416,
+   "Q_rad_lastorbit_mean_W": 4168.4317791628455,
+   "f_min": 0.020373050980989568,
+   "f_max": 0.29999995288257
+  }
+ },
+ "periodicity_lastorbit_minus_previous_C": {}
+}

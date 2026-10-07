@@ -1,0 +1,712 @@
+{
+ "case_id": "EC-001",
+ "status": "pass",
+ "checks": [
+  {
+   "name": "前提：HT-002 已通过",
+   "expected": "tests/results/HT-002.json, written by tests/test_ht_002_derivative_balance.py, has case_id HT-002, status pass and every recorded check passed (precondition of EC-001)",
+   "actual": "case_id 'HT-002', status 'pass', 21 of 21 checks passed, file written 2026-10-05T23:17:05+00:00",
+   "passed": true
+  },
+  {
+   "name": "前提：装配热容与 T5 手算一致",
+   "expected": "six capacitances equal m cp sums, relative error <= 1e-12",
+   "actual": "C_J_K ['2081.7', '435.8', '698.88', '1077.12', '936.78', '2653.6'] J/K, largest relative error 0",
+   "passed": true
+  },
+  {
+   "name": "前提：装配热阻与 T5 手算一致",
+   "expected": "five resistances equal l/(k A) + R_contact or the equivalent total",
+   "actual": "R_K_W ['113.940299', '0.051330672', '0.12', '1.04850299', '0.649201597'] K/W, largest relative error 0",
+   "passed": true
+  },
+  {
+   "name": "前提：四个功率端口的实例对应一致",
+   "expected": "thermal port instances and Power links both equal {'P_pv_W': 'SolarArray01', 'P_load_W': 'Compute01', 'Q_B_W': 'Battery01', 'Q_D_W': 'PDU01'}; Power PORT_NAMES ('P_pv_W', 'P_load_W', 'Q_B_W', 'Q_D_W')",
+   "actual": "thermal {'P_pv_W': 'SolarArray01', 'P_load_W': 'Compute01', 'Q_B_W': 'Battery01', 'Q_D_W': 'PDU01'}; Power links {'P_pv_W': 'SolarArray01', 'P_load_W': 'Compute01', 'Q_B_W': 'Battery01', 'Q_D_W': 'PDU01'}; Power PORT_NAMES ('P_pv_W', 'P_load_W', 'Q_B_W', 'Q_D_W'); surface order kept True",
+   "passed": true
+  },
+  {
+   "name": "第1步：端口与实例错配的联合配置被拒绝",
+   "expected": "Power links Q_B_W to PDU01 and Q_D_W to Battery01: CoupledConfigurationError naming Q_B_W before any integration; array position alone must not connect a value to the wrong device (design 5.1)",
+   "actual": "CoupledConfigurationError: Power port Q_B_W is linked to 'PDU01' but the thermal instance map takes it from 'Battery01'; array position alone must not connect a value to the wrong device (thermal design 5.1)",
+   "passed": true
+  },
+  {
+   "name": "前提：absorbed_solar_S_W 与手算一致",
+   "expected": "A alpha G max(0, cos) of the S surfaces, relative error <= 1e-12",
+   "actual": "module 643.5486737046391 W, hand 643.5486737046391 W, relative error 0",
+   "passed": true
+  },
+  {
+   "name": "第1步：功率取值覆盖用例输入范围",
+   "expected": "P_pv in [0, absorbed_solar_S_W], P_load in [0, rated], Q_B positive and negative, Q_D positive",
+   "actual": "absorbed_solar_S_W 643.548674 W, rated 60.0 W, values {'P_pv_W': [0.0, 160.88716842615977, 482.66150527847935, 643.5486737046391], 'P_load_W': [0.0, 15.0, 45.0, 60.0], 'Q_B_W': [-6.0, -1.5, 6.0, 12.0], 'Q_D_W': [0.5, 10.0]}",
+   "passed": true
+  },
+  {
+   "name": "第1步：P_pv_W 只改变太阳能板导数",
+   "expected": "the other five derivatives do not change (0 K/s, at most 1e-12 of the S change)",
+   "actual": "largest change of the other five nodes 0.0 K/s over 4 values",
+   "passed": true
+  },
+  {
+   "name": "第1步：P_pv_W 导数变化与手算一致",
+   "expected": "change of dT_S = -delta P_pv_W / C_S, relative error <= 1e-12",
+   "actual": "largest relative error 3.59e-16; P_pv_W=0 W: dT_S change 0.154572866817 K/s, hand 0.154572866817 K/s; P_pv_W=160.887 W: dT_S change 0.0772864334083 K/s, hand 0.0772864334083 K/s; P_pv_W=482.662 W: dT_S change -0.0772864334083 K/s, hand -0.0772864334083 K/s; P_pv_W=643.549 W: dT_S change -0.154572866817 K/s, hand -0.154572866817 K/s",
+   "passed": true
+  },
+  {
+   "name": "第1步：P_pv_W 变化满足 T1 整体热平衡",
+   "expected": "sum C_i change of dT_i = -delta P_pv_W, relative error <= 1e-12",
+   "actual": "largest relative error 3.53e-16",
+   "passed": true
+  },
+  {
+   "name": "第1步：P_load_W 只改变计算节点导数",
+   "expected": "the other five derivatives do not change (0 K/s, at most 1e-12 of the J change)",
+   "actual": "largest change of the other five nodes 0.0 K/s over 4 values",
+   "passed": true
+  },
+  {
+   "name": "第1步：P_load_W 导数变化与手算一致",
+   "expected": "change of dT_J = +delta P_load_W / C_J, relative error <= 1e-12",
+   "actual": "largest relative error 6.05e-16; P_load_W=0 W: dT_J change -0.0688389169344 K/s, hand -0.0688389169344 K/s; P_load_W=15 W: dT_J change -0.0344194584672 K/s, hand -0.0344194584672 K/s; P_load_W=45 W: dT_J change 0.0344194584672 K/s, hand 0.0344194584672 K/s; P_load_W=60 W: dT_J change 0.0688389169344 K/s, hand 0.0688389169344 K/s",
+   "passed": true
+  },
+  {
+   "name": "第1步：P_load_W 变化满足 T1 整体热平衡",
+   "expected": "sum C_i change of dT_i = +delta P_load_W, relative error <= 1e-12",
+   "actual": "largest relative error 5.92e-16",
+   "passed": true
+  },
+  {
+   "name": "第1步：Q_B_W 只改变电池导数",
+   "expected": "the other five derivatives do not change (0 K/s, at most 1e-12 of the B change)",
+   "actual": "largest change of the other five nodes 0.0 K/s over 4 values",
+   "passed": true
+  },
+  {
+   "name": "第1步：Q_B_W 导数变化与手算一致",
+   "expected": "change of dT_B = +delta Q_B_W / C_B, relative error <= 1e-12",
+   "actual": "largest relative error 3.11e-16; Q_B_W=-6 W: dT_B change -0.00696301247772 K/s, hand -0.00696301247772 K/s; Q_B_W=-1.5 W: dT_B change -0.00278520499109 K/s, hand -0.00278520499109 K/s; Q_B_W=6 W: dT_B change 0.00417780748663 K/s, hand 0.00417780748663 K/s; Q_B_W=12 W: dT_B change 0.00974821746881 K/s, hand 0.00974821746881 K/s",
+   "passed": true
+  },
+  {
+   "name": "第1步：Q_B_W 变化满足 T1 整体热平衡",
+   "expected": "sum C_i change of dT_i = +delta Q_B_W, relative error <= 1e-12",
+   "actual": "largest relative error 2.96e-16",
+   "passed": true
+  },
+  {
+   "name": "第1步：Q_D_W 只改变电源设备导数",
+   "expected": "the other five derivatives do not change (0 K/s, at most 1e-12 of the D change)",
+   "actual": "largest change of the other five nodes 0.0 K/s over 2 values",
+   "passed": true
+  },
+  {
+   "name": "第1步：Q_D_W 导数变化与手算一致",
+   "expected": "change of dT_D = +delta Q_D_W / C_D, relative error <= 1e-12",
+   "actual": "largest relative error 0; Q_D_W=0.5 W: dT_D change -0.00266871624074 K/s, hand -0.00266871624074 K/s; Q_D_W=10 W: dT_D change 0.00747240547407 K/s, hand 0.00747240547407 K/s",
+   "passed": true
+  },
+  {
+   "name": "第1步：Q_D_W 变化满足 T1 整体热平衡",
+   "expected": "sum C_i change of dT_i = +delta Q_D_W, relative error <= 1e-12",
+   "actual": "largest relative error 0",
+   "passed": true
+  },
+  {
+   "name": "第1步：六个组件导数与独立实现一致",
+   "expected": "|C_i dT_i - net_i| / gross_i <= 1e-12 for all six nodes, independent T2 to T4",
+   "actual": "largest 4.17e-17 over 15 evaluations, base dT [0.04680431978473928, -0.37819021312552475, 0.09989596909355497, -0.007461942212462923, -0.01817352683048129, -0.008312555681724986] K/s",
+   "passed": true
+  },
+  {
+   "name": "第1步：ThermalInputs 保留端口数值与符号",
+   "expected": "every port value is stored unchanged, Q_B_W keeps its sign",
+   "actual": "all stored values identical True",
+   "passed": true
+  },
+  {
+   "name": "第1步：同一时刻的输入不产生温区警告",
+   "expected": "no ThermalRangeWarning at temperatures inside the declared ranges",
+   "actual": "0 warning(s)",
+   "passed": true
+  },
+  {
+   "name": "第1步：替代程序 Power 结果进入 T3 与独立实现一致",
+   "expected": "valid Power stand-in result without event; its four ports give |C_i dT_i - net_i| / gross_i <= 1e-12",
+   "actual": "valid True, event_required False, reason 'charge_limited: charging held at -2.855238933180834 A per ce', ports {'P_pv_W': 159.093923, 'P_load_W': 60.0, 'Q_B_W': 2.910663, 'Q_D_W': 3.157895} W, largest 7.47e-17",
+   "passed": true
+  },
+  {
+   "name": "第2步：Q_B 取负值时电池温度导数依次减小",
+   "expected": "dT_B(0) > dT_B(-0.5) > dT_B(-2.0) > dT_B(-8.0)",
+   "actual": "dT_B ['-0.00885454470801', '-0.00931874553985', '-0.0107113480354', '-0.0162817580176'] K/s",
+   "passed": true
+  },
+  {
+   "name": "第2步：负 Q_B 引起的导数减小量与手算一致",
+   "expected": "dT_B(Q_B) - dT_B(0) = Q_B / C_B, relative error <= 1e-12",
+   "actual": "largest relative error 7.01e-16; decreases ['-0.000464200831848', '-0.00185680332739', '-0.00742721330957'] K/s, hand ['-0.000464200831848', '-0.00185680332739', '-0.00742721330957'] K/s",
+   "passed": true
+  },
+  {
+   "name": "第2步：Q_B 保留符号不被截断",
+   "expected": "ThermalInputs keeps Q_B_W < 0 and dT_B(+8.0) - dT_B(-8.0) = 2 8.0 / C_B",
+   "actual": "stored values kept True; difference 0.014854426619132506 K/s, relative error 2.34e-16",
+   "passed": true
+  },
+  {
+   "name": "第2步：替代程序在额定负载下小电流充电给出负 Q_B",
+   "expected": "request 60.0 W equal to the rated load 60.0 W; G chosen so that P_pv_max exceeds P_need = request / eta_D by 6.0 W; valid result without event, P_load_W equal to the request, the battery port absorbs the 6.0 W surplus within power_residual_tol_W 1e-06 W, charging current i < 0 and net battery heat Q_B_W < 0 (reversible heat)",
+   "actual": "G 530.785366 W/m2, reason 'supplied', P_pv_W 69.15789473683616 W, P_pv_max 69.15789473684211 W, P_need 63.15789473684211 W, P_load_W 60.0 W, P_B_W -5.999999999994039 W, Q_B_W -0.007398277016713549 W, i -0.19563734887172285 A per cell, reversible heat -0.002683906243341055 W per cell",
+   "passed": true
+  },
+  {
+   "name": "第2步：替代程序的负 Q_B 进入电池方程与手算一致",
+   "expected": "dT_B = (Q_B - q_BR) / C_B and dT_B(Q_B) - dT_B(0) = Q_B / C_B, relative errors <= 1e-12",
+   "actual": "dT_B -0.008861413280697394 K/s, hand -0.008861413280697394 K/s, error 0; decrease error 4.76e-14; six nodes 1.31e-17",
+   "passed": true
+  },
+  {
+   "name": "第3步：Power 替代程序最大可发功率与手算一致",
+   "expected": "P_pv_max = eta A G max(0, cos), relative error <= 1e-12",
+   "actual": "stand-in 177.32948344114095 W, hand 177.32948344114095 W, error 0",
+   "passed": true
+  },
+  {
+   "name": "第3步：降低 P_pv 后未输出功率留在太阳能板",
+   "expected": "C_S (dT_S(reduced) - dT_S(P_pv_max)) = P_pv_max - P_pv, relative error <= 1e-12",
+   "actual": "largest relative error 8.01e-16; P_pv 132.997113 W: C_S change 44.3323708603 W, unexported 44.3323708603 W; P_pv 88.664742 W: C_S change 88.6647417206 W, unexported 88.6647417206 W; P_pv 0.000000 W: C_S change 177.329483441 W, unexported 177.329483441 W",
+   "passed": true
+  },
+  {
+   "name": "第3步：降低 P_pv 时其余组件导数不变",
+   "expected": "J, C, B, D and R derivatives unchanged",
+   "actual": "largest change 0.0 K/s",
+   "passed": true
+  },
+  {
+   "name": "第3步：降低 P_pv 后整体储热速率增加量等于少输出的电功率",
+   "expected": "sum C_i change of dT_i = P_pv_max - P_pv (T1), relative error <= 1e-12",
+   "actual": "largest relative error 8.01e-16",
+   "passed": true
+  },
+  {
+   "name": "第3步：替代程序限充时降低实际 P_pv",
+   "expected": "valid result with reason charge_limited and P_pv_W < P_pv_max (Power design 4.2, 5.5)",
+   "actual": "reason 'charge_limited', P_pv_W 25.73648364583133 W, P_pv_max 177.32948344114095 W, curtailed 151.59299979530962 W, stand-in diagnostics curtailed_W 151.59299979530962 W",
+   "passed": true
+  },
+  {
+   "name": "第3步：限充少输出的电功率留在太阳能板能量收支中",
+   "expected": "C_S (dT_S(actual P_pv) - dT_S(P_pv_max)) = P_pv_max - P_pv, relative error <= 1e-12; six nodes match",
+   "actual": "retained 151.59299979530965 W, unexported 151.59299979530962 W, error 1.87e-16; six nodes 1.22e-17",
+   "passed": true
+  },
+  {
+   "name": "第4步：P_pv_W 为负被拒绝",
+   "expected": "ThermalInputError naming inputs.P_pv_W >= 0 (design 5.6); no ThermalEvaluation returned; a repeated call gives the same class and message",
+   "actual": "ThermalInputError: inputs.P_pv_W must be >= 0, got -1.0; Thermal does not repair Power results (design 5.6); repeated identical True",
+   "passed": true
+  },
+  {
+   "name": "第4步：P_load_W 为负被拒绝",
+   "expected": "ThermalInputError naming inputs.P_load_W >= 0 (design 5.6); no ThermalEvaluation returned; a repeated call gives the same class and message",
+   "actual": "ThermalInputError: inputs.P_load_W must be >= 0, got -1.0; Thermal does not repair Power results (design 5.6); repeated identical True",
+   "passed": true
+  },
+  {
+   "name": "第4步：Q_D_W 为负被拒绝",
+   "expected": "ThermalInputError naming inputs.Q_D_W >= 0 (design 5.6); no ThermalEvaluation returned; a repeated call gives the same class and message",
+   "actual": "ThermalInputError: inputs.Q_D_W must be >= 0, got -0.5; Thermal does not repair Power results (design 5.6); repeated identical True",
+   "passed": true
+  },
+  {
+   "name": "第4步：P_pv 略大于 absorbed_solar_S_W 被拒绝",
+   "expected": "ThermalInputError: P_pv_W 643.5486743481878 W exceeds absorbed_solar_S_W (design 4.4, 5.6); no ThermalEvaluation returned; a repeated call gives the same class and message",
+   "actual": "ThermalInputError: inputs.P_pv_W 643.5486743481878 W exceeds absorbed_solar_S_W 643.5486737046391 W; the actual solar electrical output cannot exceed the direct sunlight absorbed by S (design 4.4, 5.6); repeated identical True",
+   "passed": true
+  },
+  {
+   "name": "第4步：P_pv 大于 absorbed_solar_S_W 被拒绝",
+   "expected": "ThermalInputError: P_pv_W 693.5486737046391 W exceeds absorbed_solar_S_W (design 4.4, 5.6); no ThermalEvaluation returned; a repeated call gives the same class and message",
+   "actual": "ThermalInputError: inputs.P_pv_W 693.5486737046391 W exceeds absorbed_solar_S_W 643.5486737046391 W; the actual solar electrical output cannot exceed the direct sunlight absorbed by S (design 4.4, 5.6); repeated identical True",
+   "passed": true
+  },
+  {
+   "name": "第4步：日食时 P_pv 大于零被拒绝",
+   "expected": "ThermalInputError: P_pv_W 0.001 W exceeds absorbed_solar_S_W (design 4.4, 5.6); no ThermalEvaluation returned; a repeated call gives the same class and message",
+   "actual": "ThermalInputError: inputs.P_pv_W 0.001 W exceeds absorbed_solar_S_W 0.0 W; the actual solar electrical output cannot exceed the direct sunlight absorbed by S (design 4.4, 5.6); repeated identical True",
+   "passed": true
+  },
+  {
+   "name": "第4步：P_pv 等于 absorbed_solar_S_W 时正常计算",
+   "expected": "P_pv = absorbed_solar_S_W and, in eclipse, P_pv = 0 are inside the bound and return a ThermalEvaluation",
+   "actual": "at the bound evaluated; eclipse zero evaluated",
+   "passed": true
+  },
+  {
+   "name": "第4步：valid 为假的 temperature_out_of_range 结果不含功率端口",
+   "expected": "stand-in result valid=False with reason temperature_out_of_range, all four ports None (Power design 5.1)",
+   "actual": "valid False, event_required False, reason 'temperature_out_of_range: PowerInputs.T_B_K=340.0 K lies outside battery.limits.T_range_K (253.15, 333.15)', ports {'P_pv_W': None, 'P_load_W': None, 'Q_B_W': None, 'Q_D_W': None}",
+   "passed": true
+  },
+  {
+   "name": "第4步：valid 为假的 temperature_out_of_range 结果不能构成 ThermalInputs",
+   "expected": "ThermalInputError: a missing port of an unusable Power result is not replaced by zero; no ThermalEvaluation returned; a repeated call gives the same class and message",
+   "actual": "ThermalInputError: ThermalInputs.P_pv_W is missing (None); an invalid Power result or one that requires an event provides no ports and must not reach the thermal derivative (design 5.6); repeated identical True",
+   "passed": true
+  },
+  {
+   "name": "第4步：valid 为假的 temperature_out_of_range 结果不进入 thermal_derivative",
+   "expected": "ThermalInputError: such a result must not reach the thermal derivative (design 5.6); no ThermalEvaluation returned; a repeated call gives the same class and message",
+   "actual": "ThermalInputError: inputs come from a Power result that is invalid or requires an event; such a result must not reach the thermal derivative (design 5.6); repeated identical True",
+   "passed": true
+  },
+  {
+   "name": "第4步：valid 为假的 invalid_input 结果不含功率端口",
+   "expected": "stand-in result valid=False with reason invalid_input, all four ports None (Power design 5.1)",
+   "actual": "valid False, event_required False, reason \"invalid_input: PowerInputs.instance_id='Sat02' differs from PowerState.instance_id='Sat01'\", ports {'P_pv_W': None, 'P_load_W': None, 'Q_B_W': None, 'Q_D_W': None}",
+   "passed": true
+  },
+  {
+   "name": "第4步：valid 为假的 invalid_input 结果不能构成 ThermalInputs",
+   "expected": "ThermalInputError: a missing port of an unusable Power result is not replaced by zero; no ThermalEvaluation returned; a repeated call gives the same class and message",
+   "actual": "ThermalInputError: ThermalInputs.P_pv_W is missing (None); an invalid Power result or one that requires an event provides no ports and must not reach the thermal derivative (design 5.6); repeated identical True",
+   "passed": true
+  },
+  {
+   "name": "第4步：valid 为假的 invalid_input 结果不进入 thermal_derivative",
+   "expected": "ThermalInputError: such a result must not reach the thermal derivative (design 5.6); no ThermalEvaluation returned; a repeated call gives the same class and message",
+   "actual": "ThermalInputError: inputs come from a Power result that is invalid or requires an event; such a result must not reach the thermal derivative (design 5.6); repeated identical True",
+   "passed": true
+  },
+  {
+   "name": "第4步：event_required 为真的 supply_shortfall 结果不含功率端口",
+   "expected": "stand-in result valid=True, event_required=True with reason supply_shortfall, all four ports None (Power design 5.1)",
+   "actual": "valid True, event_required True, reason 'supply_shortfall: the largest battery port power in the allowed discharge interval is 23.948259691809472 W, below the re', ports {'P_pv_W': None, 'P_load_W': None, 'Q_B_W': None, 'Q_D_W': None}",
+   "passed": true
+  },
+  {
+   "name": "第4步：event_required 为真的 supply_shortfall 结果不能构成 ThermalInputs",
+   "expected": "ThermalInputError: a missing port of an unusable Power result is not replaced by zero; no ThermalEvaluation returned; a repeated call gives the same class and message",
+   "actual": "ThermalInputError: ThermalInputs.P_pv_W is missing (None); an invalid Power result or one that requires an event provides no ports and must not reach the thermal derivative (design 5.6); repeated identical True",
+   "passed": true
+  },
+  {
+   "name": "第4步：event_required 为真的 supply_shortfall 结果不进入 thermal_derivative",
+   "expected": "ThermalInputError: such a result must not reach the thermal derivative (design 5.6); no ThermalEvaluation returned; a repeated call gives the same class and message",
+   "actual": "ThermalInputError: inputs come from a Power result that is invalid or requires an event; such a result must not reach the thermal derivative (design 5.6); repeated identical True",
+   "passed": true
+  },
+  {
+   "name": "第4步：event_required 为真的 device_boundary 结果不含功率端口",
+   "expected": "stand-in result valid=True, event_required=True with reason device_boundary, all four ports None (Power design 5.1)",
+   "actual": "valid True, event_required True, reason 'device_boundary: PowerState.x_n=0.96 lies outside the material range (0.01, 0.95)', ports {'P_pv_W': None, 'P_load_W': None, 'Q_B_W': None, 'Q_D_W': None}",
+   "passed": true
+  },
+  {
+   "name": "第4步：event_required 为真的 device_boundary 结果不能构成 ThermalInputs",
+   "expected": "ThermalInputError: a missing port of an unusable Power result is not replaced by zero; no ThermalEvaluation returned; a repeated call gives the same class and message",
+   "actual": "ThermalInputError: ThermalInputs.P_pv_W is missing (None); an invalid Power result or one that requires an event provides no ports and must not reach the thermal derivative (design 5.6); repeated identical True",
+   "passed": true
+  },
+  {
+   "name": "第4步：event_required 为真的 device_boundary 结果不进入 thermal_derivative",
+   "expected": "ThermalInputError: such a result must not reach the thermal derivative (design 5.6); no ThermalEvaluation returned; a repeated call gives the same class and message",
+   "actual": "ThermalInputError: inputs come from a Power result that is invalid or requires an event; such a result must not reach the thermal derivative (design 5.6); repeated identical True",
+   "passed": true
+  },
+  {
+   "name": "第4步：带完整端口但 valid 为假的输入被拒绝",
+   "expected": "ThermalInputError for valid=False, event_required=False even with four numeric ports; no ThermalEvaluation returned; a repeated call gives the same class and message",
+   "actual": "ThermalInputError: inputs come from a Power result that is invalid or requires an event; such a result must not reach the thermal derivative (design 5.6); repeated identical True",
+   "passed": true
+  },
+  {
+   "name": "第4步：带完整端口但 event_required 为真的输入被拒绝",
+   "expected": "ThermalInputError for valid=True, event_required=True even with four numeric ports; no ThermalEvaluation returned; a repeated call gives the same class and message",
+   "actual": "ThermalInputError: inputs come from a Power result that is invalid or requires an event; such a result must not reach the thermal derivative (design 5.6); repeated identical True",
+   "passed": true
+  },
+  {
+   "name": "第4步：有效且无事件的同类输入正常计算",
+   "expected": "valid=True, event_required=False with the same ports gives the ThermalInputs evaluation",
+   "actual": "result evaluated, identical derivatives True",
+   "passed": true
+  },
+  {
+   "name": "第4步：功率与热状态不在同一时刻时被拒绝",
+   "expected": "ThermalInputs and thermal_derivative reject a time_s that differs from the environment or the state (6.1)",
+   "actual": "inputs ThermalInputError: ThermalInputs.environment.time_s 0.0 differs from ThermalInputs.time_s 1.0; state ThermalInputError: inputs.time_s 0.0 differs from state.time_s 1.0",
+   "passed": true
+  },
+  {
+   "name": "第4步：热模块输出不含负载启停字段",
+   "expected": "ThermalEvaluation fields are exactly ['Q_emit_W', 'Q_env_W', 'T_B_K', 'T_J_K', 'dT_dt_K_s', 'q_W', 'run_id', 'time_s']; thermal_derivative(state, inputs, parameters) receives no Power protection state",
+   "actual": "fields ['Q_emit_W', 'Q_env_W', 'T_B_K', 'T_J_K', 'dT_dt_K_s', 'q_W', 'run_id', 'time_s']; parameters ['state', 'inputs', 'parameters']",
+   "passed": true
+  },
+  {
+   "name": "第4步联合运行：valid 为假时报告错误并停止",
+   "expected": "CoupledRunError, archive status stopped, error kind power_invalid in a trial evaluation (context integration or event_location) at a time >= 1510.0 s, every accepted state before 1510.0 s",
+   "actual": "error CoupledRunError, status stopped, kind power_invalid, context 'integration', time 1511.5872589485373 s, last accepted 1467.219554341651 s, power reason 'numerical_failure: injected by the EC-001 test'",
+   "passed": true
+  },
+  {
+   "name": "第4步联合运行：valid 为假时不执行保护规则",
+   "expected": "no Power event applied, load stays connected and not latched (Power design 5.5, thermal design 5.6)",
+   "actual": "events 0, load_connected True, trip_latched False",
+   "passed": true
+  },
+  {
+   "name": "第4步联合运行：valid 为假的结果没有进入热导数",
+   "expected": "every thermal_derivative call follows a valid Power result without event at the same instant with identical ports; the injected invalid result is followed by no thermal call",
+   "actual": "{'power_calls': 326, 'thermal_calls': 310, 'evaluation_records': 326, 'power_state_mismatch': 0, 'unusable_power_calls': 1, 'unusable_reaching_thermal': 0, 'thermal_without_usable_power': 0, 'thermal_port_mismatch': 0, 'thermal_T_B_mismatch': 0, 'evaluation_copy_mismatch': 0, 'battery_echo_mismatch': 0, 'record_without_power': 0}",
+   "passed": true
+  },
+  {
+   "name": "第4步联合运行：供电不足事件在容限内定位",
+   "expected": "run completes; supply_loss located by bisection at window start 610.0 s within event_time_tol_s 0.001 s, bracket width <= tolerance",
+   "actual": "status completed, events [(610.0003202763392, 'supply_loss', 'located'), (1210.0, 'start', 'command')], located at 610.0003202763392 s, offset 0.00032027633915276965 s, bracket [609.9997828208423, 610.0003202763392]",
+   "passed": true
+  },
+  {
+   "name": "第4步联合运行：供电不足事件按失电保护处理并重算",
+   "expected": "decision valid and event_required with reason supply_shortfall; apply_power_event disconnects and latches; Power recomputed at the same instant gives P_load_W = 0 and Q_D_W = 0",
+   "actual": "decision {'valid': True, 'event_required': True, 'can_supply_request': False, 'reason': 'supply_shortfall: injected by the EC-001 test'}; before {'load_connected': True, 'trip_latched': False}; after {'load_connected': False, 'trip_latched': True}; recomputed {'P_pv_W': 40.43793268932112, 'P_load_W': 0.0, 'Q_B_W': 0.6032690495574569, 'Q_D_W': 0.0, 'reason': 'charge_limited: charging held at -1.2035099014678905 A per cell by the voltage bound, actual solar output 40.43793268932112 W of 145.99732035281653 W available'}",
+   "passed": true
+  },
+  {
+   "name": "第4步联合运行：失电后热模块不重启负载",
+   "expected": "between 610.0003 s and the start command at 1210.0 s every output sample has load_connected False and P_load_W = 0, although Power reports can_supply_request True after the window closes",
+   "actual": "10 samples, P_load_W max 0.0, any connected False; 47 Power calls after the window with can_supply_request all True True",
+   "passed": true
+  },
+  {
+   "name": "第4步联合运行：启动指令由 Power 接通负载",
+   "expected": "the start command at 1210.0 s reconnects through apply_power_event with can_supply_request True; P_load_W = 60.0 W before the event and after the command",
+   "actual": "start event 1210.0 s source command, decision {'valid': True, 'event_required': False, 'can_supply_request': True, 'reason': 'charge_limited: charging held at -0.575883852471581 A per cell by the voltage bound, actual solar output 19.34969744304476 W of 145.98914498946348 W available'}, after {'load_connected': True, 'trip_latched': False}; P_load_W after the command [60.0]",
+   "passed": true
+  },
+  {
+   "name": "第4步联合运行：事件前后温度不跳变",
+   "expected": "the accepted state at the event instant, the state of the event record and the state just after the event are identical; the event changes no temperature and no lithium fraction",
+   "actual": "accepted states at the instant 1, identical True, T_B np.float64(289.36151070582804) K",
+   "passed": true
+  },
+  {
+   "name": "第4步联合运行：event_required 为真的结果没有进入热导数",
+   "expected": "no thermal_derivative call follows a Power result with event_required True; every thermal call follows a usable Power result at the same instant with identical ports",
+   "actual": "{'power_calls': 585, 'thermal_calls': 544, 'evaluation_records': 585, 'power_state_mismatch': 0, 'unusable_power_calls': 8, 'unusable_reaching_thermal': 0, 'thermal_without_usable_power': 0, 'thermal_port_mismatch': 0, 'thermal_T_B_mismatch': 0, 'evaluation_copy_mismatch': 0, 'battery_echo_mismatch': 0, 'record_without_power': 0}",
+   "passed": true
+  },
+  {
+   "name": "第4步联合运行：器件边界在最后一个已接受状态停止",
+   "expected": "device_boundary stop at the last accepted state inside the bound, within 0.001 s before 1510.0 s; no event applied; no thermal call from an event result",
+   "actual": "status stopped, kind device_boundary, time 1509.9996999381742 s, last accepted 1509.9996999381742 s, bracket [1509.9996999381742, 1510.00037693562], events 0, load_connected True, log {'power_calls': 516, 'thermal_calls': 478, 'evaluation_records': 516, 'power_state_mismatch': 0, 'unusable_power_calls': 6, 'unusable_reaching_thermal': 0, 'thermal_without_usable_power': 0, 'thermal_port_mismatch': 0, 'thermal_T_B_mismatch': 0, 'evaluation_copy_mismatch': 0, 'battery_echo_mismatch': 0, 'record_without_power': 0}",
+   "passed": true
+  },
+  {
+   "name": "第4步联合运行：重复运行得到相同的处理结果",
+   "expected": "a second run of each injection gives the same error record or the same events and accepted states",
+   "actual": "invalid True, supply shortfall True, device boundary True",
+   "passed": true
+  },
+  {
+   "name": "第5步：联合运行一圈完成",
+   "expected": "status completed from 0 s to one orbital period 5553.624 s, no Power event",
+   "actual": "status completed, error None, end 5553.624271252228 s, events 0, wall 3.13 s",
+   "passed": true
+  },
+  {
+   "name": "第5步：电池温度保持在替代程序温度范围内",
+   "expected": "every accepted state and every output sample of T_B is finite and inside (253.15, 333.15) K (Power stand-in battery.limits.T_range_K)",
+   "actual": "167 accepted states and 94 output samples, all finite True, T_B from 262.644 K to 291.150 K",
+   "passed": true
+  },
+  {
+   "name": "第5步：状态向量只含一个电池温度",
+   "expected": "every accepted state of the coupled integration has 8 components: the six node temperatures S, J, C, B, D, R in K, of which component 4 is the only battery temperature, and the two lithium fractions, dimensionless in [0, 1], that Power reads as x_n and x_p (see the evaluation check); the final Power state holds the x_n and x_p of the last accepted state; the archived state vector label agrees",
+   "actual": "accepted states (167, 8), components 7 and 8 from 0.263436 to 0.910437, final Power state x_n, x_p (0.7866921047832025, 0.341265378660046), last accepted state (0.7866921047832025, 0.341265378660046); output temperatures (94, 6); label ['S', 'J', 'C', 'B', 'D', 'R', 'x_n', 'x_p']",
+   "passed": true
+  },
+  {
+   "name": "第5步：Power 状态不含电池温度，Power 结果只返回输入温度",
+   "expected": "PowerState has no temperature field and the final Power state of the run has none; the only temperature field of PowerResult, including its nested BatteryResponse and SolarPowerResult, is PowerResult.battery.T_B_K, the input temperature returned with the battery response, which the check '第5步：电池响应不更新温度' compares with the input of every call",
+   "actual": "PowerState temperature fields []; PowerResult temperature fields ['PowerResult.battery.T_B_K']; final Power state PowerState has T_B_K False",
+   "passed": true
+  },
+  {
+   "name": "第5步：每次 Power 求值读取所用状态的电池温度",
+   "expected": "every solve_power_allocation call reads T_B_K, x_n and x_p bit for bit from the state of its evaluation record at the same instant: solver trials in integration and event location, accepted states in boundary decisions and the accepted solution at output samples and energy audit points; every evaluation record follows a Power call and every Power call is closed by a record of one of these contexts",
+   "actual": "1700 Power calls: solver trials 1115 (integration 1072, event_location 43), on accepted states or the accepted solution 585 (boundary 5, output 94, energy_audit 486), other 0; 0 state mismatches, 0 records without a Power call; archive statistics power_calls_by_context {'integration': 1072, 'event_location': 43, 'boundary': 5, 'output': 94, 'energy_audit': 486}",
+   "passed": true
+  },
+  {
+   "name": "第5步：0 s 的首次 Power 求值读取 ThermalState 的电池初温",
+   "expected": "the first Power call is the boundary decision at 0 s on the initial accepted state and reads T_B_K = 291.15 K, the battery temperature of the initial ThermalState",
+   "actual": "first call time 0.0 s, context 'boundary', T_B_K 291.15 K; initial ThermalState T_B 291.15 K",
+   "passed": true
+  },
+  {
+   "name": "第5步：联合配置中电池初温只有一份",
+   "expected": "one battery initial temperature, the 291.15 K of the initial ThermalState, in the joint configuration (thermal design 9.4, outside the listed basis of EC-001; Power design: the battery initial temperature is kept by Thermal): the initial accepted state and every T_B entry of the Power scene record, the Power parameter provenance and the archive provenance hold this value bit for bit; PowerState and the archived Power initial state carry no battery temperature",
+   "actual": "entries [('ThermalState.temperature_K[3]', 291.15), ('archive.accepted.state[0][3]', 291.15), ('Power scene record.initial_state.T_B_K', 291.15), ('PowerParameters.provenance.initial_state.T_B_K', 291.15), ('archive.provenance.power.parameters_provenance.initial_state.T_B_K', 291.15)]; distinct values [291.15]; PowerState fields ['run_id', 'instance_id', 'time_s', 'x_n', 'x_p', 'load_connected', 'trip_latched', 'handled_command_ids']; archived Power initial state keys ['handled_command_ids', 'load_connected', 'time_s', 'trip_latched', 'x_n', 'x_p']; the stand-in scene record requires initial_state.T_B_K for its own initial check of the zero-current voltage and the temperature range, a field that the Power design's initial_state_fields do not list, and the test fills it with the ThermalState value",
+   "passed": true
+  },
+  {
+   "name": "第5步：每个已接受状态的电池温度返回 Power",
+   "expected": "for every accepted state a Power evaluation at the same instant reads exactly its T_B, x_n and x_p",
+   "actual": "167 accepted states, 0 without such a call",
+   "passed": true
+  },
+  {
+   "name": "第5步：热导数只接收有效 Power 结果的原值端口",
+   "expected": "every thermal_derivative call follows a valid Power result without event at the same instant; ports and battery temperature are identical",
+   "actual": "1652 thermal calls, without usable Power 0, port mismatches 0, T_B mismatches 0",
+   "passed": true
+  },
+  {
+   "name": "第5步：ThermalEvaluation 的 T_B_K 是输入温度的副本",
+   "expected": "T_B_K = temperature_K[3] and T_J_K = temperature_K[1] of the evaluated state in every thermal call",
+   "actual": "0 mismatches in 1652 calls",
+   "passed": true
+  },
+  {
+   "name": "第5步：电池响应不更新温度",
+   "expected": "the battery response of every usable Power result echoes the input T_B_K unchanged",
+   "actual": "0 mismatches",
+   "passed": true
+  },
+  {
+   "name": "第5步：输出样本的四个端口按 T3 进入对应组件",
+   "expected": "at every valid output sample C_i dT_i of all six nodes equals the T3 terms rebuilt independently from the archived ports and temperatures, the orbit and Earth flux inputs of the same instant (own T4) and hand C and R; |error| / gross <= 1e-12",
+   "actual": "94 of 94 samples, largest errors {'S': '2.49e-16', 'J': '7.91e-18', 'C': '1.95e-17', 'B': '1.08e-16', 'D': '1.16e-16', 'R': '1.18e-16'}",
+   "passed": true
+  },
+  {
+   "name": "第5步：限充时段太阳能板使用实际 P_pv",
+   "expected": "at charge_limited samples P_pv_W < P_pv_max (hand, from the same orbit sample) and the S balance uses the actual P_pv_W",
+   "actual": "52 charge_limited samples, smallest unexported power 0.9045386323729758 W, largest S error 2.49e-16",
+   "passed": true
+  },
+  {
+   "name": "第5步：电池温度变化等于热模块电池方程的积分",
+   "expected": "T_B(end) - T_B(0) equals the integral of (Q_B - q_BR) / C_B along the accepted solution, with Q_B from Power at each point and hand C_B and R_BR; |residual| <= sum over steps of sqrt(n) (atol_T + rtol |T_B|)",
+   "actual": "change -23.644911933461117 K, integral -23.64501839492157 K, residual 0.00010646146045445448 K, bound 0.12735488348084645 K over 162 steps",
+   "passed": true
+  }
+ ],
+ "metrics": {
+  "precondition_HT_002_status": "pass",
+  "precondition_HT_002_checks_passed": 21,
+  "precondition_HT_002_checks": 21,
+  "precondition_HT_002_file_written_utc": "2026-10-05T23:17:05+00:00",
+  "premise_C_max_relative_error": 0.0,
+  "premise_R_max_relative_error": 0.0,
+  "step1_P_pv_W_max_relative_error": 3.59126102623732e-16,
+  "step1_P_load_W_max_relative_error": 6.04793992664554e-16,
+  "step1_Q_B_W_max_relative_error": 3.114175584073564e-16,
+  "step1_Q_D_W_max_relative_error": 0.0,
+  "absorbed_solar_S_W": 643.5486737046391,
+  "step1_variations": 14,
+  "step1_max_relative_error": 6.04793992664554e-16,
+  "step1_max_other_node_change_K_s": 0.0,
+  "step1_max_T1_relative_error": 5.921189464667501e-16,
+  "step1_max_full_derivative_relative_error": 7.474242052077433e-17,
+  "rated_load_W": 60.0,
+  "step2_negative_Q_B_W": [
+   -0.5,
+   -2.0,
+   -8.0
+  ],
+  "step2_dT_B_K_s": [
+   -0.008854544708006595,
+   -0.009318745539854486,
+   -0.010711348035398159,
+   -0.01628175801757285
+  ],
+  "step2_fixed_max_relative_error": 7.0068950641655185e-16,
+  "step2_symmetry_Q_B_W": 8.0,
+  "step2_symmetry_relative_error": 2.335631688055173e-16,
+  "step2_stand_in_request_W": 60.0,
+  "step2_stand_in_surplus_W": 6.0,
+  "step2_stand_in_reason": "supplied",
+  "step2_stand_in_P_B_W": -5.999999999994039,
+  "step2_stand_in_cell_current_A": -0.19563734887172285,
+  "step2_stand_in_Q_B_W": -0.007398277016713549,
+  "step2_stand_in_G_W_m2": 530.7853658079573,
+  "step2_stand_in_rate_relative_error": 0.0,
+  "step2_stand_in_drop_relative_error": 4.7601551640872346e-14,
+  "step2_stand_in_full_relative_error": 1.3123087299684194e-17,
+  "step2_max_relative_error": 4.7601551640872346e-14,
+  "step3_P_pv_max_W": 177.32948344114095,
+  "step3_curtailed_fractions": [
+   0.75,
+   0.5,
+   0.0
+  ],
+  "step3_fixed_panel_relative_error": 8.013813856238327e-16,
+  "step3_fixed_T1_relative_error": 8.013813856238327e-16,
+  "step3_fixed_other_node_change_K_s": 0.0,
+  "step3_stand_in_relative_error": 1.8748695169817064e-16,
+  "step3_stand_in_full_relative_error": 1.222344270078457e-17,
+  "step3_max_relative_error": 8.013813856238327e-16,
+  "step3_stand_in_P_pv_W": 25.73648364583133,
+  "step3_stand_in_curtailed_W": 151.59299979530962,
+  "step4_thermal_rejections": 16,
+  "step4_thermal_repeat_identical": true,
+  "step4_invalid_from_s": 1510.0,
+  "step4_invalid_stop_time_s": 1511.5872589485373,
+  "step4_invalid_context": "integration",
+  "step4_invalid_last_accepted_s": 1467.219554341651,
+  "step4_shortfall_window_start_s": 610.0,
+  "step4_supply_loss_time_s": 610.0003202763392,
+  "step4_supply_loss_offset_s": 0.00032027633915276965,
+  "step4_restart_command_s": 1210.0,
+  "step4_event_tolerance_s": 0.001,
+  "step4_device_boundary_from_s": 1510.0,
+  "step4_device_boundary_stop_s": 1509.9996999381742,
+  "step5_eclipse_entry_s": 1683.1930560013657,
+  "step5_eclipse_exit_s": 3858.3263519773536,
+  "step5_period_s": 5553.624271252228,
+  "step5_T_B_min_K": 262.64384898954955,
+  "step5_T_B_max_K": 291.15,
+  "step5_T_B_limits_K": [
+   253.15,
+   333.15
+  ],
+  "step5_power_calls": 1700,
+  "step5_power_calls_by_context": {
+   "integration": 1072,
+   "event_location": 43,
+   "boundary": 5,
+   "output": 94,
+   "energy_audit": 486
+  },
+  "step5_power_calls_solver_trials": 1115,
+  "step5_power_calls_on_accepted_states": 585,
+  "step5_thermal_calls": 1652,
+  "step5_accepted_states": 167,
+  "step5_state_components": 8,
+  "step5_first_T_B_K": 291.15,
+  "step5_first_context": "boundary",
+  "step5_battery_initial_entries": [
+   [
+    "ThermalState.temperature_K[3]",
+    291.15
+   ],
+   [
+    "archive.accepted.state[0][3]",
+    291.15
+   ],
+   [
+    "Power scene record.initial_state.T_B_K",
+    291.15
+   ],
+   [
+    "PowerParameters.provenance.initial_state.T_B_K",
+    291.15
+   ],
+   [
+    "archive.provenance.power.parameters_provenance.initial_state.T_B_K",
+    291.15
+   ]
+  ],
+  "step5_battery_initial_distinct_K": [
+   291.15
+  ],
+  "step5_samples": 94,
+  "step5_max_sample_relative_error": 2.49051639813722e-16,
+  "step5_charge_limited_samples": 52,
+  "step5_smallest_unexported_W": 0.9045386323729758,
+  "step5_battery_audit_residual_K": 0.00010646146045445448,
+  "step5_battery_audit_bound_K": 0.12735488348084645,
+  "step5_battery_change_K": -23.644911933461117,
+  "step5_Q_B_range_W": [
+   0.046863715550639604,
+   3.665969868227145
+  ],
+  "step5_energy_audit_relative_residual": 4.123814678755572e-07,
+  "step5_accepted_steps": 162,
+  "step5_rejected_steps": 14,
+  "step5_range_warnings": 0,
+  "step5_wall_s": 3.1313528000027873
+ },
+ "summary_cn": "本用例在 Thermal 目录用项目解释器执行。Power 结果由 sdtwin_sim.power_stand_in 给出，该程序按供电模块设计报告的接口、式 P1 至 P11 以及 valid 与 event_required 的规定编写，是替代程序，不是正式的供电模块；联合运行使用 sdtwin_sim.coupled。前提用例 HT-002 的结果文件记录为通过，21 项检查全部通过。热容与热阻由 assemble_thermal_parameters 按本用例数据装配，与 T5 手算的最大相对误差分别为 0 与 0。四个功率端口分别对应 SolarArray01、Compute01、Battery01 与 PDU01，端口与实例错配的联合配置在积分前被拒绝。第1步在同一时刻逐个改变四个功率共 14 组，P_pv 取零至本次 absorbed_solar_S_W 643.55 W，该值与手算一致，P_load 取零至额定功率 60 W，Q_B 取正值与负值，Q_D 取正值。P_pv 只改变太阳能板，P_load 只改变计算节点，Q_B 只改变电池，Q_D 只改变电源设备，其余五个组件的导数变化最大为 0 K/s。导数变化与功率变化除以组件热容的手算值相比，最大相对误差为 6.0×10^{−16}，各组件储存热能的变化率之和与 T1 相比，最大相对误差为 5.9×10^{−16}，验收限值为 1×10^{−12}。本用例在所用时刻另用独立实现的 T2 至 T4 核对六个组件的温度导数，替代程序给出的四个端口也一并核对，最大相对偏差为 7.5×10^{−17}，ThermalInputs 保留各端口的数值与符号，没有温区警告。第2步 Q_B 取 −0.5 W、−2.0 W、−8.0 W 时电池温度导数依次减小，与 Q_B 取零时相比，导数的变化量等于 Q_B 除以电池热容，最大相对误差为 7.0×10^{−16}。Q_B 取 8.0 W 与 −8.0 W 时两个电池温度导数之差等于 16.0 W 除以电池热容，相对误差为 2.3×10^{−16}，ThermalInputs 保留 Q_B 的负号。替代程序的请求功率等于计算节点额定功率 60 W，太阳能板最大可发功率比所需配电入口功率多 6 W，电池以小电流充电吸收这部分余量，单体电流为 −0.196 A，Q_B 为 −0.0074 W，热模块保留负号，电池温度导数与手算的相对误差为 0，与 Q_B 取零时相比，导数变化量的相对误差为 4.8×10^{−14}。第3步替代程序给出的最大可发功率为 177.33 W，与手算一致。把 P_pv 由该值依次降为其 0.75 倍、0.5 倍与零，太阳能板储存热能的变化率增加量等于少输出的电功率，最大相对误差为 8.0×10^{−16}，各组件储存热能的变化率之和的增加量同样等于少输出的电功率，最大相对误差为 8.0×10^{−16}，其余五个组件的导数不变，少输出的电功率全部留在太阳能板的能量收支中。替代程序限充时实际 P_pv 为 25.74 W，少输出 151.59 W，太阳能板储存热能的变化率增加同样数值，相对误差为 1.9×10^{−16}。第4步由替代程序给出四种不可用结果，temperature_out_of_range 与 invalid_input 的 valid 为假，supply_shortfall 与 device_boundary 的 event_required 为真，四种结果都不含功率端口。逐项注入 P_pv_W、P_load_W 或 Q_D_W 为负，P_pv 略大于 absorbed_solar_S_W 或比它大 50 W，日食时 P_pv 大于零，上述四种不可用结果，以及带完整端口但 valid 为假或 event_required 为真的输入，热模块共 16 次报出 ThermalInputError，报错写明出错的功率字段或 Power 结果不可用，不返回导数，也不修补功率，重复注入得到相同的错误类别与信息。P_pv 等于 absorbed_solar_S_W 以及日食时为零的输入正常计算，有效且无事件的同类输入正常计算，功率与热状态不在同一时刻时被拒绝，ThermalEvaluation 不含负载启停字段。联合运行中自 1510 s 起注入 valid 为假的结果，运行在 1511.59 s 的试算中报出 power_invalid 并停止，已接受状态止于 1467.22 s，没有执行保护规则，该结果没有进入热导数。自 610 s 起注入 event_required 为真且原因为供电不足的结果，边界定位在 610.0003 s，与注入起点相差 0.00032 s，小于容限 0.001 s，失电保护断开负载，Power 在同一时刻重算，事件前后温度不跳变，此后负载保持断开，直到 1210 s 的启动指令由 Power 接通负载，热模块不决定负载重启，event_required 为真的结果没有进入热导数。自 1510 s 起注入原因为器件边界的结果时，运行停在 1509.9997 s 的已接受状态，没有施加事件，该结果没有进入热导数。三种注入各重复运行一次，处理结果相同。第5步与 Power 联合运行一圈 5553.6 s，日食段为 1683.2 s 至 3858.3 s，没有 Power 事件，电池温度在 262.64 K 至 291.15 K 之间，位于替代程序 253.15 K 至 333.15 K 的温度范围内。联合配置与运行归档中的电池初温只有 ThermalState 中的 291.15 K 这一个数值。替代程序的场景记录要求 initial_state.T_B_K 字段，供其初始零电流电压与温度范围检查使用。供电模块设计报告规定电池初温由 Thermal 保存，其 initial_state_fields 不含该字段，本用例因此在该字段填入 ThermalState 的同一数值。PowerState 与归档的 Power 初始状态都不含电池温度。这一配置检查对应设计报告第 9.4 节电池初温只有一份的规定，第 9.4 节不在本用例列出的设计依据中。0 s 的首次 Power 求值在初始已接受状态上进行，读取的 T_B_K 为 291.15 K。联合积分的 167 个已接受状态都由六个组件温度与 x_n、x_p 共 8 个分量组成，电池温度只占一个分量，x_n 与 x_p 都在零与一之间；PowerState 不含温度字段，Power 结果中的温度只有电池响应返回的输入温度 T_B_K。1700 次 Power 求值中，1115 次为积分与边界定位中的求解器试算，其中积分 1072 次、边界定位 43 次；其余 585 次在已接受状态或已接受解上求值，不属于试算，其中已接受状态上的判断 5 次、输出采样 94 次、能量核算 486 次。每次求值读取的 T_B_K、x_n 与 x_p 都与所用状态逐位相同，167 个已接受状态的电池温度都作为 T_B_K 返回 Power。1652 次热导数计算接收的四个端口与电池温度都与同一时刻有效 Power 结果及其输入相同，ThermalEvaluation 与电池响应给出的 T_B_K 都等于输入温度。94 个输出样本的六个组件导数与独立重建的 T3 相比，最大相对偏差为 2.5×10^{−16}，其中 52 个限充样本的太阳能板使用降低后的实际 P_pv。电池温度一圈变化 −23.6449 K，沿已接受解对热模块电池方程积分的结果与之相差 1.1×10^{−4} K，小于由求解容限给出的 0.127 K。电池温度只在热模块中更新，并作为 T_B_K 返回 Power。",
+ "anomalies_cn": "无",
+ "environment": {
+  "python": "3.11.9",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "astropy": "8.0.1",
+  "pytest": "9.1.1",
+  "ntu_space_dynamics": "0.1.0",
+  "usd": "0.26.8"
+ },
+ "execution": {
+  "started_utc": "2026-10-05T23:17:02.838518+00:00",
+  "recorded_utc": "2026-10-05T23:40:12.109053+00:00",
+  "collected_functions": 8,
+  "finished_functions": 8,
+  "unexecuted_functions": [],
+  "source_sha256": {
+   "thermal/__init__.py": "ffb342305704801c8871a2af365af61877f7e6485b07ec381e0f777da9d294f5",
+   "thermal/environment.py": "5c3eba796dd28d41a4f1b6fa637ada3c0b8d2942ebc5f65b1e55f1384fa99f41",
+   "thermal/model.py": "9f758d46ea25844878e8cac7ccc402c31610548d255ded7d8d980ae95a965b9e",
+   "thermal/parameters.py": "792e7f5d1175e3564b7486a230039cf026fbad78074cfc8de4fbf352d9c946f9",
+   "thermal/types.py": "2c76359dfa9555ef7d51df83009a5985964c66080dc9062746815451e827a794",
+   "sdtwin_sim/__init__.py": "e2c3bee5849391a86fa79109339d001a75779dd93835d9e829f5f1591de81a31",
+   "sdtwin_sim/coupled.py": "f05e19e220284ad3a0c1e4188eb405fa66b6777f4226decfe95d2c559bca1dff",
+   "sdtwin_sim/earth_flux.py": "03b0d340d77e583cf73a3f0ec31ca0d9830c3bdc5f824903adae266b82a853a2",
+   "sdtwin_sim/power_stand_in.py": "3229251cdd2834bc2df18177c079e651f53a0827fb57cba21527ebdbf281c58f",
+   "sdtwin_sim/scene.py": "b7b1ad5328e6f6278354249e3087d47197895294af8607d21c7dcce354c7ab9b",
+   "tests/conftest.py": "345e7f788242083755505607636fa4af3e88cbf303a6a1728e4ab327e106d11e",
+   "tests/data/dm_001/reference.py": "3bba4938e76134c73272c00250517cc01c519da62f881382ddb42daa9c79fe2c",
+   "tests/data/en_001/en001_reference.py": "73370bd0a9fdc7e7c373e8dda1b5aa0c9a6970dc047fba3cf8a7c3fd808e6ea4",
+   "tests/data/en_003/earth_reference.py": "880154b92405e9af399b772296148219ca78f8ac62e9fcbeaeef67bb45ce117f",
+   "tests/data/en_003/fe_explore.py": "0cceaffd85c2d15b11fee6c7e6b5bbb00a17d94e63940b45a2db1863dfecd473",
+   "tests/data/en_003/fe_export.py": "b33fc7276138dc59e944c5cbfed73acc0d1f1ec2ce7d458b90eed62790aa8f85",
+   "tests/data/en_003/fe_refine.py": "6ad00122cb8f7a65d0f5c23f7c139b20e92d6f75fa0f472b16d2d97628995c43",
+   "tests/data/en_003/fe_refine_ladder.py": "587ffe012aa40955c6b615f68d6e257314ac0bc418765aaa358e17dc848e0580",
+   "tests/data/en_003/ladder_compare.py": "fdf7d4d74fb0f099934f5ef3c3bbdef67df6f7cf3605a5ad1984cb48450cc3ab",
+   "tests/data/fe_001/fe001_support.py": "d1bd978ad70120cf974e46cd996a8367bd5efc08e4d8755405c2a3a21be41051",
+   "tests/data/fe_002/fe002_support.py": "2c27a76b1fd972625293b26b8e1a07d0850ba78254c4457782607279205c4f7c",
+   "tests/data/fe_003/fe003_support.py": "00d548cb2c513707bfeb16f81bf130eded88fb09a87ba8785ad27ee341a985f2",
+   "tests/data/fe_004/fe004_support.py": "54a7d7d8ce2fa0e4f9b054f596a927f8531c0cc0b77a783dcd7ab6973c1f6e44",
+   "tests/data/ht_001/t2_reference.py": "2098ccd9080957ab24ff44712b3b8e688d2b41cfa077e95460a96c82f3d27f89",
+   "tests/data/ht_002/ht002_reference.py": "076d20dec2f98fb84bbbcda17b3a0313de6c8ffb44f4c2121282eb01387bd7e7",
+   "tests/data/ht_003/analytic.py": "5ee9b0e8d1c4e06067e44754c2dd2393218e4d2a6a3d91d64064d726cb06a3a5",
+   "tests/data/ni_001/ni001_support.py": "fc84c2b085ace6fa38819195dd85f0ae47846dbd8505432ef469dd19a276b0c7",
+   "tests/data/ni_002/ni002_reference.py": "b263602b77beb5b57e4b7360db586394228e18381b8f1e40abf20f1c3295665b",
+   "tests/data/ni_003/make_ni003_data.py": "d03cfe33141adc1f8288763c42009504dcdf076ba5e46d9539ddedca64eedce7",
+   "tests/data/ni_003/ni003_support.py": "bc563f0d0b9d56e461eac3e8db7c76b37ce1431468dd4b51d257a4a551257616",
+   "tests/data/ni_003/payload/ni003_payload.py": "4755abecf85fc0e3ee9006954b933ff3e1728e8647f725a0cb05e0bff654d433",
+   "tests/data/ni_003/probe_no_exec.py": "a2d7e9613788aa4f5eb24af6c8b5dac16a234a28b96df880b7a0bfef6672cc32",
+   "tests/data/ni_003/run_alone.py": "932a1b32033842df026eac9a1496ccd301c89291e980e969fbb3a5022acee0f6",
+   "tests/data/pa_001/pa001_inputs.py": "f1b685263ff6770efd7dd01f2f9b378230ab7fab12800b3e5a697d4cf17fc4b4",
+   "tests/data/simready/make_geometry.py": "2a4c7a5b278c7ddcbe2b673950b13c7bdaaf03921f8883693bc30e28c254094c",
+   "tests/data/simready/make_scene_variants.py": "994ca8d44a44023f7d778c0337ad5403420eea194bc8202194c440a28d1f1247",
+   "tests/test_dm_001_data_objects.py": "44d85eac05803a2bb04c5e1d0c2fea1c0c572c60299ee6f28eb7cb4986f897a8",
+   "tests/test_ec_001_power_ports.py": "cdb8dac627ff5e5bd56a852fd6344996658d8dc2df56beebb8efdd5a159c7f67",
+   "tests/test_en_001_surface_environment.py": "1b0f11127159690d57558aedcdece9c11559b2b6dda75637714d26090c0dd679",
+   "tests/test_en_002_surface_heat.py": "c45ab4a04ceaa6211d5aaf72befbf5d95e8e9c7be5b86454ccc4a6b5cae39e34",
+   "tests/test_en_003_earth_flux.py": "eaa1527e9722b6feb07abc9289f43680b60c59791ce838e072a5e24b90e62c79",
+   "tests/test_fe_001_solar_array_fe.py": "f23d462dbbd432308214db7d5634689b059f5e5b1bb4f46251c0836d139f3cd7",
+   "tests/test_fe_002_radiator_fe.py": "f1be285404e242cc6394363eac2ed1345233e1497ed83fff5f4e3dde09260aa1",
+   "tests/test_fe_003_compute_cold_plate_fe.py": "3a9bfdd73afca2fb2257235348b85702707b5c390b1814a3d15621fba39bafce",
+   "tests/test_fe_004_whole_satellite_chain.py": "6aaeec63a82a4031d916d063694f2aa9a6b750c1712ce2bb7ba036497f1e9a66",
+   "tests/test_ht_001_heat_flows.py": "2d91f41677820f09cdb4e6edac6582be56c9647cea59bfaa629e30da1e759049",
+   "tests/test_ht_002_derivative_balance.py": "728e57be7630d1be877a265ad0206e9ab0cef1374a9bd74f20f438f18a0d144b",
+   "tests/test_ht_003_analytic.py": "a66ffc2613929fbd9bb44a0f2a8f1d41879069d1b2d9584f8fb2041f1545e832",
+   "tests/test_ni_001_numerics_eclipse.py": "1f4cba777b1aba392d09bb130ec6652d2b04004a3ac97ea4e49a88424aacdf47",
+   "tests/test_ni_002_end_to_end.py": "fb33ca9517ced5761c63ae7d68cefc72e98c3c3e36c7a8665b0d89fc9d3c696e",
+   "tests/test_ni_003_scene_assembly.py": "2ce365771b66f67e78334bbb3358a210d8eabed0753d82b7abeb4f3e900e6226",
+   "tests/test_pa_001_t5_assembly.py": "fa1b1edba0b491daf8a6e06ecd6d3a1e8baa9307daf94b5d885659a0620e3293"
+  }
+ }
+}

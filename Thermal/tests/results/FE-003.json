@@ -1,0 +1,1540 @@
+{
+ "case_id": "FE-003",
+ "status": "pass",
+ "checks": [
+  {
+   "name": "前置条件 有限元平均环境工况的部件统计与回路热量分解可用",
+   "expected": "nom0 的 items.csv 含 MBSU 4 台、DDCU 6 台、IEA 4 台的第三圈 Tmin_C、Tmean_C、Tmax_C，均为有限值；loop_breakdown.csv 含各设备所在回路的冷板热量，均为有限值；summary.json 为 nom0 并给出轨道周期",
+   "actual": "设备数 {'MBSU': 4, 'DDCU': 6, 'IEA': 4}，缺少条目 []，统计量有限且有序 True；需要的回路热量行 [('A', 'oru'), ('B', 'oru'), ('PVP4', 'iea'), ('PVP6', 'iea'), ('PVS4', 'iea'), ('PVS6', 'iea')]，缺少 []，有限 True；summary 工况 nom0，周期 5553.624271 s",
+   "passed": true
+  },
+  {
+   "name": "输入 MBSU 495 W，冷板面 0.79 m²",
+   "expected": "iss_spec 中全部 MBSU 方块发热 495 W，尺寸与冷板面相同，冷板面面积按用例位数取舍后为 0.79 m²，差不超过 0.005 m²",
+   "actual": "4 台，发热 [495.0] W，尺寸 [0.94, 0.84, 0.51] m，冷板面 +z，面积 0.7896 m²，垂直冷板面的厚度 0.51 m，尺寸与冷板面组合 1 种",
+   "passed": true
+  },
+  {
+   "name": "输入 DDCU 694 W，冷板面 0.56 m²",
+   "expected": "iss_spec 中全部 DDCU 方块发热 694 W，尺寸与冷板面相同，冷板面面积按用例位数取舍后为 0.56 m²，差不超过 0.005 m²",
+   "actual": "6 台，发热 [694.0] W，尺寸 [0.89, 0.71, 0.79] m，冷板面 -x，面积 0.5609 m²，垂直冷板面的厚度 0.89 m，尺寸与冷板面组合 1 种",
+   "passed": true
+  },
+  {
+   "name": "输入 IEA 6000 W，冷板面 13.5 m²",
+   "expected": "iss_spec 中全部 IEA 方块发热 6000 W，尺寸与冷板面相同，冷板面面积按用例位数取舍后为 13.5 m²，差不超过 0.005 m²",
+   "actual": "4 台，发热 [6000.0] W，尺寸 [3.0, 4.5, 1.6] m，冷板面 -z，面积 13.5000 m²，垂直冷板面的厚度 1.6 m，尺寸与冷板面组合 1 种",
+   "passed": true
+  },
+  {
+   "name": "输入 冷板换热系数 60 W·m^{−2}·K^{−1}",
+   "expected": "三类设备的冷板边界都用 iss_spec PARAMS h_cp_oru，值为 60 W/(m²·K)",
+   "actual": "冷板边界换热系数参数 ['h_cp_oru']，h_cp_oru = 60[W/(m^2*K)]，解析为 60.0 W/(m²·K)",
+   "passed": true
+  },
+  {
+   "name": "输入 设备等效导热系数 150 W·m^{−1}·K^{−1}",
+   "expected": "三类设备属于 iss_spec MATERIALS oru_eq 的类别，导热系数 150 W/(m·K)",
+   "actual": "设备类别 ['box']，oru_eq 类别 ['box']，导热系数 150.0 W/(m·K)，密度 300.0 kg/m³，比热 900.0 J/(kg·K)",
+   "passed": true
+  },
+  {
+   "name": "输入 冷却液 2.8 °C",
+   "expected": "三类设备冷板边界的冷却液设定点相同，按用例位数取舍后为 2.8 °C，差不超过 0.05 K；运行取有限元参数表的精确值",
+   "actual": "设定点参数 ['T_setA', 'T_setB', 'T_set_pv']，均为 ([37.0] °F − 32)/1.8，即 275.927778 K，2.7778 °C",
+   "passed": true
+  },
+  {
+   "name": "输入 P_load 取有限元中经冷板排出的热量",
+   "expected": "有限元按冷却回路给出冷板热量：IEA 取所在 PVTCS 回路 iea 热量，每个 PVTCS 回路只有一台 IEA；MBSU 与 DDCU 的单台冷板热量没有单独输出，取发热乘所在回路 loop_breakdown oru 热量与该回路冷板设备总发热之比；P_load 小于设备发热；回路冷板设备发热中未经冷板进入回路的比例与用例所述约 5.4% 之差不超过 0.05 个百分点。这部分包括多层隔热外表面的辐射换热与方块的储热，本检查不分开计量",
+   "actual": "回路 A 冷板设备 ['MBSU_1', 'MBSU_4', 'DDCU_S0_1A', 'DDCU_S0_4B', 'DDCU_S1_4B'] 发热 3072 W，经冷板进入回路 2905.78 W，比值 0.945893，未经冷板进入回路 166.22 W，占 5.41%；回路 B 冷板设备 ['MBSU_2', 'MBSU_3', 'DDCU_S0_3B', 'DDCU_S0_2B', 'DDCU_P1_3A'] 发热 3072 W，经冷板进入回路 2907.36 W，比值 0.946407，未经冷板进入回路 164.64 W，占 5.36%；IEA IEA_P4 5834.94 W，IEA_P6 5833.05 W，IEA_S4 5840.92 W，IEA_S6 5835.22 W；每个 PVTCS 回路 IEA 台数 {'PVP4': 1, 'PVP6': 1, 'PVS4': 1, 'PVS6': 1}",
+   "passed": true
+  },
+  {
+   "name": "前置条件 冷板热容取极大值并以冷却液温度为初温，CR 连接取极大热阻",
+   "expected": "装配的 C_C 为 1e+15 J/K，R_CR 为 1e+12 K/W 按等效总热阻装配，T_C 初值等于冷却液温度 275.927778 K",
+   "actual": "MBSU_A: C_C 1.000e+15 J/K，R_CR 1.000e+12 K/W，方法 equivalent_total，T_C 初值 275.927778 K；MBSU_B: C_C 1.000e+15 J/K，R_CR 1.000e+12 K/W，方法 equivalent_total，T_C 初值 275.927778 K；DDCU_A: C_C 1.000e+15 J/K，R_CR 1.000e+12 K/W，方法 equivalent_total，T_C 初值 275.927778 K；DDCU_B: C_C 1.000e+15 J/K，R_CR 1.000e+12 K/W，方法 equivalent_total，T_C 初值 275.927778 K；IEA_PVP4: C_C 1.000e+15 J/K，R_CR 1.000e+12 K/W，方法 equivalent_total，T_C 初值 275.927778 K；IEA_PVP6: C_C 1.000e+15 J/K，R_CR 1.000e+12 K/W，方法 equivalent_total，T_C 初值 275.927778 K；IEA_PVS4: C_C 1.000e+15 J/K，R_CR 1.000e+12 K/W，方法 equivalent_total，T_C 初值 275.927778 K；IEA_PVS6: C_C 1.000e+15 J/K，R_CR 1.000e+12 K/W，方法 equivalent_total，T_C 初值 275.927778 K",
+   "passed": true
+  },
+  {
+   "name": "前置条件 冷板测试配置按第 9.4 节记入运行归档",
+   "expected": "每次运行的归档保存解析后的参数、来源、资产与初值：C_C 与 R_CR 的值与装配记录一致，冷板材料 ColdPlate01_fixed_temperature_mass 属于 ColdPlate01，质量 1e+12 kg、比热 1000 J/(kg·K)；CR 按等效总热阻装配并含接触部分；两者来源都是 fe003_config.json 中按第 9.4 节写明的测试配置说明，冷板资产为 fe003_cold_plate_boundary 版本 1，表示有限元冷板边界而不是器件数据；没有参数覆盖；第一个已接受状态在起始时刻，T_C 等于冷却液温度；调用方记录 cold_plate 为同一说明",
+   "actual": "MBSU_A: run_id FE-003-nom0-MBSU_A，UTC 起点 2019-06-01T00:00:00+00:00；归档 C_C 1.000e+15 J/K，材料 ColdPlate01_fixed_temperature_mass 属于 ColdPlate01，质量 1000000000000.0 kg，比热 1000.0 J/(kg·K)；R_CR 1.000e+12 K/W，方法 equivalent_total，输入 {'equivalent_total_resistance_K_W': 1000000000000.0, 'includes_contact': True}；冷板材料来源与配置一致 True，CR 来源与配置一致 True，来源开头 'FE-003 precondition recorded per thermal design 9.4'；冷板资产 fe003_cold_plate_boundary 版本 1；参数覆盖 0 项；t = 0 s 的已接受状态 T_C 275.927778 K；调用方记录 cold_plate 与配置一致 True；MBSU_B: run_id FE-003-nom0-MBSU_B，UTC 起点 2019-06-01T00:00:00+00:00；归档 C_C 1.000e+15 J/K，材料 ColdPlate01_fixed_temperature_mass 属于 ColdPlate01，质量 1000000000000.0 kg，比热 1000.0 J/(kg·K)；R_CR 1.000e+12 K/W，方法 equivalent_total，输入 {'equivalent_total_resistance_K_W': 1000000000000.0, 'includes_contact': True}；冷板材料来源与配置一致 True，CR 来源与配置一致 True，来源开头 'FE-003 precondition recorded per thermal design 9.4'；冷板资产 fe003_cold_plate_boundary 版本 1；参数覆盖 0 项；t = 0 s 的已接受状态 T_C 275.927778 K；调用方记录 cold_plate 与配置一致 True；DDCU_A: run_id FE-003-nom0-DDCU_A，UTC 起点 2019-06-01T00:00:00+00:00；归档 C_C 1.000e+15 J/K，材料 ColdPlate01_fixed_temperature_mass 属于 ColdPlate01，质量 1000000000000.0 kg，比热 1000.0 J/(kg·K)；R_CR 1.000e+12 K/W，方法 equivalent_total，输入 {'equivalent_total_resistance_K_W': 1000000000000.0, 'includes_contact': True}；冷板材料来源与配置一致 True，CR 来源与配置一致 True，来源开头 'FE-003 precondition recorded per thermal design 9.4'；冷板资产 fe003_cold_plate_boundary 版本 1；参数覆盖 0 项；t = 0 s 的已接受状态 T_C 275.927778 K；调用方记录 cold_plate 与配置一致 True；DDCU_B: run_id FE-003-nom0-DDCU_B，UTC 起点 2019-06-01T00:00:00+00:00；归档 C_C 1.000e+15 J/K，材料 ColdPlate01_fixed_temperature_mass 属于 ColdPlate01，质量 1000000000000.0 kg，比热 1000.0 J/(kg·K)；R_CR 1.000e+12 K/W，方法 equivalent_total，输入 {'equivalent_total_resistance_K_W': 1000000000000.0, 'includes_contact': True}；冷板材料来源与配置一致 True，CR 来源与配置一致 True，来源开头 'FE-003 precondition recorded per thermal design 9.4'；冷板资产 fe003_cold_plate_boundary 版本 1；参数覆盖 0 项；t = 0 s 的已接受状态 T_C 275.927778 K；调用方记录 cold_plate 与配置一致 True；IEA_PVP4: run_id FE-003-nom0-IEA_PVP4，UTC 起点 2019-06-01T00:00:00+00:00；归档 C_C 1.000e+15 J/K，材料 ColdPlate01_fixed_temperature_mass 属于 ColdPlate01，质量 1000000000000.0 kg，比热 1000.0 J/(kg·K)；R_CR 1.000e+12 K/W，方法 equivalent_total，输入 {'equivalent_total_resistance_K_W': 1000000000000.0, 'includes_contact': True}；冷板材料来源与配置一致 True，CR 来源与配置一致 True，来源开头 'FE-003 precondition recorded per thermal design 9.4'；冷板资产 fe003_cold_plate_boundary 版本 1；参数覆盖 0 项；t = 0 s 的已接受状态 T_C 275.927778 K；调用方记录 cold_plate 与配置一致 True；IEA_PVP6: run_id FE-003-nom0-IEA_PVP6，UTC 起点 2019-06-01T00:00:00+00:00；归档 C_C 1.000e+15 J/K，材料 ColdPlate01_fixed_temperature_mass 属于 ColdPlate01，质量 1000000000000.0 kg，比热 1000.0 J/(kg·K)；R_CR 1.000e+12 K/W，方法 equivalent_total，输入 {'equivalent_total_resistance_K_W': 1000000000000.0, 'includes_contact': True}；冷板材料来源与配置一致 True，CR 来源与配置一致 True，来源开头 'FE-003 precondition recorded per thermal design 9.4'；冷板资产 fe003_cold_plate_boundary 版本 1；参数覆盖 0 项；t = 0 s 的已接受状态 T_C 275.927778 K；调用方记录 cold_plate 与配置一致 True；IEA_PVS4: run_id FE-003-nom0-IEA_PVS4，UTC 起点 2019-06-01T00:00:00+00:00；归档 C_C 1.000e+15 J/K，材料 ColdPlate01_fixed_temperature_mass 属于 ColdPlate01，质量 1000000000000.0 kg，比热 1000.0 J/(kg·K)；R_CR 1.000e+12 K/W，方法 equivalent_total，输入 {'equivalent_total_resistance_K_W': 1000000000000.0, 'includes_contact': True}；冷板材料来源与配置一致 True，CR 来源与配置一致 True，来源开头 'FE-003 precondition recorded per thermal design 9.4'；冷板资产 fe003_cold_plate_boundary 版本 1；参数覆盖 0 项；t = 0 s 的已接受状态 T_C 275.927778 K；调用方记录 cold_plate 与配置一致 True；IEA_PVS6: run_id FE-003-nom0-IEA_PVS6，UTC 起点 2019-06-01T00:00:00+00:00；归档 C_C 1.000e+15 J/K，材料 ColdPlate01_fixed_temperature_mass 属于 ColdPlate01，质量 1000000000000.0 kg，比热 1000.0 J/(kg·K)；R_CR 1.000e+12 K/W，方法 equivalent_total，输入 {'equivalent_total_resistance_K_W': 1000000000000.0, 'includes_contact': True}；冷板材料来源与配置一致 True，CR 来源与配置一致 True，来源开头 'FE-003 precondition recorded per thermal design 9.4'；冷板资产 fe003_cold_plate_boundary 版本 1；参数覆盖 0 项；t = 0 s 的已接受状态 T_C 275.927778 K；调用方记录 cold_plate 与配置一致 True",
+   "passed": true
+  },
+  {
+   "name": "步骤1 MBSU 按式 T5 第二行计算 R_JC",
+   "expected": "接触部分 1/(h A) = 1/(60 × 0.7896) = 0.021107734 K/W，导热部分 (L/3)/(κ A) = (0.51 m/3)/(150 × 0.7896) = 0.001435326 K/W，R_JC = 0.022543060 K/W；assemble_thermal_parameters 按 conduction_plus_contact 装配，与手算的相对差不超过 1e-12",
+   "actual": "MBSU_A: 装配 R_JC 0.022543060 K/W，方法 conduction_plus_contact，导热部分 0.001435326 K/W，相对差 0.0e+00；MBSU_B: 装配 R_JC 0.022543060 K/W，方法 conduction_plus_contact，导热部分 0.001435326 K/W，相对差 0.0e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤1 MBSU 导热长度取设备厚度的三分之一",
+   "expected": "厚度 0.51 m 的设备内均匀发热、只经冷板面散热时，一维导热有限体积解的平均温升每瓦等于 (L/3)/(κ A) = 0.001435326 K/W，相对差不超过 1e-06",
+   "actual": "4000 个单元的平均温升 0.001435326 K/W，相对差 3.1e-08，冷板面热流 1.000000000002 W，最远端温升 0.002152989 K/W 即 L/(2κA)",
+   "passed": true
+  },
+  {
+   "name": "步骤1 MBSU C_J 按式 T5 第一行由方块质量与比热装配",
+   "expected": "C_J = 体积 0.402696 m³ × 300 kg/m³ × 900 J/(kg·K) = 108727.920 J/K，相对差不超过 1e-12",
+   "actual": "装配 C_J 108727.920, 108727.920 J/K，最大相对差 0.0e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤1 DDCU 按式 T5 第二行计算 R_JC",
+   "expected": "接触部分 1/(h A) = 1/(60 × 0.5609) = 0.029714150 K/W，导热部分 (L/3)/(κ A) = (0.89 m/3)/(150 × 0.5609) = 0.003526079 K/W，R_JC = 0.033240229 K/W；assemble_thermal_parameters 按 conduction_plus_contact 装配，与手算的相对差不超过 1e-12",
+   "actual": "DDCU_A: 装配 R_JC 0.033240229 K/W，方法 conduction_plus_contact，导热部分 0.003526079 K/W，相对差 0.0e+00；DDCU_B: 装配 R_JC 0.033240229 K/W，方法 conduction_plus_contact，导热部分 0.003526079 K/W，相对差 0.0e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤1 DDCU 导热长度取设备厚度的三分之一",
+   "expected": "厚度 0.89 m 的设备内均匀发热、只经冷板面散热时，一维导热有限体积解的平均温升每瓦等于 (L/3)/(κ A) = 0.003526079 K/W，相对差不超过 1e-06",
+   "actual": "4000 个单元的平均温升 0.003526079 K/W，相对差 3.1e-08，冷板面热流 0.999999999997 W，最远端温升 0.005289119 K/W 即 L/(2κA)",
+   "passed": true
+  },
+  {
+   "name": "步骤1 DDCU C_J 按式 T5 第一行由方块质量与比热装配",
+   "expected": "C_J = 体积 0.499201 m³ × 300 kg/m³ × 900 J/(kg·K) = 134784.270 J/K，相对差不超过 1e-12",
+   "actual": "装配 C_J 134784.270, 134784.270 J/K，最大相对差 0.0e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤1 IEA 按式 T5 第二行计算 R_JC",
+   "expected": "接触部分 1/(h A) = 1/(60 × 13.5000) = 0.001234568 K/W，导热部分 (L/3)/(κ A) = (1.6 m/3)/(150 × 13.5000) = 0.000263374 K/W，R_JC = 0.001497942 K/W；assemble_thermal_parameters 按 conduction_plus_contact 装配，与手算的相对差不超过 1e-12",
+   "actual": "IEA_PVP4: 装配 R_JC 0.001497942 K/W，方法 conduction_plus_contact，导热部分 0.000263374 K/W，相对差 0.0e+00；IEA_PVP6: 装配 R_JC 0.001497942 K/W，方法 conduction_plus_contact，导热部分 0.000263374 K/W，相对差 0.0e+00；IEA_PVS4: 装配 R_JC 0.001497942 K/W，方法 conduction_plus_contact，导热部分 0.000263374 K/W，相对差 0.0e+00；IEA_PVS6: 装配 R_JC 0.001497942 K/W，方法 conduction_plus_contact，导热部分 0.000263374 K/W，相对差 0.0e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤1 IEA 导热长度取设备厚度的三分之一",
+   "expected": "厚度 1.6 m 的设备内均匀发热、只经冷板面散热时，一维导热有限体积解的平均温升每瓦等于 (L/3)/(κ A) = 0.000263374 K/W，相对差不超过 1e-06",
+   "actual": "4000 个单元的平均温升 0.000263374 K/W，相对差 3.1e-08，冷板面热流 0.999999999998 W，最远端温升 0.000395062 K/W 即 L/(2κA)",
+   "passed": true
+  },
+  {
+   "name": "步骤1 IEA C_J 按式 T5 第一行由方块质量与比热装配",
+   "expected": "C_J = 体积 21.600000 m³ × 300 kg/m³ × 900 J/(kg·K) = 5832000.000 J/K，相对差不超过 1e-12",
+   "actual": "装配 C_J 5832000.000, 5832000.000, 5832000.000, 5832000.000 J/K，最大相对差 0.0e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 MBSU 回路 A 运行完成",
+   "expected": "sdtwin_sim.coupled.run_coupled 自轨道正午积分 14 个轨道周期到 77750.740 s，status completed，无错误记录，全部输出样点有效；归档的求解设置等于表 8 的场景配置 method RK45，rtol 1e-08，atol_T_K 1e-06，max_step_s 120.0，output_step_s 60.0，environment_step_s 10.0，event_time_tol_s 0.001",
+   "actual": "status completed，错误 None，已接受步 760，拒绝步 0，函数求值 5915，分段 29，日食边界 28，无效输出样点 0，用时 14.3 s；归档的求解设置 method RK45，rtol 1e-08，atol_T_K 1e-06，max_step_s 120.0，output_step_s 60.0，environment_step_s 10.0，event_time_tol_s 0.001，与配置一致 True",
+   "passed": true
+  },
+  {
+   "name": "步骤2 MBSU 回路 A 冷板温度保持为冷却液温度",
+   "expected": "全部输出样点与已接受状态的 T_C 与冷却液温度 275.927778 K 之差不超过 1e-05 K，q_CR 的绝对值不超过 1e-06 W",
+   "actual": "T_C 最大偏差：输出样点 3.62e-08 K，已接受状态 3.62e-08 K；q_CR 绝对值最大 6.16e-11 W",
+   "passed": true
+  },
+  {
+   "name": "步骤2 MBSU 回路 A 温度导数按式 T3 第二、三行",
+   "expected": "每个输出样点 P_load_W 等于 468.216857 W；q_JC = (T_J − T_C)/R_JC，C_J dT_J/dt = P_load − q_JC，C_C dT_C/dt = q_JC − q_CR，与按归档温度手算之差相对于各项功率不超过 1e-12",
+   "actual": "1297 个输出样点，P_load_W 一致 True；q_JC 相对差 0.0e+00，dT_J/dt 0.0e+00，dT_C/dt 0.0e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 MBSU 回路 A 计算节点温度随时间按式 T3 第二行变化",
+   "expected": "T_J 自 285.00 K 起与指数解 T_C + P_load R_JC + (T_J0 − T_C − P_load R_JC) exp(−t/τ) 之差不超过 0.001 K，τ = C_J R_JC = 2451.1 s",
+   "actual": "输出样点最大差 3.51e-08 K，已接受状态最大差 3.51e-08 K",
+   "passed": true
+  },
+  {
+   "name": "步骤2 MBSU 回路 A 积分到稳态时 T_J 等于冷板温度加 P_load 乘 R_JC",
+   "expected": "结束时 T_J 与 T_C + P_load R_JC = T_C + 468.2169 W × 0.022543060 K/W 之差不超过 0.001 K，最后一个轨道周期内 T_J 的变化不超过 0.001 K",
+   "actual": "t = 77750.740 s 时 T_J 286.482818 K，T_C 275.927777814 K，T_C + P_load R_JC = 286.482818 K，差 -1.15e-09 K；一个周期前 T_J 286.482818 K，变化 2.60e-09 K；q_JC 468.2169 W，P_load 468.2169 W",
+   "passed": true
+  },
+  {
+   "name": "步骤2 MBSU 回路 B 运行完成",
+   "expected": "sdtwin_sim.coupled.run_coupled 自轨道正午积分 14 个轨道周期到 77750.740 s，status completed，无错误记录，全部输出样点有效；归档的求解设置等于表 8 的场景配置 method RK45，rtol 1e-08，atol_T_K 1e-06，max_step_s 120.0，output_step_s 60.0，environment_step_s 10.0，event_time_tol_s 0.001",
+   "actual": "status completed，错误 None，已接受步 760，拒绝步 0，函数求值 5915，分段 29，日食边界 28，无效输出样点 0，用时 13.7 s；归档的求解设置 method RK45，rtol 1e-08，atol_T_K 1e-06，max_step_s 120.0，output_step_s 60.0，environment_step_s 10.0，event_time_tol_s 0.001，与配置一致 True",
+   "passed": true
+  },
+  {
+   "name": "步骤2 MBSU 回路 B 冷板温度保持为冷却液温度",
+   "expected": "全部输出样点与已接受状态的 T_C 与冷却液温度 275.927778 K 之差不超过 1e-05 K，q_CR 的绝对值不超过 1e-06 W",
+   "actual": "T_C 最大偏差：输出样点 3.63e-08 K，已接受状态 3.63e-08 K；q_CR 绝对值最大 6.16e-11 W",
+   "passed": true
+  },
+  {
+   "name": "步骤2 MBSU 回路 B 温度导数按式 T3 第二、三行",
+   "expected": "每个输出样点 P_load_W 等于 468.471340 W；q_JC = (T_J − T_C)/R_JC，C_J dT_J/dt = P_load − q_JC，C_C dT_C/dt = q_JC − q_CR，与按归档温度手算之差相对于各项功率不超过 1e-12",
+   "actual": "1297 个输出样点，P_load_W 一致 True；q_JC 相对差 0.0e+00，dT_J/dt 0.0e+00，dT_C/dt 0.0e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 MBSU 回路 B 计算节点温度随时间按式 T3 第二行变化",
+   "expected": "T_J 自 285.00 K 起与指数解 T_C + P_load R_JC + (T_J0 − T_C − P_load R_JC) exp(−t/τ) 之差不超过 0.001 K，τ = C_J R_JC = 2451.1 s",
+   "actual": "输出样点最大差 3.51e-08 K，已接受状态最大差 3.51e-08 K",
+   "passed": true
+  },
+  {
+   "name": "步骤2 MBSU 回路 B 积分到稳态时 T_J 等于冷板温度加 P_load 乘 R_JC",
+   "expected": "结束时 T_J 与 T_C + P_load R_JC = T_C + 468.4713 W × 0.022543060 K/W 之差不超过 0.001 K，最后一个轨道周期内 T_J 的变化不超过 0.001 K",
+   "actual": "t = 77750.740 s 时 T_J 286.488555 K，T_C 275.927777814 K，T_C + P_load R_JC = 286.488555 K，差 -1.15e-09 K；一个周期前 T_J 286.488555 K，变化 2.60e-09 K；q_JC 468.4713 W，P_load 468.4713 W",
+   "passed": true
+  },
+  {
+   "name": "步骤2 DDCU 回路 A 运行完成",
+   "expected": "sdtwin_sim.coupled.run_coupled 自轨道正午积分 14 个轨道周期到 77750.740 s，status completed，无错误记录，全部输出样点有效；归档的求解设置等于表 8 的场景配置 method RK45，rtol 1e-08，atol_T_K 1e-06，max_step_s 120.0，output_step_s 60.0，environment_step_s 10.0，event_time_tol_s 0.001",
+   "actual": "status completed，错误 None，已接受步 760，拒绝步 0，函数求值 5915，分段 29，日食边界 28，无效输出样点 0，用时 14.7 s；归档的求解设置 method RK45，rtol 1e-08，atol_T_K 1e-06，max_step_s 120.0，output_step_s 60.0，environment_step_s 10.0，event_time_tol_s 0.001，与配置一致 True",
+   "passed": true
+  },
+  {
+   "name": "步骤2 DDCU 回路 A 冷板温度保持为冷却液温度",
+   "expected": "全部输出样点与已接受状态的 T_C 与冷却液温度 275.927778 K 之差不超过 1e-05 K，q_CR 的绝对值不超过 1e-06 W",
+   "actual": "T_C 最大偏差：输出样点 4.93e-08 K，已接受状态 4.93e-08 K；q_CR 绝对值最大 6.16e-11 W",
+   "passed": true
+  },
+  {
+   "name": "步骤2 DDCU 回路 A 温度导数按式 T3 第二、三行",
+   "expected": "每个输出样点 P_load_W 等于 656.449493 W；q_JC = (T_J − T_C)/R_JC，C_J dT_J/dt = P_load − q_JC，C_C dT_C/dt = q_JC − q_CR，与按归档温度手算之差相对于各项功率不超过 1e-12",
+   "actual": "1297 个输出样点，P_load_W 一致 True；q_JC 相对差 0.0e+00，dT_J/dt 0.0e+00，dT_C/dt 0.0e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 DDCU 回路 A 计算节点温度随时间按式 T3 第二行变化",
+   "expected": "T_J 自 285.00 K 起与指数解 T_C + P_load R_JC + (T_J0 − T_C − P_load R_JC) exp(−t/τ) 之差不超过 0.001 K，τ = C_J R_JC = 4480.3 s",
+   "actual": "输出样点最大差 4.64e-08 K，已接受状态最大差 4.64e-08 K",
+   "passed": true
+  },
+  {
+   "name": "步骤2 DDCU 回路 A 积分到稳态时 T_J 等于冷板温度加 P_load 乘 R_JC",
+   "expected": "结束时 T_J 与 T_C + P_load R_JC = T_C + 656.4495 W × 0.033240229 K/W 之差不超过 0.001 K，最后一个轨道周期内 T_J 的变化不超过 0.001 K",
+   "actual": "t = 77750.740 s 时 T_J 297.748309 K，T_C 275.927777827 K，T_C + P_load R_JC = 297.748309 K，差 -3.73e-07 K；一个周期前 T_J 297.748308 K，变化 9.13e-07 K；q_JC 656.4495 W，P_load 656.4495 W",
+   "passed": true
+  },
+  {
+   "name": "步骤2 DDCU 回路 B 运行完成",
+   "expected": "sdtwin_sim.coupled.run_coupled 自轨道正午积分 14 个轨道周期到 77750.740 s，status completed，无错误记录，全部输出样点有效；归档的求解设置等于表 8 的场景配置 method RK45，rtol 1e-08，atol_T_K 1e-06，max_step_s 120.0，output_step_s 60.0，environment_step_s 10.0，event_time_tol_s 0.001",
+   "actual": "status completed，错误 None，已接受步 760，拒绝步 0，函数求值 5915，分段 29，日食边界 28，无效输出样点 0，用时 15.8 s；归档的求解设置 method RK45，rtol 1e-08，atol_T_K 1e-06，max_step_s 120.0，output_step_s 60.0，environment_step_s 10.0，event_time_tol_s 0.001，与配置一致 True",
+   "passed": true
+  },
+  {
+   "name": "步骤2 DDCU 回路 B 冷板温度保持为冷却液温度",
+   "expected": "全部输出样点与已接受状态的 T_C 与冷却液温度 275.927778 K 之差不超过 1e-05 K，q_CR 的绝对值不超过 1e-06 W",
+   "actual": "T_C 最大偏差：输出样点 4.94e-08 K，已接受状态 4.94e-08 K；q_CR 绝对值最大 6.16e-11 W",
+   "passed": true
+  },
+  {
+   "name": "步骤2 DDCU 回路 B 温度导数按式 T3 第二、三行",
+   "expected": "每个输出样点 P_load_W 等于 656.806283 W；q_JC = (T_J − T_C)/R_JC，C_J dT_J/dt = P_load − q_JC，C_C dT_C/dt = q_JC − q_CR，与按归档温度手算之差相对于各项功率不超过 1e-12",
+   "actual": "1297 个输出样点，P_load_W 一致 True；q_JC 相对差 0.0e+00，dT_J/dt 0.0e+00，dT_C/dt 0.0e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 DDCU 回路 B 计算节点温度随时间按式 T3 第二行变化",
+   "expected": "T_J 自 285.00 K 起与指数解 T_C + P_load R_JC + (T_J0 − T_C − P_load R_JC) exp(−t/τ) 之差不超过 0.001 K，τ = C_J R_JC = 4480.3 s",
+   "actual": "输出样点最大差 4.64e-08 K，已接受状态最大差 4.64e-08 K",
+   "passed": true
+  },
+  {
+   "name": "步骤2 DDCU 回路 B 积分到稳态时 T_J 等于冷板温度加 P_load 乘 R_JC",
+   "expected": "结束时 T_J 与 T_C + P_load R_JC = T_C + 656.8063 W × 0.033240229 K/W 之差不超过 0.001 K，最后一个轨道周期内 T_J 的变化不超过 0.001 K",
+   "actual": "t = 77750.740 s 时 T_J 297.760169 K，T_C 275.927777827 K，T_C + P_load R_JC = 297.760169 K，差 -3.74e-07 K；一个周期前 T_J 297.760168 K，变化 9.14e-07 K；q_JC 656.8063 W，P_load 656.8063 W",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVP4 运行完成",
+   "expected": "sdtwin_sim.coupled.run_coupled 自轨道正午积分 14 个轨道周期到 77750.740 s，status completed，无错误记录，全部输出样点有效；归档的求解设置等于表 8 的场景配置 method RK45，rtol 1e-08，atol_T_K 1e-06，max_step_s 120.0，output_step_s 60.0，environment_step_s 10.0，event_time_tol_s 0.001",
+   "actual": "status completed，错误 None，已接受步 760，拒绝步 0，函数求值 5915，分段 29，日食边界 28，无效输出样点 0，用时 15.8 s；归档的求解设置 method RK45，rtol 1e-08，atol_T_K 1e-06，max_step_s 120.0，output_step_s 60.0，environment_step_s 10.0，event_time_tol_s 0.001，与配置一致 True",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVP4 冷板温度保持为冷却液温度",
+   "expected": "全部输出样点与已接受状态的 T_C 与冷却液温度 275.927778 K 之差不超过 1e-05 K，q_CR 的绝对值不超过 1e-06 W",
+   "actual": "T_C 最大偏差：输出样点 4.56e-07 K，已接受状态 4.56e-07 K；q_CR 绝对值最大 6.16e-11 W",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVP4 温度导数按式 T3 第二、三行",
+   "expected": "每个输出样点 P_load_W 等于 5834.941868 W；q_JC = (T_J − T_C)/R_JC，C_J dT_J/dt = P_load − q_JC，C_C dT_C/dt = q_JC − q_CR，与按归档温度手算之差相对于各项功率不超过 1e-12",
+   "actual": "1297 个输出样点，P_load_W 一致 True；q_JC 相对差 0.0e+00，dT_J/dt 0.0e+00，dT_C/dt 0.0e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVP4 计算节点温度随时间按式 T3 第二行变化",
+   "expected": "T_J 自 285.00 K 起与指数解 T_C + P_load R_JC + (T_J0 − T_C − P_load R_JC) exp(−t/τ) 之差不超过 0.001 K，τ = C_J R_JC = 8736.0 s",
+   "actual": "输出样点最大差 4.05e-07 K，已接受状态最大差 4.05e-07 K",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVP4 积分到稳态时 T_J 等于冷板温度加 P_load 乘 R_JC",
+   "expected": "结束时 T_J 与 T_C + P_load R_JC = T_C + 5834.9419 W × 0.001497942 K/W 之差不超过 0.001 K，最后一个轨道周期内 T_J 的变化不超过 0.001 K",
+   "actual": "t = 77750.740 s 时 T_J 284.668230 K，T_C 275.927778233 K，T_C + P_load R_JC = 284.668185 K，差 4.52e-05 K；一个周期前 T_J 284.668270 K，变化 -4.02e-05 K；q_JC 5834.9720 W，P_load 5834.9419 W",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVP6 运行完成",
+   "expected": "sdtwin_sim.coupled.run_coupled 自轨道正午积分 14 个轨道周期到 77750.740 s，status completed，无错误记录，全部输出样点有效；归档的求解设置等于表 8 的场景配置 method RK45，rtol 1e-08，atol_T_K 1e-06，max_step_s 120.0，output_step_s 60.0，environment_step_s 10.0，event_time_tol_s 0.001",
+   "actual": "status completed，错误 None，已接受步 760，拒绝步 0，函数求值 5915，分段 29，日食边界 28，无效输出样点 0，用时 14.8 s；归档的求解设置 method RK45，rtol 1e-08，atol_T_K 1e-06，max_step_s 120.0，output_step_s 60.0，environment_step_s 10.0，event_time_tol_s 0.001，与配置一致 True",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVP6 冷板温度保持为冷却液温度",
+   "expected": "全部输出样点与已接受状态的 T_C 与冷却液温度 275.927778 K 之差不超过 1e-05 K，q_CR 的绝对值不超过 1e-06 W",
+   "actual": "T_C 最大偏差：输出样点 4.55e-07 K，已接受状态 4.55e-07 K；q_CR 绝对值最大 6.16e-11 W",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVP6 温度导数按式 T3 第二、三行",
+   "expected": "每个输出样点 P_load_W 等于 5833.048817 W；q_JC = (T_J − T_C)/R_JC，C_J dT_J/dt = P_load − q_JC，C_C dT_C/dt = q_JC − q_CR，与按归档温度手算之差相对于各项功率不超过 1e-12",
+   "actual": "1297 个输出样点，P_load_W 一致 True；q_JC 相对差 0.0e+00，dT_J/dt 0.0e+00，dT_C/dt 0.0e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVP6 计算节点温度随时间按式 T3 第二行变化",
+   "expected": "T_J 自 285.00 K 起与指数解 T_C + P_load R_JC + (T_J0 − T_C − P_load R_JC) exp(−t/τ) 之差不超过 0.001 K，τ = C_J R_JC = 8736.0 s",
+   "actual": "输出样点最大差 4.05e-07 K，已接受状态最大差 4.05e-07 K",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVP6 积分到稳态时 T_J 等于冷板温度加 P_load 乘 R_JC",
+   "expected": "结束时 T_J 与 T_C + P_load R_JC = T_C + 5833.0488 W × 0.001497942 K/W 之差不超过 0.001 K，最后一个轨道周期内 T_J 的变化不超过 0.001 K",
+   "actual": "t = 77750.740 s 时 T_J 284.665395 K，T_C 275.927778233 K，T_C + P_load R_JC = 284.665349 K，差 4.56e-05 K；一个周期前 T_J 284.665435 K，变化 -4.05e-05 K；q_JC 5833.0793 W，P_load 5833.0488 W",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVS4 运行完成",
+   "expected": "sdtwin_sim.coupled.run_coupled 自轨道正午积分 14 个轨道周期到 77750.740 s，status completed，无错误记录，全部输出样点有效；归档的求解设置等于表 8 的场景配置 method RK45，rtol 1e-08，atol_T_K 1e-06，max_step_s 120.0，output_step_s 60.0，environment_step_s 10.0，event_time_tol_s 0.001",
+   "actual": "status completed，错误 None，已接受步 760，拒绝步 0，函数求值 5915，分段 29，日食边界 28，无效输出样点 0，用时 14.5 s；归档的求解设置 method RK45，rtol 1e-08，atol_T_K 1e-06，max_step_s 120.0，output_step_s 60.0，environment_step_s 10.0，event_time_tol_s 0.001，与配置一致 True",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVS4 冷板温度保持为冷却液温度",
+   "expected": "全部输出样点与已接受状态的 T_C 与冷却液温度 275.927778 K 之差不超过 1e-05 K，q_CR 的绝对值不超过 1e-06 W",
+   "actual": "T_C 最大偏差：输出样点 4.56e-07 K，已接受状态 4.56e-07 K；q_CR 绝对值最大 6.16e-11 W",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVS4 温度导数按式 T3 第二、三行",
+   "expected": "每个输出样点 P_load_W 等于 5840.921530 W；q_JC = (T_J − T_C)/R_JC，C_J dT_J/dt = P_load − q_JC，C_C dT_C/dt = q_JC − q_CR，与按归档温度手算之差相对于各项功率不超过 1e-12",
+   "actual": "1297 个输出样点，P_load_W 一致 True；q_JC 相对差 0.0e+00，dT_J/dt 0.0e+00，dT_C/dt 0.0e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVS4 计算节点温度随时间按式 T3 第二行变化",
+   "expected": "T_J 自 285.00 K 起与指数解 T_C + P_load R_JC + (T_J0 − T_C − P_load R_JC) exp(−t/τ) 之差不超过 0.001 K，τ = C_J R_JC = 8736.0 s",
+   "actual": "输出样点最大差 4.05e-07 K，已接受状态最大差 4.05e-07 K",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVS4 积分到稳态时 T_J 等于冷板温度加 P_load 乘 R_JC",
+   "expected": "结束时 T_J 与 T_C + P_load R_JC = T_C + 5840.9215 W × 0.001497942 K/W 之差不超过 0.001 K，最后一个轨道周期内 T_J 的变化不超过 0.001 K",
+   "actual": "t = 77750.740 s 时 T_J 284.677186 K，T_C 275.927778234 K，T_C + P_load R_JC = 284.677142 K，差 4.40e-05 K；一个周期前 T_J 284.677225 K，变化 -3.91e-05 K；q_JC 5840.9509 W，P_load 5840.9215 W",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVS6 运行完成",
+   "expected": "sdtwin_sim.coupled.run_coupled 自轨道正午积分 14 个轨道周期到 77750.740 s，status completed，无错误记录，全部输出样点有效；归档的求解设置等于表 8 的场景配置 method RK45，rtol 1e-08，atol_T_K 1e-06，max_step_s 120.0，output_step_s 60.0，environment_step_s 10.0，event_time_tol_s 0.001",
+   "actual": "status completed，错误 None，已接受步 760，拒绝步 0，函数求值 5915，分段 29，日食边界 28，无效输出样点 0，用时 14.2 s；归档的求解设置 method RK45，rtol 1e-08，atol_T_K 1e-06，max_step_s 120.0，output_step_s 60.0，environment_step_s 10.0，event_time_tol_s 0.001，与配置一致 True",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVS6 冷板温度保持为冷却液温度",
+   "expected": "全部输出样点与已接受状态的 T_C 与冷却液温度 275.927778 K 之差不超过 1e-05 K，q_CR 的绝对值不超过 1e-06 W",
+   "actual": "T_C 最大偏差：输出样点 4.56e-07 K，已接受状态 4.56e-07 K；q_CR 绝对值最大 6.16e-11 W",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVS6 温度导数按式 T3 第二、三行",
+   "expected": "每个输出样点 P_load_W 等于 5835.223575 W；q_JC = (T_J − T_C)/R_JC，C_J dT_J/dt = P_load − q_JC，C_C dT_C/dt = q_JC − q_CR，与按归档温度手算之差相对于各项功率不超过 1e-12",
+   "actual": "1297 个输出样点，P_load_W 一致 True；q_JC 相对差 0.0e+00，dT_J/dt 0.0e+00，dT_C/dt 0.0e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVS6 计算节点温度随时间按式 T3 第二行变化",
+   "expected": "T_J 自 285.00 K 起与指数解 T_C + P_load R_JC + (T_J0 − T_C − P_load R_JC) exp(−t/τ) 之差不超过 0.001 K，τ = C_J R_JC = 8736.0 s",
+   "actual": "输出样点最大差 4.05e-07 K，已接受状态最大差 4.05e-07 K",
+   "passed": true
+  },
+  {
+   "name": "步骤2 IEA 回路 PVS6 积分到稳态时 T_J 等于冷板温度加 P_load 乘 R_JC",
+   "expected": "结束时 T_J 与 T_C + P_load R_JC = T_C + 5835.2236 W × 0.001497942 K/W 之差不超过 0.001 K，最后一个轨道周期内 T_J 的变化不超过 0.001 K",
+   "actual": "t = 77750.740 s 时 T_J 284.668652 K，T_C 275.927778233 K，T_C + P_load R_JC = 284.668607 K，差 4.51e-05 K；一个周期前 T_J 284.668692 K，变化 -4.01e-05 K；q_JC 5835.2537 W，P_load 5835.2236 W",
+   "passed": true
+  },
+  {
+   "name": "步骤3 MBSU 平均温度与有限元第三圈平均温度比较",
+   "expected": "每台 MBSU 的热模块最后一个轨道周期 5553.6243 s 内按时间加权的 T_J 平均值与有限元 items.csv 第三圈 Tmean_C 均为有限值，两者之差不超过 1 K",
+   "actual": "MBSU_1 回路 A：P_load 468.22 W，热模块 13.333 °C，有限元 13.562 °C，差 -0.229 K；MBSU_4 回路 A：P_load 468.22 W，热模块 13.333 °C，有限元 13.547 °C，差 -0.214 K；MBSU_2 回路 B：P_load 468.47 W，热模块 13.339 °C，有限元 13.513 °C，差 -0.174 K；MBSU_3 回路 B：P_load 468.47 W，热模块 13.339 °C，有限元 13.553 °C，差 -0.214 K；全部为有限值 True；最大差的绝对值 0.229 K",
+   "passed": true
+  },
+  {
+   "name": "步骤3 DDCU 平均温度与有限元第三圈平均温度比较",
+   "expected": "每台 DDCU 的热模块最后一个轨道周期 5553.6243 s 内按时间加权的 T_J 平均值与有限元 items.csv 第三圈 Tmean_C 均为有限值，两者之差不超过 1 K",
+   "actual": "DDCU_S0_1A 回路 A：P_load 656.45 W，热模块 24.598 °C，有限元 24.400 °C，差 +0.198 K；DDCU_S0_4B 回路 A：P_load 656.45 W，热模块 24.598 °C，有限元 24.378 °C，差 +0.220 K；DDCU_S1_4B 回路 A：P_load 656.45 W，热模块 24.598 °C，有限元 24.349 °C，差 +0.250 K；DDCU_S0_3B 回路 B：P_load 656.81 W，热模块 24.610 °C，有限元 24.384 °C，差 +0.226 K；DDCU_S0_2B 回路 B：P_load 656.81 W，热模块 24.610 °C，有限元 24.411 °C，差 +0.199 K；DDCU_P1_3A 回路 B：P_load 656.81 W，热模块 24.610 °C，有限元 24.449 °C，差 +0.161 K；全部为有限值 True；最大差的绝对值 0.250 K",
+   "passed": true
+  },
+  {
+   "name": "步骤3 IEA 平均温度与有限元第三圈平均温度比较",
+   "expected": "每台 IEA 的热模块最后一个轨道周期 5553.6243 s 内按时间加权的 T_J 平均值与有限元 items.csv 第三圈 Tmean_C 均为有限值，两者之差不超过 1 K",
+   "actual": "IEA_P4 回路 PVP4：P_load 5834.94 W，热模块 11.518 °C，有限元 11.524 °C，差 -0.006 K；IEA_P6 回路 PVP6：P_load 5833.05 W，热模块 11.515 °C，有限元 11.521 °C，差 -0.006 K；IEA_S4 回路 PVS4：P_load 5840.92 W，热模块 11.527 °C，有限元 11.533 °C，差 -0.006 K；IEA_S6 回路 PVS6：P_load 5835.22 W，热模块 11.519 °C，有限元 11.524 °C，差 -0.006 K；全部为有限值 True；最大差的绝对值 0.006 K",
+   "passed": true
+  },
+  {
+   "name": "验收判据 三类设备平均温度差不超过 1 K",
+   "expected": "MBSU、DDCU 与 IEA 共 14 台设备都有有限的平均温度差，绝对值均不超过 1 K",
+   "actual": "MBSU 最大差 0.229 K；DDCU 最大差 0.250 K；IEA 最大差 0.006 K；设备 14 台，有限值 14 台；总体最大 0.250 K",
+   "passed": true
+  }
+ ],
+ "metrics": {
+  "cold_plate_record_9_4": {
+   "MBSU_A": {
+    "C_C_value": true,
+    "C_C_portion": true,
+    "C_C_source": true,
+    "R_CR_value": true,
+    "R_CR_source": true,
+    "asset": true,
+    "no_override": true,
+    "initial_T_C": true,
+    "caller_record": true
+   },
+   "MBSU_B": {
+    "C_C_value": true,
+    "C_C_portion": true,
+    "C_C_source": true,
+    "R_CR_value": true,
+    "R_CR_source": true,
+    "asset": true,
+    "no_override": true,
+    "initial_T_C": true,
+    "caller_record": true
+   },
+   "DDCU_A": {
+    "C_C_value": true,
+    "C_C_portion": true,
+    "C_C_source": true,
+    "R_CR_value": true,
+    "R_CR_source": true,
+    "asset": true,
+    "no_override": true,
+    "initial_T_C": true,
+    "caller_record": true
+   },
+   "DDCU_B": {
+    "C_C_value": true,
+    "C_C_portion": true,
+    "C_C_source": true,
+    "R_CR_value": true,
+    "R_CR_source": true,
+    "asset": true,
+    "no_override": true,
+    "initial_T_C": true,
+    "caller_record": true
+   },
+   "IEA_PVP4": {
+    "C_C_value": true,
+    "C_C_portion": true,
+    "C_C_source": true,
+    "R_CR_value": true,
+    "R_CR_source": true,
+    "asset": true,
+    "no_override": true,
+    "initial_T_C": true,
+    "caller_record": true
+   },
+   "IEA_PVP6": {
+    "C_C_value": true,
+    "C_C_portion": true,
+    "C_C_source": true,
+    "R_CR_value": true,
+    "R_CR_source": true,
+    "asset": true,
+    "no_override": true,
+    "initial_T_C": true,
+    "caller_record": true
+   },
+   "IEA_PVS4": {
+    "C_C_value": true,
+    "C_C_portion": true,
+    "C_C_source": true,
+    "R_CR_value": true,
+    "R_CR_source": true,
+    "asset": true,
+    "no_override": true,
+    "initial_T_C": true,
+    "caller_record": true
+   },
+   "IEA_PVS6": {
+    "C_C_value": true,
+    "C_C_portion": true,
+    "C_C_source": true,
+    "R_CR_value": true,
+    "R_CR_source": true,
+    "asset": true,
+    "no_override": true,
+    "initial_T_C": true,
+    "caller_record": true
+   }
+  },
+  "step1_r_jc": {
+   "MBSU": {
+    "area_m2": 0.7896,
+    "thickness_m": 0.51,
+    "volume_m3": 0.402696,
+    "mass_kg": 120.8088,
+    "C_J_hand_J_K": 108727.92,
+    "contact_K_W": 0.02110773387369132,
+    "length_m": 0.17,
+    "conduction_K_W": 0.00143532590341101,
+    "R_JC_K_W": 0.02254305977710233,
+    "slab_mean_rise_K_per_W": 0.0014353259482702283,
+    "slab_relative_difference": 3.1253681292791666e-08,
+    "module_worst_relative_R": 0.0,
+    "module_worst_relative_C": 0.0
+   },
+   "DDCU": {
+    "area_m2": 0.5609,
+    "thickness_m": 0.89,
+    "volume_m3": 0.49920100000000006,
+    "mass_kg": 149.76030000000003,
+    "C_J_hand_J_K": 134784.27000000002,
+    "contact_K_W": 0.02971414987817199,
+    "length_m": 0.2966666666666667,
+    "conduction_K_W": 0.0035260791188764097,
+    "R_JC_K_W": 0.0332402289970484,
+    "slab_mean_rise_K_per_W": 0.0035260792290510786,
+    "slab_relative_difference": 3.124565988251708e-08,
+    "module_worst_relative_R": 0.0,
+    "module_worst_relative_C": 0.0
+   },
+   "IEA": {
+    "area_m2": 13.5,
+    "thickness_m": 1.6,
+    "volume_m3": 21.6,
+    "mass_kg": 6480.0,
+    "C_J_hand_J_K": 5832000.0,
+    "contact_K_W": 0.0012345679012345679,
+    "length_m": 0.5333333333333333,
+    "conduction_K_W": 0.00026337448559670784,
+    "R_JC_K_W": 0.0014979423868312757,
+    "slab_mean_rise_K_per_W": 0.0002633744938260515,
+    "slab_relative_difference": 3.1245789128660694e-08,
+    "module_worst_relative_R": 0.0,
+    "module_worst_relative_C": 0.0
+   }
+  },
+  "step2_runs": {
+   "MBSU_A": {
+    "device": "MBSU",
+    "loop": "A",
+    "items": [
+     "MBSU_1",
+     "MBSU_4"
+    ],
+    "P_load_W": 468.21685729244774,
+    "R_JC_K_W": 0.02254305977710233,
+    "C_J_J_K": 108727.92,
+    "tau_s": 2451.06,
+    "T_J_end_K": 286.4828184154517,
+    "T_C_end_K": 275.9277778140087,
+    "T_ss_K": 286.48281841659934,
+    "T_ss_coolant_K": 286.48281838036837,
+    "steady_error_K": -1.1476686267997138e-09,
+    "repetition_K": 2.5992221708293073e-09,
+    "cold_plate_dev_K": 3.6230972000339534e-08,
+    "q_CR_max_W": 6.160626319579402e-11,
+    "exp_error_K": 3.508330337353982e-08,
+    "derivative_rel_errors": {
+     "q_JC": 0.0,
+     "dT_J": 0.0,
+     "dT_C": 0.0
+    },
+    "q_JC_end_W": 468.21685724153684,
+    "completed": true,
+    "solver_settings_match": true,
+    "wall_s": 14.259586000000127,
+    "passed": {
+     "run": true,
+     "cold_plate": true,
+     "derivative": true,
+     "exponential": true,
+     "steady": true
+    },
+    "statistics": {
+     "accepted_steps": 760,
+     "rejected_steps": 0,
+     "function_evaluations": 5915,
+     "segments": 29,
+     "eclipse_boundaries": 28,
+     "output_samples": 1297
+    },
+    "S_range_K": [
+     270.0,
+     299.11280408519116
+    ],
+    "R_range_K": [
+     214.3215146182147,
+     270.0
+    ],
+    "range_warnings": 0
+   },
+   "MBSU_B": {
+    "device": "MBSU",
+    "loop": "B",
+    "items": [
+     "MBSU_2",
+     "MBSU_3"
+    ],
+    "P_load_W": 468.4713403859886,
+    "R_JC_K_W": 0.02254305977710233,
+    "C_J_J_K": 108727.92,
+    "tau_s": 2451.06,
+    "T_J_end_K": 286.4885552430733,
+    "T_C_end_K": 275.92777781404146,
+    "T_ss_K": 286.4885552442221,
+    "T_ss_coolant_K": 286.48855520795837,
+    "steady_error_K": -1.14880549517693e-09,
+    "repetition_K": 2.6018938115157653e-09,
+    "cold_plate_dev_K": 3.626371380960336e-08,
+    "q_CR_max_W": 6.160626319581653e-11,
+    "exp_error_K": 3.511490831442643e-08,
+    "derivative_rel_errors": {
+     "q_JC": 0.0,
+     "dT_J": 0.0,
+     "dT_C": 0.0
+    },
+    "q_JC_end_W": 468.4713403350293,
+    "completed": true,
+    "solver_settings_match": true,
+    "wall_s": 13.749183499996434,
+    "passed": {
+     "run": true,
+     "cold_plate": true,
+     "derivative": true,
+     "exponential": true,
+     "steady": true
+    },
+    "statistics": {
+     "accepted_steps": 760,
+     "rejected_steps": 0,
+     "function_evaluations": 5915,
+     "segments": 29,
+     "eclipse_boundaries": 28,
+     "output_samples": 1297
+    },
+    "S_range_K": [
+     270.0,
+     299.11280408521566
+    ],
+    "R_range_K": [
+     214.32151461822494,
+     270.0
+    ],
+    "range_warnings": 0
+   },
+   "DDCU_A": {
+    "device": "DDCU",
+    "loop": "A",
+    "items": [
+     "DDCU_S0_1A",
+     "DDCU_S0_4B",
+     "DDCU_S1_4B"
+    ],
+    "P_load_W": 656.4494928504217,
+    "R_JC_K_W": 0.0332402289970484,
+    "C_J_J_K": 134784.27000000002,
+    "tau_s": 4480.260000000001,
+    "T_J_end_K": 297.74830892110043,
+    "T_C_end_K": 275.92777782710203,
+    "T_ss_K": 297.74830929444636,
+    "T_ss_coolant_K": 297.7483092451221,
+    "steady_error_K": -3.733459266186401e-07,
+    "repetition_K": 9.126742952503264e-07,
+    "cold_plate_dev_K": 4.932428510073805e-08,
+    "q_CR_max_W": 6.160626305035563e-11,
+    "exp_error_K": 4.638292239178554e-08,
+    "derivative_rel_errors": {
+     "q_JC": 0.0,
+     "dT_J": 0.0,
+     "dT_C": 0.0
+    },
+    "q_JC_end_W": 656.4494816186728,
+    "completed": true,
+    "solver_settings_match": true,
+    "wall_s": 14.73325869999826,
+    "passed": {
+     "run": true,
+     "cold_plate": true,
+     "derivative": true,
+     "exponential": true,
+     "steady": true
+    },
+    "statistics": {
+     "accepted_steps": 760,
+     "rejected_steps": 0,
+     "function_evaluations": 5915,
+     "segments": 29,
+     "eclipse_boundaries": 28,
+     "output_samples": 1297
+    },
+    "S_range_K": [
+     270.0,
+     299.1128041501063
+    ],
+    "R_range_K": [
+     214.3215147767464,
+     270.0
+    ],
+    "range_warnings": 0
+   },
+   "DDCU_B": {
+    "device": "DDCU",
+    "loop": "B",
+    "items": [
+     "DDCU_S0_3B",
+     "DDCU_S0_2B",
+     "DDCU_P1_3A"
+    ],
+    "P_load_W": 656.8062832886386,
+    "R_JC_K_W": 0.0332402289970484,
+    "C_J_J_K": 134784.27000000002,
+    "tau_s": 4480.260000000001,
+    "T_J_end_K": 297.76016871665234,
+    "T_C_end_K": 275.92777782713046,
+    "T_ss_K": 297.760169090345,
+    "T_ss_coolant_K": 297.7601690409923,
+    "steady_error_K": -3.73692671473691e-07,
+    "repetition_K": 9.135226264334051e-07,
+    "cold_plate_dev_K": 4.9352706810168456e-08,
+    "q_CR_max_W": 6.160626304996171e-11,
+    "exp_error_K": 4.6409184051299235e-08,
+    "derivative_rel_errors": {
+     "q_JC": 0.0,
+     "dT_J": 0.0,
+     "dT_C": 0.0
+    },
+    "q_JC_end_W": 656.8062720464567,
+    "completed": true,
+    "solver_settings_match": true,
+    "wall_s": 15.77055339999788,
+    "passed": {
+     "run": true,
+     "cold_plate": true,
+     "derivative": true,
+     "exponential": true,
+     "steady": true
+    },
+    "statistics": {
+     "accepted_steps": 760,
+     "rejected_steps": 0,
+     "function_evaluations": 5915,
+     "segments": 29,
+     "eclipse_boundaries": 28,
+     "output_samples": 1297
+    },
+    "S_range_K": [
+     270.0,
+     299.11280415024726
+    ],
+    "R_range_K": [
+     214.32151477716874,
+     270.0
+    ],
+    "range_warnings": 0
+   },
+   "IEA_PVP4": {
+    "device": "IEA",
+    "loop": "PVP4",
+    "items": [
+     "IEA_P4"
+    ],
+    "P_load_W": 5834.94186820878,
+    "R_JC_K_W": 0.0014979423868312757,
+    "C_J_J_K": 5832000.0,
+    "tau_s": 8736.0,
+    "T_J_end_K": 284.6682301856959,
+    "T_C_end_K": 275.927778233383,
+    "T_ss_K": 284.66818498246937,
+    "T_ss_coolant_K": 284.66818452686414,
+    "steady_error_K": 4.52032265343405e-05,
+    "repetition_K": -4.01703293277933e-05,
+    "cold_plate_dev_K": 4.5560523176391143e-07,
+    "q_CR_max_W": 6.16062636165667e-11,
+    "exp_error_K": 4.0463584127792274e-07,
+    "derivative_rel_errors": {
+     "q_JC": 0.0,
+     "dT_J": 0.0,
+     "dT_C": 0.0
+    },
+    "q_JC_end_W": 5834.972045088023,
+    "completed": true,
+    "solver_settings_match": true,
+    "wall_s": 15.824226700002328,
+    "passed": {
+     "run": true,
+     "cold_plate": true,
+     "derivative": true,
+     "exponential": true,
+     "steady": true
+    },
+    "statistics": {
+     "accepted_steps": 760,
+     "rejected_steps": 0,
+     "function_evaluations": 5915,
+     "segments": 29,
+     "eclipse_boundaries": 28,
+     "output_samples": 1297
+    },
+    "S_range_K": [
+     270.0,
+     299.11280408218045
+    ],
+    "R_range_K": [
+     214.32151461681627,
+     270.0
+    ],
+    "range_warnings": 0
+   },
+   "IEA_PVP6": {
+    "device": "IEA",
+    "loop": "PVP6",
+    "items": [
+     "IEA_P6"
+    ],
+    "P_load_W": 5833.048817235306,
+    "R_JC_K_W": 0.0014979423868312757,
+    "C_J_J_K": 5832000.0,
+    "tau_s": 8736.0,
+    "T_J_end_K": 284.6653948910288,
+    "T_C_end_K": 275.92777823325235,
+    "T_ss_K": 284.6653493010452,
+    "T_ss_coolant_K": 284.6653488455706,
+    "steady_error_K": 4.558998364245781e-05,
+    "repetition_K": -4.051391044868069e-05,
+    "cold_plate_dev_K": 4.554746055873693e-07,
+    "q_CR_max_W": 6.160626361643557e-11,
+    "exp_error_K": 4.045218702231068e-07,
+    "derivative_rel_errors": {
+     "q_JC": 0.0,
+     "dT_J": 0.0,
+     "dT_C": 0.0
+    },
+    "q_JC_end_W": 5833.079252306819,
+    "completed": true,
+    "solver_settings_match": true,
+    "wall_s": 14.810857300006319,
+    "passed": {
+     "run": true,
+     "cold_plate": true,
+     "derivative": true,
+     "exponential": true,
+     "steady": true
+    },
+    "statistics": {
+     "accepted_steps": 760,
+     "rejected_steps": 0,
+     "function_evaluations": 5915,
+     "segments": 29,
+     "eclipse_boundaries": 28,
+     "output_samples": 1297
+    },
+    "S_range_K": [
+     270.0,
+     299.11280408218056
+    ],
+    "R_range_K": [
+     214.32151461681678,
+     270.0
+    ],
+    "range_warnings": 0
+   },
+   "IEA_PVS4": {
+    "device": "IEA",
+    "loop": "PVS4",
+    "items": [
+     "IEA_S4"
+    ],
+    "P_load_W": 5840.921529977032,
+    "R_JC_K_W": 0.0014979423868312757,
+    "C_J_J_K": 5832000.0,
+    "tau_s": 8736.0,
+    "T_J_end_K": 284.6771861532654,
+    "T_C_end_K": 275.9277782337981,
+    "T_ss_K": 284.67714217170607,
+    "T_ss_coolant_K": 284.6771417156857,
+    "steady_error_K": 4.3981559315398044e-05,
+    "repetition_K": -3.908504322680528e-05,
+    "cold_plate_dev_K": 4.560203592518519e-07,
+    "q_CR_max_W": 6.160626361698278e-11,
+    "exp_error_K": 4.049975927955529e-07,
+    "derivative_rel_errors": {
+     "q_JC": 0.0,
+     "dT_J": 0.0,
+     "dT_C": 0.0
+    },
+    "q_JC_end_W": 5840.950891292713,
+    "completed": true,
+    "solver_settings_match": true,
+    "wall_s": 14.46063729999878,
+    "passed": {
+     "run": true,
+     "cold_plate": true,
+     "derivative": true,
+     "exponential": true,
+     "steady": true
+    },
+    "statistics": {
+     "accepted_steps": 760,
+     "rejected_steps": 0,
+     "function_evaluations": 5915,
+     "segments": 29,
+     "eclipse_boundaries": 28,
+     "output_samples": 1297
+    },
+    "S_range_K": [
+     270.0,
+     299.11280408217596
+    ],
+    "R_range_K": [
+     214.32151461681534,
+     270.0
+    ],
+    "range_warnings": 0
+   },
+   "IEA_PVS6": {
+    "device": "IEA",
+    "loop": "PVS6",
+    "items": [
+     "IEA_S6"
+    ],
+    "P_load_W": 5835.223574585425,
+    "R_JC_K_W": 0.0014979423868312757,
+    "C_J_J_K": 5832000.0,
+    "tau_s": 8736.0,
+    "T_J_end_K": 284.6686521080855,
+    "T_C_end_K": 275.9277782334052,
+    "T_ss_K": 284.66860696241383,
+    "T_ss_coolant_K": 284.6686065067864,
+    "steady_error_K": 4.514567166324923e-05,
+    "repetition_K": -4.0119199923083215e-05,
+    "cold_plate_dev_K": 4.55627457540686e-07,
+    "q_CR_max_W": 6.160626361658894e-11,
+    "exp_error_K": 4.0465437223247136e-07,
+    "derivative_rel_errors": {
+     "q_JC": 0.0,
+     "dT_J": 0.0,
+     "dT_C": 0.0
+    },
+    "q_JC_end_W": 5835.2537130420615,
+    "completed": true,
+    "solver_settings_match": true,
+    "wall_s": 14.220772400003625,
+    "passed": {
+     "run": true,
+     "cold_plate": true,
+     "derivative": true,
+     "exponential": true,
+     "steady": true
+    },
+    "statistics": {
+     "accepted_steps": 760,
+     "rejected_steps": 0,
+     "function_evaluations": 5915,
+     "segments": 29,
+     "eclipse_boundaries": 28,
+     "output_samples": 1297
+    },
+    "S_range_K": [
+     270.0,
+     299.11280408218045
+    ],
+    "R_range_K": [
+     214.32151461681627,
+     270.0
+    ],
+    "range_warnings": 0
+   }
+  },
+  "eclipse_boundaries": {
+   "MBSU_A": {
+    "module": 28,
+    "closed_form": 28,
+    "max_error_s": 2.9103830456733704e-11
+   },
+   "MBSU_B": {
+    "module": 28,
+    "closed_form": 28,
+    "max_error_s": 2.9103830456733704e-11
+   },
+   "DDCU_A": {
+    "module": 28,
+    "closed_form": 28,
+    "max_error_s": 2.9103830456733704e-11
+   },
+   "DDCU_B": {
+    "module": 28,
+    "closed_form": 28,
+    "max_error_s": 2.9103830456733704e-11
+   },
+   "IEA_PVP4": {
+    "module": 28,
+    "closed_form": 28,
+    "max_error_s": 2.9103830456733704e-11
+   },
+   "IEA_PVP6": {
+    "module": 28,
+    "closed_form": 28,
+    "max_error_s": 2.9103830456733704e-11
+   },
+   "IEA_PVS4": {
+    "module": 28,
+    "closed_form": 28,
+    "max_error_s": 2.9103830456733704e-11
+   },
+   "IEA_PVS6": {
+    "module": 28,
+    "closed_form": 28,
+    "max_error_s": 2.9103830456733704e-11
+   }
+  },
+  "solver_settings": {
+   "method": "RK45",
+   "rtol": 1e-08,
+   "atol_T_K": 1e-06,
+   "max_step_s": 120.0,
+   "output_step_s": 60.0,
+   "environment_step_s": 10.0,
+   "event_time_tol_s": 0.001,
+   "source": "thermal design table 8: adaptive RK45 with relative tolerance, temperature absolute tolerance and maximum step as scene settings; maximum step equal to the 120 s step of the FE; output sampled on the accepted solution every 60 s"
+  },
+  "step3_comparison": {
+   "MBSU": [
+    {
+     "item": "MBSU_1",
+     "run": "MBSU_A",
+     "loop": "A",
+     "P_load_W": 468.21685729244774,
+     "fe_Tmin_C": 12.70675157552688,
+     "fe_Tmean_C": 13.561669697733974,
+     "fe_Tmax_C": 14.103100445022392,
+     "module_mean_C": 13.332818414152102,
+     "module_min_C": 13.332818412852475,
+     "module_max_C": 13.332818415451698,
+     "diff_K": -0.22885128358187146,
+     "window_s": [
+      72197.11552627897,
+      77750.73979753119
+     ],
+     "inside_fe_range": true
+    },
+    {
+     "item": "MBSU_4",
+     "run": "MBSU_A",
+     "loop": "A",
+     "P_load_W": 468.21685729244774,
+     "fe_Tmin_C": 12.69860505880581,
+     "fe_Tmean_C": 13.547286398593737,
+     "fe_Tmax_C": 14.082596522990912,
+     "module_mean_C": 13.332818414152102,
+     "module_min_C": 13.332818412852475,
+     "module_max_C": 13.332818415451698,
+     "diff_K": -0.21446798444163484,
+     "window_s": [
+      72197.11552627897,
+      77750.73979753119
+     ],
+     "inside_fe_range": true
+    },
+    {
+     "item": "MBSU_2",
+     "run": "MBSU_B",
+     "loop": "B",
+     "P_load_W": 468.4713403859886,
+     "fe_Tmin_C": 12.674632331883117,
+     "fe_Tmean_C": 13.512892213179889,
+     "fe_Tmax_C": 14.031316272468302,
+     "module_mean_C": 13.338555241772363,
+     "module_min_C": 13.338555240471408,
+     "module_max_C": 13.338555243073301,
+     "diff_K": -0.17433697140752535,
+     "window_s": [
+      72197.11552627897,
+      77750.73979753119
+     ],
+     "inside_fe_range": true
+    },
+    {
+     "item": "MBSU_3",
+     "run": "MBSU_B",
+     "loop": "B",
+     "P_load_W": 468.4713403859886,
+     "fe_Tmin_C": 12.701363531860693,
+     "fe_Tmean_C": 13.552951695934446,
+     "fe_Tmax_C": 14.091975973376634,
+     "module_mean_C": 13.338555241772363,
+     "module_min_C": 13.338555240471408,
+     "module_max_C": 13.338555243073301,
+     "diff_K": -0.21439645416208286,
+     "window_s": [
+      72197.11552627897,
+      77750.73979753119
+     ],
+     "inside_fe_range": true
+    }
+   ],
+   "DDCU": [
+    {
+     "item": "DDCU_S0_1A",
+     "run": "DDCU_A",
+     "loop": "A",
+     "P_load_W": 656.4494928504217,
+     "fe_Tmin_C": 21.771157123603473,
+     "fe_Tmean_C": 24.400335547982596,
+     "fe_Tmax_C": 25.98077629467599,
+     "module_mean_C": 24.59830855634388,
+     "module_min_C": 24.59830800842616,
+     "module_max_C": 24.598308921100454,
+     "diff_K": 0.1979730083612843,
+     "window_s": [
+      72197.11552627897,
+      77750.73979753119
+     ],
+     "inside_fe_range": true
+    },
+    {
+     "item": "DDCU_S0_4B",
+     "run": "DDCU_A",
+     "loop": "A",
+     "P_load_W": 656.4494928504217,
+     "fe_Tmin_C": 21.75228914198533,
+     "fe_Tmean_C": 24.378140638819993,
+     "fe_Tmax_C": 25.948634613869103,
+     "module_mean_C": 24.59830855634388,
+     "module_min_C": 24.59830800842616,
+     "module_max_C": 24.598308921100454,
+     "diff_K": 0.22016791752388798,
+     "window_s": [
+      72197.11552627897,
+      77750.73979753119
+     ],
+     "inside_fe_range": true
+    },
+    {
+     "item": "DDCU_S1_4B",
+     "run": "DDCU_A",
+     "loop": "A",
+     "P_load_W": 656.4494928504217,
+     "fe_Tmin_C": 21.72347216383139,
+     "fe_Tmean_C": 24.348652961740406,
+     "fe_Tmax_C": 25.92322298979923,
+     "module_mean_C": 24.59830855634388,
+     "module_min_C": 24.59830800842616,
+     "module_max_C": 24.598308921100454,
+     "diff_K": 0.24965559460347464,
+     "window_s": [
+      72197.11552627897,
+      77750.73979753119
+     ],
+     "inside_fe_range": true
+    },
+    {
+     "item": "DDCU_S0_3B",
+     "run": "DDCU_B",
+     "loop": "B",
+     "P_load_W": 656.8062832886386,
+     "fe_Tmin_C": 21.75980189342596,
+     "fe_Tmean_C": 24.383680795729354,
+     "fe_Tmax_C": 25.95682451520679,
+     "module_mean_C": 24.610168351556737,
+     "module_min_C": 24.61016780312974,
+     "module_max_C": 24.610168716652367,
+     "diff_K": 0.2264875558273829,
+     "window_s": [
+      72197.11552627897,
+      77750.73979753119
+     ],
+     "inside_fe_range": true
+    },
+    {
+     "item": "DDCU_S0_2B",
+     "run": "DDCU_B",
+     "loop": "B",
+     "P_load_W": 656.8062832886386,
+     "fe_Tmin_C": 21.780644274853103,
+     "fe_Tmean_C": 24.411245057808085,
+     "fe_Tmax_C": 25.987031824390783,
+     "module_mean_C": 24.610168351556737,
+     "module_min_C": 24.61016780312974,
+     "module_max_C": 24.610168716652367,
+     "diff_K": 0.1989232937486527,
+     "window_s": [
+      72197.11552627897,
+      77750.73979753119
+     ],
+     "inside_fe_range": true
+    },
+    {
+     "item": "DDCU_P1_3A",
+     "run": "DDCU_B",
+     "loop": "B",
+     "P_load_W": 656.8062832886386,
+     "fe_Tmin_C": 21.820974606645848,
+     "fe_Tmean_C": 24.44878206263672,
+     "fe_Tmax_C": 26.03266603686336,
+     "module_mean_C": 24.610168351556737,
+     "module_min_C": 24.61016780312974,
+     "module_max_C": 24.610168716652367,
+     "diff_K": 0.16138628892001705,
+     "window_s": [
+      72197.11552627897,
+      77750.73979753119
+     ],
+     "inside_fe_range": true
+    }
+   ],
+   "IEA": [
+    {
+     "item": "IEA_P4",
+     "run": "IEA_PVP4",
+     "loop": "PVP4",
+     "P_load_W": 5834.94186820878,
+     "fe_Tmin_C": 9.858054391388293,
+     "fe_Tmean_C": 11.52425986349831,
+     "fe_Tmax_C": 12.382702038012326,
+     "module_mean_C": 11.518248155279014,
+     "module_min_C": 11.518230185695927,
+     "module_max_C": 11.518270356025255,
+     "diff_K": -0.006011708219295642,
+     "window_s": [
+      72197.11552627897,
+      77750.73979753119
+     ],
+     "inside_fe_range": true
+    },
+    {
+     "item": "IEA_P6",
+     "run": "IEA_PVP6",
+     "loop": "PVP6",
+     "P_load_W": 5833.048817235306,
+     "fe_Tmin_C": 9.86038567616265,
+     "fe_Tmean_C": 11.521398273561777,
+     "fe_Tmax_C": 12.373582328775,
+     "module_mean_C": 11.515413014322768,
+     "module_min_C": 11.515394891028848,
+     "module_max_C": 11.515435404939296,
+     "diff_K": -0.0059852592390097215,
+     "window_s": [
+      72197.11552627897,
+      77750.73979753119
+     ],
+     "inside_fe_range": true
+    },
+    {
+     "item": "IEA_S4",
+     "run": "IEA_PVS4",
+     "loop": "PVS4",
+     "P_load_W": 5840.921529977032,
+     "fe_Tmin_C": 9.868497652554652,
+     "fe_Tmean_C": 11.53299896884991,
+     "fe_Tmax_C": 12.381444062733522,
+     "module_mean_C": 11.527203637314486,
+     "module_min_C": 11.527186153265404,
+     "module_max_C": 11.527225238308631,
+     "diff_K": -0.005795331535423998,
+     "window_s": [
+      72197.11552627897,
+      77750.73979753119
+     ],
+     "inside_fe_range": true
+    },
+    {
+     "item": "IEA_S6",
+     "run": "IEA_PVS6",
+     "loop": "PVS6",
+     "P_load_W": 5835.223574585425,
+     "fe_Tmin_C": 9.860675211890339,
+     "fe_Tmean_C": 11.52447487785334,
+     "fe_Tmax_C": 12.372685073128366,
+     "module_mean_C": 11.518670054794345,
+     "module_min_C": 11.518652108085519,
+     "module_max_C": 11.518692227285442,
+     "diff_K": -0.005804823058994657,
+     "window_s": [
+      72197.11552627897,
+      77750.73979753119
+     ],
+     "inside_fe_range": true
+    }
+   ]
+  },
+  "step3_worst_abs_diff_K": {
+   "MBSU": 0.22885128358187146,
+   "DDCU": 0.24965559460347464,
+   "IEA": 0.006011708219295642
+  },
+  "fe_context": {
+   "box_class_sample_mean_C": 11.854741176470586,
+   "box_class_time_weighted_mean_C": 11.85507044678303,
+   "hottest_block_start_orbit3_C": 25.192611201671067,
+   "hottest_block_end_C": 26.0327,
+   "hottest_block_rise_over_one_period_K": 0.8400887983289316,
+   "hottest_item_orbit3": "DDCU_P1_3A",
+   "hottest_item_Tmax_C": 26.03266603686336,
+   "hottest_candidates_orbit3": [
+    "DDCU_P1_3A",
+    "DDCU_S0_1A",
+    "DDCU_S0_2B",
+    "DDCU_S0_3B",
+    "DDCU_S0_4B",
+    "DDCU_S1_4B"
+   ],
+   "hottest_class_is_DDCU": true,
+   "fe_periodicity_box_class_K": -0.048735617540295095,
+   "orbit3_window_s": [
+    11006.375728747771,
+    16560.0
+   ],
+   "finite": true
+  },
+  "auxiliary_earth_flux_resolution": {
+   "max_abs_difference_W_m2": 0.007025577542904671,
+   "instants": 6
+  },
+  "p_load_split_diagnostic": {
+   "method": "implied cold-plate heat (FE Tmean - coolant) / R_JC per device, R_JC by hand from T5",
+   "devices": {
+    "MBSU_1": {
+     "device": "MBSU",
+     "loop": "A",
+     "Q_W": 495.0,
+     "P_load_W": 468.21685729244774,
+     "uniform_share": 0.9458926409948439,
+     "R_JC_K_W": 0.02254305977710233,
+     "implied_cold_plate_W": 478.36859887625945,
+     "implied_share": 0.9664012098510292,
+     "P_load_minus_implied_W": -10.151741583811713,
+     "R_JC_times_excess_K": -0.22885131736556294,
+     "diff_K": -0.22885128358187146
+    },
+    "MBSU_4": {
+     "device": "MBSU",
+     "loop": "A",
+     "Q_W": 495.0,
+     "P_load_W": 468.21685729244774,
+     "uniform_share": 0.9458926409948439,
+     "R_JC_K_W": 0.02254305977710233,
+     "implied_cold_plate_W": 477.7305621908015,
+     "implied_share": 0.965112246850104,
+     "P_load_minus_implied_W": -9.513704898353751,
+     "R_JC_times_excess_K": -0.21446801822529987,
+     "diff_K": -0.21446798444163484
+    },
+    "MBSU_2": {
+     "device": "MBSU",
+     "loop": "B",
+     "Q_W": 495.0,
+     "P_load_W": 468.4713403859886,
+     "uniform_share": 0.9464067482545224,
+     "R_JC_K_W": 0.02254305977710233,
+     "implied_cold_plate_W": 476.20485158390545,
+     "implied_share": 0.962030003199809,
+     "P_load_minus_implied_W": -7.733511197916869,
+     "R_JC_times_excess_K": -0.17433700522153023,
+     "diff_K": -0.17433697140752535
+    },
+    "MBSU_3": {
+     "device": "MBSU",
+     "loop": "B",
+     "Q_W": 495.0,
+     "P_load_W": 468.4713403859886,
+     "uniform_share": 0.9464067482545224,
+     "R_JC_K_W": 0.02254305977710233,
+     "implied_cold_plate_W": 477.9818722346351,
+     "implied_share": 0.9656199439083537,
+     "P_load_minus_implied_W": -9.510531848646508,
+     "R_JC_times_excess_K": -0.21439648797607377,
+     "diff_K": -0.21439645416208286
+    },
+    "DDCU_S0_1A": {
+     "device": "DDCU",
+     "loop": "A",
+     "Q_W": 694.0,
+     "P_load_W": 656.4494928504217,
+     "uniform_share": 0.9458926409948439,
+     "R_JC_K_W": 0.0332402289970484,
+     "implied_cold_plate_W": 650.4936464825444,
+     "implied_share": 0.9373107298019371,
+     "P_load_minus_implied_W": 5.9558463678773705,
+     "R_JC_times_excess_K": 0.19797369713948276,
+     "diff_K": 0.1979730083612843
+    },
+    "DDCU_S0_4B": {
+     "device": "DDCU",
+     "loop": "A",
+     "Q_W": 694.0,
+     "P_load_W": 656.4494928504217,
+     "uniform_share": 0.9458926409948439,
+     "R_JC_K_W": 0.0332402289970484,
+     "implied_cold_plate_W": 649.8259342004012,
+     "implied_share": 0.9363486083579268,
+     "P_load_minus_implied_W": 6.623558650020527,
+     "R_JC_times_excess_K": 0.22016860630206309,
+     "diff_K": 0.22016791752388798
+    },
+    "DDCU_S0_3B": {
+     "device": "DDCU",
+     "loop": "B",
+     "Q_W": 694.0,
+     "P_load_W": 656.8062832886386,
+     "uniform_share": 0.9464067482545224,
+     "R_JC_K_W": 0.0332402289970484,
+     "implied_cold_plate_W": 649.9926044393401,
+     "implied_share": 0.93658876720366,
+     "P_load_minus_implied_W": 6.813678849298526,
+     "R_JC_times_excess_K": 0.22648824526302824,
+     "diff_K": 0.2264875558273829
+    },
+    "DDCU_S0_2B": {
+     "device": "DDCU",
+     "loop": "B",
+     "Q_W": 694.0,
+     "P_load_W": 656.8062832886386,
+     "uniform_share": 0.9464067482545224,
+     "R_JC_K_W": 0.0332402289970484,
+     "implied_cold_plate_W": 650.8218484882055,
+     "implied_share": 0.937783643354763,
+     "P_load_minus_implied_W": 5.984434800433064,
+     "R_JC_times_excess_K": 0.19892398318430068,
+     "diff_K": 0.1989232937486527
+    },
+    "DDCU_S1_4B": {
+     "device": "DDCU",
+     "loop": "A",
+     "Q_W": 694.0,
+     "P_load_W": 656.4494928504217,
+     "uniform_share": 0.9458926409948439,
+     "R_JC_K_W": 0.0332402289970484,
+     "implied_cold_plate_W": 648.9388260796293,
+     "implied_share": 0.9350703545815984,
+     "P_load_minus_implied_W": 7.510666770792454,
+     "R_JC_times_excess_K": 0.2496562833816632,
+     "diff_K": 0.24965559460347464
+    },
+    "DDCU_P1_3A": {
+     "device": "DDCU",
+     "loop": "B",
+     "Q_W": 694.0,
+     "P_load_W": 656.8062832886386,
+     "uniform_share": 0.9464067482545224,
+     "R_JC_K_W": 0.0332402289970484,
+     "implied_cold_plate_W": 651.9511128152352,
+     "implied_share": 0.9394108253821833,
+     "P_load_minus_implied_W": 4.855170473403405,
+     "R_JC_times_excess_K": 0.16138697835563706,
+     "diff_K": 0.16138628892001705
+    }
+   },
+   "loops": {
+    "A": {
+     "members": [
+      "MBSU_1",
+      "MBSU_4",
+      "DDCU_S0_1A",
+      "DDCU_S0_4B",
+      "DDCU_S1_4B"
+     ],
+     "implied_W": 2905.3575678296356,
+     "fe_cold_plate_W": 2905.7821931361605,
+     "difference_W": -0.4246253065248311
+    },
+    "B": {
+     "members": [
+      "MBSU_2",
+      "MBSU_3",
+      "DDCU_S0_3B",
+      "DDCU_S0_2B",
+      "DDCU_P1_3A"
+     ],
+     "implied_W": 2906.9522895613213,
+     "fe_cold_plate_W": 2907.361530637893,
+     "difference_W": -0.4092410765715613
+    }
+   }
+  },
+  "series_file": "tests/results/FE-003_series.json",
+  "coolant_K": 275.92777777777775,
+  "T_J0_K": 285.0,
+  "run_end_s": 77750.73979753119,
+  "orbit_period_s": 5553.624271252228,
+  "coolant_case_value_shift_K": 0.02222222222222836,
+  "setup_wall_s": 117.84081129998958
+ },
+ "summary_cn": "本用例按有限元平均环境工况，对 MBSU、DDCU 与 IEA 三类冷板设备共 14 台检验计算节点经冷板的传热计算。设备尺寸与发热、冷板换热系数 60 W·m^{−2}·K^{−1} 与设备等效导热系数 150 W·m^{−1}·K^{−1} 取自有限元模型参数表，与用例输入一致；冷却液温度取有限元设定点 37 °F，即 2.78 °C，用例写作 2.8 °C，按 2.8 °C 计算时各设备的稳态温度高 0.022 K。步骤1按式 T5 第二行计算 $R_JC$，接触部分取冷板换热系数与冷板面积乘积的倒数，导热部分以设备厚度的三分之一为导热长度：MBSU 冷板面 0.7896 m²，厚度 0.51 m，接触部分 0.021108 K/W，导热部分 0.001435 K/W，$R_JC$ 为 0.022543 K/W；DDCU 冷板面 0.5609 m²，厚度 0.89 m，接触部分 0.029714 K/W，导热部分 0.003526 K/W，$R_JC$ 为 0.033240 K/W；IEA 冷板面 13.5 m²，厚度 1.6 m，接触部分 0.001235 K/W，导热部分 0.000263 K/W，$R_JC$ 为 0.001498 K/W。assemble_thermal_parameters 装配的 $R_JC$ 与 $C_J$ 和手算值的相对差最大为 0，限值 1×10^{−12}；一维均匀发热导热的有限体积解给出的每瓦平均温升与三分之一厚度的导热热阻相对差最大为 3.1×10^{−8}，限值 1×10^{−6}；步骤1的 9 项检查全部通过。$P_load$ 取有限元第三圈经冷板排出的热量。有限元按冷却回路给出冷板热量，IEA 每个 PVTCS 回路只有一台，取所在回路的冷板热量 5833.0 至 5840.9 W；MBSU 与 DDCU 的单台冷板热量在有限元结果中没有单独输出，按所在回路冷板热量与该回路冷板设备总发热之比折算，回路 A 与 B 的比值为 0.9459 与 0.9464，即这些回路冷板设备的发热分别有 5.41% 与 5.36% 未经冷板进入回路，与用例所述约 5.4% 一致。这部分热量包括多层隔热外表面的辐射换热和方块的储热，本用例没有分开计量；有限元方块的最高温度在第三圈内一直出现在 DDCU，相隔一个轨道周期的第三圈首尾由 25.19 °C 升到 26.03 °C，说明第三圈末温度最高的 DDCU 方块在这一圈内仍在升温，一部分发热储存在方块内。冷板热容取 1×10^{15} J/K 并以冷却液温度为初温，CR 热阻取 1×10^{12} K/W，使冷板温度保持为冷却液温度，对应有限元的冷板边界；这组取值连同来源说明按第 9.4 节作为测试配置记入每次运行的归档。前置条件与输入的 10 项检查全部通过。步骤2经 sdtwin_sim.coupled 在每次试算中调用 thermal_derivative，按每类设备与回路共运行 8 次，完成 8 次，积分方法 RK45，相对容限 1×10^{−8}，温度绝对容限 1×10^{−6} K，最大步长 120 s，自轨道正午积分 14 个轨道周期，在日食边界分段，每次运行的 28 个日食边界与圆柱阴影的解析时刻相差最大 2.9×10^{−11} s；计算节点初温取有限元方块初温 285 K。太阳能板、电池、电源设备与散热板只用于补齐六个节点，不参与比较，太阳能板与散热板表面的反照与地球红外由 sdtwin_sim.earth_flux 按平均环境工况给出，按 120 × 180 网格积分，在一个轨道周期的 6 个时刻与默认的 240 × 360 网格相差最大 0.007 W/m²。冷板温度偏离冷却液温度最大 4.6×10^{−7} K，限值 1×10^{−5} K；$q_CR$ 的绝对值最大 6.2×10^{−11} W，限值 1×10^{−6} W；温度导数与式 T3 第二、三行按归档温度手算的相对差最大为 0，限值 1×10^{−12}；计算节点温度全程与指数解之差最大 4.0×10^{−7} K，限值 0.001 K；结束时 $T_J$ 与冷板温度加 $P_load$ 乘 $R_JC$ 之差最大 4.6×10^{−5} K，最后一个轨道周期内 $T_J$ 的变化最大 4.1×10^{−5} K，限值均为 0.001 K；步骤2的 40 项检查全部通过。步骤3在已接受状态的解上取最后一个轨道周期按时间加权的平均温度，与有限元第三圈平均温度比较：MBSU 热模块 13.33 至 13.34 °C，有限元 13.51 至 13.56 °C，差 −0.23 至 −0.17 K；DDCU 热模块 24.60 至 24.61 °C，有限元 24.35 至 24.45 °C，差 0.16 至 0.25 K；IEA 热模块 11.52 至 11.53 °C，有限元 11.52 至 11.53 °C，差 −0.01 K。14 台设备平均温度差的绝对值最大为 0.25 K，不超过验收值 1 K，三类设备的平均温度与有限元一致。用 $R_JC$ 和有限元各设备第三圈平均温度反推单台冷板热量，回路 A 与 B 的合计分别比有限元回路冷板热量少 0.42 W 与 0.41 W；反推的单台冷板热量与发热之比 MBSU 为 0.962 至 0.966，DDCU 为 0.935 至 0.939；按回路统一比值折算时，MBSU 的 $P_load$ 比反推值小 7.7 至 10.2 W，DDCU 的 $P_load$ 比反推值大 4.9 至 7.5 W，与步骤3中 MBSU 差为负、DDCU 差为正一致。有限元各设备的第三圈平均温度是输出样点的算术平均，以全部舱外设备方块的平均温度为例，算术平均与按时间加权平均相差 3.3×10^{−4} K。",
+ "anomalies_cn": "无",
+ "environment": {
+  "python": "3.11.9",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "astropy": "8.0.1",
+  "pytest": "9.1.1",
+  "ntu_space_dynamics": "0.1.0",
+  "usd": "0.26.8"
+ },
+ "execution": {
+  "started_utc": "2026-10-05T23:17:02.838518+00:00",
+  "recorded_utc": "2026-10-05T23:40:12.153155+00:00",
+  "collected_functions": 5,
+  "finished_functions": 5,
+  "unexecuted_functions": [],
+  "source_sha256": {
+   "thermal/__init__.py": "ffb342305704801c8871a2af365af61877f7e6485b07ec381e0f777da9d294f5",
+   "thermal/environment.py": "5c3eba796dd28d41a4f1b6fa637ada3c0b8d2942ebc5f65b1e55f1384fa99f41",
+   "thermal/model.py": "9f758d46ea25844878e8cac7ccc402c31610548d255ded7d8d980ae95a965b9e",
+   "thermal/parameters.py": "792e7f5d1175e3564b7486a230039cf026fbad78074cfc8de4fbf352d9c946f9",
+   "thermal/types.py": "2c76359dfa9555ef7d51df83009a5985964c66080dc9062746815451e827a794",
+   "sdtwin_sim/__init__.py": "e2c3bee5849391a86fa79109339d001a75779dd93835d9e829f5f1591de81a31",
+   "sdtwin_sim/coupled.py": "f05e19e220284ad3a0c1e4188eb405fa66b6777f4226decfe95d2c559bca1dff",
+   "sdtwin_sim/earth_flux.py": "03b0d340d77e583cf73a3f0ec31ca0d9830c3bdc5f824903adae266b82a853a2",
+   "sdtwin_sim/power_stand_in.py": "3229251cdd2834bc2df18177c079e651f53a0827fb57cba21527ebdbf281c58f",
+   "sdtwin_sim/scene.py": "b7b1ad5328e6f6278354249e3087d47197895294af8607d21c7dcce354c7ab9b",
+   "tests/conftest.py": "345e7f788242083755505607636fa4af3e88cbf303a6a1728e4ab327e106d11e",
+   "tests/data/dm_001/reference.py": "3bba4938e76134c73272c00250517cc01c519da62f881382ddb42daa9c79fe2c",
+   "tests/data/en_001/en001_reference.py": "73370bd0a9fdc7e7c373e8dda1b5aa0c9a6970dc047fba3cf8a7c3fd808e6ea4",
+   "tests/data/en_003/earth_reference.py": "880154b92405e9af399b772296148219ca78f8ac62e9fcbeaeef67bb45ce117f",
+   "tests/data/en_003/fe_explore.py": "0cceaffd85c2d15b11fee6c7e6b5bbb00a17d94e63940b45a2db1863dfecd473",
+   "tests/data/en_003/fe_export.py": "b33fc7276138dc59e944c5cbfed73acc0d1f1ec2ce7d458b90eed62790aa8f85",
+   "tests/data/en_003/fe_refine.py": "6ad00122cb8f7a65d0f5c23f7c139b20e92d6f75fa0f472b16d2d97628995c43",
+   "tests/data/en_003/fe_refine_ladder.py": "587ffe012aa40955c6b615f68d6e257314ac0bc418765aaa358e17dc848e0580",
+   "tests/data/en_003/ladder_compare.py": "fdf7d4d74fb0f099934f5ef3c3bbdef67df6f7cf3605a5ad1984cb48450cc3ab",
+   "tests/data/fe_001/fe001_support.py": "d1bd978ad70120cf974e46cd996a8367bd5efc08e4d8755405c2a3a21be41051",
+   "tests/data/fe_002/fe002_support.py": "2c27a76b1fd972625293b26b8e1a07d0850ba78254c4457782607279205c4f7c",
+   "tests/data/fe_003/fe003_support.py": "00d548cb2c513707bfeb16f81bf130eded88fb09a87ba8785ad27ee341a985f2",
+   "tests/data/fe_004/fe004_support.py": "54a7d7d8ce2fa0e4f9b054f596a927f8531c0cc0b77a783dcd7ab6973c1f6e44",
+   "tests/data/ht_001/t2_reference.py": "2098ccd9080957ab24ff44712b3b8e688d2b41cfa077e95460a96c82f3d27f89",
+   "tests/data/ht_002/ht002_reference.py": "076d20dec2f98fb84bbbcda17b3a0313de6c8ffb44f4c2121282eb01387bd7e7",
+   "tests/data/ht_003/analytic.py": "5ee9b0e8d1c4e06067e44754c2dd2393218e4d2a6a3d91d64064d726cb06a3a5",
+   "tests/data/ni_001/ni001_support.py": "fc84c2b085ace6fa38819195dd85f0ae47846dbd8505432ef469dd19a276b0c7",
+   "tests/data/ni_002/ni002_reference.py": "b263602b77beb5b57e4b7360db586394228e18381b8f1e40abf20f1c3295665b",
+   "tests/data/ni_003/make_ni003_data.py": "d03cfe33141adc1f8288763c42009504dcdf076ba5e46d9539ddedca64eedce7",
+   "tests/data/ni_003/ni003_support.py": "bc563f0d0b9d56e461eac3e8db7c76b37ce1431468dd4b51d257a4a551257616",
+   "tests/data/ni_003/payload/ni003_payload.py": "4755abecf85fc0e3ee9006954b933ff3e1728e8647f725a0cb05e0bff654d433",
+   "tests/data/ni_003/probe_no_exec.py": "a2d7e9613788aa4f5eb24af6c8b5dac16a234a28b96df880b7a0bfef6672cc32",
+   "tests/data/ni_003/run_alone.py": "932a1b32033842df026eac9a1496ccd301c89291e980e969fbb3a5022acee0f6",
+   "tests/data/pa_001/pa001_inputs.py": "f1b685263ff6770efd7dd01f2f9b378230ab7fab12800b3e5a697d4cf17fc4b4",
+   "tests/data/simready/make_geometry.py": "2a4c7a5b278c7ddcbe2b673950b13c7bdaaf03921f8883693bc30e28c254094c",
+   "tests/data/simready/make_scene_variants.py": "994ca8d44a44023f7d778c0337ad5403420eea194bc8202194c440a28d1f1247",
+   "tests/test_dm_001_data_objects.py": "44d85eac05803a2bb04c5e1d0c2fea1c0c572c60299ee6f28eb7cb4986f897a8",
+   "tests/test_ec_001_power_ports.py": "cdb8dac627ff5e5bd56a852fd6344996658d8dc2df56beebb8efdd5a159c7f67",
+   "tests/test_en_001_surface_environment.py": "1b0f11127159690d57558aedcdece9c11559b2b6dda75637714d26090c0dd679",
+   "tests/test_en_002_surface_heat.py": "c45ab4a04ceaa6211d5aaf72befbf5d95e8e9c7be5b86454ccc4a6b5cae39e34",
+   "tests/test_en_003_earth_flux.py": "eaa1527e9722b6feb07abc9289f43680b60c59791ce838e072a5e24b90e62c79",
+   "tests/test_fe_001_solar_array_fe.py": "f23d462dbbd432308214db7d5634689b059f5e5b1bb4f46251c0836d139f3cd7",
+   "tests/test_fe_002_radiator_fe.py": "f1be285404e242cc6394363eac2ed1345233e1497ed83fff5f4e3dde09260aa1",
+   "tests/test_fe_003_compute_cold_plate_fe.py": "3a9bfdd73afca2fb2257235348b85702707b5c390b1814a3d15621fba39bafce",
+   "tests/test_fe_004_whole_satellite_chain.py": "6aaeec63a82a4031d916d063694f2aa9a6b750c1712ce2bb7ba036497f1e9a66",
+   "tests/test_ht_001_heat_flows.py": "2d91f41677820f09cdb4e6edac6582be56c9647cea59bfaa629e30da1e759049",
+   "tests/test_ht_002_derivative_balance.py": "728e57be7630d1be877a265ad0206e9ab0cef1374a9bd74f20f438f18a0d144b",
+   "tests/test_ht_003_analytic.py": "a66ffc2613929fbd9bb44a0f2a8f1d41879069d1b2d9584f8fb2041f1545e832",
+   "tests/test_ni_001_numerics_eclipse.py": "1f4cba777b1aba392d09bb130ec6652d2b04004a3ac97ea4e49a88424aacdf47",
+   "tests/test_ni_002_end_to_end.py": "fb33ca9517ced5761c63ae7d68cefc72e98c3c3e36c7a8665b0d89fc9d3c696e",
+   "tests/test_ni_003_scene_assembly.py": "2ce365771b66f67e78334bbb3358a210d8eabed0753d82b7abeb4f3e900e6226",
+   "tests/test_pa_001_t5_assembly.py": "fa1b1edba0b491daf8a6e06ecd6d3a1e8baa9307daf94b5d885659a0620e3293"
+  }
+ }
+}

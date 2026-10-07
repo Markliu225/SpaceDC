@@ -1,0 +1,6 @@
+04:24:45 layout: {'cylinders': 20, 'blocks': 126, 'panels': 94, 'sun_rays_ecs': 3, 'int_ops_spec': 113, 'ge_rows': 88}
+04:25:01 geometry: 126 domains, 970 boundaries, 2128 edges (2s)
+04:25:07 selections: shells 214 bnds; solids 126 doms; body=348 hrs=48 sarj=30 saw=16
+04:26:48 global equations: 88 unknowns
+04:27:26 mesh 3s {'tri': 17748, 'tet': 19907}
+04:31:02 saved C:\Workspace\SpaceDC\Thermal\iss_fem\out\comsol\iss_cold0.mph

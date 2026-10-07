@@ -1,0 +1,281 @@
+{
+  "scene_id": "sdtwin.example.sat01.ni003_pv_equal",
+  "scene_version": "0.1.0",
+  "description": "PV efficiency 0.91 equal to the front absorptivity 0.91.",
+  "root_prim_path": "/World/Sat01",
+  "instances": [
+    {
+      "instance_id": "SolarArray01",
+      "asset_ref": "../../simready/assets/solar_array_panel.json",
+      "mounting": {
+        "body_from_asset_xyzw": [
+          0.0,
+          0.7071067811865476,
+          0.0,
+          0.7071067811865476
+        ]
+      },
+      "display_transform": {
+        "translate_m": [
+          0.45,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "instance_id": "Battery01",
+      "asset_ref": "../../simready/assets/battery_pack.json",
+      "mounting": {
+        "body_from_asset_xyzw": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "display_transform": {
+        "translate_m": [
+          -0.15,
+          0.1,
+          -0.1
+        ]
+      }
+    },
+    {
+      "instance_id": "Controller01",
+      "asset_ref": "../../simready/assets/power_controller.json",
+      "mounting": {
+        "body_from_asset_xyzw": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "display_transform": {
+        "translate_m": [
+          -0.15,
+          -0.1,
+          -0.1
+        ]
+      }
+    },
+    {
+      "instance_id": "PDU01",
+      "asset_ref": "../../simready/assets/pdu.json",
+      "mounting": {
+        "body_from_asset_xyzw": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "display_transform": {
+        "translate_m": [
+          -0.15,
+          -0.1,
+          0.0
+        ]
+      }
+    },
+    {
+      "instance_id": "Compute01",
+      "asset_ref": "../../simready/assets/compute_board.json",
+      "mounting": {
+        "body_from_asset_xyzw": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "display_transform": {
+        "translate_m": [
+          0.1,
+          0.0,
+          0.1
+        ]
+      }
+    },
+    {
+      "instance_id": "ColdPlate01",
+      "asset_ref": "../../simready/assets/cold_plate.json",
+      "mounting": {
+        "body_from_asset_xyzw": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "display_transform": {
+        "translate_m": [
+          0.1,
+          0.0,
+          0.08
+        ]
+      }
+    },
+    {
+      "instance_id": "Radiator01",
+      "asset_ref": "../../simready/assets/radiator_panel.json",
+      "mounting": {
+        "body_from_asset_xyzw": [
+          0.7071067811865476,
+          0.0,
+          0.0,
+          0.7071067811865476
+        ]
+      },
+      "display_transform": {
+        "translate_m": [
+          0.0,
+          -0.2,
+          0.0
+        ]
+      }
+    }
+  ],
+  "parameter_overrides": {
+    "source": "illustrative test value: NI-003 design 9.4 efficiency check",
+    "instances": {
+      "SolarArray01": {
+        "power": {
+          "efficiency": 0.91
+        }
+      }
+    },
+    "connections": {}
+  },
+  "initial_state": {
+    "thermal": {
+      "temperature_K": {
+        "SolarArray01": 280.0,
+        "Battery01": 293.15,
+        "Controller01": 293.15,
+        "PDU01": 293.15,
+        "Compute01": 293.15,
+        "ColdPlate01": 293.15,
+        "Radiator01": 283.15
+      }
+    },
+    "power": {
+      "Battery01": {
+        "x_n": 0.75,
+        "x_p": 0.364343000358038
+      },
+      "Compute01": {
+        "load_connected": true,
+        "trip_latched": false
+      }
+    }
+  },
+  "connections": {
+    "thermal": [
+      {
+        "path": "SR",
+        "from_instance": "SolarArray01",
+        "to_instance": "Radiator01",
+        "length_m": 0.15,
+        "conductivity_W_mK": 6.7,
+        "area_m2": 0.0002,
+        "contact_resistance_K_W": 2.0,
+        "source": "illustrative test value: titanium hinge bracket, conduction plus bolted contact"
+      },
+      {
+        "path": "JC",
+        "from_instance": "Compute01",
+        "to_instance": "ColdPlate01",
+        "length_m": 0.003,
+        "conductivity_W_mK": 167.0,
+        "area_m2": 0.0135,
+        "contact_resistance_K_W": 0.05,
+        "source": "illustrative test value: spreader-to-plate aluminium pedestal with gap pad contact"
+      },
+      {
+        "path": "CR",
+        "from_instance": "ColdPlate01",
+        "to_instance": "Radiator01",
+        "equivalent_total_resistance_K_W": 0.12,
+        "includes_contact": true,
+        "source": "illustrative test value: equivalent total resistance of a two heat-pipe path including both saddle contacts"
+      },
+      {
+        "path": "BR",
+        "from_instance": "Battery01",
+        "to_instance": "Radiator01",
+        "length_m": 0.05,
+        "conductivity_W_mK": 167.0,
+        "area_m2": 0.0004,
+        "contact_resistance_K_W": 0.3,
+        "source": "illustrative test value: aluminium bracket from pack enclosure to radiator, conduction plus contact"
+      },
+      {
+        "path": "DR",
+        "from_instance": "PDU01",
+        "to_instance": "Radiator01",
+        "length_m": 0.04,
+        "conductivity_W_mK": 167.0,
+        "area_m2": 0.0006,
+        "contact_resistance_K_W": 0.25,
+        "source": "illustrative test value: shared aluminium mounting deck of Controller01 and PDU01, conduction plus contact"
+      }
+    ],
+    "electrical": [
+      {
+        "from": {
+          "instance_id": "SolarArray01",
+          "port": "pv_out"
+        },
+        "to": {
+          "instance_id": "Controller01",
+          "port": "solar_in"
+        },
+        "source": "Power design table 9"
+      },
+      {
+        "from": {
+          "instance_id": "Battery01",
+          "port": "battery_terminal"
+        },
+        "to": {
+          "instance_id": "Controller01",
+          "port": "battery_port"
+        },
+        "source": "Power design table 9: the battery connects electrically to the controller"
+      },
+      {
+        "from": {
+          "instance_id": "Controller01",
+          "port": "pdu_out"
+        },
+        "to": {
+          "instance_id": "PDU01",
+          "port": "bus_in"
+        },
+        "source": "Power design table 9"
+      },
+      {
+        "from": {
+          "instance_id": "PDU01",
+          "port": "load_out"
+        },
+        "to": {
+          "instance_id": "Compute01",
+          "port": "bus_in"
+        },
+        "source": "Power design table 9"
+      }
+    ]
+  },
+  "provenance": {
+    "status": "illustrative_test_value",
+    "note": "Example scene for tests; every value is an illustrative test value, not a measured or selected device parameter. Explicit battery input correction before execution: x_p 0.45 -> 0.364343000358038 from Power P5 lithium inventory using the illustrative cell pack.",
+    "references": [
+      "Thermal design report 9.3, 9.4, table 9",
+      "Power design report table 8, table 9"
+    ]
+  }
+}

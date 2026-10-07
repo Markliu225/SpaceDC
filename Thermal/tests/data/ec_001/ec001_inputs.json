@@ -1,0 +1,137 @@
+{
+  "case_id": "EC-001",
+  "description": "Inputs of test case EC-001 (electro-thermal coupling through the four Power ports). A six-node satellite of thermal design table 1 with explicit material masses, five path connections, one synchronized instant for the single-port derivative checks, illustrative Power stand-in overrides and a 400 km circular orbit for the one-orbit joint run. Every value is an illustrative test value written for this case; no device has been selected or measured.",
+  "provenance": {
+    "status": "illustrative_test_value",
+    "note": "Masses, specific heats, surfaces and connections are of the order of a small computing satellite; they were chosen so that the battery stays inside the Power stand-in temperature range [253.15, 333.15] K during one orbit.",
+    "power_model": "sdtwin_sim.power_stand_in, a stand-in written from the Power design report (P1 to P11, valid and event_required of its 5.1 and 5.5); it is not the production Power module"
+  },
+  "thermal": {
+    "components": [
+      {"instance_id": "SolarArray01", "node_id": "S", "asset_id": "ec001.solar_array_panel", "asset_version": "1.0",
+       "materials": [
+         {"material_id": "SolarArray01.substrate", "mass_kg": 1.65, "cp_J_kgK": 930.0, "source": "illustrative test value: honeycomb substrate with CFRP facesheets"},
+         {"material_id": "SolarArray01.cells", "mass_kg": 0.72, "cp_J_kgK": 760.0, "source": "illustrative test value: triple-junction cells with coverglass"}
+       ],
+       "surfaces": [
+         {"surface_id": "SolarArray01.front", "area_m2": 0.6, "normal_body": [1.0, 0.0, 0.0], "absorptivity": 0.91, "emissivity": 0.85, "source": "illustrative test value: coverglass cell side"},
+         {"surface_id": "SolarArray01.back", "area_m2": 0.6, "normal_body": [-1.0, 0.0, 0.0], "absorptivity": 0.88, "emissivity": 0.86, "source": "illustrative test value: black CFRP back face"}
+       ],
+       "temperature_range_K": [173.15, 383.15], "ports": ["P_pv_W"]},
+      {"instance_id": "Compute01", "node_id": "J", "asset_id": "ec001.compute_board", "asset_version": "1.0",
+       "materials": [
+         {"material_id": "Compute01.laminate", "mass_kg": 0.05, "cp_J_kgK": 1100.0, "source": "illustrative test value: FR-4 class laminate"},
+         {"material_id": "Compute01.spreader", "mass_kg": 0.48, "cp_J_kgK": 385.0, "source": "illustrative test value: copper heat spreader"},
+         {"material_id": "Compute01.module", "mass_kg": 0.28, "cp_J_kgK": 700.0, "source": "illustrative test value: system-on-module with lid"}
+       ],
+       "surfaces": [], "temperature_range_K": [253.15, 358.15], "ports": ["P_load_W"]},
+      {"instance_id": "ColdPlate01", "node_id": "C", "asset_id": "ec001.cold_plate", "asset_version": "1.0",
+       "materials": [
+         {"material_id": "ColdPlate01.plate", "mass_kg": 0.78, "cp_J_kgK": 896.0, "source": "illustrative test value: machined Al 6061 plate"}
+       ],
+       "surfaces": [], "temperature_range_K": [243.15, 343.15], "ports": []},
+      {"instance_id": "Battery01", "node_id": "B", "asset_id": "ec001.battery_pack", "asset_version": "1.0",
+       "materials": [
+         {"material_id": "Battery01.cells", "mass_kg": 0.76, "cp_J_kgK": 1040.0, "source": "illustrative test value: lithium-ion cells, lumped specific heat"},
+         {"material_id": "Battery01.enclosure", "mass_kg": 0.32, "cp_J_kgK": 896.0, "source": "illustrative test value: aluminium enclosure"}
+       ],
+       "surfaces": [], "temperature_range_K": [253.15, 333.15], "temperature_range_source": "illustrative test value: same interval as the cell material range battery.limits.T_range_K of the Power stand-in parameters", "ports": ["Q_B_W"]},
+      {"instance_id": "Controller01", "node_id": "D", "asset_id": "ec001.power_controller", "asset_version": "1.0",
+       "materials": [
+         {"material_id": "Controller01.housing", "mass_kg": 0.42, "cp_J_kgK": 896.0, "source": "illustrative test value: aluminium housing"},
+         {"material_id": "Controller01.boards", "mass_kg": 0.18, "cp_J_kgK": 1100.0, "source": "illustrative test value: populated control boards"}
+       ],
+       "surfaces": [], "temperature_range_K": [243.15, 343.15], "ports": []},
+      {"instance_id": "PDU01", "node_id": "D", "asset_id": "ec001.pdu", "asset_version": "1.0",
+       "materials": [
+         {"material_id": "PDU01.housing", "mass_kg": 0.31, "cp_J_kgK": 896.0, "source": "illustrative test value: aluminium housing"},
+         {"material_id": "PDU01.harness", "mass_kg": 0.22, "cp_J_kgK": 385.0, "source": "illustrative test value: copper conductors of the harness assigned to node D"}
+       ],
+       "surfaces": [], "temperature_range_K": [243.15, 343.15], "ports": ["Q_D_W"]},
+      {"instance_id": "Radiator01", "node_id": "R", "asset_id": "ec001.radiator_panel", "asset_version": "1.0",
+       "materials": [
+         {"material_id": "Radiator01.facesheet", "mass_kg": 2.6, "cp_J_kgK": 896.0, "source": "illustrative test value: Al 6061 facesheet"},
+         {"material_id": "Radiator01.heat_pipes", "mass_kg": 0.36, "cp_J_kgK": 900.0, "source": "illustrative test value: embedded heat pipes counted once, in the radiator"}
+       ],
+       "surfaces": [
+         {"surface_id": "Radiator01.front", "area_m2": 0.48, "normal_body": [0.0, -1.0, 0.0], "absorptivity": 0.20, "emissivity": 0.88, "source": "illustrative test value: white silicone paint"},
+         {"surface_id": "Radiator01.back", "area_m2": 0.48, "normal_body": [0.0, 1.0, 0.0], "absorptivity": 0.30, "emissivity": 0.80, "source": "illustrative test value: treated aluminium back face"}
+       ],
+       "temperature_range_K": [173.15, 343.15], "ports": []}
+    ],
+    "connections": [
+      {"path": "SR", "length_m": 0.15, "conductivity_W_mK": 6.7, "area_m2": 2.0e-4, "contact_resistance_K_W": 2.0, "source": "illustrative test value: titanium hinge bracket, conduction plus bolted contact"},
+      {"path": "JC", "length_m": 0.003, "conductivity_W_mK": 167.0, "area_m2": 0.0135, "contact_resistance_K_W": 0.05, "source": "illustrative test value: aluminium pedestal with gap pad contact"},
+      {"path": "CR", "equivalent_total_resistance_K_W": 0.12, "includes_contact": true, "source": "illustrative test value: equivalent total of a two heat-pipe path including both saddle contacts"},
+      {"path": "BR", "length_m": 0.05, "conductivity_W_mK": 167.0, "area_m2": 4.0e-4, "contact_resistance_K_W": 0.3, "source": "illustrative test value: aluminium bracket from the pack enclosure to the radiator"},
+      {"path": "DR", "length_m": 0.04, "conductivity_W_mK": 167.0, "area_m2": 6.0e-4, "contact_resistance_K_W": 0.25, "source": "illustrative test value: shared mounting deck of Controller01 and PDU01"}
+    ],
+    "rated_load_W": 60.0,
+    "rated_load_source": "illustrative rated power of Compute01 for this case",
+    "initial_temperature_K": {"S": 280.0, "J": 293.15, "C": 293.15, "B": 291.15, "D": 293.15, "R": 283.15}
+  },
+  "instant": {
+    "comment": "One synchronized instant for steps 1 to 4: satellite at +X of GCRS, Sun along +X, body rotated 30 degrees about Z, so the solar array front sees the Sun at 30 degrees incidence. Earth albedo and infrared per surface are fixed illustrative inputs.",
+    "run_id": "ec001.instant",
+    "time_s": 0.0,
+    "epoch_utc": "2026-03-20T12:00:00+00:00",
+    "position_m": [6778137.0, 0.0, 0.0],
+    "sun_position_m": [149597870700.0, 0.0, 0.0],
+    "rotation_axis_body": [0.0, 0.0, 1.0],
+    "rotation_angle_deg": 30.0,
+    "G_W_m2": 1361.0,
+    "albedo_W_m2": {"SolarArray01.front": 0.0, "SolarArray01.back": 290.0, "Radiator01.front": 8.0, "Radiator01.back": 120.0},
+    "infrared_W_m2": {"SolarArray01.front": 0.0, "SolarArray01.back": 182.0, "Radiator01.front": 12.0, "Radiator01.back": 95.0},
+    "eclipse_position_m": [-6778137.0, 0.0, 0.0],
+    "temperature_K": {"S": 300.0, "J": 310.0, "C": 300.0, "B": 295.0, "D": 298.0, "R": 285.0},
+    "base_ports": {"P_pv_fraction_of_absorbed": 0.5, "P_load_W": 30.0, "Q_B_W": 1.5, "Q_D_W": 3.0},
+    "variations": {
+      "P_pv_fraction_of_absorbed": [0.0, 0.25, 0.75, 1.0],
+      "P_load_W": [0.0, 15.0, 45.0, 60.0],
+      "Q_B_W": [-6.0, -1.5, 6.0, 12.0],
+      "Q_D_W": [0.5, 10.0]
+    },
+    "negative_battery_heat_W": [-0.5, -2.0, -8.0],
+    "curtailed_fraction_of_P_pv_max": [0.75, 0.5, 0.0]
+  },
+  "power": {
+    "overrides": {
+      "solar": {"area_m2": 0.51, "efficiency": 0.295, "normal_body": [1.0, 0.0, 0.0]},
+      "battery": {"N_s": 4, "N_p": 2},
+      "pdu": {"eta_D": 0.95},
+      "source": "EC-001 case data: cell area, efficiency and normal of the SolarArray01 front, four series by two parallel cells, PDU01 efficiency"
+    },
+    "initial_x_n": 0.75,
+    "initial_T_B_K_comment": "The battery initial temperature is thermal.initial_temperature_K.B, held by the ThermalState only (thermal design 9.4; Power design: kept by Thermal). The stand-in scene record requires initial_state.T_B_K for its own initial check; the test fills it with that same value.",
+    "request_W": 60.0,
+    "charge_limited_x_n": 0.93,
+    "charge_limited_request_W": 20.0,
+    "small_charge_comment": "Step 2 stand-in case: the request equals the rated load of Compute01 (thermal.rated_load_W) and the irradiance is chosen so that P_pv_max exceeds the distribution input power request / eta_D by small_charge_surplus_W; the battery absorbs that surplus with a small charging current.",
+    "small_charge_x_n": 0.5,
+    "small_charge_request_W": 60.0,
+    "small_charge_surplus_W": 6.0,
+    "empty_x_n": 0.03,
+    "out_of_range_x_n": 0.96,
+    "out_of_range_T_B_K": 340.0
+  },
+  "orbit": {
+    "epoch_utc": "2026-03-20T12:00:00+00:00",
+    "altitude_m": 400000.0,
+    "eccentricity": 0.0,
+    "inclination_deg": 51.6,
+    "raan_deg": 0.0,
+    "argument_of_perigee_deg": 0.0,
+    "true_anomaly_deg": 0.0,
+    "ephemeris_step_s": 30.0,
+    "ephemeris_margin_s": 300.0,
+    "sun_tilt_deg": 45.0,
+    "attitude_comment": "body +X is turned 45 degrees from the satellite-to-Sun direction within the plane normal to the projected orbit normal; body +Z is the orbit normal projected normal to the Sun direction",
+    "earth_flux_model": {"albedo": 0.30, "olr_W_m2": 237.0, "solar_constant_W_m2": 1361.0, "resolution": [24, 48]}
+  },
+  "injection": {
+    "comment": "Power results injected through PowerCoupling.solve; times avoid the 60 s output grid. The shortfall window and the restart command lie in the sunlit arc before the eclipse entry near 1683 s.",
+    "invalid": {"run_duration_s": 2400.0, "from_s": 1510.0},
+    "shortfall": {"run_duration_s": 1500.0, "window_s": [610.0, 910.0], "start_command_s": 1210.0, "start_command_id": "ec001.start.1"},
+    "device_boundary": {"run_duration_s": 2400.0, "from_s": 1510.0}
+  }
+}

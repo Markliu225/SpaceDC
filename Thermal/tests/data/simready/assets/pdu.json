@@ -1,0 +1,39 @@
+{
+  "asset_id": "sdtwin.example.pdu",
+  "asset_version": "0.1.0",
+  "description": "Power distribution unit and its assigned harness to the computing node; distribution and wiring losses enter node D.",
+  "geometry_uri": "../geometry/pdu.usda",
+  "capabilities": [
+    {
+      "domain": "thermal",
+      "model_id": "sdtwin.thermal.power_equipment/1",
+      "parameter_set": {
+        "materials": [
+          {"material_id": "housing_al", "mass_kg": 0.31, "cp_J_kgK": 896.0,
+           "source": "illustrative test value: aluminium housing"},
+          {"material_id": "assigned_harness_cu", "mass_kg": 0.22, "cp_J_kgK": 385.0,
+           "source": "illustrative test value: copper conductor mass of the harness assigned to node D"}
+        ],
+        "surfaces": [],
+        "temperature_range_K": [243.15, 343.15]
+      }
+    },
+    {
+      "domain": "power",
+      "model_id": "sdtwin.power.pdu.fixed_efficiency/1",
+      "parameter_set": {"eta_D": 0.95, "wiring_scope": "PDU01 switching stage and the harness from PDU01 to Compute01; not the battery cell resistance"}
+    }
+  ],
+  "ports": [
+    {"name": "Q_D_W", "kind": "power_port", "unit": "W", "description": "distribution and wiring loss heat into node D"},
+    {"name": "bus_in", "kind": "electrical", "unit": "W", "description": "bus input from Controller01"},
+    {"name": "load_out", "kind": "electrical", "unit": "W", "description": "supply to Compute01"},
+    {"name": "T_D_K", "kind": "temperature", "unit": "K", "description": "shared power equipment temperature of node D"},
+    {"name": "radiator_link", "kind": "thermal_interface", "unit": "W", "description": "mounting path DR to the radiator"}
+  ],
+  "provenance": {
+    "status": "illustrative_test_value",
+    "note": "All values are illustrative test values for a small computing satellite; no device has been selected.",
+    "references": []
+  }
+}

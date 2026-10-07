@@ -1,0 +1,740 @@
+{
+ "case_id": "NI-003",
+ "status": "pass",
+ "checks": [
+  {
+   "name": "前提 Sat01 下七个实例",
+   "expected": "[\"SolarArray01\", \"Battery01\", \"Controller01\", \"PDU01\", \"Compute01\", \"ColdPlate01\", \"Radiator01\"]",
+   "actual": "[\"SolarArray01\", \"Battery01\", \"Controller01\", \"PDU01\", \"Compute01\", \"ColdPlate01\", \"Radiator01\"]",
+   "passed": true
+  },
+  {
+   "name": "前提 七个资产登记表 9 的八个字段",
+   "expected": "asset_id、asset_version、geometry_uri、domain、model_id、parameter_set、ports、provenance 齐全",
+   "actual": "七个资产全部齐全",
+   "passed": true
+  },
+  {
+   "name": "前提 装配读取表 9 的资产记录与场景实例和场景配置",
+   "expected": "provenance 的版本、几何、文件哈希、模型标识、端口与场景配置等于文件内容",
+   "actual": "七个资产、七个实例与三项场景配置全部一致",
+   "passed": true
+  },
+  {
+   "name": "前提 七个实例几何路径为 /World/Sat01/实例标识",
+   "expected": "{\"SolarArray01\": \"/World/Sat01/SolarArray01\", \"Battery01\": \"/World/Sat01/Battery01\", \"Controller01\": \"/World/Sat01/Controller01\", \"PDU01\": \"/World/Sat01/PDU01\", \"Compute01\": \"/World/Sat01/Compute01\", \"ColdPlate01\": \"/World/Sat01/ColdPlate01\", \"Radiator01\": \"/World/Sat01/Radiator01\"}",
+   "actual": "{\"SolarArray01\": \"/World/Sat01/SolarArray01\", \"Battery01\": \"/World/Sat01/Battery01\", \"Controller01\": \"/World/Sat01/Controller01\", \"PDU01\": \"/World/Sat01/PDU01\", \"Compute01\": \"/World/Sat01/Compute01\", \"ColdPlate01\": \"/World/Sat01/ColdPlate01\", \"Radiator01\": \"/World/Sat01/Radiator01\"}",
+   "passed": true
+  },
+  {
+   "name": "前提 合成舞台七个实例 prim 的名称、父路径、引用几何与资产标识",
+   "expected": "名称等于实例标识，父路径为 /World/Sat01，网格与资产 USD 一致",
+   "actual": "七个实例全部符合",
+   "passed": true
+  },
+  {
+   "name": "前提 八个部件的 USD 包围尺寸乘 metersPerUnit 等于文档物理尺寸",
+   "expected": "相对差不超过 1×10⁻⁹",
+   "actual": "{\"最大相对差\": \"0.00e+00\", \"solar_array_panel.usda/Panel\": \"['1', '0.6', '0.025'] m, metersPerUnit 1\", \"compute_board.usda/Board\": \"['0.16', '0.1', '0.0016'] m, metersPerUnit 0.001\", \"compute_board.usda/Spreader\": \"['0.09', '0.15', '0.004'] m, metersPerUnit 0.001\", \"cold_plate.usda/Plate\": \"['0.2', '0.15', '0.012'] m, metersPerUnit 0.01\", \"battery_pack.usda/Pack\": \"['0.19', '0.12', '0.075'] m, metersPerUnit 1\", \"power_controller.usda/Housing\": \"['0.16', '0.12', '0.05'] m, metersPerUnit 1\", \"pdu.usda/Housing\": \"['0.14', '0.1', '0.045'] m, metersPerUnit 1\", \"radiator_panel.usda/Panel\": \"['0.8', '0.6', '0.002'] m, metersPerUnit 1\"}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 四个外露表面面积与手算比较",
+   "expected": "面积相对误差不超过 0.1%",
+   "actual": "{\"SolarArray01/front\": \"0.6 m² 手算 0.6 m²\", \"SolarArray01/back\": \"0.6 m² 手算 0.6 m²\", \"Radiator01/front\": \"0.48 m² 手算 0.48 m²\", \"Radiator01/back\": \"0.48 m² 手算 0.48 m²\", \"最大相对误差\": \"0.00e+00\"}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 十四个材料部分质量与手算比较",
+   "expected": "质量相对误差不超过 0.1%",
+   "actual": "{\"最大相对误差\": \"1.43e-16\", \"由几何尺寸与密度得到的质量\": {\"Compute01/pcb_laminate\": \"0.04864 kg 手算 0.04864 kg\", \"Compute01/copper_spreader\": \"0.48384 kg 手算 0.48384 kg\", \"ColdPlate01/plate_al6061\": \"0.7776 kg 手算 0.7776 kg\", \"Radiator01/facesheet_al6061\": \"2.592 kg 手算 2.592 kg\"}, \"缺失或多余\": []}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 六个节点质量与手算比较",
+   "expected": "质量相对误差不超过 0.1%",
+   "actual": "{\"S\": \"2.37 kg 手算 2.37 kg\", \"J\": \"0.81248 kg 手算 0.81248 kg\", \"C\": \"0.7776 kg 手算 0.7776 kg\", \"B\": \"1.08 kg 手算 1.08 kg\", \"D\": \"1.13 kg 手算 1.13 kg\", \"R\": \"2.952 kg 手算 2.952 kg\"}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 六个节点热容与手算比较",
+   "expected": "热容相对误差不超过 0.1%",
+   "actual": "{\"S\": \"2081.7 J/K 手算 2081.7 J/K\", \"J\": \"435.7824 J/K 手算 435.7824 J/K\", \"C\": \"696.7296 J/K 手算 696.7296 J/K\", \"B\": \"1077.12 J/K 手算 1077.12 J/K\", \"D\": \"936.78 J/K 手算 936.78 J/K\", \"R\": \"2646.432 J/K 手算 2646.432 J/K\", \"最大相对误差\": \"1.63e-16\"}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 五条连接热阻与手算比较",
+   "expected": "热阻相对误差不超过 0.1%",
+   "actual": "{\"SR\": \"113.9402985 K/W 手算 113.9402985 K/W\", \"JC\": \"0.05133067199 K/W 手算 0.05133067199 K/W\", \"CR\": \"0.12 K/W 手算 0.12 K/W\", \"BR\": \"1.048502994 K/W 手算 1.048502994 K/W\", \"DR\": \"0.6492015968 K/W 手算 0.6492015968 K/W\", \"最大相对误差\": \"0.00e+00\"}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 外露表面法线与光学参数",
+   "expected": "法线等于场景说明的 +X、−X、−Y、+Y，与独立四元数旋转一致，吸收率与发射率等于资产值",
+   "actual": "{\"法线最大偏差\": \"0.00e+00\", \"独立旋转\": {\"SolarArray01/front\": [1.0, 0.0, 0.0], \"SolarArray01/back\": [-1.0, 0.0, 0.0], \"Radiator01/front\": [0.0, -1.0, 0.0], \"Radiator01/back\": [0.0, 1.0, 0.0]}, \"光学参数一致\": true}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 验收 面积与质量相对误差",
+   "expected": "不超过 0.1%",
+   "actual": "最大相对误差 1.43e-16",
+   "passed": true
+  },
+  {
+   "name": "步骤2 示例显示缩放场景 物理参数与 Sat01 逐位相同",
+   "expected": "热容、热阻、面积、法线、光学参数与各材料质量逐位不变",
+   "actual": "{\"显示缩放\": {\"SolarArray01\": [3.0, 3.0, 3.0], \"Compute01\": [10.0, 10.0, 10.0], \"Radiator01\": [2.0, 1.0, 2.0]}, \"改变的量\": [], \"比较项数\": 49}",
+   "passed": true
+  },
+  {
+   "name": "步骤2 七个实例全部显示缩放场景 物理参数与 Sat01 逐位相同",
+   "expected": "热容、热阻、面积、法线、光学参数与各材料质量逐位不变",
+   "actual": "{\"显示缩放\": {\"SolarArray01\": [3.0, 3.0, 3.0], \"Battery01\": [1.0, 2.0, 4.0], \"Controller01\": [5.0, 1.0, 1.0], \"PDU01\": [0.5, 0.5, 0.5], \"Compute01\": [10.0, 10.0, 10.0], \"ColdPlate01\": [1.0, 4.0, 0.5], \"Radiator01\": [2.0, 1.0, 2.0]}, \"改变的量\": [], \"比较项数\": 49}",
+   "passed": true
+  },
+  {
+   "name": "步骤2 无显示缩放时显示包围盒等于物理尺寸",
+   "expected": "相对差不超过 1e-06",
+   "actual": "{\"SolarArray01\": [\"0.02500000037\", \"0.6000000238\", \"1\"], \"Battery01\": [\"0.1899999976\", \"0.1199999973\", \"0.07500000298\"], \"Controller01\": [\"0.1599999964\", \"0.1199999973\", \"0.05000000075\"], \"PDU01\": [\"0.1400000006\", \"0.1000000015\", \"0.04500000179\"], \"Compute01\": [\"0.16\", \"0.1\", \"0.005600000012\"], \"ColdPlate01\": [\"0.2\", \"0.15\", \"0.01200000048\"], \"Radiator01\": [\"0.8000000119\", \"0.002000000095\", \"0.6000000238\"], \"最大相对差\": \"4.75e-08\"}",
+   "passed": true
+  },
+  {
+   "name": "步骤2 显示缩放后显示包围盒按缩放比例改变",
+   "expected": "等于物理尺寸乘显示缩放后的独立计算值，相对差不超过 1e-06",
+   "actual": "{\"SolarArray01\": \"显示 ['0.07500000112', '1.800000072', '3'] m 物理 ['0.025', '0.6', '1'] m\", \"Battery01\": \"显示 ['0.1899999976', '0.2399999946', '0.3000000119'] m 物理 ['0.19', '0.12', '0.075'] m\", \"Controller01\": \"显示 ['0.7999999821', '0.1199999973', '0.05000000075'] m 物理 ['0.16', '0.12', '0.05'] m\", \"PDU01\": \"显示 ['0.0700000003', '0.05000000075', '0.02250000089'] m 物理 ['0.14', '0.1', '0.045'] m\", \"Compute01\": \"显示 ['1.6', '1', '0.05600000012'] m 物理 ['0.16', '0.1', '0.0056'] m\", \"ColdPlate01\": \"显示 ['0.2', '0.6', '0.006000000238'] m 物理 ['0.2', '0.15', '0.012'] m\", \"Radiator01\": \"显示 ['1.600000024', '0.00400000019', '0.6000000238'] m 物理 ['0.8', '0.002', '0.6'] m\", \"最大相对差\": \"4.75e-08\"}",
+   "passed": true
+  },
+  {
+   "name": "步骤2 显示包围盒推得的面积与质量和装配值不同，装配值等于手算",
+   "expected": "缩放后包围盒推得的值偏离手算，装配值的相对误差不超过 0.1%",
+   "actual": "{\"面积\": {\"SolarArray01/front\": \"装配面积 0.6 m² 手算 0.6 m²，按显示包围盒为 5.400000215 m²，比值 9.000000358\", \"SolarArray01/back\": \"装配面积 0.6 m² 手算 0.6 m²，按显示包围盒为 5.400000215 m²，比值 9.000000358\", \"Radiator01/front\": \"装配面积 0.48 m² 手算 0.48 m²，按显示包围盒为 0.9600000525 m²，比值 2.000000109\", \"Radiator01/back\": \"装配面积 0.48 m² 手算 0.48 m²，按显示包围盒为 0.9600000525 m²，比值 2.000000109\"}, \"质量\": {\"Compute01/pcb_laminate\": \"装配质量 0.04864 kg 手算 0.04864 kg，按显示缩放体积为 48.64 kg\", \"Compute01/copper_spreader\": \"装配质量 0.48384 kg 手算 0.48384 kg，按显示缩放体积为 483.84 kg\", \"ColdPlate01/plate_al6061\": \"装配质量 0.7776 kg 手算 0.7776 kg，按显示缩放体积为 1.5552 kg\", \"Radiator01/facesheet_al6061\": \"装配质量 2.592 kg 手算 2.592 kg，按显示缩放体积为 10.368 kg\"}}",
+   "passed": true
+  },
+  {
+   "name": "步骤2 显示缩放资产的默认 prim 带缩放",
+   "expected": "独立解析得到默认 prim 缩放 2、2、2",
+   "actual": "[2.0, 2.0, 2.0]",
+   "passed": true
+  },
+  {
+   "name": "步骤2 显示缩放资产被拒绝",
+   "expected": "拒绝，SceneError，报错指出 radiator_panel_display_scaled, scale",
+   "actual": "SceneError: asset ni003.radiator_panel_display_scaled@0.1.0: geometry radiator_panel_display_scaled.usda prim 'Panel': prim transform contains scale, shear or reflection; physical sizes must come from extents and metersPerUnit only",
+   "passed": true
+  },
+  {
+   "name": "步骤2 部件带缩放的示例资产被拒绝",
+   "expected": "拒绝，SceneError，报错指出 invalid_scaled_panel, scale",
+   "actual": "SceneError: asset sdtwin.example.radiator_panel_scaled_geometry@0.1.0: geometry invalid_scaled_panel.usda prim 'Panel': prim transform contains scale, shear or reflection; physical sizes must come from extents and metersPerUnit only",
+   "passed": true
+  },
+  {
+   "name": "步骤2 毫米单位资产的物理参数等于米单位资产",
+   "expected": "metersPerUnit 0.001，面积、质量与热容相对差不超过 1×10⁻¹²，显示包围盒为米制物理尺寸",
+   "actual": "{\"metersPerUnit\": 0.001, \"包围尺寸\": [[-400.0, -300.0, -1.0], [400.0, 300.0, 1.0]], \"最大相对差\": \"0.00e+00\", \"显示包围盒\": [\"0.8\", \"0.002\", \"0.6\"], \"缺失项\": []}",
+   "passed": true
+  },
+  {
+   "name": "步骤3 示例覆盖值优先于资产参数集并重算受影响量",
+   "expected": "受影响的热容、质量、吸收率与热阻等于手算，相对误差不超过 0.1%，其余量逐位不变",
+   "actual": "{\"重算项\": {\"C B\": \"1077.12 变为 1118.72 手算 1118.72\", \"C C\": \"696.7296 变为 609.6384 手算 609.6384\", \"C R\": \"2646.432 变为 2913.696 手算 2913.696\", \"R BR\": \"1.048502994 变为 1.248502994 手算 1.248502994\", \"R CR\": \"0.12 变为 0.15 手算 0.15\", \"alpha Radiator01/front\": \"0.2 变为 0.25 手算 0.25\", \"m Battery01/li_ion_cells\": \"0.76 变为 0.8 手算 0.8\", \"m ColdPlate01/plate_al6061\": \"0.7776 变为 0.6804 手算 0.6804\", \"m Radiator01/facesheet_al6061\": \"2.592 变为 2.6976 手算 2.6976\"}, \"重算项最大相对误差\": \"0.00e+00\", \"超限项\": {}, \"缺失项\": [], \"未受影响却改变的项\": [], \"应重算却未变的项\": []}",
+   "passed": true
+  },
+  {
+   "name": "步骤3 覆盖记录写入 provenance",
+   "expected": "七项覆盖逐项记录目标、字段、原值、新值与来源",
+   "actual": "{\"记录项数\": 7, \"缺失或不符\": []}",
+   "passed": true
+  },
+  {
+   "name": "步骤3 密度覆盖后的材料来源记录有效密度",
+   "expected": "ThermalParameters 的材料来源记录 density 2810",
+   "actual": "sdtwin.example.radiator_panel@0.1.0 materials[facesheet_al6061].mass_kg = density 2700 kg/m^3 x extent box 0.8 m x 0.6 m x 0.002 m x solid fraction 1 of /RadiatorPanel/Panel in radiator_panel.usda: illustrative test value: Al 6061 density and specific heat; scene override effective density 2810 kg/m^3, solid_fraction 1, box_size_m [0.8, 0.6, 0.002]; illustrative test value: scenario overrides for the assembly tests",
+   "passed": true
+  },
+  {
+   "name": "步骤3 Power 参数覆盖值优先",
+   "expected": "SolarArray01 光电效率取覆盖值 0.28，资产值 0.295 保持在资产文件中",
+   "actual": "装配值 0.28，资产文件值 0.295",
+   "passed": true
+  },
+  {
+   "name": "步骤3 几何改变后重算面积、质量与热容",
+   "expected": "散热板 0.2.0 版 1.0 m×0.6 m 面板的两面面积、面板质量与 C_R 等于手算，其余量逐位不变",
+   "actual": "{\"重算项\": {\"A Radiator01/back\": \"0.48 变为 0.6 手算 0.6\", \"A Radiator01/front\": \"0.48 变为 0.6 手算 0.6\", \"C R\": \"2646.432 变为 3227.04 手算 3227.04\", \"m Radiator01/facesheet_al6061\": \"2.592 变为 3.24 手算 3.24\"}, \"重算项最大相对误差\": \"1.37e-16\", \"超限项\": {}, \"缺失项\": [], \"未受影响却改变的项\": [], \"应重算却未变的项\": [], \"独立解析尺寸\": [\"1\", \"0.6\", \"0.002\"], \"资产版本\": \"0.2.0\"}",
+   "passed": true
+  },
+  {
+   "name": "步骤3 安装方式改变后重算法线与热阻",
+   "expected": "散热板改为正面朝 +Z 后法线改变而面积不变，BR、SR、DR 热阻等于手算，其余量逐位不变",
+   "actual": "{\"重算项\": {\"R BR\": \"1.048502994 变为 1.49760479 手算 1.49760479\", \"R DR\": \"0.6492015968 变为 0.7992015968 手算 0.7992015968\", \"R SR\": \"113.9402985 变为 57.97014925 手算 57.97014925\", \"n1 Radiator01/back\": \"1 变为 0 手算 0\", \"n1 Radiator01/front\": \"-1 变为 0 手算 0\", \"n2 Radiator01/back\": \"0 变为 -1 手算 -1\", \"n2 Radiator01/front\": \"0 变为 1 手算 1\"}, \"重算项最大相对误差\": \"0.00e+00\", \"超限项\": {}, \"缺失项\": [], \"未受影响却改变的项\": [], \"应重算却未变的项\": []}",
+   "passed": true
+  },
+  {
+   "name": "步骤3 材料改变后重算热容",
+   "expected": "C_J、C_D、C_C、C_R 与发射率等于手算，其余量逐位不变",
+   "actual": "{\"重算项\": {\"C C\": \"696.7296 变为 725.11488 手算 725.11488\", \"C D\": \"936.78 变为 958.78 手算 958.78\", \"C J\": \"435.7824 变为 438.2016 手算 438.2016\", \"C R\": \"2646.432 变为 2682.432 手算 2682.432\", \"eps SolarArray01/back\": \"0.86 变为 0.8 手算 0.8\", \"m ColdPlate01/plate_al6061\": \"0.7776 变为 0.80928 手算 0.80928\", \"m Controller01/electronics_pcb\": \"0.18 变为 0.2 手算 0.2\", \"m Radiator01/embedded_heat_pipes\": \"0.36 变为 0.4 手算 0.4\"}, \"重算项最大相对误差\": \"3.14e-16\", \"超限项\": {}, \"缺失项\": [], \"未受影响却改变的项\": [], \"应重算却未变的项\": []}",
+   "passed": true
+  },
+  {
+   "name": "步骤3 覆盖值不写回资产文件",
+   "expected": "装配前后七个资产文件、七个几何文件与场景文件哈希不变",
+   "actual": "15 个文件中哈希不变",
+   "passed": true
+  },
+  {
+   "name": "步骤4 Controller01 与 PDU01 共用 D，其余节点各一个实例",
+   "expected": "{\"S\": [\"SolarArray01\"], \"J\": [\"Compute01\"], \"C\": [\"ColdPlate01\"], \"B\": [\"Battery01\"], \"D\": [\"Controller01\", \"PDU01\"], \"R\": [\"Radiator01\"]}",
+   "actual": "{\"S\": [\"SolarArray01\"], \"J\": [\"Compute01\"], \"C\": [\"ColdPlate01\"], \"B\": [\"Battery01\"], \"D\": [\"Controller01\", \"PDU01\"], \"R\": [\"Radiator01\"]}",
+   "passed": true
+  },
+  {
+   "name": "步骤4 D 的热容为两台设备材料之和",
+   "expected": "C_D 手算 936.78 J/K，材料来自 Controller01 与 PDU01",
+   "actual": "C_D 936.78 J/K，材料所属 ['Controller01', 'PDU01']",
+   "passed": true
+  },
+  {
+   "name": "步骤4 D 的适用温区为两台设备温区的交集",
+   "expected": "243.15 K 至 343.15 K",
+   "actual": "[243.15, 343.15]",
+   "passed": true
+  },
+  {
+   "name": "步骤4 电池热连接 BR 通往散热板，电连接接控制器",
+   "expected": "BR 由 Battery01 到 Radiator01，节点 B 到 R；Battery01 的电连接终点为 Controller01",
+   "actual": "{\"BR\": {\"from_instance\": \"Battery01\", \"to_instance\": \"Radiator01\", \"nodes\": [\"B\", \"R\"]}, \"电连接\": [{\"from\": {\"instance_id\": \"Battery01\", \"port\": \"battery_terminal\"}, \"to\": {\"instance_id\": \"Controller01\", \"port\": \"battery_port\"}, \"source\": \"Power design table 9: the battery connects electrically to the controller\"}]}",
+   "passed": true
+  },
+  {
+   "name": "步骤4 BR 终点改为控制器的场景被拒绝",
+   "expected": "拒绝，SceneError，报错指出 BR, Controller01, to_instance",
+   "actual": "SceneError: scene sdtwin.example.sat01.ni003_br_to_controller@0.1.0.connections.thermal[BR].to_instance: instance Controller01 is node D, path BR needs R at its to end",
+   "passed": true
+  },
+  {
+   "name": "步骤4 Power 与 Thermal 使用相同的组件实例标识",
+   "expected": "热端口映射与 Power 链接均为 {'P_pv_W': 'SolarArray01', 'P_load_W': 'Compute01', 'Q_B_W': 'Battery01', 'Q_D_W': 'PDU01'}，Power 实例与电连接端点均为热组件实例",
+   "actual": "{\"热端口映射\": {\"P_pv_W\": \"SolarArray01\", \"P_load_W\": \"Compute01\", \"Q_B_W\": \"Battery01\", \"Q_D_W\": \"PDU01\"}, \"Power 角色得到的链接\": {\"P_pv_W\": \"SolarArray01\", \"P_load_W\": \"Compute01\", \"Q_B_W\": \"Battery01\", \"Q_D_W\": \"PDU01\"}, \"Power 实例\": [\"Battery01\", \"Compute01\", \"Controller01\", \"PDU01\", \"SolarArray01\"], \"电连接端点\": [\"Battery01\", \"Compute01\", \"Controller01\", \"PDU01\", \"SolarArray01\"]}",
+   "passed": true
+  },
+  {
+   "name": "步骤4 联合运行核对 Power 链接与热实例映射",
+   "expected": "链接一致时运行完成；Q_D_W 链接到 Controller01 时在配置阶段给出 CoupledConfigurationError",
+   "actual": "{\"一致链接\": \"完成\", \"错误链接\": \"CoupledConfigurationError: Power port Q_D_W is linked to 'Controller01' but the thermal instance map takes it from 'PDU01'; array position alone must not connect a value to the wrong device (thermal design 5.1)\"}",
+   "passed": true
+  },
+  {
+   "name": "步骤4 材料质量只计一次",
+   "expected": "十四个材料部分各出现一次，总质量等于手算 9.12208 kg，热管质量只在 R",
+   "actual": "{\"材料部分\": 14, \"重复\": [], \"总质量\": \"9.12208 kg\", \"热管所在节点\": [\"R\"]}",
+   "passed": true
+  },
+  {
+   "name": "步骤4 同一资产重复列出材料部分被拒绝",
+   "expected": "拒绝，SceneError，报错指出 li_ion_cells, duplicate",
+   "actual": "SceneError: asset ni003.battery_pack_duplicate_material@0.1.0.capabilities[thermal].parameter_set.materials[li_ion_cells]: duplicate material_id",
+   "passed": true
+  },
+  {
+   "name": "步骤5 同一场景第二块散热板被拒绝",
+   "expected": "拒绝，SceneError，报错指出 Radiator02, node R",
+   "actual": "SceneError: scene sdtwin.example.sat01.two_radiators@0.1.0.instances[Radiator02]: node R already holds Radiator01; two instances of one asset need independent temperatures, which the six-node model cannot represent",
+   "passed": true
+  },
+  {
+   "name": "步骤5 同一场景第二个电池被拒绝",
+   "expected": "拒绝，SceneError，报错指出 Battery02, node B",
+   "actual": "SceneError: scene sdtwin.example.sat01.ni003_second_battery@0.1.0.instances[Battery02]: node B already holds Battery01; two instances of one asset need independent temperatures, which the six-node model cannot represent",
+   "passed": true
+  },
+  {
+   "name": "步骤5 同一资产在共用节点 D 上的第二个实例被拒绝",
+   "expected": "拒绝，SceneError，报错指出 PDU02, node D, PDU01",
+   "actual": "SceneError: scene sdtwin.example.sat01.ni003_second_pdu@0.1.0.instances[PDU02]: node D already holds PDU01; two instances of one asset need independent temperatures, which the six-node model cannot represent",
+   "passed": true
+  },
+  {
+   "name": "步骤5 电池初温写入 Power 初始状态被拒绝",
+   "expected": "拒绝，SceneError，报错指出 Battery01, T_B_K, Thermal",
+   "actual": "SceneError: scene sdtwin.example.sat01.ni003_battery_temperature_power@0.1.0.initial_state.power[Battery01].T_B_K: temperatures are owned by Thermal and belong in initial_state.thermal",
+   "passed": true
+  },
+  {
+   "name": "步骤5 两颗卫星由同一组资产文件装配",
+   "expected": "两场景引用相同的七个资产与七个几何文件，热参数逐位相同",
+   "actual": "{\"资产与几何文件数\": 14, \"文件相同\": true, \"热参数相同\": true}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 各自装配出本场景的初始温度",
+   "expected": "{\"Sat01\": [280.0, 293.15, 293.15, 293.15, 293.15, 283.15], \"Sat02\": [300.0, 295.15, 291.15, 288.15, 290.15, 275.15]}",
+   "actual": "{\"Sat01\": [280.0, 293.15, 293.15, 293.15, 293.15, 283.15], \"Sat02\": [300.0, 295.15, 291.15, 288.15, 290.15, 275.15]}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 四次联合运行全部完成",
+   "expected": "status 为 completed，无错误记录",
+   "actual": "{\"Sat01 第一次\": [\"completed\", null], \"Sat02 第一次\": [\"completed\", null], \"Sat01 第二次\": [\"completed\", null], \"Sat02 第二次\": [\"completed\", null]}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 每颗卫星从本场景的温度与电池状态起算",
+   "expected": "{\"Sat01\": {\"温度\": [280.0, 293.15, 293.15, 293.15, 293.15, 283.15], \"x_n\": 0.75, \"场景 x_p\": 0.364343000358038}, \"Sat02\": {\"温度\": [300.0, 295.15, 291.15, 288.15, 290.15, 275.15], \"x_n\": 0.55, \"场景 x_p\": 0.4901336675020886}}",
+   "actual": "{\"Sat01\": {\"首个样本温度\": [280.0, 293.15, 293.15, 293.15, 293.15, 283.15], \"首个 x_n\": 0.75, \"首个 x_p\": 0.364343000358038, \"首次 Power 调用 T_B_K\": 293.15, \"首次 Power 调用 x_n\": 0.75, \"首次 Power 调用 x_p\": 0.364343000358038, \"场景 x_p 是否按锂量守恒替换\": false}, \"Sat02\": {\"首个样本温度\": [300.0, 295.15, 291.15, 288.15, 290.15, 275.15], \"首个 x_n\": 0.55, \"首个 x_p\": 0.4901336675020886, \"首次 Power 调用 T_B_K\": 288.15, \"首次 Power 调用 x_n\": 0.55, \"首次 Power 调用 x_p\": 0.4901336675020886, \"场景 x_p 是否按锂量守恒替换\": false}}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 每次 Power 调用使用本卫星的运行标识、实例标识与本卫星试算 B 温度",
+   "expected": "Sat01 与 Sat02 各自的 run_id 与 instance_id，T_B_K 等于同一试算状态的 B 温度",
+   "actual": "{\"Sat01\": {\"run_id\": \"ni003-sat01\", \"Power 调用\": 1157, \"标识不符\": 0, \"与试算状态配对\": 1157, \"未配对\": 0, \"B 温度不符\": 0, \"最终 Power 状态\": [\"ni003-sat01\", \"Sat01\"]}, \"Sat02\": {\"run_id\": \"ni003-sat02\", \"Power 调用\": 1151, \"标识不符\": 0, \"与试算状态配对\": 1151, \"未配对\": 0, \"B 温度不符\": 0, \"最终 Power 状态\": [\"ni003-sat02\", \"Sat02\"]}}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 两颗卫星的温度与电池状态各自变化",
+   "expected": "两组温度与锂状态时程不同，终值不同，结果数组不共用内存",
+   "actual": "{\"同一时刻温度最大差\": \"20 K\", \"电池温度同一时刻最大差\": \"5.101556211 K\", \"电池终止温度差\": \"0.1713750231 K\", \"x_n 同一时刻最大差\": \"0.2201162465\", \"终止温度\": {\"Sat01\": [243.65805916177098, 274.4917751057748, 270.97326184949486, 274.7950656141387, 273.23723213558867, 261.146927194946], \"Sat02\": [243.13332107311777, 274.4481475727385, 270.9309078300469, 274.96644063720373, 273.1218521796587, 261.1121605563883]}, \"终止锂状态\": {\"Sat01\": [0.7805918785706757, 0.3451021362850623], \"Sat02\": [0.7440502234595467, 0.3680851321599456]}}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 另一颗卫星运行后重算结果逐位相同",
+   "expected": "Sat01 在 Sat02 运行后重算、Sat02 在 Sat01 重算后重算，归档全部字段与状态数组逐位相同；每份归档在其后的运行结束时仍与刚完成时逐位相同",
+   "actual": "{\"Sat01\": {\"字段\": 36, \"不同字段\": [], \"数组\": 13, \"不同数组\": [], \"最大差\": 0.0}, \"Sat02\": {\"字段\": 36, \"不同字段\": [], \"数组\": 13, \"不同数组\": [], \"最大差\": 0.0}, \"归档未被其后运行改变\": {\"Sat01 第一次\": true, \"Sat02 第一次\": true, \"Sat01 第二次\": true, \"Sat02 第二次\": true}}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 单独进程中只运行一颗卫星的结果与同进程结果逐位相同",
+   "expected": "新解释器只装配并运行该卫星，归档全部字段与状态数组逐位相同",
+   "actual": "{\"Sat01\": {\"状态\": \"completed\", \"不同字段\": [], \"不同数组\": [], \"最大差\": 0.0, \"独立进程已载入的被测模块\": [\"sdtwin_sim\", \"sdtwin_sim.coupled\", \"sdtwin_sim.earth_flux\", \"sdtwin_sim.power_stand_in\", \"sdtwin_sim.scene\", \"thermal\", \"thermal.environment\", \"thermal.model\", \"thermal.parameters\", \"thermal.types\"]}, \"Sat02\": {\"状态\": \"completed\", \"不同字段\": [], \"不同数组\": [], \"最大差\": 0.0, \"独立进程已载入的被测模块\": [\"sdtwin_sim\", \"sdtwin_sim.coupled\", \"sdtwin_sim.earth_flux\", \"sdtwin_sim.power_stand_in\", \"sdtwin_sim.scene\", \"thermal\", \"thermal.environment\", \"thermal.model\", \"thermal.parameters\", \"thermal.types\"]}}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 运行后资产、几何与场景文件哈希不变",
+   "expected": "16 个文件哈希不变，资产、几何与场景目录没有新增或改变的文件",
+   "actual": "{\"改变的文件\": [], \"目录列表不变\": true}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 运行温度与锂状态不写回资产记录",
+   "expected": "装配对象与重新装配结果不变，初始温度仍为场景初值，资产文件不含温度、锂状态或运行标识字段",
+   "actual": "{\"改变\": [], \"资产文件中的运行字段\": []}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 示例未登记热模型被拒绝",
+   "expected": "拒绝，UnregisteredModelError，报错指出 user.plugins.thermal:exec_python, model_id, not a registered thermal model",
+   "actual": "UnregisteredModelError: asset sdtwin.example.power_controller_unregistered@0.1.0.capabilities[0].model_id: 'user.plugins.thermal:exec_python' is not a registered thermal model; allowed ids are ['sdtwin.thermal.battery_pack/1', 'sdtwin.thermal.cold_plate/1', 'sdtwin.thermal.compute_board/1', 'sdtwin.thermal.power_equipment/1', 'sdtwin.thermal.radiator/1', 'sdtwin.thermal.solar_array/1']",
+   "passed": true
+  },
+  {
+   "name": "步骤5 未登记的 Power 模型版本被拒绝",
+   "expected": "拒绝，UnregisteredModelError，报错指出 sdtwin.power.controller.ideal_mppt/2, model_id, not a registered power model",
+   "actual": "UnregisteredModelError: asset ni003.power_controller_unregistered_power@0.1.0.capabilities[1].model_id: 'sdtwin.power.controller.ideal_mppt/2' is not a registered power model; allowed ids are ['sdtwin.power.battery.spm2/1', 'sdtwin.power.controller.ideal_mppt/1', 'sdtwin.power.load.compute_request/1', 'sdtwin.power.pdu.fixed_efficiency/1', 'sdtwin.power.solar_array.fixed_efficiency/1']",
+   "passed": true
+  },
+  {
+   "name": "步骤5 其他领域登记的模型标识被拒绝",
+   "expected": "拒绝，UnregisteredModelError，报错指出 sdtwin.power.controller.ideal_mppt/1, model_id, not a registered thermal model",
+   "actual": "UnregisteredModelError: asset ni003.power_controller_cross_domain@0.1.0.capabilities[0].model_id: 'sdtwin.power.controller.ideal_mppt/1' is not a registered thermal model; allowed ids are ['sdtwin.thermal.battery_pack/1', 'sdtwin.thermal.cold_plate/1', 'sdtwin.thermal.compute_board/1', 'sdtwin.thermal.power_equipment/1', 'sdtwin.thermal.radiator/1', 'sdtwin.thermal.solar_array/1']",
+   "passed": true
+  },
+  {
+   "name": "步骤5 导入路径形式的模型标识被拒绝",
+   "expected": "拒绝，UnregisteredModelError，报错指出 ni003_payload:execute, model_id, not a registered thermal model",
+   "actual": "UnregisteredModelError: asset ni003.power_controller_payload_model@0.1.0.capabilities[0].model_id: 'ni003_payload:execute' is not a registered thermal model; allowed ids are ['sdtwin.thermal.battery_pack/1', 'sdtwin.thermal.cold_plate/1', 'sdtwin.thermal.compute_board/1', 'sdtwin.thermal.power_equipment/1', 'sdtwin.thermal.radiator/1', 'sdtwin.thermal.solar_array/1']",
+   "passed": true
+  },
+  {
+   "name": "步骤5 模型登记表只含数据记录",
+   "expected": "登记项的字段均为文本、布尔值或其组合，没有可调用对象",
+   "actual": "{\"热模型\": [\"sdtwin.thermal.battery_pack/1\", \"sdtwin.thermal.cold_plate/1\", \"sdtwin.thermal.compute_board/1\", \"sdtwin.thermal.power_equipment/1\", \"sdtwin.thermal.radiator/1\", \"sdtwin.thermal.solar_array/1\"], \"Power 模型\": [\"sdtwin.power.battery.spm2/1\", \"sdtwin.power.controller.ideal_mppt/1\", \"sdtwin.power.load.compute_request/1\", \"sdtwin.power.pdu.fixed_efficiency/1\", \"sdtwin.power.solar_array.fixed_efficiency/1\"], \"可调用字段\": []}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 导入路径模型标识既不导入也不执行",
+   "expected": "UnregisteredModelError；载入窗口内无带标记的 import、compile、exec 事件，哨兵文件不存在，模块未载入",
+   "actual": "{\"错误\": \"UnregisteredModelError\", \"事件\": {\"count\": 0, \"with_marker\": 0, \"imports\": [], \"exec\": 0, \"compile\": 0, \"spawn_or_load\": 0}, \"哨兵\": false, \"模块已载入\": false}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 USD 中的 Python 文本不被执行",
+   "expected": "含代码文本的资产正常装配且热参数与 Sat01 逐位相同；窗口内无 exec、compile 与进程事件，哨兵文件不存在",
+   "actual": "{\"接受\": true, \"参数相同\": true, \"事件\": {\"count\": 0, \"with_marker\": 0, \"imports\": [], \"exec\": 0, \"compile\": 0, \"spawn_or_load\": 0}, \"哨兵\": false, \"错误\": null}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 探针能发现执行",
+   "expected": "主动导入载荷模块与主动执行 USD 文本时哨兵文件写入且审计事件带标记",
+   "actual": "{\"导入\": [\"NI003-MODEL-ID-PAYLOAD-IMPORTED\", 2], \"执行\": [\"NI003-USD-PAYLOAD-EXECUTED\", 2]}",
+   "passed": true
+  },
+  {
+   "name": "步骤5 场景装配源码不含动态执行调用",
+   "expected": "scene.py 不调用 eval、exec、compile、动态导入、序列化载入或子进程",
+   "actual": "未发现",
+   "passed": true
+  },
+  {
+   "name": "步骤5 光电效率不超过同一表面的吸收率",
+   "expected": "效率不超过所绑定表面吸收率时接受，超过时拒绝并指出该表面；判据按覆盖后的值与所绑定的表面",
+   "actual": "{\"Sat01 基准\": \"效率 0.295 表面 front 吸收率 0.91，应接受，实际接受\", \"示例效率 0.95\": \"效率 0.95 表面 front 吸收率 0.91，应拒绝，实际拒绝 scene sdtwin.example.sat01.invalid_pv_efficiency@0.1.0 instance SolarArray01 power.surface_id -> surface SolarArray01/front: photovoltaic efficiency 0.95 exceeds the absorptivity 0.91 of the same surf\", \"正面吸收率覆盖为 0.25\": \"效率 0.295 表面 front 吸收率 0.25，应拒绝，实际拒绝 scene sdtwin.example.sat01.ni003_pv_absorptivity_override@0.1.0 instance SolarArray01 power.surface_id -> surface SolarArray01/front: photovoltaic efficiency 0.295 exceeds the absorptivity 0.25 of the\", \"效率等于吸收率 0.91\": \"效率 0.91 表面 front 吸收率 0.91，应接受，实际接受\", \"效率 0.9101 略高于吸收率\": \"效率 0.9101 表面 front 吸收率 0.91，应拒绝，实际拒绝 scene sdtwin.example.sat01.ni003_pv_slightly_above@0.1.0 instance SolarArray01 power.surface_id -> surface SolarArray01/front: photovoltaic efficiency 0.9101 exceeds the absorptivity 0.91 of the same \", \"背面电池效率 0.89 对背面吸收率 0.88\": \"效率 0.89 表面 back 吸收率 0.88，应拒绝，实际拒绝 scene sdtwin.example.sat01.ni003_pv_back_cells@0.1.0 instance SolarArray01 power.surface_id -> surface SolarArray01/back: photovoltaic efficiency 0.89 exceeds the absorptivity 0.88 of the same surface\", \"背面电池效率覆盖为 0.87\": \"效率 0.87 表面 back 吸收率 0.88，应接受，实际接受\"}",
+   "passed": true
+  }
+ ],
+ "metrics": {
+  "usd_documented_size_max_rel_diff": 0.0,
+  "step1_max_rel_error_area": 0.0,
+  "step1_max_rel_error_mass": 1.427755947306014e-16,
+  "step1_max_rel_error_C": 1.6317210826354445e-16,
+  "step1_max_rel_error_R": 0.0,
+  "step1_C_J_K": {
+   "S": 2081.7,
+   "J": 435.78240000000005,
+   "C": 696.7296,
+   "B": 1077.12,
+   "D": 936.78,
+   "R": 2646.4320000000002
+  },
+  "step1_R_K_W": {
+   "SR": 113.94029850746269,
+   "JC": 0.05133067198935463,
+   "CR": 0.12,
+   "BR": 1.048502994011976,
+   "DR": 0.6492015968063872
+  },
+  "step1_node_mass_kg": {
+   "S": 2.37,
+   "J": 0.81248,
+   "C": 0.7776,
+   "B": 1.08,
+   "D": 1.13,
+   "R": 2.952
+  },
+  "step1_total_mass_kg": 9.12208,
+  "step1_areas_m2": {
+   "SolarArray01/front": 0.6,
+   "SolarArray01/back": 0.6,
+   "Radiator01/front": 0.48,
+   "Radiator01/back": 0.48
+  },
+  "step2_display_scaled_area_ratio": {
+   "SolarArray01/front": "装配面积 0.6 m² 手算 0.6 m²，按显示包围盒为 5.400000215 m²，比值 9.000000358",
+   "SolarArray01/back": "装配面积 0.6 m² 手算 0.6 m²，按显示包围盒为 5.400000215 m²，比值 9.000000358",
+   "Radiator01/front": "装配面积 0.48 m² 手算 0.48 m²，按显示包围盒为 0.9600000525 m²，比值 2.000000109",
+   "Radiator01/back": "装配面积 0.48 m² 手算 0.48 m²，按显示包围盒为 0.9600000525 m²，比值 2.000000109"
+  },
+  "step2_max_bbox_area_ratio": 9.000000357627872,
+  "step2_mm_asset_max_rel_diff": 0.0,
+  "step2_display_bbox_max_rel_diff": 4.7497445429879396e-08,
+  "step3_overrides_max_rel_error": 0.0,
+  "observation_density_override_provenance": {
+   "scene_override": {
+    "facesheet_al6061": {
+     "density_kg_m3": 2810.0,
+     "cp_J_kgK": 960.0
+    }
+   },
+   "portion_mass_kg": 2.6976,
+   "portion_source": "sdtwin.example.radiator_panel@0.1.0 materials[facesheet_al6061].mass_kg = density 2700 kg/m^3 x extent box 0.8 m x 0.6 m x 0.002 m x solid fraction 1 of /RadiatorPanel/Panel in radiator_panel.usda: illustrative test value: Al 6061 density and specific heat; scene override effective density 2810 kg/m^3, solid_fraction 1, box_size_m [0.8, 0.6, 0.002]; illustrative test value: scenario overrides for the assembly tests",
+   "overrides_applied_fields": [
+    "cp_J_kgK",
+    "mass_kg"
+   ],
+   "density_2810_recorded_in_assembly_or_parameters": true
+  },
+  "step3_geometry_change_C_R_J_K": 3227.04,
+  "step3_geometry_change_radiator_area_m2": [
+   0.6,
+   0.6
+  ],
+  "step3_installation_R_K_W": {
+   "SR": 57.97014925373134,
+   "JC": 0.05133067198935463,
+   "CR": 0.12,
+   "BR": 1.4976047904191618,
+   "DR": 0.7992015968063872
+  },
+  "step3_material_C_J_K": {
+   "S": 2081.7,
+   "J": 438.20160000000004,
+   "C": 725.1148799999999,
+   "B": 1077.12,
+   "D": 958.78,
+   "R": 2682.4320000000002
+  },
+  "step4_total_mass_kg": 9.12208,
+  "observation_second_satellite_root_World_Sat02": "SceneError: scene sdtwin.example.sat02.root@0.1.0.root_prim_path: must be '/World/Sat01', got '/World/Sat02'",
+  "step5_Sat01_power_calls": 1157,
+  "step5_Sat02_power_calls": 1151,
+  "step5_max_battery_temperature_difference_K": 5.10155621130906,
+  "step5_final_battery_temperature_difference_K": 0.17137502306502483,
+  "step5_max_x_n_difference": 0.22011624647876465,
+  "step5_Sat01_initial_T_K": [
+   280.0,
+   293.15,
+   293.15,
+   293.15,
+   293.15,
+   283.15
+  ],
+  "step5_Sat01_final_T_K": [
+   243.65805916177098,
+   274.4917751057748,
+   270.97326184949486,
+   274.7950656141387,
+   273.23723213558867,
+   261.146927194946
+  ],
+  "step5_Sat01_T_B_range_K": [
+   270.54154155511344,
+   293.15
+  ],
+  "step5_Sat01_x_n_range": [
+   0.4677020486945044,
+   0.8983712005798088
+  ],
+  "step5_Sat01_final_lithium": [
+   0.7805918785706757,
+   0.3451021362850623
+  ],
+  "step5_Sat01_range_warnings": 0,
+  "step5_Sat01_eclipse_boundaries": [
+   [
+    1535.698,
+    "umbra_to_penumbra"
+   ],
+   [
+    1543.954,
+    "penumbra_to_sunlit"
+   ],
+   [
+    4923.314,
+    "sunlit_to_penumbra"
+   ],
+   [
+    4931.57,
+    "penumbra_to_umbra"
+   ]
+  ],
+  "step5_Sat02_initial_T_K": [
+   300.0,
+   295.15,
+   291.15,
+   288.15,
+   290.15,
+   275.15
+  ],
+  "step5_Sat02_final_T_K": [
+   243.13332107311777,
+   274.4481475727385,
+   270.9309078300469,
+   274.96644063720373,
+   273.1218521796587,
+   261.1121605563883
+  ],
+  "step5_Sat02_T_B_range_K": [
+   268.4194000508747,
+   288.15
+  ],
+  "step5_Sat02_x_n_range": [
+   0.2472773043109096,
+   0.8626416489494618
+  ],
+  "step5_Sat02_final_lithium": [
+   0.7440502234595467,
+   0.3680851321599456
+  ],
+  "step5_Sat02_range_warnings": 0,
+  "step5_Sat02_eclipse_boundaries": [
+   [
+    1535.698,
+    "umbra_to_penumbra"
+   ],
+   [
+    1543.954,
+    "penumbra_to_sunlit"
+   ],
+   [
+    4923.314,
+    "sunlit_to_penumbra"
+   ],
+   [
+    4931.57,
+    "penumbra_to_umbra"
+   ]
+  ],
+  "step5_max_temperature_difference_K": 20.0,
+  "step5_power_info": {
+   "Sat01": {
+    "x_n": 0.75,
+    "x_p_scene": 0.364343000358038,
+    "x_p_used": 0.364343000358038,
+    "inventory_rel_diff_scene": 0.0,
+    "x_p_replaced": false,
+    "T_B_K": 293.15,
+    "request_W": 60.0,
+    "Q_n_C": 11440.748256129,
+    "Q_p_C": 18190.1384512533,
+    "N_s": 4,
+    "N_p": 2
+   },
+   "Sat02": {
+    "x_n": 0.55,
+    "x_p_scene": 0.4901336675020886,
+    "x_p_used": 0.4901336675020886,
+    "inventory_rel_diff_scene": 0.0,
+    "x_p_replaced": false,
+    "T_B_K": 288.15,
+    "request_W": 60.0,
+    "Q_n_C": 11440.748256129,
+    "Q_p_C": 18190.1384512533,
+    "N_s": 4,
+    "N_p": 2
+   }
+  },
+  "step5_probe": {
+   "sentinel_before": false,
+   "payload_model": {
+    "rejected": true,
+    "error_type": "UnregisteredModelError",
+    "message": "asset ni003.power_controller_payload_model@0.1.0.capabilities[0].model_id: 'ni003_payload:execute' is not a registered thermal model; allowed ids are ['sdtwin.thermal.battery_pack/1', 'sdtwin.thermal.cold_plate/1', 'sdtwin.thermal.compute_board/1', 'sdtwin.thermal.power_equipment/1', 'sdtwin.thermal.radiator/1', 'sdtwin.thermal.solar_array/1']",
+    "sentinel_exists": false,
+    "sentinel_text": null,
+    "module_loaded": false,
+    "events": {
+     "count": 0,
+     "with_marker": 0,
+     "imports": [],
+     "exec": 0,
+     "compile": 0,
+     "spawn_or_load": 0
+    }
+   },
+   "payload_usd": {
+    "accepted": true,
+    "same_parameters_as_sat01": true,
+    "error": null,
+    "controller_asset": "ni003.power_controller_payload_usd",
+    "sentinel_exists": false,
+    "sentinel_text": null,
+    "module_loaded": false,
+    "events": {
+     "count": 0,
+     "with_marker": 0,
+     "imports": [],
+     "exec": 0,
+     "compile": 0,
+     "spawn_or_load": 0
+    }
+   },
+   "control_import": {
+    "sentinel_exists": true,
+    "sentinel_text": "NI003-MODEL-ID-PAYLOAD-IMPORTED",
+    "module_loaded": true,
+    "events": {
+     "count": 2,
+     "with_marker": 2,
+     "imports": [],
+     "exec": 1,
+     "compile": 1,
+     "spawn_or_load": 0
+    }
+   },
+   "control_exec": {
+    "sentinel_exists": true,
+    "sentinel_text": "NI003-USD-PAYLOAD-EXECUTED",
+    "module_loaded": true,
+    "events": {
+     "count": 2,
+     "with_marker": 2,
+     "imports": [],
+     "exec": 1,
+     "compile": 1,
+     "spawn_or_load": 0
+    },
+    "code_text": "import os, pathlib; pathlib.Path(os.environ['NI003_SENTINEL']).write_text('NI003-USD-PAYLOAD-EXECUTED')"
+   }
+  },
+  "step5_pv_cases": {
+   "Sat01 基准": "效率 0.295 表面 front 吸收率 0.91，应接受，实际接受",
+   "示例效率 0.95": "效率 0.95 表面 front 吸收率 0.91，应拒绝，实际拒绝 scene sdtwin.example.sat01.invalid_pv_efficiency@0.1.0 instance SolarArray01 power.surface_id -> surface SolarArray01/front: photovoltaic efficiency 0.95 exceeds the absorptivity 0.91 of the same surf",
+   "正面吸收率覆盖为 0.25": "效率 0.295 表面 front 吸收率 0.25，应拒绝，实际拒绝 scene sdtwin.example.sat01.ni003_pv_absorptivity_override@0.1.0 instance SolarArray01 power.surface_id -> surface SolarArray01/front: photovoltaic efficiency 0.295 exceeds the absorptivity 0.25 of the",
+   "效率等于吸收率 0.91": "效率 0.91 表面 front 吸收率 0.91，应接受，实际接受",
+   "效率 0.9101 略高于吸收率": "效率 0.9101 表面 front 吸收率 0.91，应拒绝，实际拒绝 scene sdtwin.example.sat01.ni003_pv_slightly_above@0.1.0 instance SolarArray01 power.surface_id -> surface SolarArray01/front: photovoltaic efficiency 0.9101 exceeds the absorptivity 0.91 of the same ",
+   "背面电池效率 0.89 对背面吸收率 0.88": "效率 0.89 表面 back 吸收率 0.88，应拒绝，实际拒绝 scene sdtwin.example.sat01.ni003_pv_back_cells@0.1.0 instance SolarArray01 power.surface_id -> surface SolarArray01/back: photovoltaic efficiency 0.89 exceeds the absorptivity 0.88 of the same surface",
+   "背面电池效率覆盖为 0.87": "效率 0.87 表面 back 吸收率 0.88，应接受，实际接受"
+  }
+ },
+ "summary_cn": "用 sdtwin_sim.scene 装配示例 Sat01 场景的七个实例，并用本用例自建的显示缩放资产、毫米单位资产、0.2.0 版散热板、覆盖值场景、同一资产的第二颗卫星、未登记 model_id 与带代码文本的 USD 资产逐项检查第 9.3 节与第 9.4 节的要求。四个外露表面面积与十四个材料部分质量按资产物理尺寸手算比较，面积最大相对误差为 0，质量最大相对误差为 1.4×10⁻¹⁶，验收值为 0.1%，满足；六个节点热容与五条热阻的最大相对误差为 1.6×10⁻¹⁶ 与 0，总质量为 9.12208 kg。示例显示缩放场景与七个实例全部加显示缩放的场景，热容、热阻、面积、法线与质量和 Sat01 逐位相同，显示包围盒按缩放比例改变，按包围盒推得的面积可达实际值的 9 倍，默认 prim 带缩放的资产与部件带缩放的资产均被拒绝，毫米单位资产得到与米单位相同的物理参数。示例覆盖值优先于资产参数集，七项覆盖记入 provenance；材料、几何与安装方式改变后，受影响的热容、面积与热阻等于手算，其余量逐位不变，0.2.0 版散热板的热容为 3227.04 J/K。Controller01 与 PDU01 共用 D，BR 由 Battery01 通往 Radiator01，热端口映射与 Power 链接使用同一组实例标识，链接不一致时联合运行在配置阶段报错，十四个材料部分各计一次。同一场景的第二块散热板、第二个电池与共用节点 D 上同一资产的第二个实例均被拒绝；场景记录中的电池初温只能写在热初始状态中，写入 Power 初始状态的电池初温被拒绝。Sat01 与第二颗卫星 Sat02 由同一组资产文件装配，按各自初值联合运行 5600 s，于 1544.0 s 出日食、于 4923.3 s 进日食；电池温度分别在 270.54 K 至 293.15 K 与 268.42 K 至 288.15 K 之间，终止 x_n 分别为 0.7806 与 0.7441，两颗卫星电池温度在同一时刻最大相差 5.10 K，x_n 最大相差 0.2201。每次 Power 调用都使用本卫星的运行标识、实例标识与本卫星的试算电池温度；另一颗卫星运行后重算以及在新解释器中单独运行，归档逐位相同；运行前后资产、几何与场景文件哈希不变，运行温度与锂状态没有写回资产记录。Sat01 示例场景给出的初始 x_p 为 0.36，与测试用供电程序电池参数在 x_n 为 0.75 时的锂量相差 0.0%，联合运行原样使用场景中已声明的 x_p 为 0.3643，没有在运行时修正初值。第二颗卫星的场景记录仍写根路径 /World/Sat01，场景装配只接受这一根路径，以 /World/Sat02 为根的记录被拒绝。未登记的热模型、未登记的 Power 模型版本、其他领域的模型标识与导入路径形式的 model_id 均被拒绝，模型登记表只含数据记录。审计钩子、哨兵文件与已载入模块列表显示载入过程中没有导入、编译或执行注入代码，USD 中的代码文本未被执行，主动导入与主动执行的对照均被探针发现。七种光电效率工况按覆盖后的效率与所绑定表面的吸收率判定，效率不超过吸收率时接受，超过时拒绝。共 63 项检查，63 项通过。",
+ "anomalies_cn": "无",
+ "environment": {
+  "python": "3.11.9",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "astropy": "8.0.1",
+  "pytest": "9.1.1",
+  "ntu_space_dynamics": "0.1.0",
+  "usd": "0.26.8"
+ },
+ "execution": {
+  "started_utc": "2026-10-05T23:17:02.838518+00:00",
+  "recorded_utc": "2026-10-05T23:40:12.210868+00:00",
+  "collected_functions": 11,
+  "finished_functions": 11,
+  "unexecuted_functions": [],
+  "source_sha256": {
+   "thermal/__init__.py": "ffb342305704801c8871a2af365af61877f7e6485b07ec381e0f777da9d294f5",
+   "thermal/environment.py": "5c3eba796dd28d41a4f1b6fa637ada3c0b8d2942ebc5f65b1e55f1384fa99f41",
+   "thermal/model.py": "9f758d46ea25844878e8cac7ccc402c31610548d255ded7d8d980ae95a965b9e",
+   "thermal/parameters.py": "792e7f5d1175e3564b7486a230039cf026fbad78074cfc8de4fbf352d9c946f9",
+   "thermal/types.py": "2c76359dfa9555ef7d51df83009a5985964c66080dc9062746815451e827a794",
+   "sdtwin_sim/__init__.py": "e2c3bee5849391a86fa79109339d001a75779dd93835d9e829f5f1591de81a31",
+   "sdtwin_sim/coupled.py": "f05e19e220284ad3a0c1e4188eb405fa66b6777f4226decfe95d2c559bca1dff",
+   "sdtwin_sim/earth_flux.py": "03b0d340d77e583cf73a3f0ec31ca0d9830c3bdc5f824903adae266b82a853a2",
+   "sdtwin_sim/power_stand_in.py": "3229251cdd2834bc2df18177c079e651f53a0827fb57cba21527ebdbf281c58f",
+   "sdtwin_sim/scene.py": "b7b1ad5328e6f6278354249e3087d47197895294af8607d21c7dcce354c7ab9b",
+   "tests/conftest.py": "345e7f788242083755505607636fa4af3e88cbf303a6a1728e4ab327e106d11e",
+   "tests/data/dm_001/reference.py": "3bba4938e76134c73272c00250517cc01c519da62f881382ddb42daa9c79fe2c",
+   "tests/data/en_001/en001_reference.py": "73370bd0a9fdc7e7c373e8dda1b5aa0c9a6970dc047fba3cf8a7c3fd808e6ea4",
+   "tests/data/en_003/earth_reference.py": "880154b92405e9af399b772296148219ca78f8ac62e9fcbeaeef67bb45ce117f",
+   "tests/data/en_003/fe_explore.py": "0cceaffd85c2d15b11fee6c7e6b5bbb00a17d94e63940b45a2db1863dfecd473",
+   "tests/data/en_003/fe_export.py": "b33fc7276138dc59e944c5cbfed73acc0d1f1ec2ce7d458b90eed62790aa8f85",
+   "tests/data/en_003/fe_refine.py": "6ad00122cb8f7a65d0f5c23f7c139b20e92d6f75fa0f472b16d2d97628995c43",
+   "tests/data/en_003/fe_refine_ladder.py": "587ffe012aa40955c6b615f68d6e257314ac0bc418765aaa358e17dc848e0580",
+   "tests/data/en_003/ladder_compare.py": "fdf7d4d74fb0f099934f5ef3c3bbdef67df6f7cf3605a5ad1984cb48450cc3ab",
+   "tests/data/fe_001/fe001_support.py": "d1bd978ad70120cf974e46cd996a8367bd5efc08e4d8755405c2a3a21be41051",
+   "tests/data/fe_002/fe002_support.py": "2c27a76b1fd972625293b26b8e1a07d0850ba78254c4457782607279205c4f7c",
+   "tests/data/fe_003/fe003_support.py": "00d548cb2c513707bfeb16f81bf130eded88fb09a87ba8785ad27ee341a985f2",
+   "tests/data/fe_004/fe004_support.py": "54a7d7d8ce2fa0e4f9b054f596a927f8531c0cc0b77a783dcd7ab6973c1f6e44",
+   "tests/data/ht_001/t2_reference.py": "2098ccd9080957ab24ff44712b3b8e688d2b41cfa077e95460a96c82f3d27f89",
+   "tests/data/ht_002/ht002_reference.py": "076d20dec2f98fb84bbbcda17b3a0313de6c8ffb44f4c2121282eb01387bd7e7",
+   "tests/data/ht_003/analytic.py": "5ee9b0e8d1c4e06067e44754c2dd2393218e4d2a6a3d91d64064d726cb06a3a5",
+   "tests/data/ni_001/ni001_support.py": "fc84c2b085ace6fa38819195dd85f0ae47846dbd8505432ef469dd19a276b0c7",
+   "tests/data/ni_002/ni002_reference.py": "b263602b77beb5b57e4b7360db586394228e18381b8f1e40abf20f1c3295665b",
+   "tests/data/ni_003/make_ni003_data.py": "d03cfe33141adc1f8288763c42009504dcdf076ba5e46d9539ddedca64eedce7",
+   "tests/data/ni_003/ni003_support.py": "bc563f0d0b9d56e461eac3e8db7c76b37ce1431468dd4b51d257a4a551257616",
+   "tests/data/ni_003/payload/ni003_payload.py": "4755abecf85fc0e3ee9006954b933ff3e1728e8647f725a0cb05e0bff654d433",
+   "tests/data/ni_003/probe_no_exec.py": "a2d7e9613788aa4f5eb24af6c8b5dac16a234a28b96df880b7a0bfef6672cc32",
+   "tests/data/ni_003/run_alone.py": "932a1b32033842df026eac9a1496ccd301c89291e980e969fbb3a5022acee0f6",
+   "tests/data/pa_001/pa001_inputs.py": "f1b685263ff6770efd7dd01f2f9b378230ab7fab12800b3e5a697d4cf17fc4b4",
+   "tests/data/simready/make_geometry.py": "2a4c7a5b278c7ddcbe2b673950b13c7bdaaf03921f8883693bc30e28c254094c",
+   "tests/data/simready/make_scene_variants.py": "994ca8d44a44023f7d778c0337ad5403420eea194bc8202194c440a28d1f1247",
+   "tests/test_dm_001_data_objects.py": "44d85eac05803a2bb04c5e1d0c2fea1c0c572c60299ee6f28eb7cb4986f897a8",
+   "tests/test_ec_001_power_ports.py": "cdb8dac627ff5e5bd56a852fd6344996658d8dc2df56beebb8efdd5a159c7f67",
+   "tests/test_en_001_surface_environment.py": "1b0f11127159690d57558aedcdece9c11559b2b6dda75637714d26090c0dd679",
+   "tests/test_en_002_surface_heat.py": "c45ab4a04ceaa6211d5aaf72befbf5d95e8e9c7be5b86454ccc4a6b5cae39e34",
+   "tests/test_en_003_earth_flux.py": "eaa1527e9722b6feb07abc9289f43680b60c59791ce838e072a5e24b90e62c79",
+   "tests/test_fe_001_solar_array_fe.py": "f23d462dbbd432308214db7d5634689b059f5e5b1bb4f46251c0836d139f3cd7",
+   "tests/test_fe_002_radiator_fe.py": "f1be285404e242cc6394363eac2ed1345233e1497ed83fff5f4e3dde09260aa1",
+   "tests/test_fe_003_compute_cold_plate_fe.py": "3a9bfdd73afca2fb2257235348b85702707b5c390b1814a3d15621fba39bafce",
+   "tests/test_fe_004_whole_satellite_chain.py": "6aaeec63a82a4031d916d063694f2aa9a6b750c1712ce2bb7ba036497f1e9a66",
+   "tests/test_ht_001_heat_flows.py": "2d91f41677820f09cdb4e6edac6582be56c9647cea59bfaa629e30da1e759049",
+   "tests/test_ht_002_derivative_balance.py": "728e57be7630d1be877a265ad0206e9ab0cef1374a9bd74f20f438f18a0d144b",
+   "tests/test_ht_003_analytic.py": "a66ffc2613929fbd9bb44a0f2a8f1d41879069d1b2d9584f8fb2041f1545e832",
+   "tests/test_ni_001_numerics_eclipse.py": "1f4cba777b1aba392d09bb130ec6652d2b04004a3ac97ea4e49a88424aacdf47",
+   "tests/test_ni_002_end_to_end.py": "fb33ca9517ced5761c63ae7d68cefc72e98c3c3e36c7a8665b0d89fc9d3c696e",
+   "tests/test_ni_003_scene_assembly.py": "2ce365771b66f67e78334bbb3358a210d8eabed0753d82b7abeb4f3e900e6226",
+   "tests/test_pa_001_t5_assembly.py": "fa1b1edba0b491daf8a6e06ecd6d3a1e8baa9307daf94b5d885659a0620e3293"
+  }
+ }
+}

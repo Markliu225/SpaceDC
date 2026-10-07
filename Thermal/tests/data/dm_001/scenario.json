@@ -1,0 +1,79 @@
+{
+ "description": "Test data of case DM-001 (common data objects, design 5.1 table 6). Every device value is a test value chosen for the checks, not a selected device. Components and connections are listed in a scrambled order on purpose, so that the node, path and exposed-node orders of the assembled objects are checked against the design order and not against the input order. The battery numbers C_B = 1000 J/K, T_B = 303 K, T_R = 300 K, R_BR = 0.5 K/W and Q_B = 10 W are the battery example of design 4.3.",
+ "source_note": "DM-001 test value, not a selected device",
+ "run_id": "dm001",
+ "epoch_utc": "2026-03-20T12:00:00+00:00",
+ "time_s": 120.0,
+ "components": [
+  {"instance_id": "Radiator01", "node_id": "R", "asset_id": "dm001.radiator", "asset_version": "dm001-r1",
+   "materials": [{"material_id": "R_panel", "mass_kg": 3.0, "cp_J_kgK": 900.0, "source": "DM-001 test value, not a selected device"}],
+   "surfaces": [
+    {"surface_id": "R_space", "area_m2": 1.5, "normal_body": [1.0, 0.0, 0.0], "absorptivity": 0.2, "emissivity": 0.9, "source": "DM-001 test value, not a selected device"},
+    {"surface_id": "R_side", "area_m2": 0.5, "normal_body": [0.0, 1.0, 0.0], "absorptivity": 0.25, "emissivity": 0.85, "source": "DM-001 test value, not a selected device"}
+   ],
+   "temperature_range_K": [173.15, 373.15], "ports": []},
+  {"instance_id": "Battery01", "node_id": "B", "asset_id": "dm001.battery", "asset_version": "dm001-b1",
+   "materials": [{"material_id": "B_cells", "mass_kg": 1.0, "cp_J_kgK": 1000.0, "source": "DM-001 test value, design 4.3 battery example C_B = 1000 J/K"}],
+   "surfaces": [], "temperature_range_K": [253.15, 333.15], "ports": ["Q_B_W"]},
+  {"instance_id": "PDU01", "node_id": "D", "asset_id": "dm001.pdu", "asset_version": "dm001-p1",
+   "materials": [{"material_id": "D_pdu", "mass_kg": 0.5, "cp_J_kgK": 900.0, "source": "DM-001 test value, not a selected device"}],
+   "surfaces": [], "temperature_range_K": [233.15, 358.15], "ports": ["Q_D_W"]},
+  {"instance_id": "SolarArray01", "node_id": "S", "asset_id": "dm001.solar_array", "asset_version": "dm001-s1",
+   "materials": [{"material_id": "S_substrate", "mass_kg": 4.0, "cp_J_kgK": 900.0, "source": "DM-001 test value, not a selected device"}],
+   "surfaces": [
+    {"surface_id": "S_front", "area_m2": 2.0, "normal_body": [0.0, 0.0, 1.0], "absorptivity": 0.8, "emissivity": 0.85, "source": "DM-001 test value, not a selected device"},
+    {"surface_id": "S_back", "area_m2": 2.0, "normal_body": [0.0, 0.0, -1.0], "absorptivity": 0.3, "emissivity": 0.8, "source": "DM-001 test value, not a selected device"}
+   ],
+   "temperature_range_K": [173.15, 393.15], "ports": ["P_pv_W"]},
+  {"instance_id": "Controller01", "node_id": "D", "asset_id": "dm001.controller", "asset_version": "dm001-k1",
+   "materials": [{"material_id": "D_controller", "mass_kg": 0.3, "cp_J_kgK": 900.0, "source": "DM-001 test value, not a selected device"}],
+   "surfaces": [], "temperature_range_K": [233.15, 358.15], "ports": []},
+  {"instance_id": "ColdPlate01", "node_id": "C", "asset_id": "dm001.cold_plate", "asset_version": "dm001-c1",
+   "materials": [{"material_id": "C_plate", "mass_kg": 1.2, "cp_J_kgK": 900.0, "source": "DM-001 test value, not a selected device"}],
+   "surfaces": [], "temperature_range_K": [233.15, 358.15], "ports": []},
+  {"instance_id": "Compute01", "node_id": "J", "asset_id": "dm001.compute", "asset_version": "dm001-j1",
+   "materials": [{"material_id": "J_board", "mass_kg": 0.5, "cp_J_kgK": 800.0, "source": "DM-001 test value, not a selected device"}],
+   "surfaces": [], "temperature_range_K": [233.15, 358.15], "ports": ["P_load_W"]}
+ ],
+ "connections": [
+  {"path": "DR", "length_m": 0.1, "conductivity_W_mK": 200.0, "area_m2": 0.001, "contact_resistance_K_W": 0.25, "source": "DM-001 test value, not a selected device"},
+  {"path": "BR", "equivalent_total_resistance_K_W": 0.5, "includes_contact": true, "source": "DM-001 test value, design 4.3 battery example R_BR = 0.5 K/W"},
+  {"path": "CR", "equivalent_total_resistance_K_W": 0.2, "includes_contact": false, "contact_resistance_K_W": 0.05, "source": "DM-001 test value, not a selected device"},
+  {"path": "JC", "length_m": 0.005, "conductivity_W_mK": 400.0, "area_m2": 0.0025, "contact_resistance_K_W": 0.095, "source": "DM-001 test value, not a selected device"},
+  {"path": "SR", "length_m": 0.5, "conductivity_W_mK": 100.0, "area_m2": 0.002, "contact_resistance_K_W": 0.5, "source": "DM-001 test value, not a selected device"}
+ ],
+ "temperature_K": {"S": 320.0, "J": 330.0, "C": 310.0, "B": 303.0, "D": 305.0, "R": 300.0},
+ "orbit_input": {
+  "position_m": [0.0, 0.0, 6778137.0],
+  "sun_position_m": [89760000000.0, 0.0, 119680000000.0],
+  "frame": "GCRS",
+  "quaternion_xyzw": [0.0, 0.0, 0.0, 1.0],
+  "G_W_m2": 1361.0
+ },
+ "earth_flux_W_m2": {
+  "albedo": {"R_space": 40.0, "R_side": 25.0, "S_front": 0.0, "S_back": 120.0},
+  "infrared": {"R_space": 180.0, "R_side": 150.0, "S_front": 0.0, "S_back": 230.0}
+ },
+ "ports_W": {"P_pv_W": 300.0, "P_load_W": 150.0, "Q_B_W": 10.0, "Q_D_W": 5.0},
+ "Q_B_W_signs": [10.0, -10.0],
+ "coupled_thermal_only": {
+  "run_id": "dm001_trial",
+  "t_end_s": 1200.0,
+  "solver": {"method": "RK45", "rtol": 1e-9, "atol_T_K": 1e-9, "max_step_s": 80.0, "first_step_s": 80.0,
+             "output_step_s": 60.0, "environment_step_s": 30.0, "event_time_tol_s": 0.001},
+  "note": "first_step_s of 80 s against the 40 s time constant C_J R_JC = 400 J/K x 0.1 K/W forces rejected trial steps while every trial temperature stays positive; a 120 s first step drives a stage temperature of J below 0 K and stops the run"
+ },
+ "coupled_power": {
+  "run_id": "dm001_power",
+  "t_end_s": 300.0,
+  "request_W": 100.0,
+  "note": "Power stand-in example parameters with T_B_K = 303 K; battery inside [253.15, 333.15] K and at mid charge"
+ },
+ "coupled_power_event": {
+  "run_id": "dm001_event",
+  "t_end_s": 300.0,
+  "request_W": 100.0,
+  "forced_shortfall_from_s": 150.0,
+  "note": "the Power stand-in result is replaced, through PowerCoupling(solve=...), by a confirmed supply_shortfall decision while the load is connected and t >= 150 s; the runner locates the boundary within event_time_tol_s, discards the sub-integrations that meet the event and applies supply_loss"
+ }
+}

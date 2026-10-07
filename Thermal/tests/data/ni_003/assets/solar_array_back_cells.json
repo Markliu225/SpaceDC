@@ -1,0 +1,90 @@
+{
+  "asset_id": "ni003.solar_array_back_cells",
+  "asset_version": "0.1.0",
+  "description": "The example panel with its Power capability bound to the back surface: efficiency 0.89 exceeds the back absorptivity 0.88 but not the front absorptivity 0.91.",
+  "geometry_uri": "../../simready/geometry/solar_array_panel.usda",
+  "capabilities": [
+    {
+      "domain": "thermal",
+      "model_id": "sdtwin.thermal.solar_array/1",
+      "parameter_set": {
+        "materials": [
+          {
+            "material_id": "substrate_honeycomb_cfrp",
+            "mass_kg": 1.65,
+            "cp_J_kgK": 930.0,
+            "source": "illustrative test value: aluminium honeycomb with CFRP facesheets, about 2.75 kg/m^2"
+          },
+          {
+            "material_id": "cells_and_coverglass",
+            "mass_kg": 0.72,
+            "cp_J_kgK": 760.0,
+            "source": "illustrative test value: triple-junction cells with coverglass, about 1.2 kg/m^2"
+          }
+        ],
+        "surfaces": [
+          {
+            "surface_id": "front",
+            "geometry_prim": "Panel",
+            "face": "+Z",
+            "absorptivity": 0.91,
+            "emissivity": 0.85,
+            "source": "illustrative test value: typical coverglass cell side"
+          },
+          {
+            "surface_id": "back",
+            "geometry_prim": "Panel",
+            "face": "-Z",
+            "absorptivity": 0.88,
+            "emissivity": 0.86,
+            "source": "illustrative test value: typical black CFRP facesheet"
+          }
+        ],
+        "temperature_range_K": [
+          173.15,
+          383.15
+        ]
+      }
+    },
+    {
+      "domain": "power",
+      "model_id": "sdtwin.power.solar_array.fixed_efficiency/1",
+      "parameter_set": {
+        "cell_area_m2": 0.51,
+        "efficiency": 0.89,
+        "surface_id": "back"
+      }
+    }
+  ],
+  "ports": [
+    {
+      "name": "P_pv_W",
+      "kind": "power_port",
+      "unit": "W",
+      "description": "actual solar electrical output removed from node S"
+    },
+    {
+      "name": "pv_out",
+      "kind": "electrical",
+      "unit": "W",
+      "description": "array output to Controller01"
+    },
+    {
+      "name": "T_S_K",
+      "kind": "temperature",
+      "unit": "K",
+      "description": "solar array temperature of node S"
+    },
+    {
+      "name": "radiator_link",
+      "kind": "thermal_interface",
+      "unit": "W",
+      "description": "hinge bracket path SR"
+    }
+  ],
+  "provenance": {
+    "status": "illustrative_test_value",
+    "note": "NI-003 test asset. Efficiency checked against the absorptivity of the same surface.",
+    "references": []
+  }
+}

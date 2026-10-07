@@ -1,0 +1,9 @@
+07:21:24 capacity case nom0 Qd [35.0]
+07:21:29 geometry: 0 domains, 48 boundaries, 192 edges (0s)
+07:21:31 selections: shells 48 bnds; solids -1 doms; hrs=48
+07:21:45 global equations: 48 unknowns
+07:21:50 mesh 0s {'tri': 1056, 'tet': 0}
+07:42:25 nom0 Qd 35 kW loop A: outlet mean -36.45 C, min -39.39, max -33.59, orbit-to-orbit drift -0.326 K (1203 s)
+07:42:26 nom0 Qd 35 kW loop B: outlet mean -37.84 C, min -39.36, max -36.57, orbit-to-orbit drift -0.363 K (1203 s)
+07:42:27 saved C:\Workspace\SpaceDC\Thermal\iss_fem\out\comsol\cap_nom0_dt60.mph
+07:42:28 nom0 capacity {'A': {'Q_at_mean_setpoint_kW': None, 'Q_at_max_setpoint_kW': None}, 'B': {'Q_at_mean_setpoint_kW': None, 'Q_at_max_setpoint_kW': None}}

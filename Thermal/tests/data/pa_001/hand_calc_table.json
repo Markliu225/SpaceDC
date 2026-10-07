@@ -1,0 +1,35 @@
+{
+ "description": "PA-001 hand calculation of design report T5 for the inputs in pa001_inputs.py. C_i = sum of m c_p over the material portions of node i; R_ij = l / (kappa A) + R_contact for a solid path; an equivalent total is used directly when it includes the contact part and the separate contact resistance is added when it does not. Values are exact decimals or exact ratios.",
+ "units": {"C_J_K": "J/K", "R_K_W": "K/W", "mass": "kg", "cp": "J/(kg K)", "areal_heat_capacity": "J/(m2 K)"},
+ "baseline": {
+  "C_J_K": {
+   "S": {"terms": ["0.62 x 712 = 441.44", "1.35 x 1050 = 1417.5", "0.21 x 896 = 188.16"], "value": "2047.1"},
+   "J": {"terms": ["design 4.5 example: 1 x 1000 = 1000"], "value": "1000"},
+   "C": {"terms": ["2.4 x 896 = 2150.4", "0.18 x 4180 = 752.4"], "value": "2902.8"},
+   "B": {"terms": ["3.2 x 1040 = 3328", "0.65 x 896 = 582.4"], "value": "3910.4"},
+   "D": {"terms": ["Controller01: 0.95 x 896 = 851.2", "Controller01: 0.30 x 1150 = 345", "PDU01 MBSU block: 0.94 x 0.84 x 0.51 = 0.402696 m3, x 300 = 120.8088 kg, x 900 = 108727.92"], "value": "109924.12"},
+   "R": {"terms": ["radiator panel: 3.4 x 2.705 = 9.197 m2, x 8 = 73.576 kg, x 900 = 66218.4"], "value": "66218.4"}
+  },
+  "R_K_W": {
+   "SR": {"terms": ["0.12 / (167 x 0.0004) = 300/167", "+ 0.35"], "value": "7169/3340"},
+   "JC": {"terms": ["0.002 / (3 x 0.0064) = 5/48", "+ 0.05"], "value": "37/240"},
+   "CR": {"terms": ["heat-pipe equivalent total 0.085 including contact, nothing added"], "value": "0.085"},
+   "BR": {"terms": ["0.08 / (167 x 0.0025) = 32/167", "+ 0.12"], "value": "1301/4175"},
+   "DR": {"terms": ["liquid-cooling equivalent total 0.045 without contact", "+ 0.021"], "value": "0.066"}
+  }
+ },
+ "override": {
+  "changes": ["Battery01 bt01_li_ion_cells mass_kg 3.2 -> 3.45", "BR contact_resistance_K_W 0.12 -> 0.08"],
+  "C_J_K": {"B": {"terms": ["3.45 x 1040 = 3588", "0.65 x 896 = 582.4"], "value": "4170.4"}},
+  "R_K_W": {"BR": {"terms": ["32/167", "+ 0.08"], "value": "1134/4175"}}
+ },
+ "acceptance": {
+  "design_4_5_example_C_J_K": "1000",
+  "mbsu_block_C_J_K": "108727.92",
+  "mbsu_block_C_kJ_K_one_decimal": "108.7",
+  "radiator_panel_area_m2": "9.197",
+  "radiator_panel_C_per_area_J_m2K": "7200",
+  "radiator_panel_C_per_area_kJ_m2K_one_decimal": "7.2",
+  "relative_error_limit": 1e-12
+ }
+}

@@ -1,0 +1,325 @@
+*******************************************
+***COMSOL 6.3.0.290 progress output file***
+*******************************************
+Wed Sep 30 02:44:05 SGT 2026
+<---- O: orbital transient, 3.0 orbits/解 4 (sol4) 中的“编译方程: 轨道热载荷” --------------
+开始于 2026年9月30日 上午2:44:19。
+几何形函数: 二次拉格朗日单元
+几何形函数: 二次拉格朗日单元
+几何形函数: 二次拉格朗日单元
+几何形函数: 二次拉格朗日单元
+几何形函数: 二次拉格朗日单元
+几何形函数: 二次拉格朗日单元
+在 AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD 上运行。
+在以下位置使用 1 个插槽： MarkLiu 上（共 5 个内核）。
+可用内存：32.38 GB。
+           当前进度:   0 % - 生成方程
+Memory: 982/1045 1013/1064
+           当前进度:   1 % - 编译方程: 轨道热载荷
+Memory: 1200/1200 1223/1223
+           当前进度:   1 % - 正在创建可视化网格
+Memory: 1199/1208 1223/1230
+时间：20。
+物理内存: 1.31 GB
+虚拟内存: 1.33 GB
+结束时间：2026年9月30日 上午2:44:40。
+----- O: orbital transient, 3.0 orbits/解 4 (sol4) 中的“编译方程: 轨道热载荷” ------------->
+<---- O: orbital transient, 3.0 orbits/解 4 (sol4) 中的“因变量 1” --------------------
+开始于 2026年9月30日 上午2:44:40。
+           当前进度:   1 % - 因变量 1
+Memory: 1212/1317 1235/1338
+求解时间：0 s。
+物理内存: 1.32 GB
+虚拟内存: 1.34 GB
+结束时间：2026年9月30日 上午2:44:40。
+----- O: orbital transient, 3.0 orbits/解 4 (sol4) 中的“因变量 1” ------------------->
+<---- O: orbital transient, 3.0 orbits/解 4 (sol4) 中的“瞬态求解器 1” ------------------
+开始于 2026年9月30日 上午2:44:40。
+瞬态求解器 (BDF)
+求解的自由度数：60（加上 16144 个内部自由度）。
+           当前进度:   2 % - 瞬态求解器 1
+Memory: 1278/1317 1301/1338
+找到对称矩阵。
+           当前进度:   2 % - 组装矩阵
+Memory: 1293/1317 1315/1338
+缩放因变量：
+形函数 (comp1.otl2.ds_hrs.storeGextd_band): 1
+形函数 (comp1.otl2.ds_hrs.storeGextu_band): 1
+形函数 (comp1.otl3.ds_pvr.storeGextd_band): 1
+形函数 (comp1.otl3.ds_pvr.storeGextu_band): 1
+形函数 (comp1.otl3.ds_rsa.storeGextd_band): 1
+形函数 (comp1.otl3.ds_rsa.storeGextu_band): 1
+形函数 (comp1.otl4.ds_saw.storeGextd_band): 1
+形函数 (comp1.otl4.ds_saw.storeGextu_band): 1
+形函数 (comp1.otl.ds_box.storeGextd_band): 1
+形函数 (comp1.otl.ds_box.storeGextu_band): 1
+形函数 (comp1.otl.ds_payload.storeGextd_band): 1
+形函数 (comp1.otl.ds_payload.storeGextu_band): 1
+形函数 (comp1.otl.ds_skin_rus.storeGextd_band): 1
+形函数 (comp1.otl.ds_skin_rus.storeGextu_band): 1
+形函数 (comp1.otl.ds_skin_usos.storeGextd_band): 1
+形函数 (comp1.otl.ds_skin_usos.storeGextu_band): 1
+形函数 (comp1.otl.ds_truss.storeGextd_band): 1
+形函数 (comp1.otl.ds_truss.storeGextu_band): 1
+指示器状态的比例：
+comp1.otl2.inEclipse_event: 4e+05
+comp1.otl2.outEclipse_event: 4e+05
+comp1.otl3.inEclipse_event: 4e+05
+comp1.otl3.outEclipse_event: 4e+05
+comp1.otl4.inEclipse_event: 4e+05
+comp1.otl4.outEclipse_event: 4e+05
+comp1.otl.inEclipse_event: 4e+05
+comp1.otl.outEclipse_event: 4e+05
+Step        Time    Stepsize      Res  Jac  Sol Order Tfail NLfail   LinErr   LinRes
+   0           0           - out    2    3    2                  0        0        0
+指示器状态的比例：
+comp1.otl2.inEclipse_event: 4e+05
+comp1.otl2.outEclipse_event: 4e+05
+comp1.otl3.inEclipse_event: 4e+05
+comp1.otl3.outEclipse_event: 4e+05
+comp1.otl4.inEclipse_event: 4e+05
+comp1.otl4.outEclipse_event: 4e+05
+comp1.otl.inEclipse_event: 4e+05
+comp1.otl.outEclipse_event: 4e+05
+           当前进度:   2 % - 约束处理
+Memory: 1312/1317 1334/1338
+           当前进度:   2 % - 组装矩阵
+Memory: 1356/1357 1374/1378
+           当前进度:   2 % - 
+Memory: 1366/1366 1383/1383
+   1         0.6         0.6        3    4    3     1     0      0        0        0
+           当前进度:   2 % - 组装矩阵
+Memory: 1373/1373 1386/1386
+           当前进度:   2 % - 
+Memory: 1376/1376 1389/1389
+   2         1.2         0.6        4    5    4     1     0      0        0        0
+   3         2.4         1.2        5    6    5     2     0      0        0        0
+           当前进度:   3 % - 
+Memory: 1391/1392 1419/1420
+   4         4.8         2.4        6    7    6     1     0      0        0        0
+   5         9.6         4.8        7    8    7     1     0      0        0        0
+   6        19.2         9.6        8    9    8     1     0      0        0        0
+           当前进度:   4 % - 
+Memory: 1416/1416 1444/1444
+   7        38.4        19.2        9   10    9     1     0      0        0        0
+           当前进度:   5 % - 
+Memory: 1426/1426 1454/1454
+   -          60           - out
+   8        76.8        38.4       10   11   10     1     0      0        0        0
+           当前进度:   8 % - 
+Memory: 1427/1427 1455/1455
+   -         120           - out
+   9       136.8          60       11   12   11     1     0      0        0        0
+-          当前进度:  13 % - 
+Memory: 1431/1431 1459/1459
+   -         180           - out
+  10       196.8          60       12   13   12     1     0      0        0        0
+-          当前进度:  18 % - 
+Memory: 1433/1433 1461/1461
+   -         240           - out
+  11       256.8          60       13   14   13     1     0      0        0        0
+--         当前进度:  23 % - 
+Memory: 1435/1435 1463/1463
+   -         300           - out
+  12       316.8          60       14   15   14     1     0      0        0        0
+--         当前进度:  28 % - 
+Memory: 1438/1438 1465/1465
+   -         360           - out
+  13       376.8          60       15   16   15     1     0      0        0        0
+---        当前进度:  32 % - 
+Memory: 1440/1440 1467/1467
+   -         420           - out
+  14       436.8          60       16   17   16     1     0      0        0        0
+---        当前进度:  37 % - 
+Memory: 1441/1441 1468/1468
+   -         480           - out
+  15       496.8          60       17   18   17     1     0      0        0        0
+----       当前进度:  42 % - 
+   -         540           - out
+  16       548.4        51.6       18   19   18     1     0      0        0        0
+----       当前进度:  46 % - 
+  17         600        51.6 out   19   20   19     1     0      0        0        0
+时间步进已完成。
+-----      当前进度:  50 % - 
+Memory: 1442/1442 1469/1469
+求解时间：49 s。
+物理内存: 1.45 GB
+虚拟内存: 1.49 GB
+结束时间：2026年9月30日 上午2:45:29。
+----- O: orbital transient, 3.0 orbits/解 4 (sol4) 中的“瞬态求解器 1” ----------------->
+<---- O: orbital transient, 3.0 orbits/解 4 (sol4) 中的“编译方程: 轨道温度” ---------------
+开始于 2026年9月30日 上午2:45:29。
+几何形函数: 二次拉格朗日单元
+几何形函数: 二次拉格朗日单元
+几何形函数: 二次拉格朗日单元
+几何形函数: 二次拉格朗日单元
+几何形函数: 二次拉格朗日单元
+几何形函数: 二次拉格朗日单元
+-----      当前进度:  50 % - 生成方程
+Memory: 1495/1496 1522/1523
+-----      当前进度:  51 % - 编译方程: 轨道温度
+Memory: 1734/1735 1764/1766
+-----      当前进度:  51 % - 正在创建可视化网格
+Memory: 1831/1831 1860/1860
+时间：18。
+物理内存: 2.18 GB
+虚拟内存: 2.21 GB
+结束时间：2026年9月30日 上午2:45:47。
+----- O: orbital transient, 3.0 orbits/解 4 (sol4) 中的“编译方程: 轨道温度” -------------->
+<---- O: orbital transient, 3.0 orbits/解 4 (sol4) 中的“因变量 2” --------------------
+开始于 2026年9月30日 上午2:45:47。
+待求解变量的初始值: 解 4 (sol4), 解存储 2 (sol5), t=600 s [自动（单一解）].
+不求解变量的值: 解 4 (sol4), 解存储 2 (sol5), t=600 s [自动（单一解）].
+-----      当前进度:  51 % - 因变量 2
+Memory: 1990/2178 2027/2214
+求解时间：0 s。
+物理内存: 1.99 GB
+虚拟内存: 2.03 GB
+结束时间：2026年9月30日 上午2:45:47。
+----- O: orbital transient, 3.0 orbits/解 4 (sol4) 中的“因变量 2” ------------------->
+<---- O: orbital transient, 3.0 orbits/解 4 (sol4) 中的“瞬态求解器 2” ------------------
+开始于 2026年9月30日 上午2:45:47。
+瞬态求解器 (BDF)
+-----      当前进度:  52 % - 瞬态求解器 2
+Memory: 1990/2178 2028/2214
+求解的自由度数：24040（加上 8908 个内部自由度）。
+-----      当前进度:  52 % - 组装稀疏模式
+Memory: 1996/2178 2035/2214
+-----      当前进度:  52 % - 组装矩阵
+Memory: 2027/2178 2069/2214
+找到对称矩阵。
+缩放因变量：
+温度 (comp1.T): 3e+02
+已使用正交零空间函数。
+-----      当前进度:  52 % - 组装稀疏模式
+Memory: 2041/2178 2069/2214
+找到非对称矩阵。
+缩放因变量：
+温度 (comp1.T2): 3e+02
+collected heat Qc (W) (comp1.ODE1): 2e+04
+NH3 panel outlet temperatures (K) (comp1.ODE2): 3e+02
+radiator flow fractions (comp1.ODE3): 1
+已使用正交零空间函数。
+-----      当前进度:  52 % - 约束处理
+Memory: 2043/2178 2070/2214
+找到对称矩阵。
+缩放因变量：
+表面辐射度，上侧 (comp1.otl.ds_box.Ju_band): 1.6e+02
+表面辐射度，上侧 (comp1.otl.ds_payload.Ju_band): 1.6e+02
+表面辐射度，下侧 (comp1.otl.ds_skin_rus.Jd_band): 1.5e-06
+表面辐射度，上侧 (comp1.otl.ds_skin_rus.Ju_band): 1.3e+02
+表面辐射度，下侧 (comp1.otl.ds_skin_usos.Jd_band): 1.5e-06
+表面辐射度，上侧 (comp1.otl.ds_skin_usos.Ju_band): 66
+表面辐射度，上侧 (comp1.otl.ds_truss.Ju_band): 99
+已使用正交零空间函数。
+-----      当前进度:  52 % - 组装稀疏模式
+Memory: 2044/2178 2071/2214
+找到对称矩阵。
+缩放因变量：
+表面辐射度，下侧 (comp1.otl2.ds_hrs.Jd_band): 1.1e+02
+表面辐射度，上侧 (comp1.otl2.ds_hrs.Ju_band): 1.1e+02
+已使用正交零空间函数。
+-----      当前进度:  52 % - 组装矩阵
+找到对称矩阵。
+缩放因变量：
+表面辐射度，下侧 (comp1.otl3.ds_pvr.Jd_band): 1.2e+02
+表面辐射度，上侧 (comp1.otl3.ds_pvr.Ju_band): 1.2e+02
+表面辐射度，下侧 (comp1.otl3.ds_rsa.Jd_band): 1.6e+02
+表面辐射度，上侧 (comp1.otl3.ds_rsa.Ju_band): 1.7e+02
+已使用正交零空间函数。
+找到对称矩阵。
+缩放因变量：
+表面辐射度，下侧 (comp1.otl4.ds_saw.Jd_band): 1.6e+02
+表面辐射度，上侧 (comp1.otl4.ds_saw.Ju_band): 1.7e+02
+已使用正交零空间函数。
+-----      当前进度:  52 % - 组装稀疏模式
+Memory: 2043/2178 2086/2214
+找到对称矩阵。
+-----      当前进度:  52 % - 约束处理
+Memory: 2053/2178 2094/2214
+指示器状态的比例：
+comp1.otl2.inEclipse_event: 4e+05
+comp1.otl2.outEclipse_event: 4e+05
+comp1.otl3.inEclipse_event: 4e+05
+comp1.otl3.outEclipse_event: 4e+05
+comp1.otl4.inEclipse_event: 4e+05
+comp1.otl4.outEclipse_event: 4e+05
+comp1.otl.inEclipse_event: 4e+05
+comp1.otl.outEclipse_event: 4e+05
+Step        Time    Stepsize      Res  Jac  Sol Order Tfail NLfail   LinErr   LinRes
+-----      当前进度:  52 % - 组装矩阵
+Memory: 2070/2178 2103/2214
+-----      当前进度:  52 % - 组装稀疏模式
+Memory: 2077/2178 2108/2214
+-----      当前进度:  52 % - 矩阵分解
+Memory: 2088/2178 2118/2214
+-----      当前进度:  52 % - 组装矩阵
+Memory: 2114/2178 2160/2214
+-----      当前进度:  52 % - 组装稀疏模式
+Memory: 2135/2178 2174/2214
+-----      当前进度:  52 % - 求解线性方程组
+Memory: 2149/2178 2188/2214
+-----      当前进度:  52 % - 组装矩阵
+Memory: 2170/2178 2214/2214
+-----      当前进度:  52 % - 求解线性方程组
+Memory: 2194/2194 2231/2231
+-----      当前进度:  52 % - 组装矩阵
+Memory: 2195/2195 2231/2231
+-----      当前进度:  52 % - 求解线性方程组
+Memory: 2318/2318 2350/2353
+-----      当前进度:  52 % - 组装矩阵
+Memory: 2319/2319 2354/2354
+-----      当前进度:  52 % - 组装稀疏模式
+Memory: 2350/2350 2383/2383
+-----      当前进度:  52 % - 组装矩阵
+Memory: 2360/2360 2394/2397
+-----      当前进度:  52 % - 组装稀疏模式
+Memory: 2361/2361 2394/2397
+-----      当前进度:  52 % - 组装矩阵
+Memory: 2366/2368 2399/2402
+-----      当前进度:  52 % - 组装稀疏模式
+Memory: 2451/2451 2477/2478
+-----      当前进度:  52 % - 组装矩阵
+Memory: 2451/2456 2477/2483
+-----      当前进度:  52 % - 矩阵分解
+Memory: 2465/2467 2491/2494
+-----      当前进度:  52 % - 组装矩阵
+Memory: 2470/2470 2496/2496
+-----      当前进度:  52 % - 组装稀疏模式
+Memory: 2488/2493 2529/2534
+-----      当前进度:  52 % - 组装矩阵
+-----      当前进度:  52 % - 组装稀疏模式
+Memory: 2520/2520 2560/2560
+-----      当前进度:  52 % - 组装矩阵
+Memory: 2524/2526 2564/2567
+-----      当前进度:  52 % - 求解线性方程组
+Memory: 2530/2530 2570/2573
+-----      当前进度:  52 % - 组装矩阵
+-----      当前进度:  52 % - 组装稀疏模式
+Memory: 2530/2534 2570/2574
+-----      当前进度:  52 % - 组装矩阵
+   0           0           - out  622  126  603                  0
+                   Group #1:      110   21  110                     4.2e-16  2.9e-16
+                   Group #2:      110   21  110                     2.6e-15  6.8e-15
+                   Group #3:      110   21  110                     3.2e-16  1.3e-16
+                   Group #4:      110   21   91                     3.5e-16  1.3e-16
+                   Group #5:       91   21   91                     2.5e-16  9.8e-17
+                   Group #6:       91   21   91                     3.4e-16  1.3e-16
+指示器状态的比例：
+comp1.otl2.inEclipse_event: 4e+05
+comp1.otl2.outEclipse_event: 4e+05
+comp1.otl3.inEclipse_event: 4e+05
+comp1.otl3.outEclipse_event: 4e+05
+comp1.otl4.inEclipse_event: 4e+05
+comp1.otl4.outEclipse_event: 4e+05
+comp1.otl.inEclipse_event: 4e+05
+comp1.otl.outEclipse_event: 4e+05
+-----      当前进度:  52 % - 约束处理
+Memory: 2567/2570 2608/2610
+---------- 当前进度: 100 % - 
+Memory: 2562/2570 2601/2612
+求解时间：90 s。 （1 分钟，30 秒）
+物理内存: 2.57 GB
+虚拟内存: 2.62 GB
+结束时间：2026年9月30日 上午2:47:17。
+----- O: orbital transient, 3.0 orbits/解 4 (sol4) 中的“瞬态求解器 2” ----------------->

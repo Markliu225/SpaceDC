@@ -1,0 +1,345 @@
+..FF...                                                                  [100%]
+================================== FAILURES ===================================
+______________ test_step2_orientations_vs_numerical_integration _______________
+
+case_record = <conftest.CaseRecord object at 0x000002774B428910>
+sweep = {0.0: [{'u': 0.0, 'r': array([6778137.,       0.,       0.]), 's': array([ 1., -0.,  0.]), 'normals': {'nadir': array(...-0.32143947,  0.58766532,  0.7425134 ]), 'along_neg': array([ 0.32143947, -0.58766532, -0.7425134 ]), ...}, ...}, ...]}
+
+    def test_step2_orientations_vs_numerical_integration(case_record, sweep):
+        all_ok = True
+        worst_overall = 0.0
+        for group, members in GROUPS.items():
+            for quantity in ("反照", "红外"):
+                m_vals, r_vals, a_vals = [], [], []
+                for beta in BETAS:
+                    for row in sweep[beta]:
+                        for case, env in ENV.items():
+                            for nm in members:
+                                alb, ir = row["module"][case][nm]
+                                if quantity == "反照":
+                                    m_vals.append(alb)
+                                    r_vals.append(env["albedo"] * env["S"] * row["F_alb"][nm])
+                                else:
+                                    m_vals.append(ir)
+                                    r_vals.append(env["olr"] * row["F"][nm])
+                                    a_vals.append(env["olr"] * row["F_an"][nm])
+                m_vals, r_vals = np.array(m_vals), np.array(r_vals)
+                crit, rel_big, abs_small, n_big, n_small = _compare(m_vals, r_vals)
+                ok = crit <= STEP2_REL
+                extra = ""
+                if quantity == "红外":
+                    a_vals = np.array(a_vals)
+                    crit_a, rel_a, abs_a, _, _ = _compare(m_vals, a_vals)
+                    ok = ok and crit_a <= STEP2_REL
+                    extra = f"；与解析倾斜平板视角系数相比最大相对差 {rel_a:.2e}，小值样本最大绝对差 {abs_a:.2e} W/m²"
+                    crit = max(crit, crit_a)
+                if group == "背地":
+                    exact_zero = bool(np.all(m_vals == 0.0) and np.all(r_vals == 0.0))
+                    ok = ok and exact_zero
+                    extra += f"；模块与参照全部为 0：{exact_zero}"
+                worst_overall = max(worst_overall, crit)
+                all_ok &= ok
+                case_record.metric(f"step2_{group}_{quantity}_max_rel", rel_big)
+                case_record.check(
+                    f"步骤2 {group}平板{quantity}辐照与可见地球面元积分",
+                    "逐点相对差不超过 1%，仅参照接近数值零时使用 1e-12 W/m² 的绝对容限",
+                    f"β 0° 与 75°、三组环境值、{len(members)} 个法向、每圈 {N_POS} 个位置，共 {m_vals.size} 个样本；"
+                    f"参照值不低于 1e-10 W/m² 的 {n_big} 个样本最大相对差 {rel_big:.2e}，其余 {n_small} 个样本最大绝对差 "
+                    f"{abs_small:.2e} W/m²；按判据折算最大 {crit:.2e}；最大值 模块 {m_vals.max():.2f} 参照 {r_vals.max():.2f} W/m²"
+                    + extra,
+                    ok,
+                )
+        case_record.metric("step2_worst_criterion", worst_overall)
+        env = ENV["nom0"]
+        orientation = {}
+        for beta in BETAS:
+            rows = sweep[beta]
+            entry = {"time_s": [row["u"] / (2.0 * math.pi) * ORBIT_PERIOD_S for row in rows],
+                     "orbit_angle_deg": [math.degrees(row["u"]) for row in rows],
+                     "environment": {"albedo": env["albedo"], "olr_W_m2": env["olr"], "solar_constant_W_m2": env["S"]}}
+            for nm in ("nadir", "zenith", "along_pos", "cross_pos", "sun", "antisun"):
+                entry[f"{nm}_albedo_module_W_m2"] = [row["module"]["nom0"][nm][0] for row in rows]
+                entry[f"{nm}_albedo_reference_W_m2"] = [env["albedo"] * env["S"] * row["F_alb"][nm] for row in rows]
+                entry[f"{nm}_infrared_module_W_m2"] = [row["module"]["nom0"][nm][1] for row in rows]
+                entry[f"{nm}_infrared_reference_W_m2"] = [env["olr"] * row["F"][nm] for row in rows]
+                entry[f"{nm}_infrared_analytic_W_m2"] = [env["olr"] * row["F_an"][nm] for row in rows]
+                entry[f"{nm}_tilt_from_nadir_deg"] = [math.degrees(row["lam"][nm]) for row in rows]
+            orientation[f"beta_{beta:.0f}"] = entry
+        SERIES["orientation"] = orientation
+>       assert all_ok
+E       assert False
+
+tests\test_en_003_earth_flux.py:403: AssertionError
+_________________________ test_step3_fe_thermal_loads _________________________
+
+case_record = <conftest.CaseRecord object at 0x000002774B428910>
+fe_data = {'tool': 'fe_export.py', 'mph': '1.3.2', 'comsol': '6.3', 'exported_utc': '2026-10-05T13:19:46.581983+00:00', ...}
+fe_runs = {'cold0': {'geo': <test_en_003_earth_flux.FEGeometry object at 0x000002774B721610>, 'params': ThermalParameters(C_J_K=...: (100.0, 450.0), 'D': (100.0, 450.0), 'R': (100.0, 450.0)})})), 't_end': 16559.999999999825, 't_start': 10920.0, ...}}
+
+    def test_step3_fe_thermal_loads(case_record, fe_data, fe_runs):
+        if fe_data is None:
+            case_record.check("步骤3 有限元热载荷导出", "tests/data/en_003/fe_loads.json 由 fe_export.py 导出",
+                              "文件不存在，有限元对比未执行", False)
+            pytest.fail("FE export missing")
+        SERIES["fe"] = {}
+        all_ok = True
+        quad = ref.CapQuadrature(R_ORB, R_E, 600, 1200)
+        planet = {c: (fe_data["cases"][c]["otl"]["otl_saw"]["nRings"], fe_data["cases"][c]["otl"]["otl_saw"]["nPointsRing"])
+                  for c in ENV}
+        case_record.metric("fe_planet_discretisation", {c: list(v) for c, v in planet.items()})
+        case_record.metric("fe_export_provenance", {
+            "tool": "tests/data/en_003/fe_export.py", "comsol": fe_data.get("comsol"), "mph": fe_data.get("mph"),
+            "exported_utc": fe_data.get("exported_utc"),
+            "files": {c: {k: fe_data["cases"][c][k] for k in ("file", "file_bytes", "file_mtime_utc", "dataset")} for c in ENV},
+            "variables": fe_data.get("variables")})
+        for case, env in ENV.items():
+            fe_case = fe_data["cases"][case]
+            summary = fe_runs[case]["summary"]
+            funcs = fe_case["orbit_functions"]
+            raw = fe_case["otl"]["otl_saw"]["SV_ECS"]
+            rays = [float(x) for x in (raw if isinstance(raw, list) else [raw])]
+            sun = np.array(summary["orbit"]["sun_ecs"], dtype=float)
+            geo_ok = (
+                all("6778137.0" in funcs[k] and "5553.6243" in funcs[k] for k in ("rx", "ry", "rz"))
+                and "cos(0.90128803)" in funcs["ry"] and "sin(0.90128803)" in funcs["rz"]
+                and float(np.max(np.abs(np.array(rays) + sun[: len(rays)]))) < 1e-7
+                and len(rays) == 3
+                and abs(float(summary["orbit"]["R"]) - R_ORB) < 1e-6
+            )
+            all_ok &= geo_ok
+            t_fe = np.array(fe_case["t_s"], dtype=float)
+            on_grid = np.isclose(np.mod(t_fe, 120.0), 0.0, atol=1e-6) | np.isclose(np.mod(t_fe, 120.0), 120.0, atol=1e-6)
+            events = sorted(set(np.round(t_fe[~on_grid], 3).tolist()))
+            boundaries = [b.time_s for b in fe_runs[case]["runs"]["saw"]["archive"].eclipse_boundaries]
+            offsets = [min(abs(b - e) for e in events) for b in boundaries] if events and boundaries else []
+            case_record.metric(f"fe_{case}_eclipse_event_offsets_s", offsets)
+            planet_all = fe_case["otl"]["otl_saw"].get("planet_feature_all", {})
+            r_planet = str(planet_all.get("R_planet", "?")) if isinstance(planet_all, dict) else "?"
+            try:
+                r_planet_m = float(r_planet.split("[")[0]) * 1e3 if "[km]" in r_planet else float("nan")
+            except ValueError:
+                r_planet_m = float("nan")
+            f_fe_radius = (r_planet_m / R_ORB) ** 2
+            case_record.metric(f"fe_{case}_planet_radius", {"R_planet": r_planet,
+                                                           "nadir_view_factor_change_rel": f_fe_radius / (R_E / R_ORB) ** 2 - 1})
+            case_record.check(
+                f"步骤3 {env['name']} 有限元轨道、太阳方向与日食",
+                "模型轨道函数半径 6778137 m、周期 5553.6243 s、倾角 0.90128803 rad，太阳光线方向与 summary.json 太阳方向相反",
+                f"rx {funcs['rx']}；光线 {rays}；太阳方向 {sun.tolist()}；有限元日食事件 {events[:4]} s，"
+                f"柱形地影边界与之相差 {[round(x, 2) for x in offsets]} s；有限元行星半径 {r_planet}，"
+                f"使对地视角系数变化 {pct(f_fe_radius / (R_E / R_ORB) ** 2 - 1, 4)}",
+                geo_ok,
+            )
+            params_ok = (
+                abs(float(fe_case["params"]["S_sun"].split("[")[0]) - env["S"]) < 1e-9
+                and abs(float(fe_case["params"]["albedo"]) - env["albedo"]) < 1e-12
+                and abs(float(fe_case["params"]["q_olr"].split("[")[0]) - env["olr"]) < 1e-9
+                and iss_spec.CASES[case]["beta_deg"] == env["beta"]
+            )
+            all_ok &= params_ok
+            case_record.check(
+                f"步骤3 {env['name']} 有限元模型环境参数",
+                f"太阳常数 {env['S']:.0f} W/m²，反照率 {env['albedo']:.2f}，地球红外 {env['olr']:.0f} W/m²，β {env['beta']:.0f}°",
+                f"模型读出 {fe_case['params']}，文件 {fe_case['file']}，行星离散 {planet[case][0]} 圈每圈 {planet[case][1]} 点",
+                params_ok,
+            )
+            run = fe_runs[case]
+            geo = run["geo"]
+            out_case = {}
+            for law in ("saw", "hrs"):
+                archive = run["runs"][law]["archive"]
+                completed = archive.status == "completed" and bool(np.all(archive.sample_valid))
+                all_ok &= completed
+                case_record.check(
+                    f"步骤3 {env['name']} 耦合运行 {'太阳翼指向' if law == 'saw' else '散热器指向'}",
+                    "run_coupled 经 thermal_derivative 与 earth_flux 完成最后一个周期，全部输出样本有效",
+                    f"状态 {archive.status}，{archive.time_s[0]:.0f} 至 {archive.time_s[-1]:.0f} s，样本 {archive.time_s.size} 个，"
+                    f"日食边界 {len(archive.eclipse_boundaries)} 个，已接受步 {len(archive.steps['t_new_s'])} 个",
+                    completed,
+                )
+            saw_run = run["runs"]["saw"]
+            hrs_run = run["runs"]["hrs"]
+            times = np.array(saw_run["archive"].time_s, dtype=float)
+            assert np.array_equal(times, np.array(hrs_run["archive"].time_s, dtype=float))
+            fe = _fe_face_series(fe_case, times, env["S"])
+            ids = [s.surface_id for s in run["params"].surfaces]
+            surf = {s.surface_id: s for s in run["params"].surfaces}
+    
+            def module_faces(samples):
+                alb = np.array([[float(x) for x in smp.earth_flux["albedo_W_m2"]] for smp in samples])
+                ir = np.array([[float(x) for x in smp.earth_flux["infrared_W_m2"]] for smp in samples])
+                cos = np.array([[float(x) for x in smp.surface_environment["cos_incidence"]] for smp in samples])
+                G = np.array([smp.G_W_m2 for smp in samples])
+                return alb, ir, cos, G
+    
+            alb_s, ir_s, cos_s, G_s = module_faces(saw_run["samples"])
+            alb_r, ir_r, cos_r, G_r = module_faces(hrs_run["samples"])
+            ic, ib, iu, idn = ids.index("SAW_cells"), ids.index("SAW_back"), ids.index("HRS_up"), ids.index("HRS_down")
+            mod = {
+                "saw_back_albedo": alb_s[:, ib], "saw_back_infrared": ir_s[:, ib],
+                "saw_cells_albedo": alb_s[:, ic], "saw_cells_infrared": ir_s[:, ic],
+                "radiator_up_albedo": alb_r[:, iu], "radiator_up_infrared": ir_r[:, iu],
+                "radiator_down_albedo": alb_r[:, idn], "radiator_down_infrared": ir_r[:, idn],
+            }
+            # T4 consistency inside the coupled run: Q_env from thermal_derivative against the earth_flux records
+            A = np.array([surf[i].area_m2 for i in ids])
+            a = np.array([surf[i].absorptivity for i in ids])
+            e = np.array([surf[i].emissivity for i in ids])
+            node = np.array([surf[i].node_id for i in ids])
+            worst_t4 = 0.0
+            for law, (alb, ir, cos, G), col in (("saw", (alb_s, ir_s, cos_s, G_s), 0), ("hrs", (alb_r, ir_r, cos_r, G_r), 1)):
+                archive = run["runs"][law]["archive"]
+                sel = node == ("S" if col == 0 else "R")
+                hand = (A[sel] * (a[sel] * (G[:, None] * np.maximum(cos[:, sel], 0.0) + alb[:, sel]) + e[sel] * ir[:, sel])).sum(axis=1)
+                got = np.array(archive.Q_env_W)[:, col]
+                worst_t4 = max(worst_t4, float(np.max(np.abs(got - hand) / np.maximum(np.abs(hand), 1.0))))
+            t4_ok = worst_t4 <= 1e-9
+            all_ok &= t4_ok
+            case_record.check(
+                f"步骤3 {env['name']} earth_flux 经式 T4 进入温度导数",
+                "耦合运行输出的 Q_env 与按 earth_flux 记录手算的式 T4 相对差不超过 1e-9",
+                f"太阳能板与散热板最大相对差 {worst_t4:.2e}", t4_ok,
+            )
+            # independent references at the FE instants (analytic view factor, geocentric quadrature), to attribute
+            # the differences between earth_flux and the FE loads of the solar array faces
+            lam_back, lam_cells, alb_back_ref, alb_cells_ref = [], [], [], []
+            for t in times:
+                r = geo.position(float(t))
+                nadir = -r / np.linalg.norm(r)
+                lam_back.append(math.acos(max(-1.0, min(1.0, float((-geo.s) @ nadir)))))
+                lam_cells.append(math.acos(max(-1.0, min(1.0, float(geo.s @ nadir)))))
+                _, f_alb = quad.factors(r, np.array([-geo.s, geo.s]), geo.s)
+                alb_back_ref.append(env["albedo"] * env["S"] * f_alb[0])
+                alb_cells_ref.append(env["albedo"] * env["S"] * f_alb[1])
+            exact_back = env["olr"] * ref.plate_sphere_view_factor(H, np.array(lam_back))
+            exact_cells = env["olr"] * ref.plate_sphere_view_factor(H, np.array(lam_cells))
+            alb_back_ref, alb_cells_ref = np.array(alb_back_ref), np.array(alb_cells_ref)
+            dev_ir = max(_compare(mod["saw_back_infrared"], exact_back)[0], _compare(mod["saw_cells_infrared"], exact_cells)[0])
+            dev_alb = max(_compare(mod["saw_back_albedo"], alb_back_ref)[0], _compare(mod["saw_cells_albedo"], alb_cells_ref)[0])
+            an_ok = dev_ir <= 1e-3 and dev_alb <= STEP2_REL
+            all_ok &= an_ok
+            stats = {}
+            for key, reference in (("saw_back_infrared", exact_back), ("saw_cells_infrared", exact_cells),
+                                   ("saw_back_albedo", alb_back_ref), ("saw_cells_albedo", alb_cells_ref)):
+                m_ref = last_period(times, reference, run["t_end"], geo.period)[0]
+                m_fe = last_period(times, fe[key], run["t_end"], geo.period)[0]
+                m_mod = last_period(times, mod[key], run["t_end"], geo.period)[0]
+                stats[key] = {"reference_mean_W_m2": m_ref, "fe_mean_W_m2": m_fe, "module_mean_W_m2": m_mod,
+                              "fe_minus_reference_rel": (m_fe - m_ref) / m_ref if m_ref > 0 else None,
+                              "module_minus_reference_rel": (m_mod - m_ref) / m_ref if m_ref > 0 else None}
+            # spread among the 16 FE blankets: mutual obstruction between blankets would show up here
+            t_all = np.array(fe_case["t_s"], dtype=float)
+            row_of = {}
+            for i, t in enumerate(t_all):
+                row_of.setdefault(round(float(t), 6), i)
+            rows = [row_of[round(float(t), 6)] for t in times]
+            spread = {}
+            for var, label in (("Gextu2", "back_infrared"), ("Gextu1", "back_albedo"), ("Gextd2", "cells_infrared")):
+                ref_mean = last_period(times, np.array(fe_case["series"]["saw_all"][var])[rows], run["t_end"], geo.period)[0]
+                rel = [last_period(times, np.array(v[var])[rows], run["t_end"], geo.period)[0] / ref_mean - 1.0
+                       for k, v in fe_case["series"].items() if k.startswith("saw_") and k != "saw_all"]
+                spread[label] = (min(rel), max(rel))
+            stats["blanket_spread_rel"] = spread
+            case_record.metric(f"fe_{case}_saw_faces_vs_references", stats)
+            case_record.metric(f"fe_{case}_saw_back_ir_fe_minus_exact_mean_rel", stats["saw_back_infrared"]["fe_minus_reference_rel"])
+            case_record.check(
+                f"步骤3 {env['name']} 太阳翼正反面辐照与独立参照",
+                "有限元输出时刻 earth_flux 红外与解析倾斜平板视角系数逐点相差不超过 0.1%，反照与地心面元积分逐点相差不超过 1%，"
+                "参照接近数值零时使用 1e-12 W/m² 的绝对容限",
+                f"红外最大 {dev_ir:.2e}，反照最大 {dev_alb:.2e}；整周期平均 有限元比参照 背面红外 "
+                f"{pct(stats['saw_back_infrared']['fe_minus_reference_rel'])}、正面红外 "
+                f"{pct(stats['saw_cells_infrared']['fe_minus_reference_rel'])}、背面反照 "
+                f"{pct(stats['saw_back_albedo']['fe_minus_reference_rel'])}、正面反照 "
+                f"{pct(stats['saw_cells_albedo']['fe_minus_reference_rel'])}；16 块毯面背面红外整周期平均相对全体平均 "
+                f"{pct(spread['back_infrared'][0], 2)} 至 {pct(spread['back_infrared'][1], 2)}，背面反照 "
+                f"{pct(spread['back_albedo'][0], 2)} 至 {pct(spread['back_albedo'][1], 2)}",
+                an_ok,
+            )
+            # per-face irradiation statistics (diagnostic) and absorbed loads (acceptance)
+            face_rows = []
+            for key in mod:
+                mm = last_period(times, mod[key], run["t_end"], geo.period)
+                ff = last_period(times, fe[key], run["t_end"], geo.period)
+                rel_mean = (mm[0] - ff[0]) / ff[0] if ff[0] > 0 else None
+                rel_peak = (mm[1] - ff[1]) / ff[1] if ff[1] > 0 else None
+                case_record.metric(f"fe_{case}_{key}_mean_W_m2", {"module": mm[0], "fe": ff[0], "rel": rel_mean})
+                case_record.metric(f"fe_{case}_{key}_peak_W_m2", {"module": mm[1], "fe": ff[1], "rel": rel_peak})
+                face_rows.append(f"{key} 平均 {mm[0]:.2f}/{ff[0]:.2f} 峰值 {mm[1]:.2f}/{ff[1]:.2f}")
+            for key in ("radiator_inner_S1_down_infrared", "radiator_inner_P1_up_infrared"):
+                base = "radiator_down_infrared" if "S1_down" in key else "radiator_up_infrared"
+                mm = last_period(times, mod[base], run["t_end"], geo.period)
+                ff = last_period(times, fe[key], run["t_end"], geo.period)
+                case_record.metric(f"fe_{case}_{key}_mean_W_m2", {"module": mm[0], "fe": ff[0],
+                                                                 "rel": (mm[0] - ff[0]) / ff[0] if ff[0] > 0 else None})
+            case_record.metric(f"fe_{case}_face_irradiance_module_over_fe", "；".join(face_rows))
+            loads = {}
+            for comp_name, faces in (("太阳翼", (("saw_cells", ic), ("saw_back", ib))),
+                                     ("散热器", (("radiator_up", iu), ("radiator_down", idn)))):
+                for band, key, coef in (("反照", "albedo", a), ("红外", "infrared", e)):
+                    m_load = sum(A[i] * coef[i] * mod[f"{f}_{key}"] for f, i in faces)
+                    f_load = sum(A[i] * coef[i] * fe[f"{f}_{key}"] for f, i in faces)
+                    mm = last_period(times, m_load, run["t_end"], geo.period)
+                    ff = last_period(times, f_load, run["t_end"], geo.period)
+                    rel_mean = (mm[0] - ff[0]) / ff[0]
+                    rel_peak = (mm[1] - ff[1]) / ff[1]
+                    in_window = (times >= run['t_end'] - geo.period - 1e-7) & (times <= run['t_end'] + 1e-7)
+                    big = in_window & (f_load >= 0.1 * ff[1])
+                    inst = float(np.max(np.abs(m_load[big] - f_load[big]) / f_load[big])) if big.any() else float("nan")
+                    nonzero = in_window & (f_load > 1e-10)
+                    pointwise = float(np.max(np.abs(m_load[nonzero] - f_load[nonzero]) / f_load[nonzero])) if nonzero.any() else 0.0
+                    zero_ref = in_window & (f_load <= 1e-10)
+                    zero_ok = bool(np.all(np.abs(m_load[zero_ref] - f_load[zero_ref]) <= 1e-12))
+                    worst_index = int(np.flatnonzero(nonzero)[np.argmax(np.abs(m_load[nonzero] - f_load[nonzero]) / f_load[nonzero])]) if nonzero.any() else None
+                    ok = (np.all(np.isfinite(m_load)) and np.all(np.isfinite(f_load))
+                          and abs(rel_mean) <= FE_REL and abs(rel_peak) <= FE_REL and pointwise <= FE_REL and zero_ok)
+                    all_ok &= ok
+                    loads[(comp_name, band)] = dict(module=m_load, fe=f_load, mean=(mm[0], ff[0], rel_mean),
+                                                    peak=(mm[1], ff[1], rel_peak), inst=inst, ok=ok)
+                    case_record.metric(f"fe_{case}_{comp_name}_{band}_load", {
+                        "module_mean_W": mm[0], "fe_mean_W": ff[0], "rel_mean": rel_mean, "module_peak_W": mm[1],
+                        "fe_peak_W": ff[1], "rel_peak": rel_peak, "inst_max_rel_above_10pct_peak": inst,
+                        "pointwise_max_rel": pointwise, "pointwise_max_abs_W": float(np.max(np.abs(m_load[in_window] - f_load[in_window]))),
+                        "worst_relative_point": None if worst_index is None else {
+                            "time_s": float(times[worst_index]), "module_W": float(m_load[worst_index]),
+                            "fe_W": float(f_load[worst_index]), "abs_diff_W": float(abs(m_load[worst_index] - f_load[worst_index]))},
+                        "pointwise_window_s": [run['t_end'] - geo.period, run['t_end']],
+                        "zero_reference_abs_pass": zero_ok, "pass": bool(ok)})
+                    case_record.check(
+                        f"步骤3 {env['name']} {comp_name}{band}热载荷与有限元",
+                        "最后一个轨道周期同一时刻逐点比较、时间加权平均与峰值均相差不超过 3%，零参考值绝对差不超过 1e-12 W",
+                        f"平均 earth_flux {mm[0] / 1e3:.3f} kW，有限元 {ff[0] / 1e3:.3f} kW，相差 {pct(rel_mean)}；"
+                        f"峰值 {mm[1] / 1e3:.3f} kW 对 {ff[1] / 1e3:.3f} kW，相差 {pct(rel_peak)}；"
+                        f"有限元值不低于峰值 10% 的时刻逐点最大相差 {inst * 100:.1f}%，全部非零参考值逐点最大相差 {pointwise * 100:.1f}%",
+                        ok,
+                    )
+            case_record.metric(f"fe_{case}_loads_summary", {f"{k[0]}{k[1]}": {"mean_rel": v["mean"][2], "peak_rel": v["peak"][2]}
+                                                            for k, v in loads.items()})
+            out_case["time_s"] = times.tolist()
+            for key in mod:
+                out_case[f"{key}_module_W_m2"] = np.asarray(mod[key]).tolist()
+                out_case[f"{key}_fe_W_m2"] = np.asarray(fe[key]).tolist()
+            for key in ("radiator_inner_S1_down_infrared", "radiator_inner_P1_up_infrared"):
+                out_case[f"{key}_fe_W_m2"] = np.asarray(fe[key]).tolist()
+            out_case["saw_back_infrared_analytic_W_m2"] = exact_back.tolist()
+            out_case["saw_cells_infrared_analytic_W_m2"] = exact_cells.tolist()
+            out_case["saw_back_albedo_reference_W_m2"] = alb_back_ref.tolist()
+            out_case["saw_cells_albedo_reference_W_m2"] = alb_cells_ref.tolist()
+            for (comp_name, band), v in loads.items():
+                tag = {"太阳翼": "solar_array", "散热器": "radiator"}[comp_name] + {"反照": "_albedo", "红外": "_infrared"}[band]
+                out_case[f"{tag}_load_module_W"] = np.asarray(v["module"]).tolist()
+                out_case[f"{tag}_load_fe_W"] = np.asarray(v["fe"]).tolist()
+            out_case["Q_env_S_module_W"] = np.array(saw_run["archive"].Q_env_W)[:, 0].tolist()
+            out_case["Q_env_R_module_W"] = np.array(hrs_run["archive"].Q_env_W)[:, 1].tolist()
+            out_case["G_W_m2"] = G_s.tolist()
+            out_case["last_period_start_s"] = run["t_end"] - geo.period
+            out_case["period_s"] = geo.period
+            out_case["areas_m2"] = {"solar_array_each_face": run["area_saw"], "radiator_each_face": run["area_hrs"]}
+            SERIES["fe"][case] = out_case
+>       assert all_ok
+E       assert False
+
+tests\test_en_003_earth_flux.py:866: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_en_003_earth_flux.py::test_step2_orientations_vs_numerical_integration
+FAILED tests/test_en_003_earth_flux.py::test_step3_fe_thermal_loads - assert ...
+2 failed, 5 passed in 64.13s (0:01:04)

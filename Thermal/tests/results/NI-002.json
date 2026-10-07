@@ -1,0 +1,467 @@
+{
+ "case_id": "NI-002",
+ "status": "pass",
+ "checks": [
+  {
+   "name": "第1步：24 h 联合运行完成",
+   "expected": "no CoupledRunError, archive status completed, last accepted state at 86400.0 s, every output sample valid",
+   "actual": "error None, status completed, last accepted 86400.0 s, 1441 of 1441 samples valid, wall 31.3 s",
+   "passed": true
+  },
+  {
+   "name": "第1步：场景含日食，进出时刻与独立计算一致",
+   "expected": "the archive eclipse boundaries from Orbit eclipse_fraction give as many entries and exits as the analytic circular orbit with a cylindrical shadow; each cylindrical crossing lies between the penumbra and umbra boundaries of the same crossing within 1.0 s",
+   "actual": "entries 16 archive, 16 reference; exits 15 archive, 15 reference; largest excess outside the penumbra band 0 s",
+   "passed": true
+  },
+  {
+   "name": "前提：负载启停、注入与请求爬升位于设定的光照段",
+   "expected": "the injected window, the refused restarts and the ramp lie in the cylindrical shadow; the stop and start pair, the accepted restart after the ramp and the invalid injection lie in sunlight",
+   "actual": "{'injected window in eclipse 0': True, 'stop and start after eclipse 3 in sunlight': True, 'request ramp inside eclipse 9': True, 'refused restarts in eclipse': True, 'accepted restart after the ramp in sunlight': True, 'invalid injection in sunlight': True}",
+   "passed": true
+  },
+  {
+   "name": "第1步：日食、负载启停与电池约束在同一物理时刻分段处理",
+   "expected": "no accepted step spans an eclipse boundary, a declared request boundary, a command instant or a located Power event; every command and event instant is an accepted state",
+   "actual": "62 eclipse boundaries, 2 declared, 6 commands, 8 events; spanning steps 0, 0, 0, 0; instants without accepted state: commands [], events []",
+   "passed": true
+  },
+  {
+   "name": "第1步：每次试算按第 6.3 节顺序读取同一时刻的输入",
+   "expected": "every thermal_derivative call follows, at the same instant, a Power trial whose PowerInputs carry T_B_K of the trial ThermalState and the request of that instant, whose PowerEnvironment equals the orbit_input of prepare_surface_environment for that instant, and whose usable ports reach ThermalInputs unchanged; the environment passed to thermal_derivative is the one prepared for that instant",
+   "actual": "17852 Power trials, 17256 thermal calls, 15008 prepared instants; violations {'thermal_without_power': 0, 'thermal_from_unusable': 0, 'port_mismatch': 0, 'T_B_mismatch': 0, 'environment_not_prepared': 0, 'environment_mismatch': 0, 'power_environment_mismatch': 0, 'power_trial_mismatch': 0, 'request_mismatch': 0, 'unusable_reached_thermal': 0}",
+   "passed": true
+  },
+  {
+   "name": "第1步：G 取自 Orbit 的 sun_intensity 且日食只计一次",
+   "expected": "G_W_m2 of every prepared instant equals Orbit sun_intensity(position, Sun, include_eclipse=True) of the same orbit_input bit for bit; G = 0 in umbra and G > 0 in sunlight",
+   "actual": "15008 instants, 0 mismatches, umbra with G > 0: 0, sunlight with G = 0: 0",
+   "passed": true
+  },
+  {
+   "name": "第1步：全部输出与启动前记录已保存",
+   "expected": "CoupledArchive.to_json writes the archive with every output sample, accepted state and event; the resolved parameters, sources, initial values and environment configuration are written before the run starts (design 9.4)",
+   "actual": "archive NI-002_archive.json 1966289 bytes, shapes {'time_s': 1441, 'temperature_K': [1441, 6], 'ports_W': {'P_pv_W': 1441, 'P_load_W': 1441, 'Q_B_W': 1441, 'Q_D_W': 1441}, 'q_W': [1441, 5], 'accepted_states': 2529, 'events': 8}; pre-run record NI-002_prerun.json written at 1791243510.619303, run started at 1791243510.619303 (Unix s)",
+   "passed": true
+  },
+  {
+   "name": "第2步：注入一次 valid 为假的试算",
+   "expected": "exactly one Power trial returns valid False, the first Power trial at or after 26976.5 s",
+   "actual": "1 invalid results, first at 26978.079042237852 s; first trial at or after the injection time 26978.079042237852 s",
+   "passed": true
+  },
+  {
+   "name": "第2步：Power 结果无效时报告错误并停止本次计算",
+   "expected": "CoupledRunError raised; archive status stopped with an error record of kind power_invalid at the invalid trial time carrying the Power reason; the message reports valid=False",
+   "actual": "error CoupledRunError, status stopped, kind power_invalid, time 26978.079042237852 s, context integration, power_reason 'numerical_failure: injected by the NI-002 test through PowerCoupling.solve'",
+   "passed": true
+  },
+  {
+   "name": "第2步：无效结果没有进入热导数且计算不再推进",
+   "expected": "the trial with valid False ends without a thermal_derivative call; after it only the output samples of the accepted solution are evaluated; no thermal call at or after the injection time",
+   "actual": "entry after the invalid result: ('hook', 'integration', 'invalid'); later integration, location or boundary trials 0; thermal calls at or after 26976.5 s 0",
+   "passed": true
+  },
+  {
+   "name": "第2步：无效结果不执行物理边界保护",
+   "expected": "the events of the stopped run equal the events of the 24 h run before the injection time; no supply_loss after it; the final protection state is the one before the stop",
+   "actual": "events [(2958.500414394586, 'supply_loss', 'located'), (3108.5, 'start', 'command'), (3408.5, 'start', 'command'), (20701.5, 'stop', 'command'), (21301.5, 'start', 'command')]; 24 h run before 26976.5 s [(2958.500414394586, 'supply_loss', 'located'), (3108.5, 'start', 'command'), (3408.5, 'start', 'command'), (20701.5, 'stop', 'command'), (21301.5, 'start', 'command')]; final load_connected True, trip_latched False",
+   "passed": true
+  },
+  {
+   "name": "第2步：停止前的已接受状态与输出不受影响",
+   "expected": "the accepted states of the stopped run equal the first accepted states of the 24 h run bit for bit and the last one lies before the injection time; its output samples on the 60 s grid equal those of the 24 h run and its final sample at the last accepted time equals the accepted state of the 24 h run at that time",
+   "actual": "819 accepted states, identical times True, identical states True, last accepted 26969.715894655023 s; 450 grid samples identical True; samples off the grid [26969.715894655023] equal to the accepted state True",
+   "passed": true
+  },
+  {
+   "name": "第2步：事件序列符合场景",
+   "expected": "applied Power events in order [('supply_loss', 'located'), ('start', 'command'), ('start', 'command'), ('stop', 'command'), ('start', 'command'), ('supply_loss', 'located'), ('start', 'command'), ('start', 'command')]: injected supply loss, refused and accepted restart, stop and start, physical supply loss, refused and accepted restart",
+   "actual": "[(2958.5004, 'supply_loss', 'located'), (3108.5, 'start', 'command'), (3408.5, 'start', 'command'), (20701.5, 'stop', 'command'), (21301.5, 'start', 'command'), (53321.9764, 'supply_loss', 'located'), (53598.5, 'start', 'command'), (54148.5, 'start', 'command')]",
+   "passed": true
+  },
+  {
+   "name": "第2步：event_required 为真的试算被丢弃",
+   "expected": "the first trial with the injected event_required result lies at or after the window start 2958.5 s with the load connected; no thermal_derivative call follows it and its state is not an accepted state",
+   "actual": "first trial (2964.263296548351, True, 'integration', 'event_required', 'hook'); its state saved False; aborted solver attempts 13",
+   "passed": true
+  },
+  {
+   "name": "第2步：注入事件先回到约束边界",
+   "expected": "the boundary is located by bisection within event_time_tol_s 0.001 s after the known window start 2958.5 s: bracket low < start <= high, width <= tolerance, the event instant is an accepted state",
+   "actual": "event at 2958.500414394586 s, offset 0.00041439458618697245 s, bracket [2958.4998534209512, 2958.500414394586], width 0.000560973634947004 s",
+   "passed": true
+  },
+  {
+   "name": "第2步：注入事件按已声明规则更新负载离散状态",
+   "expected": "apply_power_event is called once at the event instant with an accepted supply_loss, the Power decision of that instant (valid, event_required, can_supply_request False, reason supply_shortfall) and the accepted lithium fractions; it disconnects and latches the load and keeps x_n and x_p",
+   "actual": "{'applies': 1, 'kinds': ['supply_loss'], 'accepted_flags': [True], 'decision': {'time_s': 2958.500414394586, 'valid': True, 'event_required': True, 'can_supply_request': False, 'reason': 'supply_shortfall: injected by the NI-002 test through PowerCoupling.solve'}, 'state_time': 2958.500414394586, 'updated': {'load_connected': False, 'trip_latched': True, 'lithium': (0.6860861073724802, 0.4045418563249824)}}",
+   "passed": true
+  },
+  {
+   "name": "第2步：注入事件后在同一时刻重新求功率与温度导数",
+   "expected": "after the update Power is evaluated again at the event instant with the load disconnected (valid, no event, P_load_W = 0, Q_D_W = 0, equal to the archived recomputed ports) and the next thermal_derivative call is at the same instant with these ports",
+   "actual": "recompute {'time_s': 2958.500414394586, 'connected': False, 'latched': True, 'valid': True, 'event': False, 'ports': (0.0, 0.0, 0.0, 0.0), 'reason': 'load_disconnected'}; archived (0.0, 0.0, 0.0, 0.0); next thermal call {'time_s': 2958.500414394586, 'ports': (0.0, 0.0, 0.0, 0.0)}",
+   "passed": true
+  },
+  {
+   "name": "第2步：注入事件后只有 can_supply_request 为真的启动指令接通负载",
+   "expected": "the start command inside the window meets can_supply_request False and leaves the load disconnected and latched; the start command after the window meets can_supply_request True and connects; between the event and the accepted start every output sample and thermal call has P_load_W = 0",
+   "actual": "refused 3108.5 s decision {'valid': True, 'event_required': False, 'can_supply_request': False, 'reason': 'load_disconnected'} after {'load_connected': False, 'trip_latched': True}; accepted 3408.5 s decision {'valid': True, 'event_required': False, 'can_supply_request': True, 'reason': 'load_disconnected'} after {'load_connected': True, 'trip_latched': False}; disconnected interval {'samples': 7, 'max_P_load_W': 0.0, 'any_connected': False, 'thermal_calls': 128, 'thermal_max_P_load_W': 0.0}",
+   "passed": true
+  },
+  {
+   "name": "第2步：电池约束事件由 Power 确认并定位",
+   "expected": "the stand-in battery reports a supply shortfall during the request ramp; the first such trial is discarded; the boundary is bracketed within 0.001 s and direct stand-in evaluations at the bracket ends give a supplied load at the low end and a confirmed supply_shortfall at the event state",
+   "actual": "first shortfall trial (53327.941770090096, 'event_required'); event at 53321.97644919057 s, bracket [53321.97552818997, 53321.97644919057], width 0.0009210006028297357 s, request 149.401 W; stand-in at low supplied; at high supply_shortfall: the largest battery port power in the allo",
+   "passed": true
+  },
+  {
+   "name": "第2步：电池约束事件按已声明规则处理并重算",
+   "expected": "apply_power_event with supply_loss at the event instant and the accepted lithium fractions disconnects and latches; Power and the temperature derivatives are evaluated again at the same instant with P_load_W = 0",
+   "actual": "apply ['supply_loss'] decision {'time_s': 53321.97644919057, 'valid': True, 'event_required': True, 'can_supply_request': False, 'reason': 'supply_shortfall: the largest battery port power in the allowed discharge interval is 157.26360584581116 W, below the required 157.26377233474733 W (interval end 5.999999999994 A set by current)'} updated {'load_connected': False, 'trip_latched': True, 'lithium': (0.5232327095011813, 0.5069690441495132)}; recompute {'time_s': 53321.97644919057, 'connected': False, 'latched': True, 'valid': True, 'event': False, 'ports': (0.0, 0.0, 0.0, 0.0), 'reason': 'load_disconnected'}; next thermal {'time_s': 53321.97644919057, 'ports': (0.0, 0.0, 0.0, 0.0)}",
+   "passed": true
+  },
+  {
+   "name": "第2步：电池约束事件后只有 can_supply_request 为真的启动指令接通负载",
+   "expected": "the restart in eclipse during the ramp meets can_supply_request False (also in a direct stand-in evaluation of the accepted state with the ramp request) and stays disconnected; the restart in sunlight after the ramp meets can_supply_request True and connects; P_load_W = 0 in between",
+   "actual": "refused 53598.5 s request 207.778 W, runner False, stand-in False; accepted 54148.5 s, runner True, stand-in True; disconnected interval {'samples': 14, 'max_P_load_W': 0.0, 'any_connected': False, 'thermal_calls': 299, 'thermal_max_P_load_W': 0.0}",
+   "passed": true
+  },
+  {
+   "name": "第3步：每个已接受状态都来自被接受的积分步",
+   "expected": "every accepted state of the archive is the initial ThermalState, a carried state at a segment start, the end of a solver step equal bit for bit to y_old + h K^T b of its recorded stage derivatives (Dormand-Prince weights), the continuous extension of such a step at a located charge-limit change, or one Euler bridge of event location; each step starts from the previous accepted state",
+   "actual": "2529 accepted states: explained 2529, unexplained 0; full steps 2429, truncated 33, bridges 2, segment starts 64, final 0; largest rebuild deviation 0.0; pieces left 0",
+   "passed": true
+  },
+  {
+   "name": "第3步：被拒绝的积分步与丢弃的试算不写入组件温度",
+   "expected": "no stage state, rejected candidate, step-size probe, aborted attempt, discarded event-search step, step end replaced at a charge-limit change or trial with event_required or valid False appears among the accepted states; the only coincidences allowed are located boundary states, accepted as event bridges at the instant where the event is applied (chapter 7)",
+   "actual": "13289 trial states, 0 found among the accepted states outside located boundaries; coincidences with accepted boundary states [(2958.500414394586, 'event_location event_required'), (53321.97644919057, 'event_location event_required')] at the located events [2958.500414394586, 53321.97644919057]; rejected attempts behind accepted steps 129, discarded event-search steps 0 with 0 rejected attempts, aborted attempts 13, solver starts at accepted states 137",
+   "passed": true
+  },
+  {
+   "name": "第3步：输出样本取自已接受的解",
+   "expected": "every output sample of the six temperatures and the two lithium fractions equals the continuous extension of the accepted step that contains it, rebuilt from the recorded stage derivatives (relative difference <= 1e-12 for temperatures, absolute <= 1e-12 for lithium fractions)",
+   "actual": "1441 samples, 1441 identical bit for bit, largest relative temperature difference 0.0, largest lithium difference 0.0",
+   "passed": true
+  },
+  {
+   "name": "第3步：计算域读取 J 的温度",
+   "expected": "the instance map binds node J to Compute01 and the P_load_W port to Compute01; ThermalEvaluation.T_J_K equals temperature_K[1] of the evaluated state in every call; at every output sample the archived J temperature equals the T_J_K port of the thermal evaluation of that sample",
+   "actual": "J -> ['Compute01'], P_load_W -> Compute01; evaluation copy mismatches 0 in 17256 calls; output samples without a matching T_J_K 0 of 1441",
+   "passed": true
+  },
+  {
+   "name": "第3步：Power 下次试算读取 B 的温度",
+   "expected": "every Power trial reads T_B_K, x_n and x_p bit for bit from the trial state of the same evaluation; the first trial reads the B temperature of the initial ThermalState, not the copy in the Power scene record; the B temperature of every accepted state is read by a Power evaluation at that instant; only PowerInputs carries T_B_K and the battery response echoes it unchanged",
+   "actual": "17852 Power trials, 0 mismatches; first trial at 0.0 s reads 293.15 K, ThermalState 293.15 K, Power record 293.15 K; accepted states not read by Power 0 of 2529; temperature fields ['T_B_K']; battery echo mismatches 0",
+   "passed": true
+  },
+  {
+   "name": "第4步：Orbit 的 power_considering_thermal 不再更新太阳能板温度",
+   "expected": "the Orbit function, replaced by a sentinel that fails when called, is called 0 times in every run; no source of thermal or sdtwin_sim names it; the archive records it as not called",
+   "actual": "calls {'24 h run': 0, 'repeat run': 0, 'invalid run': 0, 'hot run': 0}; sources naming it []; archive note 'not called; temperatures come only from the integrated state'",
+   "passed": true
+  },
+  {
+   "name": "第4步：每个组件温度只有一个更新来源",
+   "expected": "the coupled state vector holds one temperature per node; every derivative handed to the solver equals bit for bit the dT_dt_K_s of thermal_derivative and the lithium rates of Power for the same trial; every accepted state is rebuilt from these derivatives alone, so S and every other node are updated only by integrating T3",
+   "actual": "state vector ['S', 'J', 'C', 'B', 'D', 'R', 'x_n', 'x_p']; 15813 solver values, unpaired 0, state mismatches 0, derivative mismatches 0; accepted states unexplained 0",
+   "passed": true
+  },
+  {
+   "name": "第4步：热模块没有增加断电或降频规则",
+   "expected": "the load state changes only at applied Power events (commands or a Power supply_shortfall decision); every thermal call receives P_load_W of its Power result unchanged; while node temperatures lie outside their declared ranges the connected load keeps P_load_W equal to the request",
+   "actual": "load changes without an event []; foreign events []; supply losses from Power decisions True; port mismatches 0; excursions of nodes ['B', 'J'] (16 records), 251 connected samples inside them, 0 with P_load_W different from the request",
+   "passed": true
+  },
+  {
+   "name": "第4步：计算节点与电池超出声明范围时只报告不断电",
+   "expected": "a 600.0 s run from J = 365.0 K above [253.15, 358.15] K and B = 320.0 K above [263.15, 318.15] K completes without events, the load stays connected with P_load_W equal to the request, and the excursions of J and B are recorded",
+   "actual": "status completed, error None, events 0, load connected at every sample True, largest |P_load_W - request| 0 W, excursion nodes ['B', 'J']",
+   "passed": true
+  },
+  {
+   "name": "第4步：热导数在超范围时使用 Power 给出的原值",
+   "expected": "thermal_derivative at J and B above their declared ranges emits ThermalRangeWarning for J and B and keeps C_J dT_J/dt = P_load - q_JC and C_B dT_B/dt = Q_B - q_BR with the Power values (relative error <= 1e-12)",
+   "actual": "warnings ['node J temperature 365.0 K is outside th', 'node B temperature 320.0 K is outside th']; P_load_W 60.0 W, Q_B_W 0.7052149415957802 W; relative errors J 0, B 0",
+   "passed": true
+  },
+  {
+   "name": "第4步：热模块源码不含负载控制规则",
+   "expected": "no name, attribute, definition, argument or import of the thermal package contains ('load_connected', 'trip_latched', 'apply_power_event', 'powerevent', 'supply_loss', 'throttl', 'derat', 'shutdown', 'power_off', 'poweroff', 'can_supply', 'solve_power_allocation')",
+   "actual": "hits {}",
+   "passed": true
+  },
+  {
+   "name": "第5步：相同输入的两次运行结果相同",
+   "expected": "every leaf of the two archives except the measured wall time is identical, or numeric leaves differ by at most 1e-12; the in-memory arrays are equal",
+   "actual": "106826 leaves, 89161 numeric, 0 different, largest difference 0.0, examples []; arrays equal True; wall time 31.3 s and 35.2 s",
+   "passed": true
+  },
+  {
+   "name": "第5步：归档字段完整",
+   "expected": "the saved archive contains run_id, the UTC epoch, time_s, component identifiers with node, path, port and state order, temperatures, the four Power ports, heat flows, the solver settings of the Power numerics and the parameter versions of every thermal asset, the Power assets and the scene (design 9.4)",
+   "actual": "{'run_id': True, 'UTC epoch': True, 'time_s': True, 'component ids and state order': True, 'temperatures': True, 'four Power ports': True, 'heat flows': True, 'solver settings': True, 'parameter versions': True}; thermal assets {'SolarArray01': ('sdtwin.example.solar_array_panel', '0.1.0'), 'Battery01': ('sdtwin.example.battery_pack', '0.1.0'), 'Controller01': ('sdtwin.example.power_controller', '0.1.0'), 'PDU01': ('sdtwin.example.pdu', '0.1.0'), 'Compute01': ('sdtwin.example.compute_board', '0.1.0'), 'ColdPlate01': ('sdtwin.example.cold_plate', '0.1.0'), 'Radiator01': ('sdtwin.example.radiator_panel', '0.1.0')}; Power assets {'solar': ('example.solar_array', 'test-1'), 'battery': ('example.battery_pack', 'test-1'), 'pdu': ('example.pdu', 'test-1')}; solver settings {'method': 'RK45', 'rtol': 1e-06, 'atol_T_K': 1e-06, 'max_step_s': 60.0, 'output_step_s': 60.0, 'environment_step_s': 10.0, 'event_time_tol_s': 0.001, 'atol_x': 1e-09, 'first_step_s': None}",
+   "passed": true
+  },
+  {
+   "name": "第5步：启动前记录与归档一致并标明数值性质",
+   "expected": "the pre-run record holds the same resolved capacitances, resistances, thermal provenance, environment configuration, initial temperatures and lithium fractions and solver settings as the archive; asset values are labelled illustrative test values, not measured device parameters",
+   "actual": "C equal True, R equal True, environment equal True, initial state [280.0, 293.15, 293.15, 293.15, 293.15, 283.15, 0.75, 0.364343000358038]; value status ['illustrative_test_value']; Power data status 'illustrative test values for the SDTwin thermal tests; not a'",
+   "passed": true
+  },
+  {
+   "name": "第5步：记录 Power 求根次数与试算拒绝次数",
+   "expected": "the archive counts equal independent counts: Power calls equal the calls seen by the spy and the stand-in solve counter plus the injected results; rejected steps, discarded event-search steps and aborted attempts equal the counts of the recording RK45 solver; both runs give the same counts",
+   "actual": "Power calls 17852 archive, 17852 spy, 17845 stand-in solves plus 7 injected, battery evaluations 611472; rejected steps 129 archive, 129 solver; discarded search steps 0 and 0; aborted attempts 13 and 13; total rejected 142; repeat run {'power_spy_calls': 17852, 'committed_rejected': 129, 'discarded_steps': 0, 'discarded_rejected': 0, 'aborted': 13, 'orbit_thermal_calls': 0, 'explained': 2529, 'unexplained': 0} and {'solve_calls': 17845, 'battery_evaluations': 611472}",
+   "passed": true
+  }
+ ],
+ "metrics": {
+  "step1_wall_s": 31.31294639999396,
+  "step1_output_samples": 1441,
+  "step1_accepted_states": 2529,
+  "step1_eclipse_entries": 16,
+  "step1_eclipse_exits": 15,
+  "step1_eclipse_reference_excess_s": 0.0,
+  "step1_power_trials": 17852,
+  "step1_thermal_calls": 17256,
+  "step1_prepared_instants": 15008,
+  "step1_order_violations": 0,
+  "step1_archive_bytes": 1966289,
+  "step1_events": [
+   [
+    2958.500414394586,
+    "supply_loss",
+    "located"
+   ],
+   [
+    3108.5,
+    "start",
+    "command"
+   ],
+   [
+    3408.5,
+    "start",
+    "command"
+   ],
+   [
+    20701.5,
+    "stop",
+    "command"
+   ],
+   [
+    21301.5,
+    "start",
+    "command"
+   ],
+   [
+    53321.97644919057,
+    "supply_loss",
+    "located"
+   ],
+   [
+    53598.5,
+    "start",
+    "command"
+   ],
+   [
+    54148.5,
+    "start",
+    "command"
+   ]
+  ],
+  "step2_invalid_time_s": 26978.079042237852,
+  "step2_invalid_last_accepted_s": 26969.715894655023,
+  "step2_invalid_prefix_states": 819,
+  "step2_invalid_output_samples": 451,
+  "step2_event_tolerance_s": 0.001,
+  "step2_injected_window_start_s": 2958.5,
+  "step2_injected_event_s": 2958.500414394586,
+  "step2_injected_offset_s": 0.00041439458618697245,
+  "step2_injected_bracket_width_s": 0.000560973634947004,
+  "step2_injected_refused_start_s": 3108.5,
+  "step2_injected_accepted_start_s": 3408.5,
+  "step2_physical_event_s": 53321.97644919057,
+  "step2_physical_bracket_width_s": 0.0009210006028297357,
+  "step2_physical_request_W": 149.40058371800995,
+  "step2_physical_x_n": 0.5232327095011813,
+  "step2_physical_T_B_K": 268.85639504227424,
+  "step2_physical_refused_start_s": 53598.5,
+  "step2_physical_refused_request_W": 207.77777777777777,
+  "step2_physical_accepted_start_s": 54148.5,
+  "step3_accepted_states": 2529,
+  "step3_full_steps": 2429,
+  "step3_truncated_steps": 33,
+  "step3_event_bridges": 2,
+  "step3_rebuild_max_deviation": 0.0,
+  "step3_trial_states_not_saved": 13287,
+  "step3_trial_states_checked": 13289,
+  "step3_boundary_coincidences": [
+   [
+    2958.500414394586,
+    "event_location event_required"
+   ],
+   [
+    53321.97644919057,
+    "event_location event_required"
+   ]
+  ],
+  "step3_rejected_attempts": 129,
+  "step3_discarded_search_steps": 0,
+  "step3_aborted_attempts": 13,
+  "step3_output_identical": 1441,
+  "step3_output_samples": 1441,
+  "step3_output_max_rel": 0.0,
+  "step3_power_trials": 17852,
+  "step3_first_T_B_K": 293.15,
+  "step3_record_T_B_K": 293.15,
+  "step3_rk45_weights_equal_scipy": true,
+  "step4_orbit_thermal_calls": {
+   "24 h run": 0,
+   "repeat run": 0,
+   "invalid run": 0,
+   "hot run": 0
+  },
+  "step4_excursion_nodes": [
+   "B",
+   "J"
+  ],
+  "step4_excursion_records": 16,
+  "step4_excursion_connected_samples": 251,
+  "step4_min_T_K": {
+   "S": 202.09352640563014,
+   "J": 250.2231860856598,
+   "C": 250.24376235636066,
+   "B": 260.5009698379075,
+   "D": 254.74555061461152,
+   "R": 247.6512376956009
+  },
+  "step4_max_T_K": {
+   "S": 312.3663158163963,
+   "J": 300.22202528027293,
+   "C": 297.1531879444246,
+   "B": 293.15,
+   "D": 293.15,
+   "R": 290.14205353190863
+  },
+  "step4_hot_excursion_nodes": [
+   "B",
+   "J"
+  ],
+  "step4_hot_wall_s": 0.2520665000047302,
+  "step5_leaves_compared": 106826,
+  "step5_numeric_leaves": 89161,
+  "step5_different_leaves": 0,
+  "step5_max_abs_difference": 0.0,
+  "step5_bitwise_identical": true,
+  "step5_archive_fields": {
+   "run_id": true,
+   "UTC epoch": true,
+   "time_s": true,
+   "component ids and state order": true,
+   "temperatures": true,
+   "four Power ports": true,
+   "heat flows": true,
+   "solver settings": true,
+   "parameter versions": true
+  },
+  "step5_power_calls": 17852,
+  "step5_power_calls_by_context": {
+   "integration": 15548,
+   "event_location": 755,
+   "boundary": 108,
+   "output": 1441,
+   "energy_audit": 0
+  },
+  "step5_stand_in_solves": 17845,
+  "step5_injected_results": 7,
+  "step5_battery_evaluations": 611472,
+  "step5_accepted_steps": 2462,
+  "step5_rejected_steps": 129,
+  "step5_event_aborted_attempts": 13,
+  "step5_discarded_search_steps": 0,
+  "step5_rejected_steps_total": 142,
+  "step5_function_evaluations": 17269,
+  "step5_event_searches": 2,
+  "step5_bisection_iterations": 31,
+  "step5_wall_s": [
+   31.31294639999396,
+   35.17674399999669
+  ]
+ },
+ "summary_cn": "本用例在 Thermal 目录用项目解释器执行。Power 结果由 sdtwin_sim.power_stand_in 给出，该程序按供电模块设计报告的接口、式 P1 至 P11 以及 valid 与 event_required 的规定编写，是测试用供电程序。联合运行使用 sdtwin_sim.coupled，场景为示例 Sat01，轨道为 Orbit 二体传播的 400 km 圆轨道，太阳位置取 sun_position_ephemeris 内置星历，日照取含日食的 sun_intensity，太阳能板法向与太阳方向夹角为 55°，地球反照与红外由 earth_flux 计算，计算节点请求功率为 60 W，第 10 个日食内从 52898.5 s 至 53798.5 s 的 900 s 内请求线性升至 250 W，随后恢复 60 W。第1步按第 6.3 节的调用顺序运行 24 h，共 16 次进入日食、15 次出日食，独立的圆轨道圆柱阴影边界全部落在 Orbit 给出的半影段内，限值为 1 s。运行完成，保存 1441 个输出样本与 2529 个已接受状态，归档文件 1966289 字节，测试驱动程序在调用联合求解之前写出参数记录。17852 次 Power 试算与 17256 次热导数计算都读取同一时刻的轨道、姿态、表面环境与电池温度，调用顺序违例为 0 次，日食、负载启停与电池约束都在相同物理时刻分段处理。第2步在独立的故障注入运行中注入一次 valid 为假的试算，运行在 26978.079 s 报告 power_invalid 并停止，该结果没有进入热导数，没有执行保护规则，停止前的 819 个已接受状态与基准运行逐位相同。注入的 event_required 为真的试算被丢弃，约束边界定位在 2958.5004 s，比窗口起点晚 4.1×10 的 −4 次方 s，容限为 0.001 s，Power 按已声明规则断开负载并锁存，随后在同一时刻重新求功率与温度导数，计算节点功率为 0 W；窗口内的启动指令因 can_supply_request 为假未接通，窗口后的启动指令接通负载。电池约束事件发生在请求升至 149.4 W 时，定位在 53321.9764 s，区间宽度 9.2×10 的 −4 次方 s，替代程序在区间两端分别给出正常供电与供电不足；日食中的启动指令未接通，出日食后的启动指令接通负载。第3步共记录 2529 个已接受状态，其中包含初始状态、分段起始状态与接受的积分结果。2429 个完整积分步与按 RK45 权系数由热导数和锂占比导数重建的结果逐位相同，33 个在限充起止时刻结束的积分步与稠密输出插值结果逐位相同，2 个事件边界处的显式欧拉步与重建结果逐位相同。129 次被拒绝的积分步、13 次因事件中止的试算均有记录。共有 13287 个试算状态未写入组件温度，该计数包含拒绝与中止试算。另有两次事件定位试算与最终接受的边界状态数值重合，数值重合本身不代表未接受状态被写入。1441 个输出样本取自已接受的解，最大相对差为 0。归档的 J 温度与 ThermalEvaluation 的 T_J_K 逐位相同，供计算域读取；每次 Power 试算读取的 T_B_K 与同一试算状态的电池温度逐位相同，首次试算读取 ThermalState 的 293.15 K，Power 参数校验所用的温度副本与热初值一致，后续温度均从当前试算状态读取。第4步 Orbit 的 power_considering_thermal 在四次运行中被调用 0 次，热模块与联合程序源码没有引用该函数；交给求解器的六个温度导数与 thermal_derivative 的结果逐位相同，太阳能板等每个组件温度只由热模块的积分更新。24 h 内太阳能板温度在 202.1 K 至 312.4 K 之间，计算节点在 250.2 K 至 300.2 K 之间，电池在 260.5 K 至 293.1 K 之间。负载状态只在 Power 事件处改变，电池与计算节点温度低于声明范围时只记录范围警告，接通期间负载功率等于请求；计算节点 365 K、电池 320 K 起始的 600 s 运行同样只记录范围警告，负载保持 60 W，热模块没有增加断电或降频规则。第5步两次运行比较 106826 个归档叶项，其中包含数值、字符串与逻辑值，不同项为 0 个，最大差值为 0，验收限值为 1×10 的 −12 次方；归档包含 run_id、UTC 起点、time_s、组件标识与状态顺序、温度、Power 四功率端口、热流、求解设置与参数版本。第一次运行共 17852 次 Power 试算，其中替代程序求根 17845 次，注入结果 7 次，电池响应计算 611472 次；接受积分步 2462 个，误差控制拒绝 129 次，事件中止试算 13 次，试算拒绝合计 142 次，各项计数与独立统计一致，两次运行分别用时 31.3 s 与 35.2 s。全部 36 项检查通过，满足验收判据。",
+ "anomalies_cn": "无",
+ "environment": {
+  "python": "3.11.9",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "astropy": "8.0.1",
+  "pytest": "9.1.1",
+  "ntu_space_dynamics": "0.1.0",
+  "usd": "0.26.8"
+ },
+ "execution": {
+  "started_utc": "2026-10-05T23:17:02.838518+00:00",
+  "recorded_utc": "2026-10-05T23:40:12.197853+00:00",
+  "collected_functions": 7,
+  "finished_functions": 7,
+  "unexecuted_functions": [],
+  "source_sha256": {
+   "thermal/__init__.py": "ffb342305704801c8871a2af365af61877f7e6485b07ec381e0f777da9d294f5",
+   "thermal/environment.py": "5c3eba796dd28d41a4f1b6fa637ada3c0b8d2942ebc5f65b1e55f1384fa99f41",
+   "thermal/model.py": "9f758d46ea25844878e8cac7ccc402c31610548d255ded7d8d980ae95a965b9e",
+   "thermal/parameters.py": "792e7f5d1175e3564b7486a230039cf026fbad78074cfc8de4fbf352d9c946f9",
+   "thermal/types.py": "2c76359dfa9555ef7d51df83009a5985964c66080dc9062746815451e827a794",
+   "sdtwin_sim/__init__.py": "e2c3bee5849391a86fa79109339d001a75779dd93835d9e829f5f1591de81a31",
+   "sdtwin_sim/coupled.py": "f05e19e220284ad3a0c1e4188eb405fa66b6777f4226decfe95d2c559bca1dff",
+   "sdtwin_sim/earth_flux.py": "03b0d340d77e583cf73a3f0ec31ca0d9830c3bdc5f824903adae266b82a853a2",
+   "sdtwin_sim/power_stand_in.py": "3229251cdd2834bc2df18177c079e651f53a0827fb57cba21527ebdbf281c58f",
+   "sdtwin_sim/scene.py": "b7b1ad5328e6f6278354249e3087d47197895294af8607d21c7dcce354c7ab9b",
+   "tests/conftest.py": "345e7f788242083755505607636fa4af3e88cbf303a6a1728e4ab327e106d11e",
+   "tests/data/dm_001/reference.py": "3bba4938e76134c73272c00250517cc01c519da62f881382ddb42daa9c79fe2c",
+   "tests/data/en_001/en001_reference.py": "73370bd0a9fdc7e7c373e8dda1b5aa0c9a6970dc047fba3cf8a7c3fd808e6ea4",
+   "tests/data/en_003/earth_reference.py": "880154b92405e9af399b772296148219ca78f8ac62e9fcbeaeef67bb45ce117f",
+   "tests/data/en_003/fe_explore.py": "0cceaffd85c2d15b11fee6c7e6b5bbb00a17d94e63940b45a2db1863dfecd473",
+   "tests/data/en_003/fe_export.py": "b33fc7276138dc59e944c5cbfed73acc0d1f1ec2ce7d458b90eed62790aa8f85",
+   "tests/data/en_003/fe_refine.py": "6ad00122cb8f7a65d0f5c23f7c139b20e92d6f75fa0f472b16d2d97628995c43",
+   "tests/data/en_003/fe_refine_ladder.py": "587ffe012aa40955c6b615f68d6e257314ac0bc418765aaa358e17dc848e0580",
+   "tests/data/en_003/ladder_compare.py": "fdf7d4d74fb0f099934f5ef3c3bbdef67df6f7cf3605a5ad1984cb48450cc3ab",
+   "tests/data/fe_001/fe001_support.py": "d1bd978ad70120cf974e46cd996a8367bd5efc08e4d8755405c2a3a21be41051",
+   "tests/data/fe_002/fe002_support.py": "2c27a76b1fd972625293b26b8e1a07d0850ba78254c4457782607279205c4f7c",
+   "tests/data/fe_003/fe003_support.py": "00d548cb2c513707bfeb16f81bf130eded88fb09a87ba8785ad27ee341a985f2",
+   "tests/data/fe_004/fe004_support.py": "54a7d7d8ce2fa0e4f9b054f596a927f8531c0cc0b77a783dcd7ab6973c1f6e44",
+   "tests/data/ht_001/t2_reference.py": "2098ccd9080957ab24ff44712b3b8e688d2b41cfa077e95460a96c82f3d27f89",
+   "tests/data/ht_002/ht002_reference.py": "076d20dec2f98fb84bbbcda17b3a0313de6c8ffb44f4c2121282eb01387bd7e7",
+   "tests/data/ht_003/analytic.py": "5ee9b0e8d1c4e06067e44754c2dd2393218e4d2a6a3d91d64064d726cb06a3a5",
+   "tests/data/ni_001/ni001_support.py": "fc84c2b085ace6fa38819195dd85f0ae47846dbd8505432ef469dd19a276b0c7",
+   "tests/data/ni_002/ni002_reference.py": "b263602b77beb5b57e4b7360db586394228e18381b8f1e40abf20f1c3295665b",
+   "tests/data/ni_003/make_ni003_data.py": "d03cfe33141adc1f8288763c42009504dcdf076ba5e46d9539ddedca64eedce7",
+   "tests/data/ni_003/ni003_support.py": "bc563f0d0b9d56e461eac3e8db7c76b37ce1431468dd4b51d257a4a551257616",
+   "tests/data/ni_003/payload/ni003_payload.py": "4755abecf85fc0e3ee9006954b933ff3e1728e8647f725a0cb05e0bff654d433",
+   "tests/data/ni_003/probe_no_exec.py": "a2d7e9613788aa4f5eb24af6c8b5dac16a234a28b96df880b7a0bfef6672cc32",
+   "tests/data/ni_003/run_alone.py": "932a1b32033842df026eac9a1496ccd301c89291e980e969fbb3a5022acee0f6",
+   "tests/data/pa_001/pa001_inputs.py": "f1b685263ff6770efd7dd01f2f9b378230ab7fab12800b3e5a697d4cf17fc4b4",
+   "tests/data/simready/make_geometry.py": "2a4c7a5b278c7ddcbe2b673950b13c7bdaaf03921f8883693bc30e28c254094c",
+   "tests/data/simready/make_scene_variants.py": "994ca8d44a44023f7d778c0337ad5403420eea194bc8202194c440a28d1f1247",
+   "tests/test_dm_001_data_objects.py": "44d85eac05803a2bb04c5e1d0c2fea1c0c572c60299ee6f28eb7cb4986f897a8",
+   "tests/test_ec_001_power_ports.py": "cdb8dac627ff5e5bd56a852fd6344996658d8dc2df56beebb8efdd5a159c7f67",
+   "tests/test_en_001_surface_environment.py": "1b0f11127159690d57558aedcdece9c11559b2b6dda75637714d26090c0dd679",
+   "tests/test_en_002_surface_heat.py": "c45ab4a04ceaa6211d5aaf72befbf5d95e8e9c7be5b86454ccc4a6b5cae39e34",
+   "tests/test_en_003_earth_flux.py": "eaa1527e9722b6feb07abc9289f43680b60c59791ce838e072a5e24b90e62c79",
+   "tests/test_fe_001_solar_array_fe.py": "f23d462dbbd432308214db7d5634689b059f5e5b1bb4f46251c0836d139f3cd7",
+   "tests/test_fe_002_radiator_fe.py": "f1be285404e242cc6394363eac2ed1345233e1497ed83fff5f4e3dde09260aa1",
+   "tests/test_fe_003_compute_cold_plate_fe.py": "3a9bfdd73afca2fb2257235348b85702707b5c390b1814a3d15621fba39bafce",
+   "tests/test_fe_004_whole_satellite_chain.py": "6aaeec63a82a4031d916d063694f2aa9a6b750c1712ce2bb7ba036497f1e9a66",
+   "tests/test_ht_001_heat_flows.py": "2d91f41677820f09cdb4e6edac6582be56c9647cea59bfaa629e30da1e759049",
+   "tests/test_ht_002_derivative_balance.py": "728e57be7630d1be877a265ad0206e9ab0cef1374a9bd74f20f438f18a0d144b",
+   "tests/test_ht_003_analytic.py": "a66ffc2613929fbd9bb44a0f2a8f1d41879069d1b2d9584f8fb2041f1545e832",
+   "tests/test_ni_001_numerics_eclipse.py": "1f4cba777b1aba392d09bb130ec6652d2b04004a3ac97ea4e49a88424aacdf47",
+   "tests/test_ni_002_end_to_end.py": "fb33ca9517ced5761c63ae7d68cefc72e98c3c3e36c7a8665b0d89fc9d3c696e",
+   "tests/test_ni_003_scene_assembly.py": "2ce365771b66f67e78334bbb3358a210d8eabed0753d82b7abeb4f3e900e6226",
+   "tests/test_pa_001_t5_assembly.py": "fa1b1edba0b491daf8a6e06ecd6d3a1e8baa9307daf94b5d885659a0620e3293"
+  }
+ }
+}

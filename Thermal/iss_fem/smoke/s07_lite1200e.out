@@ -1,0 +1,7 @@
+progress log -> C:\Workspace\SpaceDC\Thermal\iss_fem\smoke\s07_lite1200e_progress.log
+set sol4 t1 tstepsbdf manual
+set sol4 t1 timestepbdf 60
+set sol4 t1 maxorder 1
+set sol4 t2 tstepsbdf manual
+set sol4 t2 timestepbdf 60
+set sol4 t2 maxorder 1

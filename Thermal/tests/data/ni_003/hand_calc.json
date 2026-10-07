@@ -1,0 +1,111 @@
+{
+  "description": "NI-003 hand calculation inputs. Part sizes are the physical dimensions documented in the USD doc strings and asset descriptions of tests/data/simready (they are checked against the authored extents and metersPerUnit by an independent text parse in ni003_support.py). Material, optical and connection values are copied from the asset and scene records. The test derives areas, masses, capacitances (T5 first line), resistances (T5 second line) and normals from these values; nothing here comes from the code under test.",
+  "acceptance": {
+    "relative_error_limit": 0.001,
+    "source": "CASES['NI-003'] acceptance: 面积与质量的相对误差不超过 0.1%"
+  },
+  "parts": {
+    "solar_array_panel.usda/Panel": {"size_m": [1.0, 0.6, 0.025], "meters_per_unit": 1.0,
+                                     "documented": "Two-sided panel 1.0 m x 0.6 m x 25 mm"},
+    "compute_board.usda/Board": {"size_m": [0.16, 0.10, 0.0016], "meters_per_unit": 0.001,
+                                 "documented": "Authored in millimetres: board 160 x 100 x 1.6 mm"},
+    "compute_board.usda/Spreader": {"size_m": [0.09, 0.15, 0.004], "meters_per_unit": 0.001,
+                                    "documented": "copper spreader 150 x 90 x 4 mm, authored as 90 x 150 x 4 mm, turned 90 deg about Z and raised 2.8 mm",
+                                    "rotate_z_deg": 90.0, "translate_stage_units": [0.0, 0.0, 2.8]},
+    "cold_plate.usda/Plate": {"size_m": [0.20, 0.15, 0.012], "meters_per_unit": 0.01,
+                              "documented": "Authored in centimetres: plate 20 x 15 x 1.2 cm"},
+    "battery_pack.usda/Pack": {"size_m": [0.19, 0.12, 0.075], "meters_per_unit": 1.0,
+                               "documented": "Pack envelope 190 x 120 x 75 mm"},
+    "power_controller.usda/Housing": {"size_m": [0.16, 0.12, 0.05], "meters_per_unit": 1.0,
+                                      "documented": "Housing 160 x 120 x 50 mm"},
+    "pdu.usda/Housing": {"size_m": [0.14, 0.10, 0.045], "meters_per_unit": 1.0,
+                         "documented": "Housing 140 x 100 x 45 mm"},
+    "radiator_panel.usda/Panel": {"size_m": [0.8, 0.6, 0.002], "meters_per_unit": 1.0,
+                                  "documented": "Aluminium facesheet 0.8 m x 0.6 m x 2 mm"}
+  },
+  "instances": {
+    "SolarArray01": {
+      "node": "S", "geometry": "solar_array_panel.usda",
+      "materials": [
+        {"material_id": "substrate_honeycomb_cfrp", "mass_kg": 1.65, "cp_J_kgK": 930.0},
+        {"material_id": "cells_and_coverglass", "mass_kg": 0.72, "cp_J_kgK": 760.0}
+      ],
+      "surfaces": [
+        {"surface_id": "front", "part": "Panel", "face": "+Z", "absorptivity": 0.91, "emissivity": 0.85,
+         "normal_body": [1.0, 0.0, 0.0]},
+        {"surface_id": "back", "part": "Panel", "face": "-Z", "absorptivity": 0.88, "emissivity": 0.86,
+         "normal_body": [-1.0, 0.0, 0.0]}
+      ]
+    },
+    "Compute01": {
+      "node": "J", "geometry": "compute_board.usda",
+      "materials": [
+        {"material_id": "pcb_laminate", "density_kg_m3": 1900.0, "part": "Board", "solid_fraction": 1.0, "cp_J_kgK": 1100.0},
+        {"material_id": "copper_spreader", "density_kg_m3": 8960.0, "part": "Spreader", "solid_fraction": 1.0, "cp_J_kgK": 385.0},
+        {"material_id": "soc_module_package", "mass_kg": 0.28, "cp_J_kgK": 700.0}
+      ],
+      "surfaces": []
+    },
+    "ColdPlate01": {
+      "node": "C", "geometry": "cold_plate.usda",
+      "materials": [
+        {"material_id": "plate_al6061", "density_kg_m3": 2700.0, "part": "Plate", "solid_fraction": 0.8, "cp_J_kgK": 896.0}
+      ],
+      "surfaces": []
+    },
+    "Battery01": {
+      "node": "B", "geometry": "battery_pack.usda",
+      "materials": [
+        {"material_id": "li_ion_cells", "mass_kg": 0.76, "cp_J_kgK": 1040.0},
+        {"material_id": "enclosure_al", "mass_kg": 0.32, "cp_J_kgK": 896.0}
+      ],
+      "surfaces": []
+    },
+    "Controller01": {
+      "node": "D", "geometry": "power_controller.usda",
+      "materials": [
+        {"material_id": "housing_al", "mass_kg": 0.42, "cp_J_kgK": 896.0},
+        {"material_id": "electronics_pcb", "mass_kg": 0.18, "cp_J_kgK": 1100.0}
+      ],
+      "surfaces": []
+    },
+    "PDU01": {
+      "node": "D", "geometry": "pdu.usda",
+      "materials": [
+        {"material_id": "housing_al", "mass_kg": 0.31, "cp_J_kgK": 896.0},
+        {"material_id": "assigned_harness_cu", "mass_kg": 0.22, "cp_J_kgK": 385.0}
+      ],
+      "surfaces": []
+    },
+    "Radiator01": {
+      "node": "R", "geometry": "radiator_panel.usda",
+      "materials": [
+        {"material_id": "facesheet_al6061", "density_kg_m3": 2700.0, "part": "Panel", "solid_fraction": 1.0, "cp_J_kgK": 896.0},
+        {"material_id": "embedded_heat_pipes", "mass_kg": 0.36, "cp_J_kgK": 900.0}
+      ],
+      "surfaces": [
+        {"surface_id": "front", "part": "Panel", "face": "+Z", "absorptivity": 0.20, "emissivity": 0.88,
+         "normal_body": [0.0, -1.0, 0.0]},
+        {"surface_id": "back", "part": "Panel", "face": "-Z", "absorptivity": 0.30, "emissivity": 0.80,
+         "normal_body": [0.0, 1.0, 0.0]}
+      ]
+    }
+  },
+  "normals_source": "sat01_scene.json description: +X faces the Sun in sun-pointing attitude, the radiator front faces -Y; the array back and radiator back face the opposite ways",
+  "connections": {
+    "SR": {"length_m": 0.15, "conductivity_W_mK": 6.7, "area_m2": 2.0e-4, "contact_resistance_K_W": 2.0},
+    "JC": {"length_m": 0.003, "conductivity_W_mK": 167.0, "area_m2": 0.0135, "contact_resistance_K_W": 0.05},
+    "CR": {"equivalent_total_resistance_K_W": 0.12, "includes_contact": true},
+    "BR": {"length_m": 0.05, "conductivity_W_mK": 167.0, "area_m2": 4.0e-4, "contact_resistance_K_W": 0.3},
+    "DR": {"length_m": 0.04, "conductivity_W_mK": 167.0, "area_m2": 6.0e-4, "contact_resistance_K_W": 0.25}
+  },
+  "design": {
+    "instances": ["SolarArray01", "Battery01", "Controller01", "PDU01", "Compute01", "ColdPlate01", "Radiator01"],
+    "nodes": {"S": ["SolarArray01"], "J": ["Compute01"], "C": ["ColdPlate01"], "B": ["Battery01"],
+              "D": ["Controller01", "PDU01"], "R": ["Radiator01"]},
+    "ports": {"P_pv_W": "SolarArray01", "P_load_W": "Compute01", "Q_B_W": "Battery01", "Q_D_W": "PDU01"},
+    "paths": {"SR": ["S", "R"], "JC": ["J", "C"], "CR": ["C", "R"], "BR": ["B", "R"], "DR": ["D", "R"]},
+    "root_prim_path": "/World/Sat01",
+    "source": "thermal design 3.1 figure 1, 3.2, 5.1 and 9.3; Power design table 9"
+  }
+}

@@ -1,0 +1,529 @@
+{
+  "checks": [
+    {
+      "actual": 6,
+      "limit": null,
+      "name": "common_time_grid",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "P_pv_max_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 1.1368683772161603e-13,
+      "limit": 1e-06,
+      "name": "P_pv_max_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "P_pv_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 1.8957280190079473e-10,
+      "limit": 1e-06,
+      "name": "P_pv_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "P_load_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 1e-06,
+      "name": "P_load_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "P_B_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 1.893454282253515e-10,
+      "limit": 1e-06,
+      "name": "P_B_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "V_B_V_availability",
+      "pass_": true
+    },
+    {
+      "actual": 7.602807272633072e-13,
+      "limit": 0.0001,
+      "name": "V_B_V_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "I_B_A_availability",
+      "pass_": true
+    },
+    {
+      "actual": 5.750067089138611e-12,
+      "limit": 0.0001,
+      "name": "I_B_A_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "Q_B_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 1.0183853760281636e-11,
+      "limit": 1e-06,
+      "name": "Q_B_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "Q_D_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 1.7763568394002505e-15,
+      "limit": 1e-06,
+      "name": "Q_D_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "SOC_availability",
+      "pass_": true
+    },
+    {
+      "actual": 4.440892098500626e-16,
+      "limit": 1e-06,
+      "name": "SOC_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "x_n_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 1e-06,
+      "name": "x_n_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "x_p_availability",
+      "pass_": true
+    },
+    {
+      "actual": 5.551115123125783e-17,
+      "limit": 1e-06,
+      "name": "x_p_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "T_B_K_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.001,
+      "name": "T_B_K_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "connected_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "connected_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "latched_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "latched_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "valid_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "valid_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "event_required_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "event_required_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "can_supply_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "can_supply_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "reason_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "reason_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "i_A_availability",
+      "pass_": true
+    },
+    {
+      "actual": 9.5812247025151e-13,
+      "limit": 0.0001,
+      "name": "i_A_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "v_cell_V_availability",
+      "pass_": true
+    },
+    {
+      "actual": 9.947598300641403e-14,
+      "limit": 0.0001,
+      "name": "v_cell_V_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "dx_n_dt_availability",
+      "pass_": true
+    },
+    {
+      "actual": 8.380882793312949e-17,
+      "limit": 1e-08,
+      "name": "dx_n_dt_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "dx_p_dt_availability",
+      "pass_": true
+    },
+    {
+      "actual": 5.266512052848338e-17,
+      "limit": 1e-08,
+      "name": "dx_p_dt_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "q_reversible_cell_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 9.433426262361877e-15,
+      "limit": 1e-06,
+      "name": "q_reversible_cell_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "min_margin_availability",
+      "pass_": true
+    },
+    {
+      "actual": 9.68114477473136e-14,
+      "limit": 1e-06,
+      "name": "min_margin_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "action_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "action_difference",
+      "pass_": true
+    },
+    {
+      "actual": 4.907185768843192e-14,
+      "limit": 2e-06,
+      "name": "python_port_conservation",
+      "pass_": true
+    },
+    {
+      "actual": 343.6131265582005,
+      "limit": 0,
+      "name": "python_solar_feasibility",
+      "pass_": true
+    },
+    {
+      "actual": 5.773159728050814e-14,
+      "limit": -1e-08,
+      "name": "python_device_constraints",
+      "pass_": true
+    },
+    {
+      "actual": 2.1782575743145571e-13,
+      "limit": 2e-06,
+      "name": "simulink_port_conservation",
+      "pass_": true
+    },
+    {
+      "actual": 343.613126558201,
+      "limit": 0,
+      "name": "simulink_solar_feasibility",
+      "pass_": true
+    },
+    {
+      "actual": 1.12798659301916e-13,
+      "limit": -1e-08,
+      "name": "simulink_device_constraints",
+      "pass_": true
+    }
+  ],
+  "comparison_status": "pass",
+  "id": "CT-001",
+  "metrics": [
+    {
+      "max_abs": 1.1368683772161603e-13,
+      "rmse": 1.1368683772161603e-13,
+      "samples": 6,
+      "signal": "P_pv_max_W",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 1.8957280190079473e-10,
+      "rmse": 9.969390815604068e-11,
+      "samples": 6,
+      "signal": "P_pv_W",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 6,
+      "signal": "P_load_W",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 1.893454282253515e-10,
+      "rmse": 9.9563216323362e-11,
+      "samples": 6,
+      "signal": "P_B_W",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 7.602807272633072e-13,
+      "rmse": 3.5913466302919735e-13,
+      "samples": 6,
+      "signal": "V_B_V",
+      "threshold": 0.0001
+    },
+    {
+      "max_abs": 5.750067089138611e-12,
+      "rmse": 2.941405652710715e-12,
+      "samples": 6,
+      "signal": "I_B_A",
+      "threshold": 0.0001
+    },
+    {
+      "max_abs": 1.0183853760281636e-11,
+      "rmse": 5.298868878977286e-12,
+      "samples": 6,
+      "signal": "Q_B_W",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 1.7763568394002505e-15,
+      "rmse": 1.7763568394002505e-15,
+      "samples": 6,
+      "signal": "Q_D_W",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 4.440892098500626e-16,
+      "rmse": 4.440892098500626e-16,
+      "samples": 6,
+      "signal": "SOC",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 6,
+      "signal": "x_n",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 5.551115123125783e-17,
+      "rmse": 5.551115123125783e-17,
+      "samples": 6,
+      "signal": "x_p",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 6,
+      "signal": "T_B_K",
+      "threshold": 0.001
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 6,
+      "signal": "connected",
+      "threshold": 0.0
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 6,
+      "signal": "latched",
+      "threshold": 0.0
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 6,
+      "signal": "valid",
+      "threshold": 0.0
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 6,
+      "signal": "event_required",
+      "threshold": 0.0
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 6,
+      "signal": "can_supply",
+      "threshold": 0.0
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 6,
+      "signal": "reason",
+      "threshold": 0.0
+    },
+    {
+      "max_abs": 9.5812247025151e-13,
+      "rmse": 4.901253374305994e-13,
+      "samples": 6,
+      "signal": "i_A",
+      "threshold": 0.0001
+    },
+    {
+      "max_abs": 9.947598300641403e-14,
+      "rmse": 4.59659148393821e-14,
+      "samples": 6,
+      "signal": "v_cell_V",
+      "threshold": 0.0001
+    },
+    {
+      "max_abs": 8.380882793312949e-17,
+      "rmse": 4.290849704344924e-17,
+      "samples": 6,
+      "signal": "dx_n_dt",
+      "threshold": 1e-08
+    },
+    {
+      "max_abs": 5.266512052848338e-17,
+      "rmse": 2.694049480995613e-17,
+      "samples": 6,
+      "signal": "dx_p_dt",
+      "threshold": 1e-08
+    },
+    {
+      "max_abs": 9.433426262361877e-15,
+      "rmse": 4.262359994905135e-15,
+      "samples": 6,
+      "signal": "q_reversible_cell_W",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 9.68114477473136e-14,
+      "rmse": 4.546947278962815e-14,
+      "samples": 6,
+      "signal": "min_margin",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 6,
+      "signal": "action",
+      "threshold": 0.0
+    }
+  ],
+  "name_cn": "充电限制与太阳限发",
+  "name_en": "Charge limits and solar curtailment",
+  "samples": 6,
+  "status": "pass"
+}

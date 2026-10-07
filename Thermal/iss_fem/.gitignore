@@ -1,0 +1,8 @@
+# COMSOL model files and locks are large and regenerable from model/*.py
+*.mph
+*.mph.lock
+*.mphbin
+*.recovery
+# raw solver dumps; figures and summary CSVs under out/ are committed
+out/raw/
+__pycache__/

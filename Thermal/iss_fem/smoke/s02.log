@@ -1,0 +1,11 @@
+geom: 9 domains 47 boundaries
+DependentVariableQuantity = dimensionless
+SourceTermQuantity = dimensionless
+ge units set
+mesh 0.2s
+otl activate list: ['ht', 'on', 'ge', 'on', 'otl', 'on', 'frame:spatial1', 'on', 'frame:material1', 'on']
+ot activate list: ['ht', 'on', 'ge', 'on', 'otl', 'on', 'frame:spatial1', 'on', 'frame:material1', 'on']
+SOLVED in 28.2s
+dset1 eval ERR Exception: 	com.comsol.util.exceptions.FlException: 未知属性。 Messages: 	未知属性。 	- 属性: innerinput 
+dset2 eval ERR Exception: 	com.comsol.util.exceptions.FlException: 未知属性。 Messages: 	未知属性。 	- 属性: innerinput 
+total 46s

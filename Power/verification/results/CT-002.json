@@ -1,0 +1,529 @@
+{
+  "checks": [
+    {
+      "actual": 12,
+      "limit": null,
+      "name": "common_time_grid",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "P_pv_max_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 1e-06,
+      "name": "P_pv_max_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "P_pv_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 1e-06,
+      "name": "P_pv_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "P_load_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 1.1082690321018163e-10,
+      "limit": 1e-06,
+      "name": "P_load_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "P_B_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 1.1674927691274206e-10,
+      "limit": 1e-06,
+      "name": "P_B_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "V_B_V_availability",
+      "pass_": true
+    },
+    {
+      "actual": 2.5934809855243657e-13,
+      "limit": 0.0001,
+      "name": "V_B_V_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "I_B_A_availability",
+      "pass_": true
+    },
+    {
+      "actual": 3.743116927523715e-12,
+      "limit": 0.0001,
+      "name": "I_B_A_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "Q_B_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 6.343953140586223e-13,
+      "limit": 1e-06,
+      "name": "Q_B_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "Q_D_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 5.831335414541172e-12,
+      "limit": 1e-06,
+      "name": "Q_D_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "SOC_availability",
+      "pass_": true
+    },
+    {
+      "actual": 4.440892098500626e-16,
+      "limit": 1e-06,
+      "name": "SOC_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "x_n_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 1e-06,
+      "name": "x_n_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "x_p_availability",
+      "pass_": true
+    },
+    {
+      "actual": 5.551115123125783e-17,
+      "limit": 1e-06,
+      "name": "x_p_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "T_B_K_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.001,
+      "name": "T_B_K_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "connected_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "connected_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "latched_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "latched_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "valid_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "valid_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "event_required_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "event_required_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "can_supply_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "can_supply_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "reason_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "reason_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "i_A_availability",
+      "pass_": true
+    },
+    {
+      "actual": 6.235151284172957e-13,
+      "limit": 0.0001,
+      "name": "i_A_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "v_cell_V_availability",
+      "pass_": true
+    },
+    {
+      "actual": 4.263256414560601e-14,
+      "limit": 0.0001,
+      "name": "v_cell_V_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "dx_n_dt_availability",
+      "pass_": true
+    },
+    {
+      "actual": 5.452351081475931e-17,
+      "limit": 1e-08,
+      "name": "dx_n_dt_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "dx_p_dt_availability",
+      "pass_": true
+    },
+    {
+      "actual": 3.429212886959035e-17,
+      "limit": 1e-08,
+      "name": "dx_p_dt_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "q_reversible_cell_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 6.540774866170551e-15,
+      "limit": 1e-06,
+      "name": "q_reversible_cell_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "min_margin_availability",
+      "pass_": true
+    },
+    {
+      "actual": 3.775018492246929e-14,
+      "limit": 1e-06,
+      "name": "min_margin_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "action_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "action_difference",
+      "pass_": true
+    },
+    {
+      "actual": 3.552713678800501e-15,
+      "limit": 2e-06,
+      "name": "python_port_conservation",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0,
+      "name": "python_solar_feasibility",
+      "pass_": true
+    },
+    {
+      "actual": 0.00448873334198252,
+      "limit": -1e-08,
+      "name": "python_device_constraints",
+      "pass_": true
+    },
+    {
+      "actual": 1.5631940186722204e-13,
+      "limit": 2e-06,
+      "name": "simulink_port_conservation",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0,
+      "name": "simulink_solar_feasibility",
+      "pass_": true
+    },
+    {
+      "actual": 0.00448873334194477,
+      "limit": -1e-08,
+      "name": "simulink_device_constraints",
+      "pass_": true
+    }
+  ],
+  "comparison_status": "pass",
+  "id": "CT-002",
+  "metrics": [
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 12,
+      "signal": "P_pv_max_W",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 6,
+      "signal": "P_pv_W",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 1.1082690321018163e-10,
+      "rmse": 4.524498801678245e-11,
+      "samples": 6,
+      "signal": "P_load_W",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 1.1674927691274206e-10,
+      "rmse": 4.7662880598071424e-11,
+      "samples": 6,
+      "signal": "P_B_W",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 2.5934809855243657e-13,
+      "rmse": 1.1050595826841764e-13,
+      "samples": 6,
+      "signal": "V_B_V",
+      "threshold": 0.0001
+    },
+    {
+      "max_abs": 3.743116927523715e-12,
+      "rmse": 1.528124682120208e-12,
+      "samples": 6,
+      "signal": "I_B_A",
+      "threshold": 0.0001
+    },
+    {
+      "max_abs": 6.343953140586223e-13,
+      "rmse": 2.58995604814325e-13,
+      "samples": 6,
+      "signal": "Q_B_W",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 5.831335414541172e-12,
+      "rmse": 2.380638095348632e-12,
+      "samples": 6,
+      "signal": "Q_D_W",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 4.440892098500626e-16,
+      "rmse": 4.440892098500626e-16,
+      "samples": 12,
+      "signal": "SOC",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 12,
+      "signal": "x_n",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 5.551115123125783e-17,
+      "rmse": 5.551115123125783e-17,
+      "samples": 12,
+      "signal": "x_p",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 12,
+      "signal": "T_B_K",
+      "threshold": 0.001
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 12,
+      "signal": "connected",
+      "threshold": 0.0
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 12,
+      "signal": "latched",
+      "threshold": 0.0
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 12,
+      "signal": "valid",
+      "threshold": 0.0
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 12,
+      "signal": "event_required",
+      "threshold": 0.0
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 12,
+      "signal": "can_supply",
+      "threshold": 0.0
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 12,
+      "signal": "reason",
+      "threshold": 0.0
+    },
+    {
+      "max_abs": 6.235151284172957e-13,
+      "rmse": 2.5454933953468713e-13,
+      "samples": 6,
+      "signal": "i_A",
+      "threshold": 0.0001
+    },
+    {
+      "max_abs": 4.263256414560601e-14,
+      "rmse": 1.7527933517080667e-14,
+      "samples": 6,
+      "signal": "v_cell_V",
+      "threshold": 0.0001
+    },
+    {
+      "max_abs": 5.452351081475931e-17,
+      "rmse": 2.2259179610587408e-17,
+      "samples": 6,
+      "signal": "dx_n_dt",
+      "threshold": 1e-08
+    },
+    {
+      "max_abs": 3.429212886959035e-17,
+      "rmse": 1.399975031535478e-17,
+      "samples": 6,
+      "signal": "dx_p_dt",
+      "threshold": 1e-08
+    },
+    {
+      "max_abs": 6.540774866170551e-15,
+      "rmse": 2.6702665640425557e-15,
+      "samples": 6,
+      "signal": "q_reversible_cell_W",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 3.775018492246929e-14,
+      "rmse": 1.5414430728036957e-14,
+      "samples": 6,
+      "signal": "min_margin",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 12,
+      "signal": "action",
+      "threshold": 0.0
+    }
+  ],
+  "name_cn": "放电能力与供电不足",
+  "name_en": "Discharge capability and supply shortfall",
+  "samples": 12,
+  "status": "pass"
+}

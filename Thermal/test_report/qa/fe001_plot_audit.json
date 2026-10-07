@@ -1,0 +1,50 @@
+{
+  "checked_utc": "2026-10-06T03:14:20.306384+00:00",
+  "cases": {
+    "cold0": {
+      "samples": 49,
+      "worst_time_s": 12960.0,
+      "worst_time_last_orbit_min": 32.56040499999999,
+      "fe_C": -0.733347,
+      "module_C": -9.909625846579615,
+      "difference_K": -9.176278846579615,
+      "old_plot_max_error_vs_test_K": 0.4657630671822659,
+      "new_plot_max_error_vs_test_K": 0.0,
+      "between_sample_subtraction_max_error_K": 1.4210854715202004e-14,
+      "original_fe_source": "iss_fem\\out\\cold0\\series.csv",
+      "original_fe_source_sha256": "aae8db2ff90b5e0f617de06d66eb6008be0ea3cc49103e39d7f1fa23b078e05e"
+    },
+    "nom0": {
+      "samples": 49,
+      "worst_time_s": 12960.0,
+      "worst_time_last_orbit_min": 32.56040499999999,
+      "fe_C": 5.04254,
+      "module_C": -7.042800660563159,
+      "difference_K": -12.085340660563158,
+      "old_plot_max_error_vs_test_K": 0.48319062252204503,
+      "new_plot_max_error_vs_test_K": 0.0,
+      "between_sample_subtraction_max_error_K": 1.4210854715202004e-14,
+      "original_fe_source": "iss_fem\\out\\nom0\\series.csv",
+      "original_fe_source_sha256": "e89b01fd733cef830045641a3d002a3c3c407e6c9bc2b67c1f4086c4c96a1c9a"
+    },
+    "hot75": {
+      "samples": 47,
+      "worst_time_s": 12720.0,
+      "worst_time_last_orbit_min": 28.560404999999992,
+      "fe_C": 53.996,
+      "module_C": 52.53394003535573,
+      "difference_K": -1.4620599646442756,
+      "old_plot_max_error_vs_test_K": 0.0,
+      "new_plot_max_error_vs_test_K": 0.0,
+      "between_sample_subtraction_max_error_K": 7.105427357601002e-15,
+      "original_fe_source": "iss_fem\\out\\hot75\\series.csv",
+      "original_fe_source_sha256": "d87cef3acd5605fa2b19c7641241fb9df01ed097e5562fe7a5ac13cc14c19788"
+    }
+  },
+  "plot_data_sha256": "70fe2d6f25fbb4d53a80a84e840547ded1c166f02b64eb74b4fa2740cb88d816",
+  "method": "Both temperature curves and residual use the same acceptance samples; no 10 s export re-interpolation.",
+  "figures": {
+    "cn": "462520677d297fca5a09be0a617632689ea0b3f14f8fc13a0043fcc9098ac58e",
+    "en": "7307cc483e683024214de3ed794c14193fddd6031db78b36eb9d19fb6834ef07"
+  }
+}

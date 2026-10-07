@@ -1,0 +1,122 @@
+{
+ "case_id": "FE-002",
+ "description": "Common radiator node R of the thermal design (T3 line 6 with T4 and T5) against the ISS finite element panel mean temperature of the EATCS radiators, loops A and B, third orbit of the three FE cases. Values below are the inputs of the FE-002 entry of Thermal/test_report/build_test_report_cn.py; the test checks them against the FE model parameter table iss_fem/model/iss_spec.py, the FE results and the FE report.",
+ "fe": {
+  "out_dir": "iss_fem/out",
+  "spec_file": "iss_fem/model/iss_spec.py",
+  "report_file": "iss_fem/docs/REPORT.md",
+  "series_file": "series.csv",
+  "items_file": "items.csv",
+  "summary_file": "summary.json",
+  "time_column": "t_s",
+  "output_interval_s": 120.0,
+  "end_time_s": 16560.0,
+  "heat_input_columns": {"A": "Qrad_A", "B": "Qrad_B"},
+  "oru_columns": {
+   "A": ["A_S1-1_Tmean_C", "A_S1-2_Tmean_C", "A_S1-3_Tmean_C"],
+   "B": ["B_P1-1_Tmean_C", "B_P1-2_Tmean_C", "B_P1-3_Tmean_C"]
+  },
+  "oru_items": {"A": ["HRS_S1-1", "HRS_S1-2", "HRS_S1-3"], "B": ["HRS_P1-1", "HRS_P1-2", "HRS_P1-3"]},
+  "panel_columns": {"min": "hrs_Tmin_C", "mean": "hrs_Tmean_C", "max": "hrs_Tmax_C"},
+  "heat_input_definition": "Qrad_L = feff_L mdot_L cp_nh3 (Tret_L - Tout_L), the enthalpy the NH3 of loop L gives up in its three radiator ORUs (iss_fem/model/iss_layout.py _loops); it feeds the 24 panels and the 24 NH3 nodes of the loop",
+  "source": "ISS FE model, COMSOL 6.3, report iss_fem/docs/REPORT.md sections 3.7 and 3.8 (BDF with manual 120 s steps from orbit noon to 16560 s, output every 120 s, event rows at the shadow boundaries) and chapter 5 (statistics over the last orbital period, the third orbit)"
+ },
+ "cases": {
+  "cold0": {"label_cn": "设计冷工况", "beta_deg": 0.0, "solar_constant_W_m2": 1321.0, "albedo": 0.20, "olr_W_m2": 206.0,
+            "z93_absorptivity": 0.15, "z93_emissivity": 0.91, "pointing_law": "zero"},
+  "nom0": {"label_cn": "平均环境工况", "beta_deg": 0.0, "solar_constant_W_m2": 1371.0, "albedo": 0.31, "olr_W_m2": 241.0,
+           "z93_absorptivity": 0.20, "z93_emissivity": 0.91, "pointing_law": "zero"},
+  "hot75": {"label_cn": "设计热工况", "beta_deg": 75.0, "solar_constant_W_m2": 1423.0, "albedo": 0.40, "olr_W_m2": 286.0,
+            "z93_absorptivity": 0.24, "z93_emissivity": 0.90, "pointing_law": "track"}
+ },
+ "pointing": {
+  "zero": "sunlit: TRRJ zero pose, panel normal along the orbit normal, the Sun lies in the panel plane at every orbit angle when beta is 0 (edge to the Sun); shadow: front face to nadir",
+  "track": "sunlit: roll about the station X axis (velocity, +XVV attitude) so that the Sun lies in the panel plane, normal = v x s / |v x s|; shadow: front face to nadir",
+  "source": "FE report table 6 and section 3.5 (ATCS overview p16: edge to the Sun in daylight, face to Earth in the shadow); body +Z is the front normal, body -Z the back normal"
+ },
+ "orbit": {
+  "earth_radius_m": 6378137.0,
+  "altitude_m": 400000.0,
+  "source": "FE orbit functions of summary.json (radius 6778137 m = 6378137 m + 400 km, inclination 0.90128803 rad, period 5553.6243 s, time from orbit noon), Sun direction sun_ecs with parallel rays and the cylindrical Earth shadow of radius 6378137 m (iss_spec ORBIT R_earth_m)"
+ },
+ "radiator": {
+  "instance_id": "Radiator01",
+  "asset_id": "fe002_iss_eatcs_radiator_loop",
+  "asset_version": "iss_fem-2026-09-30",
+  "orus_per_loop": 3,
+  "panels_per_oru": 8,
+  "panel_width_m": 3.4,
+  "wing_root_x_m": -1.26,
+  "wing_tip_x_m": -23.25,
+  "panel_gap_m": 0.05,
+  "panel_areal_density_kg_m2": 8.0,
+  "panel_cp_J_kgK": 900.0,
+  "nh3_capacity_per_panel_J_K": 1000.0,
+  "nh3_cp_J_kgK": 4610.0,
+  "case_area_one_side_m2": 220.7,
+  "case_capacity_MJ_K": 1.61,
+  "front": {"surface_id": "Radiator01_front", "normal_body": [0.0, 0.0, 1.0]},
+  "back": {"surface_id": "Radiator01_back", "normal_body": [0.0, 0.0, -1.0]},
+  "temperature_range_K": [150.0, 330.0],
+  "source": "FE-002 inputs from the FE parameter table iss_spec.py: HRS geometry (3 ORUs per loop, 8 panels per ORU, width 3.4 m, wing from X -1.26 m to -23.25 m with 0.05 m gaps), MATERIALS hrs_pan (rho 3200 kg/m3, cp 900 J/kgK, t 2.5 mm, areal mass 8 kg/m2), PARAMS C_f (NH3 node 1 kJ/K per radiator panel, 22 tubes x 2.7 m of liquid NH3 plus tube wall) and cp_nh3 (4.61 kJ/kgK); the NH3 portion is entered in T5 as the liquid NH3 mass whose m cp equals 24 x C_f. Optics per case from OPTICS z93 and OPTICS_BY_CASE. The FE uses constant properties; the declared range covers the radiator temperatures of all runs of this case."
+ },
+ "injection": {
+  "node": "D",
+  "port": "Q_D_W",
+  "controller_mass_kg": 0.05,
+  "pdu_mass_kg": 0.05,
+  "cp_J_kgK": 1000.0,
+  "R_DR_K_W": 1.0e-4,
+  "temperature_range_K": [150.0, 340.0],
+  "source": "FE-002 test configuration recorded per thermal design 9.4: the precondition of the case replaces q_SR + q_CR + q_BR + q_DR by the FE radiator heat input. The FE input enters through the D node: Q_D_W equals the FE input, C_D = 100 J/K (0.006 percent of C_R) and R_DR = 1e-4 K/W (equivalent total), so q_DR follows Q_D with a time constant of 0.01 s and T_D stays 1.4 K to 2.6 K above T_R. Controller01 and PDU01 here are this injection device, not ISS equipment."
+ },
+ "auxiliary_nodes": {
+  "note": "S, J, C and B are not compared. Their explicit values only complete the six-node model; P_pv_W, P_load_W and Q_B_W are zero and SR, JC, CR and BR take 1e12 K/W, a very large resistance that represents no conduction, so they carry no heat to R.",
+  "temperature_range_K": [100.0, 450.0],
+  "initial_temperature_K": 262.0,
+  "solar_array": {"instance_id": "SolarArray01", "mass_kg": 100.0, "cp_J_kgK": 1000.0, "area_m2": 1.0,
+                  "absorptivity": 0.2, "emissivity": 0.9},
+  "components": [
+   {"instance_id": "Compute01", "node_id": "J", "mass_kg": 1.0, "cp_J_kgK": 1000.0, "ports": ["P_load_W"]},
+   {"instance_id": "ColdPlate01", "node_id": "C", "mass_kg": 1.0, "cp_J_kgK": 1000.0, "ports": []},
+   {"instance_id": "Battery01", "node_id": "B", "mass_kg": 1.0, "cp_J_kgK": 1000.0, "ports": ["Q_B_W"]}
+  ],
+  "no_conduction_resistance_K_W": 1.0e12,
+  "source": "FE-002 auxiliary nodes, not compared; explicit test values"
+ },
+ "solver": {
+  "method": "Radau",
+  "rtol": 1.0e-8,
+  "atol_T_K": 1.0e-6,
+  "max_step_s": 60.0,
+  "output_step_s": 30.0,
+  "environment_step_s": 10.0,
+  "event_time_tol_s": 1.0e-3,
+  "earth_flux_resolution": [240, 360],
+  "split_at_fe_samples": true,
+  "dense_statistics_step_s": 5.0,
+  "source": "thermal design table 8: Radau is the implicit method for disparate thermal time scales (injection node 0.01 s against the radiator 13 min to 35 min); relative tolerance, temperature absolute tolerance and maximum step are scene settings; integration is split at the eclipse boundaries and at the FE heat-input samples (declared interpolation on continuous intervals); outputs are sampled on the accepted solution every 30 s and the statistics use a 5 s grid on the accepted solution"
+ },
+ "independent_reference": {
+  "quadrature": [96, 360],
+  "table_step_s": 10.0,
+  "rtol": 1.0e-11,
+  "atol_K": 1.0e-9,
+  "max_step_s": 30.0,
+  "source": "independent T4 with an Earth-centred quadrature and independent integration of T3 line 6 (fe002_support.py)"
+ },
+ "epoch_utc": "2019-06-01T00:00:00+00:00",
+ "criteria": {
+  "acceptance_mean_K": 5.0,
+  "heat_input_relative": 1.0e-3,
+  "relative_tol_exact": 1.0e-12,
+  "derivative_relative": 1.0e-10,
+  "environment_relative": 1.0e-4,
+  "independent_K": 0.02,
+  "leak_W": 1.0e-6,
+  "eclipse_time_tol_s": 1.0e-3,
+  "attitude_tol": 1.0e-9,
+  "loop_difference_K": 0.05,
+  "source": "acceptance 5 K from the FE-002 entry; 0.1 percent heat input from the case instruction; the other tolerances are rounding or quadrature bounds of the independent references stated with each check; loop_difference_K bounds the linearization error of the hand estimate dT = dQ / (4 eps sigma 2A T^3), second order in dT/T: 1.5 dT^2 / T = 0.03 K for dT = 2.2 K at T = 220 K"
+ }
+}

@@ -1,0 +1,3947 @@
+{
+ "case_id": "NI-001",
+ "description": "Every run of NI-001 on the FE-001 mean environment case: solver settings, step statistics, located eclipse boundaries, segments, last-orbit solar array temperature and the error against the independent fourth order Runge-Kutta reference.",
+ "last_orbit_s": [
+  11006.3757,
+  16560.0
+ ],
+ "closed_form_eclipse_s": [
+  1693.5787903905498,
+  3860.0455096094506,
+  7247.20309039055,
+  9413.669809609451,
+  12800.82739039055,
+  14967.29410960945
+ ],
+ "load": {
+  "instance_id": "Compute01",
+  "port": "P_load_W",
+  "power_W": 100.0,
+  "start_s": 11805.25,
+  "stop_s": 15763.75,
+  "start_label": "load start Compute01",
+  "stop_label": "load stop Compute01",
+  "source": "NI-001 input: one computing load start and one stop inside the last orbit, both in sunlight and away from the eclipse boundaries and from the output grid; in the thermal-only FE-001 case the load is the prescribed P_load_W of Compute01 and its start and stop are declared input discontinuities of the coupled run"
+ },
+ "reference": {
+  "rk4_step_s": 1.0,
+  "halving_max_K": 3.0856881494401023e-09,
+  "last_orbit_T_S_K": {
+   "min": 197.3755477312949,
+   "max": 340.31735782791884,
+   "mean": 282.87230702870363
+  }
+ },
+ "runs": [
+  {
+   "run_id": "NI-001-matrix-RK45-rtol1e-06-atol1e-06-h60s-out10s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "RK45",
+    "rtol": 1e-06,
+    "atol_T_K": 1e-06,
+    "max_step_s": 60.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 2.341717700008303,
+   "statistics": {
+    "accepted_steps": 308,
+    "rejected_steps": 0,
+    "function_evaluations": 3523,
+    "function_evaluations_by_context": {
+     "integration": 1866,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 1657
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37555031599214,
+    "max": 340.3173510695608,
+    "mean": 282.87233348733605
+   },
+   "reference_error_last_orbit_K": 0.0005543063315940344,
+   "reference_error_outputs_K": 0.0005543063315940344
+  },
+  {
+   "run_id": "NI-001-matrix-RK45-rtol1e-06-atol1e-06-h60s-out60s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "RK45",
+    "rtol": 1e-06,
+    "atol_T_K": 1e-06,
+    "max_step_s": 60.0,
+    "output_step_s": 60.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 1.3418936999951256,
+   "statistics": {
+    "accepted_steps": 308,
+    "rejected_steps": 0,
+    "function_evaluations": 2143,
+    "function_evaluations_by_context": {
+     "integration": 1866,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 277,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 277
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37555031599214,
+    "max": 340.3173510695608,
+    "mean": 282.87233348733605
+   },
+   "reference_error_last_orbit_K": 0.0005543063315940344,
+   "reference_error_outputs_K": 0.0003370315962456516
+  },
+  {
+   "run_id": "NI-001-matrix-RK45-rtol1e-06-atol1e-06-h10s-out10s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "RK45",
+    "rtol": 1e-06,
+    "atol_T_K": 1e-06,
+    "max_step_s": 10.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 7.710056600000826,
+   "statistics": {
+    "accepted_steps": 1678,
+    "rejected_steps": 0,
+    "function_evaluations": 11743,
+    "function_evaluations_by_context": {
+     "integration": 10086,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 1657
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554772068125,
+    "max": 340.3173578292662,
+    "mean": 282.87230701597895
+   },
+   "reference_error_last_orbit_K": 3.5866230518877273e-07,
+   "reference_error_outputs_K": 3.5091505878881435e-07
+  },
+  {
+   "run_id": "NI-001-matrix-RK45-rtol1e-06-atol1e-06-h10s-out60s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "RK45",
+    "rtol": 1e-06,
+    "atol_T_K": 1e-06,
+    "max_step_s": 10.0,
+    "output_step_s": 60.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 6.507267199995113,
+   "statistics": {
+    "accepted_steps": 1678,
+    "rejected_steps": 0,
+    "function_evaluations": 10363,
+    "function_evaluations_by_context": {
+     "integration": 10086,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 277,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 277
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554772068125,
+    "max": 340.3173578292662,
+    "mean": 282.87230701597895
+   },
+   "reference_error_last_orbit_K": 3.5866230518877273e-07,
+   "reference_error_outputs_K": 3.1789647891855566e-07
+  },
+  {
+   "run_id": "NI-001-matrix-RK45-rtol1e-06-atol1e-08-h60s-out10s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "RK45",
+    "rtol": 1e-06,
+    "atol_T_K": 1e-08,
+    "max_step_s": 60.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 2.372239799995441,
+   "statistics": {
+    "accepted_steps": 308,
+    "rejected_steps": 0,
+    "function_evaluations": 3523,
+    "function_evaluations_by_context": {
+     "integration": 1866,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 1657
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.3755503159907,
+    "max": 340.31735105808485,
+    "mean": 282.8723334247241
+   },
+   "reference_error_last_orbit_K": 0.0005526837510956284,
+   "reference_error_outputs_K": 0.0005526837510956284
+  },
+  {
+   "run_id": "NI-001-matrix-RK45-rtol1e-06-atol1e-08-h60s-out60s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "RK45",
+    "rtol": 1e-06,
+    "atol_T_K": 1e-08,
+    "max_step_s": 60.0,
+    "output_step_s": 60.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 1.299816099999589,
+   "statistics": {
+    "accepted_steps": 308,
+    "rejected_steps": 0,
+    "function_evaluations": 2143,
+    "function_evaluations_by_context": {
+     "integration": 1866,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 277,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 277
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.3755503159907,
+    "max": 340.31735105808485,
+    "mean": 282.8723334247241
+   },
+   "reference_error_last_orbit_K": 0.0005526837510956284,
+   "reference_error_outputs_K": 0.0003367110978160781
+  },
+  {
+   "run_id": "NI-001-matrix-RK45-rtol1e-06-atol1e-08-h10s-out10s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "RK45",
+    "rtol": 1e-06,
+    "atol_T_K": 1e-08,
+    "max_step_s": 10.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 7.24298350000754,
+   "statistics": {
+    "accepted_steps": 1678,
+    "rejected_steps": 0,
+    "function_evaluations": 11743,
+    "function_evaluations_by_context": {
+     "integration": 10086,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 1657
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554772067494,
+    "max": 340.3173578292686,
+    "mean": 282.87230701586793
+   },
+   "reference_error_last_orbit_K": 3.6252305335437995e-07,
+   "reference_error_outputs_K": 3.5462255709717283e-07
+  },
+  {
+   "run_id": "NI-001-matrix-RK45-rtol1e-06-atol1e-08-h10s-out60s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "RK45",
+    "rtol": 1e-06,
+    "atol_T_K": 1e-08,
+    "max_step_s": 10.0,
+    "output_step_s": 60.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 6.704019700002391,
+   "statistics": {
+    "accepted_steps": 1678,
+    "rejected_steps": 0,
+    "function_evaluations": 10363,
+    "function_evaluations_by_context": {
+     "integration": 10086,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 277,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 277
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554772067494,
+    "max": 340.3173578292686,
+    "mean": 282.87230701586793
+   },
+   "reference_error_last_orbit_K": 3.6252305335437995e-07,
+   "reference_error_outputs_K": 3.212988985978882e-07
+  },
+  {
+   "run_id": "NI-001-matrix-RK45-rtol1e-08-atol1e-06-h60s-out10s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "RK45",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-06,
+    "max_step_s": 60.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 2.547670100000687,
+   "statistics": {
+    "accepted_steps": 369,
+    "rejected_steps": 15,
+    "function_evaluations": 3979,
+    "function_evaluations_by_context": {
+     "integration": 2322,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 1657
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554972444096,
+    "max": 340.3173549454103,
+    "mean": 282.87230715653135
+   },
+   "reference_error_last_orbit_K": 6.719573377722554e-05,
+   "reference_error_outputs_K": 6.743198264302919e-05
+  },
+  {
+   "run_id": "NI-001-matrix-RK45-rtol1e-08-atol1e-06-h60s-out60s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "RK45",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-06,
+    "max_step_s": 60.0,
+    "output_step_s": 60.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 1.6718910000054166,
+   "statistics": {
+    "accepted_steps": 369,
+    "rejected_steps": 15,
+    "function_evaluations": 2599,
+    "function_evaluations_by_context": {
+     "integration": 2322,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 277,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 277
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554972444096,
+    "max": 340.3173549454103,
+    "mean": 282.87230715653135
+   },
+   "reference_error_last_orbit_K": 6.719573377722554e-05,
+   "reference_error_outputs_K": 5.51601002030111e-05
+  },
+  {
+   "run_id": "NI-001-matrix-RK45-rtol1e-08-atol1e-06-h10s-out10s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "RK45",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-06,
+    "max_step_s": 10.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 7.614127599998028,
+   "statistics": {
+    "accepted_steps": 1683,
+    "rejected_steps": 0,
+    "function_evaluations": 11773,
+    "function_evaluations_by_context": {
+     "integration": 10116,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 1657
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554773481807,
+    "max": 340.3173578290032,
+    "mean": 282.872307026349
+   },
+   "reference_error_last_orbit_K": 3.0489673008560203e-07,
+   "reference_error_outputs_K": 2.3313936026170268e-07
+  },
+  {
+   "run_id": "NI-001-matrix-RK45-rtol1e-08-atol1e-06-h10s-out60s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "RK45",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-06,
+    "max_step_s": 10.0,
+    "output_step_s": 60.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 6.884761799999978,
+   "statistics": {
+    "accepted_steps": 1683,
+    "rejected_steps": 0,
+    "function_evaluations": 10393,
+    "function_evaluations_by_context": {
+     "integration": 10116,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 277,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 277
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554773481807,
+    "max": 340.3173578290032,
+    "mean": 282.872307026349
+   },
+   "reference_error_last_orbit_K": 3.0489673008560203e-07,
+   "reference_error_outputs_K": 1.521523813607928e-07
+  },
+  {
+   "run_id": "NI-001-matrix-RK45-rtol1e-08-atol1e-08-h60s-out10s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "RK45",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-08,
+    "max_step_s": 60.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 2.59925210000074,
+   "statistics": {
+    "accepted_steps": 378,
+    "rejected_steps": 18,
+    "function_evaluations": 4051,
+    "function_evaluations_by_context": {
+     "integration": 2394,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 1657
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554727226583,
+    "max": 340.31735572272646,
+    "mean": 282.87230672901916
+   },
+   "reference_error_last_orbit_K": 5.976753163849935e-05,
+   "reference_error_outputs_K": 5.710222609422999e-05
+  },
+  {
+   "run_id": "NI-001-matrix-RK45-rtol1e-08-atol1e-08-h60s-out60s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "RK45",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-08,
+    "max_step_s": 60.0,
+    "output_step_s": 60.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 1.672391800006153,
+   "statistics": {
+    "accepted_steps": 378,
+    "rejected_steps": 18,
+    "function_evaluations": 2671,
+    "function_evaluations_by_context": {
+     "integration": 2394,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 277,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 277
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554727226583,
+    "max": 340.31735572272646,
+    "mean": 282.87230672901916
+   },
+   "reference_error_last_orbit_K": 5.976753163849935e-05,
+   "reference_error_outputs_K": 2.2737747201517777e-05
+  },
+  {
+   "run_id": "NI-001-matrix-RK45-rtol1e-08-atol1e-08-h10s-out10s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "RK45",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-08,
+    "max_step_s": 10.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 7.561740400007693,
+   "statistics": {
+    "accepted_steps": 1683,
+    "rejected_steps": 0,
+    "function_evaluations": 11773,
+    "function_evaluations_by_context": {
+     "integration": 10116,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 1657
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554773590412,
+    "max": 340.3173578283741,
+    "mean": 282.8723070286158
+   },
+   "reference_error_last_orbit_K": 2.145239363926521e-07,
+   "reference_error_outputs_K": 1.99075316231756e-07
+  },
+  {
+   "run_id": "NI-001-matrix-RK45-rtol1e-08-atol1e-08-h10s-out60s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "RK45",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-08,
+    "max_step_s": 10.0,
+    "output_step_s": 60.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 6.372986799993669,
+   "statistics": {
+    "accepted_steps": 1683,
+    "rejected_steps": 0,
+    "function_evaluations": 10393,
+    "function_evaluations_by_context": {
+     "integration": 10116,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 277,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 277
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554773590412,
+    "max": 340.3173578283741,
+    "mean": 282.8723070286158
+   },
+   "reference_error_last_orbit_K": 2.145239363926521e-07,
+   "reference_error_outputs_K": 1.8681822666621883e-07
+  },
+  {
+   "run_id": "NI-001-matrix-Radau-rtol1e-06-atol1e-06-h60s-out10s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "Radau",
+    "rtol": 1e-06,
+    "atol_T_K": 1e-06,
+    "max_step_s": 60.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 2.4863469999982044,
+   "statistics": {
+    "accepted_steps": 349,
+    "rejected_steps": 5,
+    "function_evaluations": 4397,
+    "function_evaluations_by_context": {
+     "integration": 2740,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 1657
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554846526106,
+    "max": 340.31735765635443,
+    "mean": 282.8723019023006
+   },
+   "reference_error_last_orbit_K": 0.0003743241878169101,
+   "reference_error_outputs_K": 0.00035885967395188345
+  },
+  {
+   "run_id": "NI-001-matrix-Radau-rtol1e-06-atol1e-06-h60s-out60s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "Radau",
+    "rtol": 1e-06,
+    "atol_T_K": 1e-06,
+    "max_step_s": 60.0,
+    "output_step_s": 60.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 1.7319865000026766,
+   "statistics": {
+    "accepted_steps": 349,
+    "rejected_steps": 5,
+    "function_evaluations": 3017,
+    "function_evaluations_by_context": {
+     "integration": 2740,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 277,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 277
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554846526106,
+    "max": 340.31735765635443,
+    "mean": 282.8723019023006
+   },
+   "reference_error_last_orbit_K": 0.0003743241878169101,
+   "reference_error_outputs_K": 0.00018780392400685741
+  },
+  {
+   "run_id": "NI-001-matrix-Radau-rtol1e-06-atol1e-06-h10s-out10s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "Radau",
+    "rtol": 1e-06,
+    "atol_T_K": 1e-06,
+    "max_step_s": 10.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 7.439757300002384,
+   "statistics": {
+    "accepted_steps": 1680,
+    "rejected_steps": 0,
+    "function_evaluations": 13489,
+    "function_evaluations_by_context": {
+     "integration": 11832,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 1657
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.375547731073,
+    "max": 340.3173578274337,
+    "mean": 282.87230701412784
+   },
+   "reference_error_last_orbit_K": 8.875752712356189e-06,
+   "reference_error_outputs_K": 7.416208404720237e-06
+  },
+  {
+   "run_id": "NI-001-matrix-Radau-rtol1e-06-atol1e-06-h10s-out60s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "Radau",
+    "rtol": 1e-06,
+    "atol_T_K": 1e-06,
+    "max_step_s": 10.0,
+    "output_step_s": 60.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 6.52659519998997,
+   "statistics": {
+    "accepted_steps": 1680,
+    "rejected_steps": 0,
+    "function_evaluations": 12109,
+    "function_evaluations_by_context": {
+     "integration": 11832,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 277,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 277
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.375547731073,
+    "max": 340.3173578274337,
+    "mean": 282.87230701412784
+   },
+   "reference_error_last_orbit_K": 8.875752712356189e-06,
+   "reference_error_outputs_K": 6.234747843336663e-06
+  },
+  {
+   "run_id": "NI-001-matrix-Radau-rtol1e-06-atol1e-08-h60s-out10s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "Radau",
+    "rtol": 1e-06,
+    "atol_T_K": 1e-08,
+    "max_step_s": 60.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 2.542699300000095,
+   "statistics": {
+    "accepted_steps": 350,
+    "rejected_steps": 5,
+    "function_evaluations": 4404,
+    "function_evaluations_by_context": {
+     "integration": 2747,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 1657
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554882385072,
+    "max": 340.3173576167804,
+    "mean": 282.8723021703202
+   },
+   "reference_error_last_orbit_K": 0.00037448257978667243,
+   "reference_error_outputs_K": 0.0003591378176679427
+  },
+  {
+   "run_id": "NI-001-matrix-Radau-rtol1e-06-atol1e-08-h60s-out60s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "Radau",
+    "rtol": 1e-06,
+    "atol_T_K": 1e-08,
+    "max_step_s": 60.0,
+    "output_step_s": 60.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 1.714794300001813,
+   "statistics": {
+    "accepted_steps": 350,
+    "rejected_steps": 5,
+    "function_evaluations": 3024,
+    "function_evaluations_by_context": {
+     "integration": 2747,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 277,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 277
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554882385072,
+    "max": 340.3173576167804,
+    "mean": 282.8723021703202
+   },
+   "reference_error_last_orbit_K": 0.00037448257978667243,
+   "reference_error_outputs_K": 0.00018084216407032727
+  },
+  {
+   "run_id": "NI-001-matrix-Radau-rtol1e-06-atol1e-08-h10s-out10s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "Radau",
+    "rtol": 1e-06,
+    "atol_T_K": 1e-08,
+    "max_step_s": 10.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 7.436067400005413,
+   "statistics": {
+    "accepted_steps": 1680,
+    "rejected_steps": 0,
+    "function_evaluations": 13489,
+    "function_evaluations_by_context": {
+     "integration": 11832,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 1657
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554773110347,
+    "max": 340.3173578274205,
+    "mean": 282.87230701402785
+   },
+   "reference_error_last_orbit_K": 8.881464168553066e-06,
+   "reference_error_outputs_K": 7.398432273930666e-06
+  },
+  {
+   "run_id": "NI-001-matrix-Radau-rtol1e-06-atol1e-08-h10s-out60s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "Radau",
+    "rtol": 1e-06,
+    "atol_T_K": 1e-08,
+    "max_step_s": 10.0,
+    "output_step_s": 60.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 6.536669400011306,
+   "statistics": {
+    "accepted_steps": 1680,
+    "rejected_steps": 0,
+    "function_evaluations": 12109,
+    "function_evaluations_by_context": {
+     "integration": 11832,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 277,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 277
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554773110347,
+    "max": 340.3173578274205,
+    "mean": 282.87230701402785
+   },
+   "reference_error_last_orbit_K": 8.881464168553066e-06,
+   "reference_error_outputs_K": 6.241190874334279e-06
+  },
+  {
+   "run_id": "NI-001-matrix-Radau-rtol1e-08-atol1e-06-h60s-out10s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "Radau",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-06,
+    "max_step_s": 60.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 4.213260200005607,
+   "statistics": {
+    "accepted_steps": 742,
+    "rejected_steps": 30,
+    "function_evaluations": 7601,
+    "function_evaluations_by_context": {
+     "integration": 5944,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 1657
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554773016927,
+    "max": 340.31735801618936,
+    "mean": 282.87230673220483
+   },
+   "reference_error_last_orbit_K": 1.8861738851683185e-05,
+   "reference_error_outputs_K": 1.8805870013238746e-05
+  },
+  {
+   "run_id": "NI-001-matrix-Radau-rtol1e-08-atol1e-06-h60s-out60s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "Radau",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-06,
+    "max_step_s": 60.0,
+    "output_step_s": 60.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 2.960160200003884,
+   "statistics": {
+    "accepted_steps": 742,
+    "rejected_steps": 30,
+    "function_evaluations": 6221,
+    "function_evaluations_by_context": {
+     "integration": 5944,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 277,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 277
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554773016927,
+    "max": 340.31735801618936,
+    "mean": 282.87230673220483
+   },
+   "reference_error_last_orbit_K": 1.8861738851683185e-05,
+   "reference_error_outputs_K": 1.8559444782795254e-05
+  },
+  {
+   "run_id": "NI-001-matrix-Radau-rtol1e-08-atol1e-06-h10s-out10s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "Radau",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-06,
+    "max_step_s": 10.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 7.690348000003723,
+   "statistics": {
+    "accepted_steps": 1704,
+    "rejected_steps": 0,
+    "function_evaluations": 13747,
+    "function_evaluations_by_context": {
+     "integration": 12090,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 1657
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554771967763,
+    "max": 340.31735782897624,
+    "mean": 282.8723070163068
+   },
+   "reference_error_last_orbit_K": 1.1414802543185942e-06,
+   "reference_error_outputs_K": 1.0084845030178258e-06
+  },
+  {
+   "run_id": "NI-001-matrix-Radau-rtol1e-08-atol1e-06-h10s-out60s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "Radau",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-06,
+    "max_step_s": 10.0,
+    "output_step_s": 60.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 6.768792000002577,
+   "statistics": {
+    "accepted_steps": 1704,
+    "rejected_steps": 0,
+    "function_evaluations": 12367,
+    "function_evaluations_by_context": {
+     "integration": 12090,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 277,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 277
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554771967763,
+    "max": 340.31735782897624,
+    "mean": 282.8723070163068
+   },
+   "reference_error_last_orbit_K": 1.1414802543185942e-06,
+   "reference_error_outputs_K": 7.158262746997934e-07
+  },
+  {
+   "run_id": "NI-001-matrix-Radau-rtol1e-08-atol1e-08-h60s-out10s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "Radau",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-08,
+    "max_step_s": 60.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 4.247107399991364,
+   "statistics": {
+    "accepted_steps": 809,
+    "rejected_steps": 42,
+    "function_evaluations": 8121,
+    "function_evaluations_by_context": {
+     "integration": 6464,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 1657
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.3755479340617,
+    "max": 340.3173571045496,
+    "mean": 282.8723071080302
+   },
+   "reference_error_last_orbit_K": 1.1583700711526035e-05,
+   "reference_error_outputs_K": 1.1574461524332946e-05
+  },
+  {
+   "run_id": "NI-001-matrix-Radau-rtol1e-08-atol1e-08-h60s-out60s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "Radau",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-08,
+    "max_step_s": 60.0,
+    "output_step_s": 60.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 3.6703992999973707,
+   "statistics": {
+    "accepted_steps": 809,
+    "rejected_steps": 42,
+    "function_evaluations": 6741,
+    "function_evaluations_by_context": {
+     "integration": 6464,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 277,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 277
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.3755479340617,
+    "max": 340.3173571045496,
+    "mean": 282.8723071080302
+   },
+   "reference_error_last_orbit_K": 1.1583700711526035e-05,
+   "reference_error_outputs_K": 1.127639700371219e-05
+  },
+  {
+   "run_id": "NI-001-matrix-Radau-rtol1e-08-atol1e-08-h10s-out10s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "Radau",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-08,
+    "max_step_s": 10.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 7.7298549999977695,
+   "statistics": {
+    "accepted_steps": 1713,
+    "rejected_steps": 0,
+    "function_evaluations": 13810,
+    "function_evaluations_by_context": {
+     "integration": 12153,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 1657
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554772763855,
+    "max": 340.31735782987005,
+    "mean": 282.87230702636697
+   },
+   "reference_error_last_orbit_K": 8.485456532980606e-07,
+   "reference_error_outputs_K": 9.135513892033487e-07
+  },
+  {
+   "run_id": "NI-001-matrix-Radau-rtol1e-08-atol1e-08-h10s-out60s",
+   "tag": "matrix",
+   "earth_flux": "table",
+   "settings": {
+    "method": "Radau",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-08,
+    "max_step_s": 10.0,
+    "output_step_s": 60.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 6.611593900001026,
+   "statistics": {
+    "accepted_steps": 1713,
+    "rejected_steps": 0,
+    "function_evaluations": 12430,
+    "function_evaluations_by_context": {
+     "integration": 12153,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 277,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 277
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554772763855,
+    "max": 340.31735782987005,
+    "mean": 282.87230702636697
+   },
+   "reference_error_last_orbit_K": 8.485456532980606e-07,
+   "reference_error_outputs_K": 5.249914920568699e-07
+  },
+  {
+   "run_id": "NI-001-exact-earth-flux-RK45-rtol1e-08-atol1e-08-h60s-out60s",
+   "tag": "exact-earth-flux",
+   "earth_flux": "exact",
+   "settings": {
+    "method": "RK45",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-08,
+    "max_step_s": 60.0,
+    "output_step_s": 60.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 25.47893959999783,
+   "statistics": {
+    "accepted_steps": 378,
+    "rejected_steps": 12,
+    "function_evaluations": 2635,
+    "function_evaluations_by_context": {
+     "integration": 2358,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 277,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 277
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.3755456285273,
+    "max": 340.31735544240456,
+    "mean": 282.8723056709112
+   },
+   "reference_error_last_orbit_K": 7.037245239871481e-05,
+   "reference_error_outputs_K": null
+  },
+  {
+   "run_id": "NI-001-rejected-step-RK45-rtol1e-08-atol1e-08-h60s-out10s",
+   "tag": "rejected-step",
+   "earth_flux": "table",
+   "settings": {
+    "method": "RK45",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-08,
+    "max_step_s": 60.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": 60.0
+   },
+   "status": "completed",
+   "error": null,
+   "wall_s": 2.6082932999997865,
+   "statistics": {
+    "accepted_steps": 354,
+    "rejected_steps": 22,
+    "function_evaluations": 3922,
+    "function_evaluations_by_context": {
+     "integration": 2265,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_instances": 9,
+    "segments": 9,
+    "eclipse_boundaries": 6,
+    "output_samples": 1657
+   },
+   "eclipse_boundaries_s": [
+    1693.57879039055,
+    3860.045509609451,
+    7247.203090390552,
+    9413.669809609453,
+    12800.827390390552,
+    14967.294109609453
+   ],
+   "segments": [
+    {
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ]
+    },
+    {
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 9413.669809609453,
+     "end_s": 11805.249999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 11805.250000000002,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "declared:load start Compute01"
+     ]
+    },
+    {
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ]
+    },
+    {
+     "start_s": 14967.294109609453,
+     "end_s": 15763.749999999998,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ]
+    },
+    {
+     "start_s": 15763.750000000002,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "declared:load stop Compute01"
+     ]
+    }
+   ],
+   "last_orbit_T_S_K": {
+    "min": 197.37554876909093,
+    "max": 340.3173558221221,
+    "mean": 282.8723074294971
+   },
+   "reference_error_last_orbit_K": 2.327449948325011e-05,
+   "reference_error_outputs_K": null
+  }
+ ]
+}

@@ -1,0 +1,37 @@
+{
+  "asset_id": "sdtwin.example.radiator_panel",
+  "asset_version": "0.1.0",
+  "description": "Common radiator: aluminium facesheet with embedded heat pipes. Front is white-painted, back is a treated aluminium surface.",
+  "geometry_uri": "../geometry/radiator_panel.usda",
+  "capabilities": [
+    {
+      "domain": "thermal",
+      "model_id": "sdtwin.thermal.radiator/1",
+      "parameter_set": {
+        "materials": [
+          {"material_id": "facesheet_al6061", "density_kg_m3": 2700.0, "geometry_prim": "Panel",
+           "volume_basis": "extent_box", "solid_fraction": 1.0, "cp_J_kgK": 896.0,
+           "source": "illustrative test value: Al 6061 density and specific heat"},
+          {"material_id": "embedded_heat_pipes", "mass_kg": 0.36, "cp_J_kgK": 900.0,
+           "source": "illustrative test value: aluminium-ammonia heat-pipe sections counted once, in the radiator"}
+        ],
+        "surfaces": [
+          {"surface_id": "front", "geometry_prim": "Panel", "face": "+Z", "absorptivity": 0.20, "emissivity": 0.88,
+           "source": "illustrative test value: typical white silicone paint"},
+          {"surface_id": "back", "geometry_prim": "Panel", "face": "-Z", "absorptivity": 0.30, "emissivity": 0.80,
+           "source": "illustrative test value: typical treated aluminium back face"}
+        ],
+        "temperature_range_K": [173.15, 343.15]
+      }
+    }
+  ],
+  "ports": [
+    {"name": "T_R_K", "kind": "temperature", "unit": "K", "description": "common radiator temperature"},
+    {"name": "branch_links", "kind": "thermal_interface", "unit": "W", "description": "ends of paths SR, CR, BR and DR"}
+  ],
+  "provenance": {
+    "status": "illustrative_test_value",
+    "note": "All values are illustrative test values for a small computing satellite; no device has been selected.",
+    "references": []
+  }
+}

@@ -1,0 +1,856 @@
+{
+  "checks": [
+    {
+      "actual": 121,
+      "limit": null,
+      "name": "common_time_grid",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "python_P_pv_W_required_finite",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "python_P_load_W_required_finite",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "python_P_B_W_required_finite",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "python_V_B_V_required_finite",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "python_I_B_A_required_finite",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "python_Q_B_W_required_finite",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "python_Q_D_W_required_finite",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "python_SOC_required_finite",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "python_T_B_K_required_finite",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "simulink_P_pv_W_required_finite",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "simulink_P_load_W_required_finite",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "simulink_P_B_W_required_finite",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "simulink_V_B_V_required_finite",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "simulink_I_B_A_required_finite",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "simulink_Q_B_W_required_finite",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "simulink_Q_D_W_required_finite",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "simulink_SOC_required_finite",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "simulink_T_B_K_required_finite",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "P_pv_max_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.001,
+      "name": "P_pv_max_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "P_pv_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.001,
+      "name": "P_pv_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "P_load_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 3.427658157306723e-11,
+      "limit": 0.001,
+      "name": "P_load_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "P_B_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 3.6408209780347534e-11,
+      "limit": 0.001,
+      "name": "P_B_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "V_B_V_availability",
+      "pass_": true
+    },
+    {
+      "actual": 1.1723955140041653e-13,
+      "limit": 0.0001,
+      "name": "V_B_V_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "I_B_A_availability",
+      "pass_": true
+    },
+    {
+      "actual": 1.2168044349891716e-12,
+      "limit": 0.0001,
+      "name": "I_B_A_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "Q_B_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 1.177280495312516e-12,
+      "limit": 0.001,
+      "name": "Q_B_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "Q_D_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 1.8101076193488552e-12,
+      "limit": 0.001,
+      "name": "Q_D_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "SOC_availability",
+      "pass_": true
+    },
+    {
+      "actual": 1.1102230246251565e-15,
+      "limit": 1e-06,
+      "name": "SOC_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "x_n_availability",
+      "pass_": true
+    },
+    {
+      "actual": 1.1102230246251565e-15,
+      "limit": 1e-06,
+      "name": "x_n_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "x_p_availability",
+      "pass_": true
+    },
+    {
+      "actual": 7.771561172376096e-16,
+      "limit": 1e-06,
+      "name": "x_p_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "T_B_K_availability",
+      "pass_": true
+    },
+    {
+      "actual": 9.663381206337363e-13,
+      "limit": 0.001,
+      "name": "T_B_K_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "connected_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "connected_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "latched_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "latched_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "valid_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "valid_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "event_required_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "event_required_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "can_supply_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "can_supply_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "reason_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "reason_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "i_A_availability",
+      "pass_": true
+    },
+    {
+      "actual": 1.978417429882029e-13,
+      "limit": 0.0001,
+      "name": "i_A_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "v_cell_V_availability",
+      "pass_": true
+    },
+    {
+      "actual": 1.1546319456101628e-14,
+      "limit": 0.0001,
+      "name": "v_cell_V_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "dx_n_dt_availability",
+      "pass_": true
+    },
+    {
+      "actual": 1.7293024651143796e-17,
+      "limit": 1e-08,
+      "name": "dx_n_dt_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "dx_p_dt_availability",
+      "pass_": true
+    },
+    {
+      "actual": 1.1099519740820352e-17,
+      "limit": 1e-08,
+      "name": "dx_p_dt_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "q_reversible_cell_W_availability",
+      "pass_": true
+    },
+    {
+      "actual": 2.645453300864631e-15,
+      "limit": 0.001,
+      "name": "q_reversible_cell_W_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "min_margin_availability",
+      "pass_": true
+    },
+    {
+      "actual": 3.164135620181696e-15,
+      "limit": 1e-06,
+      "name": "min_margin_difference",
+      "pass_": true
+    },
+    {
+      "actual": 0,
+      "limit": 0,
+      "name": "action_availability",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0.0,
+      "name": "action_difference",
+      "pass_": true
+    },
+    {
+      "actual": 8.881784197001252e-15,
+      "limit": 2e-06,
+      "name": "python_port_conservation",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0,
+      "name": "python_solar_feasibility",
+      "pass_": true
+    },
+    {
+      "actual": 0.24005639334630718,
+      "limit": -1e-08,
+      "name": "python_device_constraints",
+      "pass_": true
+    },
+    {
+      "actual": 4.784292767777805e-16,
+      "limit": 1e-10,
+      "name": "python_lithium_conservation",
+      "pass_": true
+    },
+    {
+      "actual": {
+        "max": 0.6551724137931034,
+        "min": 0.5155276169642022
+      },
+      "limit": "0 to 1, rounding allowance 1e-6",
+      "name": "python_SOC_within_usable_range",
+      "pass_": true
+    },
+    {
+      "actual": 3.126388037344441e-13,
+      "limit": 2e-06,
+      "name": "simulink_port_conservation",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 0,
+      "name": "simulink_solar_feasibility",
+      "pass_": true
+    },
+    {
+      "actual": 0.240056393346307,
+      "limit": -1e-08,
+      "name": "simulink_device_constraints",
+      "pass_": true
+    },
+    {
+      "actual": 1.5548951495277866e-15,
+      "limit": 1e-10,
+      "name": "simulink_lithium_conservation",
+      "pass_": true
+    },
+    {
+      "actual": {
+        "max": 0.655172413793103,
+        "min": 0.515527616964203
+      },
+      "limit": "0 to 1, rounding allowance 1e-6",
+      "name": "simulink_SOC_within_usable_range",
+      "pass_": true
+    },
+    {
+      "actual": {
+        "python": [],
+        "simulink": []
+      },
+      "limit": null,
+      "name": "event_sequence",
+      "pass_": true
+    },
+    {
+      "actual": 0.0,
+      "limit": 1e-05,
+      "name": "P_pv_W_energy",
+      "pass_": true
+    },
+    {
+      "actual": 1.2126596023639043e-15,
+      "limit": 1e-05,
+      "name": "P_load_W_energy",
+      "pass_": true
+    },
+    {
+      "actual": 2.9952692178388386e-15,
+      "limit": 1e-05,
+      "name": "P_B_W_energy",
+      "pass_": true
+    },
+    {
+      "actual": 2.0030901275499266e-15,
+      "limit": 1e-05,
+      "name": "Q_B_W_energy",
+      "pass_": true
+    },
+    {
+      "actual": 2.160049916710701e-15,
+      "limit": 1e-05,
+      "name": "Q_D_W_energy",
+      "pass_": true
+    },
+    {
+      "actual": 1.5543122344752192e-15,
+      "limit": 1e-07,
+      "name": "python_SOC_convergence",
+      "pass_": true
+    },
+    {
+      "actual": 1.7763568394002505e-14,
+      "limit": 1e-05,
+      "name": "python_V_B_V_convergence",
+      "pass_": true
+    },
+    {
+      "actual": 4.440892098500626e-15,
+      "limit": 1e-05,
+      "name": "python_I_B_A_convergence",
+      "pass_": true
+    },
+    {
+      "actual": 2.886579864025407e-14,
+      "limit": 0.0001,
+      "name": "python_Q_B_W_convergence",
+      "pass_": true
+    },
+    {
+      "actual": 5.684341886080801e-13,
+      "limit": 0.0001,
+      "name": "python_T_B_K_convergence",
+      "pass_": true
+    },
+    {
+      "actual": 9.992007221626409e-16,
+      "limit": 1e-07,
+      "name": "simulink_SOC_convergence",
+      "pass_": true
+    },
+    {
+      "actual": 1.0302869668521453e-13,
+      "limit": 1e-05,
+      "name": "simulink_V_B_V_convergence",
+      "pass_": true
+    },
+    {
+      "actual": 1.0658141036401503e-14,
+      "limit": 1e-05,
+      "name": "simulink_I_B_A_convergence",
+      "pass_": true
+    },
+    {
+      "actual": 3.019806626980426e-14,
+      "limit": 0.0001,
+      "name": "simulink_Q_B_W_convergence",
+      "pass_": true
+    },
+    {
+      "actual": 1.0231815394945443e-12,
+      "limit": 0.0001,
+      "name": "simulink_T_B_K_convergence",
+      "pass_": true
+    }
+  ],
+  "comparison_status": "pass",
+  "convergence": [
+    {
+      "max_abs": 1.5543122344752192e-15,
+      "signal": "SOC",
+      "solver": "python",
+      "threshold": 1e-07
+    },
+    {
+      "max_abs": 1.7763568394002505e-14,
+      "signal": "V_B_V",
+      "solver": "python",
+      "threshold": 1e-05
+    },
+    {
+      "max_abs": 4.440892098500626e-15,
+      "signal": "I_B_A",
+      "solver": "python",
+      "threshold": 1e-05
+    },
+    {
+      "max_abs": 2.886579864025407e-14,
+      "signal": "Q_B_W",
+      "solver": "python",
+      "threshold": 0.0001
+    },
+    {
+      "max_abs": 5.684341886080801e-13,
+      "signal": "T_B_K",
+      "solver": "python",
+      "threshold": 0.0001
+    },
+    {
+      "max_abs": 9.992007221626409e-16,
+      "signal": "SOC",
+      "solver": "simulink",
+      "threshold": 1e-07
+    },
+    {
+      "max_abs": 1.0302869668521453e-13,
+      "signal": "V_B_V",
+      "solver": "simulink",
+      "threshold": 1e-05
+    },
+    {
+      "max_abs": 1.0658141036401503e-14,
+      "signal": "I_B_A",
+      "solver": "simulink",
+      "threshold": 1e-05
+    },
+    {
+      "max_abs": 3.019806626980426e-14,
+      "signal": "Q_B_W",
+      "solver": "simulink",
+      "threshold": 0.0001
+    },
+    {
+      "max_abs": 1.0231815394945443e-12,
+      "signal": "T_B_K",
+      "solver": "simulink",
+      "threshold": 0.0001
+    }
+  ],
+  "energy": {
+    "P_B_W": {
+      "python_J": 252631.57894736808,
+      "relative_error": 2.9952692178388386e-15,
+      "simulink_J": 252631.57894736883
+    },
+    "P_load_W": {
+      "python_J": 239999.9999999997,
+      "relative_error": 1.2126596023639043e-15,
+      "simulink_J": 240000.0
+    },
+    "P_pv_W": {
+      "python_J": 0.0,
+      "relative_error": 0.0,
+      "simulink_J": 0.0
+    },
+    "Q_B_W": {
+      "python_J": 4540.458211360543,
+      "relative_error": 2.0030901275499266e-15,
+      "simulink_J": 4540.458211360534
+    },
+    "Q_D_W": {
+      "python_J": 12631.578947368414,
+      "relative_error": 2.160049916710701e-15,
+      "simulink_J": 12631.578947368442
+    }
+  },
+  "events": [],
+  "id": "NU-001",
+  "metrics": [
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 121,
+      "signal": "P_pv_max_W",
+      "threshold": 0.001
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 121,
+      "signal": "P_pv_W",
+      "threshold": 0.001
+    },
+    {
+      "max_abs": 3.427658157306723e-11,
+      "rmse": 4.316115680836614e-12,
+      "samples": 121,
+      "signal": "P_load_W",
+      "threshold": 0.001
+    },
+    {
+      "max_abs": 3.6408209780347534e-11,
+      "rmse": 4.573254495169264e-12,
+      "samples": 121,
+      "signal": "P_B_W",
+      "threshold": 0.001
+    },
+    {
+      "max_abs": 1.1723955140041653e-13,
+      "rmse": 3.252429670789685e-14,
+      "samples": 121,
+      "signal": "V_B_V",
+      "threshold": 0.0001
+    },
+    {
+      "max_abs": 1.2168044349891716e-12,
+      "rmse": 1.5316102005064052e-13,
+      "samples": 121,
+      "signal": "I_B_A",
+      "threshold": 0.0001
+    },
+    {
+      "max_abs": 1.177280495312516e-12,
+      "rmse": 1.513441411078871e-13,
+      "samples": 121,
+      "signal": "Q_B_W",
+      "threshold": 0.001
+    },
+    {
+      "max_abs": 1.8101076193488552e-12,
+      "rmse": 2.276150323203199e-13,
+      "samples": 121,
+      "signal": "Q_D_W",
+      "threshold": 0.001
+    },
+    {
+      "max_abs": 1.1102230246251565e-15,
+      "rmse": 4.882311372340156e-16,
+      "samples": 121,
+      "signal": "SOC",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 1.1102230246251565e-15,
+      "rmse": 4.362495983473895e-16,
+      "samples": 121,
+      "signal": "x_n",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 7.771561172376096e-16,
+      "rmse": 2.927821561831798e-16,
+      "samples": 121,
+      "signal": "x_p",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 9.663381206337363e-13,
+      "rmse": 4.788317589873414e-13,
+      "samples": 121,
+      "signal": "T_B_K",
+      "threshold": 0.001
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 121,
+      "signal": "connected",
+      "threshold": 0.0
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 121,
+      "signal": "latched",
+      "threshold": 0.0
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 121,
+      "signal": "valid",
+      "threshold": 0.0
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 121,
+      "signal": "event_required",
+      "threshold": 0.0
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 121,
+      "signal": "can_supply",
+      "threshold": 0.0
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 121,
+      "signal": "reason",
+      "threshold": 0.0
+    },
+    {
+      "max_abs": 1.978417429882029e-13,
+      "rmse": 2.5376789904591507e-14,
+      "samples": 121,
+      "signal": "i_A",
+      "threshold": 0.0001
+    },
+    {
+      "max_abs": 1.1546319456101628e-14,
+      "rmse": 3.1878344887058125e-15,
+      "samples": 121,
+      "signal": "v_cell_V",
+      "threshold": 0.0001
+    },
+    {
+      "max_abs": 1.7293024651143796e-17,
+      "rmse": 2.210260322853124e-18,
+      "samples": 121,
+      "signal": "dx_n_dt",
+      "threshold": 1e-08
+    },
+    {
+      "max_abs": 1.1099519740820352e-17,
+      "rmse": 1.3993558875465552e-18,
+      "samples": 121,
+      "signal": "dx_p_dt",
+      "threshold": 1e-08
+    },
+    {
+      "max_abs": 2.645453300864631e-15,
+      "rmse": 3.325411920582747e-16,
+      "samples": 121,
+      "signal": "q_reversible_cell_W",
+      "threshold": 0.001
+    },
+    {
+      "max_abs": 3.164135620181696e-15,
+      "rmse": 5.440481356759145e-16,
+      "samples": 121,
+      "signal": "min_margin",
+      "threshold": 1e-06
+    },
+    {
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "samples": 121,
+      "signal": "action",
+      "threshold": 0.0
+    }
+  ],
+  "name_cn": "求解器收敛与精度复核",
+  "name_en": "Solver convergence and accuracy review",
+  "samples": 121,
+  "status": "pass"
+}

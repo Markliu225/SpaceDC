@@ -1,0 +1,127 @@
+{
+ "case_id": "FE-003",
+ "description": "Computing node J and cold plate C of the thermal design against the ISS finite element cold-plate equipment (MBSU, DDCU, IEA) of the mean environment case nom0. Values under case_inputs are the inputs of the FE-003 entry of Thermal/test_report/build_test_report_cn.py; the test checks them against the FE model parameter table iss_fem/model/iss_spec.py and takes the values used in the runs from that table and from the FE results.",
+ "fe": {
+  "out_dir": "iss_fem/out",
+  "case": "nom0",
+  "label_cn": "平均环境工况",
+  "spec_file": "iss_fem/model/iss_spec.py",
+  "report_file": "iss_fem/docs/REPORT.md",
+  "items_file": "items.csv",
+  "breakdown_file": "loop_breakdown.csv",
+  "summary_file": "summary.json",
+  "series_file": "series.csv",
+  "time_column": "t_s",
+  "end_time_s": 16560.0,
+  "box_class_column": "box_Tmean_C",
+  "source": "ISS FE model, COMSOL 6.3, report iss_fem/docs/REPORT.md sections 3.6 (block heat sources: uniform volume heat, one face on a convective cold-plate boundary to the 2.8 C NH3 supply), 3.8 (orbit noon to 16560 s, statistics over the last 5553.6 s), 5.1 table 12 and 5.4 table 17; items.csv Tmean_C is the mean over the orbit 3 output samples of the volume average (iss_fem/model/iss_solve.py), loop_breakdown.csv W_mean the mean over the same samples of the cold-plate heat of each loop group"
+ },
+ "case_inputs": {
+  "devices": {
+   "MBSU": {"Q_W": 495.0, "cold_plate_area_m2": 0.79},
+   "DDCU": {"Q_W": 694.0, "cold_plate_area_m2": 0.56},
+   "IEA": {"Q_W": 6000.0, "cold_plate_area_m2": 13.5}
+  },
+  "h_cold_plate_W_m2K": 60.0,
+  "conductivity_W_mK": 150.0,
+  "coolant_C": 2.8,
+  "mli_share_percent": 5.4,
+  "conduction_length_fraction_of_thickness": 0.3333333333333333,
+  "remainder_note": "The case text attributes the remainder of about 5.4 percent to the MLI. The FE writes the cold-plate heat per loop, not per MBSU or DDCU; the test compares the loop remainder (block heat minus loop cold-plate heat) with 5.4 percent and does not split it. In the FE the remainder holds the radiation of the MLI outer faces of the blocks (iss_spec OPTICS box: absorptivity 0.012, emissivity 0.03; blocks sit 0.05 m off the truss faces, ORU_BOXES) and the heat still stored in blocks that warm through the third orbit.",
+  "source":"CASES['FE-003'] input and steps of Thermal/test_report/build_test_report_cn.py: MBSU 495 W 0.79 m2, DDCU 694 W 0.56 m2, IEA 6000 W 13.5 m2, cold-plate conductance 60 W/m2K, equivalent conductivity 150 W/mK, coolant 2.8 C, about 5.4 percent of the block heat leaves through the MLI, conduction length one third of the device thickness"
+ },
+ "rounding": {
+  "area_m2": 0.005,
+  "coolant_K": 0.05,
+  "share_percent": 0.05,
+  "note": "case values are written with the digits of the case text; the FE values must round to them"
+ },
+ "devices": {
+  "MBSU": {"item_prefix": "MBSU_", "breakdown_source": "oru", "label_cn": "MBSU"},
+  "DDCU": {"item_prefix": "DDCU_", "breakdown_source": "oru", "label_cn": "DDCU"},
+  "IEA": {"item_prefix": "IEA_", "breakdown_source": "iea", "label_cn": "IEA"}
+ },
+ "device_order": ["MBSU", "DDCU", "IEA"],
+ "fe_parameter_names": {
+  "h_cold_plate": "h_cp_oru",
+  "material": "oru_eq",
+  "initial_temperature_class": "box"
+ },
+ "compute_node": {
+  "instance_id": "Compute01",
+  "asset_version": "iss_fem-2026-09-30",
+  "temperature_range_K": [253.15, 353.15],
+  "range_source": "FE-003 test configuration: the FE uses constant properties for the equivalent solid oru_eq (iss_spec MATERIALS); the declared range covers the temperatures of the runs",
+  "initial_temperature_source": "FE initial temperature of the external ORU and IEA blocks, iss_spec T_INIT['box'] = 285 K (FE report 3.8)"
+ },
+ "cold_plate": {
+  "instance_id": "ColdPlate01",
+  "asset_id": "fe003_cold_plate_boundary",
+  "asset_version": "1",
+  "material_id": "ColdPlate01_fixed_temperature_mass",
+  "mass_kg": 1.0e12,
+  "cp_J_kgK": 1000.0,
+  "temperature_range_K": [253.15, 353.15],
+  "CR_equivalent_total_resistance_K_W": 1.0e12,
+  "source": "FE-003 precondition recorded per thermal design 9.4: the cold plate takes a very large capacitance, starts at the coolant temperature and CR takes a very large resistance, so the cold-plate temperature stays at the coolant temperature like the FE cold-plate boundary (convective boundary to the fixed NH3 supply set point, FE report 3.7 and 3.9 item 5)"
+ },
+ "auxiliary_nodes": {
+  "note": "S, B, D and R are not compared in FE-003. Their explicit values only complete the six-node model; P_pv_W, Q_B_W and Q_D_W are zero and CR decouples the cold plate from R.",
+  "temperature_range_K": [100.0, 450.0],
+  "initial_temperature_K": 270.0,
+  "components": [
+   {"instance_id": "SolarArray01", "node_id": "S", "mass_kg": 100.0, "cp_J_kgK": 900.0, "ports": ["P_pv_W"],
+    "surfaces": [
+     {"surface_id": "SolarArray01_front", "normal_body": [0.0, 0.0, 1.0], "area_m2": 1.0, "absorptivity": 0.6, "emissivity": 0.8},
+     {"surface_id": "SolarArray01_back", "normal_body": [0.0, 0.0, -1.0], "area_m2": 1.0, "absorptivity": 0.6, "emissivity": 0.8}
+    ]},
+   {"instance_id": "Battery01", "node_id": "B", "mass_kg": 2.0, "cp_J_kgK": 1000.0, "ports": ["Q_B_W"]},
+   {"instance_id": "Controller01", "node_id": "D", "mass_kg": 1.0, "cp_J_kgK": 900.0, "ports": []},
+   {"instance_id": "PDU01", "node_id": "D", "mass_kg": 1.0, "cp_J_kgK": 900.0, "ports": ["Q_D_W"]},
+   {"instance_id": "Radiator01", "node_id": "R", "mass_kg": 200.0, "cp_J_kgK": 900.0, "ports": [],
+    "surfaces": [
+     {"surface_id": "Radiator01_a", "normal_body": [1.0, 0.0, 0.0], "area_m2": 1.0, "absorptivity": 0.2, "emissivity": 0.9},
+     {"surface_id": "Radiator01_b", "normal_body": [-1.0, 0.0, 0.0], "area_m2": 1.0, "absorptivity": 0.2, "emissivity": 0.9}
+    ]}
+  ],
+  "resistances_K_W": {"SR": 2.0, "BR": 2.0, "DR": 2.0},
+  "source": "FE-003 auxiliary node, not compared; explicit test value"
+ },
+ "environment": {
+  "earth_radius_m": 6378137.0,
+  "earth_flux_resolution": [120, 180],
+  "resolution_note": "Earth albedo and infrared of the auxiliary S and R surfaces from sdtwin_sim.earth_flux with a 120 by 180 grid; J and C have no exposed surface (design 4.4) and do not use these inputs",
+  "attitude": "body +Z points at the Sun at every instant; body +X along the orbit normal component perpendicular to the Sun line",
+  "epoch_utc": "2019-06-01T00:00:00+00:00",
+  "epoch_note": "nominal UTC epoch; the FE environment is fixed by beta and the case values, not by a date"
+ },
+ "solver": {
+  "method": "RK45",
+  "rtol": 1.0e-8,
+  "atol_T_K": 1.0e-6,
+  "max_step_s": 120.0,
+  "output_step_s": 60.0,
+  "environment_step_s": 10.0,
+  "event_time_tol_s": 1.0e-3,
+  "source": "thermal design table 8: adaptive RK45 with relative tolerance, temperature absolute tolerance and maximum step as scene settings; maximum step equal to the 120 s step of the FE; output sampled on the accepted solution every 60 s"
+ },
+ "run": {
+  "orbits": 14,
+  "note": "integration to steady state: 14 FE orbital periods from orbit noon; the slowest device, the IEA, has C_J R_JC of about 8.7e3 s, so the initial difference decays by a factor of about 7e3 or more"
+ },
+ "criteria": {
+  "acceptance_K": 1.0,
+  "relative_tol_exact": 1.0e-12,
+  "slab_relative_tol": 1.0e-6,
+  "slab_cells": 4000,
+  "steady_state_K": 1.0e-3,
+  "repetition_K": 1.0e-3,
+  "analytic_K": 1.0e-3,
+  "cold_plate_hold_K": 1.0e-5,
+  "q_CR_max_W": 1.0e-6,
+  "derivative_rel_tol": 1.0e-12,
+  "statistics_grid_s": 10.0,
+  "eclipse_time_tol_s": 1.0e-3,
+  "source": "acceptance 1 K from CASES['FE-003']; the steady-state and exponential tolerance 0.001 K follow the analytic cases of HT-003; the relative tolerance 1e-12 follows PA-001 and HT-002"
+ }
+}

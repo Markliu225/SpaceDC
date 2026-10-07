@@ -1,0 +1,13 @@
+07:13:49 capacity case hot75 Qd [35.0, 60.0, 85.0]
+07:13:59 geometry: 0 domains, 48 boundaries, 192 edges (1s)
+07:14:03 selections: shells 48 bnds; solids -1 doms; hrs=48
+07:14:26 global equations: 48 unknowns
+07:14:34 mesh 1s {'tri': 1056, 'tet': 0}
+07:40:33 hot75 Qd 35 kW loop A: outlet mean -24.69 C, min -26.17, max -22.73, orbit-to-orbit drift -0.138 K (1510 s)
+07:40:33 hot75 Qd 35 kW loop B: outlet mean -21.82 C, min -23.35, max -20.06, orbit-to-orbit drift -0.094 K (1510 s)
+07:50:08 hot75 Qd 60 kW loop A: outlet mean -7.45 C, min -8.75, max -5.65, orbit-to-orbit drift 0.012 K (574 s)
+07:50:08 hot75 Qd 60 kW loop B: outlet mean -4.84 C, min -6.24, max -3.24, orbit-to-orbit drift 0.022 K (574 s)
+07:59:44 hot75 Qd 85 kW loop A: outlet mean 7.10 C, min 5.94, max 8.78, orbit-to-orbit drift 0.031 K (575 s)
+07:59:45 hot75 Qd 85 kW loop B: outlet mean 9.59 C, min 8.30, max 11.08, orbit-to-orbit drift 0.031 K (575 s)
+07:59:46 saved C:\Workspace\SpaceDC\Thermal\iss_fem\out\comsol\cap_hot75_g40.mph
+07:59:46 hot75 capacity {'A': {'Q_at_mean_setpoint_kW': 77.57129455447729, 'Q_at_max_setpoint_kW': 74.59463837998828}, 'B': {'Q_at_mean_setpoint_kW': 73.20152732201007, 'Q_at_max_setpoint_kW': 70.51068880200896}}

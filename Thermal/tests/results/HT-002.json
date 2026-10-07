@@ -1,0 +1,536 @@
+{
+ "case_id": "HT-002",
+ "status": "pass",
+ "checks": [
+  {
+   "name": "前置条件 节点、路径与外露表面顺序",
+   "expected": "NODE_ORDER S J C B D R，PATH_ORDER SR JC CR BR DR，EXPOSED_NODES S R，与设计报告表 6 一致",
+   "actual": "NODE_ORDER ('S', 'J', 'C', 'B', 'D', 'R')，PATH_ORDER ('SR', 'JC', 'CR', 'BR', 'DR')，EXPOSED_NODES ('S', 'R')",
+   "passed": true
+  },
+  {
+   "name": "前置条件 参数组 sat01_like 的热容与热阻等于 T5 手算值",
+   "expected": "C_J_K 与 R_K_W 相对误差 ≤ 1e-12，表面顺序与资产一致",
+   "actual": "C 手算 [2081.7, 625.0, 555.52, 1077.12, 936.78, 2646.432] J/K，装配 [2081.7, 625.0, 555.52, 1077.12, 936.78, 2646.432]，最大相对误差 0.000e+00；R 手算 [113.940299, 0.051331, 0.12, 1.048503, 0.649202] K/W，装配 [113.940299, 0.051331, 0.12, 1.048503, 0.649202]，最大相对误差 0.000e+00；表面顺序一致 True",
+   "passed": true
+  },
+  {
+   "name": "前置条件 参数组 battery_example 的热容与热阻等于 T5 手算值",
+   "expected": "C_J_K 与 R_K_W 相对误差 ≤ 1e-12，表面顺序与资产一致",
+   "actual": "C 手算 [2081.7, 625.0, 555.52, 1000.0, 936.78, 2646.432] J/K，装配 [2081.7, 625.0, 555.52, 1000.0, 936.78, 2646.432]，最大相对误差 0.000e+00；R 手算 [113.940299, 0.051331, 0.12, 0.5, 0.649202] K/W，装配 [113.940299, 0.051331, 0.12, 0.5, 0.649202]，最大相对误差 0.000e+00；表面顺序一致 True",
+   "passed": true
+  },
+  {
+   "name": "输入 1 电池算例参数",
+   "expected": "C_B = 1000 J/K，由 1 kg 与 1000 J/(kg K) 的材料按 T5 装配；R_BR = 0.5 K/W",
+   "actual": "C_B = 1000.0 J/K，R_BR = 0.5 K/W",
+   "passed": true
+  },
+  {
+   "name": "步骤 1 电池算例温升速度，验收 1",
+   "expected": "dT_B/dt = 0.004 K/s，误差 ≤ 1e-12 K/s",
+   "actual": "dT_B/dt = 0.004 K/s，与 0.004 K/s 之差 0.000e+00 K/s，与手算 0.004 K/s 之差 0.000e+00 K/s",
+   "passed": true
+  },
+  {
+   "name": "步骤 1 电池算例传热与留存功率",
+   "expected": "q_BR = 3/0.5 = 6 W，C_B dT_B/dt = 10 − 6 = 4 W，相对误差 ≤ 1e-12",
+   "actual": "q_BR = 6.0 W，C_B dT_B/dt = 4.0 W",
+   "passed": true
+  },
+  {
+   "name": "步骤 1 其余节点、功率与环境任取时电池温升速度不变",
+   "expected": "20 组随机的其余输入，T_B 303 K、T_R 300 K、Q_B 10 W 不变，dT_B/dt 与 0.004 K/s 之差 ≤ 1e-12 K/s",
+   "actual": "完成 20 组，最大差 0.000e+00 K/s",
+   "passed": true
+  },
+  {
+   "name": "输入 2 随机输入组数与覆盖",
+   "expected": "1000 组温度、四个功率与环境输入全部完成 thermal_derivative 计算；覆盖日食、Q_B 正负、P_pv 为零、介于零与 absorbed_solar_S_W 之间和等于 absorbed_solar_S_W、P_load 与 Q_D 为零",
+   "actual": "完成 1000 组，报错 0 组 []；覆盖 {'eclipse': 279, 'Q_B_negative': 509, 'Q_B_positive': 491, 'P_pv_zero': 350, 'P_pv_at_absorbed': 69, 'P_pv_between': 581, 'P_load_zero': 98, 'Q_D_zero': 92, 'range_warnings': 0}",
+   "passed": true
+  },
+  {
+   "name": "输入 2 环境输入与温区",
+   "expected": "prepare_surface_environment 的 cos_incidence 与独立四元数计算之差 ≤ 1e-12；随机温度均在声明温区内，无 ThermalRangeWarning",
+   "actual": "cos_incidence 最大差 7.772e-16；ThermalRangeWarning 0 次",
+   "passed": true
+  },
+  {
+   "name": "步骤 2 各组件储热之和等于 T1 右侧，验收 2",
+   "expected": "1000 组 |Σ C_i dT_i − T1 右侧| / 输入总功率 ≤ 1e-12；T1 右侧由独立 T4 与输入功率计算，输入总功率取 Q_env,S + Q_env,R + P_load + Q_D + max(Q_B, 0)",
+   "actual": "最大比值 8.747e-16，出现在第 985 组：残差 -5.684e-13 W，输入总功率 649.862 W；全部组最大残差 6.821e-13 W，输入总功率最小 298.156 W，T1 右侧范围 -1172.5 至 1453.1 W；改用模块自身 Q_env_W 与 Q_emit_W 时最大残差 5.684e-13 W",
+   "passed": true
+  },
+  {
+   "name": "步骤 2 另两种输入总功率口径下的比值",
+   "expected": "以环境吸热与四个功率绝对值之和，或 T1 右侧八项绝对值之和为分母，比值同样 ≤ 1e-12",
+   "actual": "环境与四个功率口径最大比值 8.670e-16；八项口径最大比值 5.230e-16",
+   "passed": true
+  },
+  {
+   "name": "步骤 3 热流 SR 在 S 端减去、在 R 端加上",
+   "expected": "SR 热阻经 overrides 由 113.94 K/W 加倍为 227.881 K/W，其余热阻不变；两端温差为正与为负时，C_S·ΔdT = −Δq，C_R·ΔdT = +Δq，其余四个节点不变，六节点合计为零，相对偏差 ≤ 1e-12；q_SR 在热阻加倍前后保留符号且等于 T2 手算值，其余热流不变",
+   "actual": "装配 SR 热阻 227.88059701492537 K/W，修改字段 contact_resistance_K_W；正向 q = 0.351061 W 变为 0.175531 W，Δq = -0.175531 W；S 端 C·ΔdT = 0.175531 W，R 端 -0.175531 W；其余节点最大 |C·ΔdT| = 0.000e+00 W，逐位为零 4/4；六节点合计 -4.374e-14 W；相对偏差 两端 2.579e-17、其余节点 0.000e+00、合计 1.116e-17；q 与 T2 相对偏差 0.000e+00、0.000e+00；反向 q = -1.05318 W 变为 -0.526592 W，Δq = 0.526592 W；S 端 C·ΔdT = -0.526592 W，R 端 0.526592 W；其余节点最大 |C·ΔdT| = 0.000e+00 W，逐位为零 4/4；六节点合计 1.324e-13 W；相对偏差 两端 6.953e-17、其余节点 0.000e+00、合计 4.594e-17；q 与 T2 相对偏差 0.000e+00、0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤 3 热流 JC 在 J 端减去、在 C 端加上",
+   "expected": "JC 热阻经 overrides 由 0.0513307 K/W 加倍为 0.102661 K/W，其余热阻不变；两端温差为正与为负时，C_J·ΔdT = −Δq，C_C·ΔdT = +Δq，其余四个节点不变，六节点合计为零，相对偏差 ≤ 1e-12；q_JC 在热阻加倍前后保留符号且等于 T2 手算值，其余热流不变",
+   "actual": "装配 JC 热阻 0.10266134397870925 K/W，修改字段 contact_resistance_K_W；正向 q = 389.631 W 变为 194.815 W，Δq = -194.815 W；J 端 C·ΔdT = 194.815 W，C 端 -194.815 W；其余节点最大 |C·ΔdT| = 0.000e+00 W，逐位为零 4/4；六节点合计 -2.842e-14 W；相对偏差 两端 4.443e-17、其余节点 0.000e+00、合计 7.249e-18；q 与 T2 相对偏差 0.000e+00、0.000e+00；反向 q = -194.815 W 变为 -97.4076 W，Δq = 97.4076 W；J 端 C·ΔdT = -97.4076 W，C 端 97.4076 W；其余节点最大 |C·ΔdT| = 0.000e+00 W，逐位为零 4/4；六节点合计 0.000e+00 W；相对偏差 两端 5.109e-17、其余节点 0.000e+00、合计 0.000e+00；q 与 T2 相对偏差 0.000e+00、0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤 3 热流 CR 在 C 端减去、在 R 端加上",
+   "expected": "CR 热阻经 overrides 由 0.12 K/W 加倍为 0.24 K/W，其余热阻不变；两端温差为正与为负时，C_C·ΔdT = −Δq，C_R·ΔdT = +Δq，其余四个节点不变，六节点合计为零，相对偏差 ≤ 1e-12；q_CR 在热阻加倍前后保留符号且等于 T2 手算值，其余热流不变",
+   "actual": "装配 CR 热阻 0.24 K/W，修改字段 equivalent_total_resistance_K_W；正向 q = 250 W 变为 125 W，Δq = -125 W；C 端 C·ΔdT = 125 W，R 端 -125 W；其余节点最大 |C·ΔdT| = 0.000e+00 W，逐位为零 4/4；六节点合计 -1.421e-14 W；相对偏差 两端 2.222e-17、其余节点 0.000e+00、合计 3.625e-18；q 与 T2 相对偏差 0.000e+00、0.000e+00；反向 q = -83.3333 W 变为 -41.6667 W，Δq = 41.6667 W；C 端 C·ΔdT = -41.6667 W，R 端 41.6667 W；其余节点最大 |C·ΔdT| = 0.000e+00 W，逐位为零 4/4；六节点合计 3.553e-14 W；相对偏差 两端 5.109e-17、其余节点 0.000e+00、合计 1.232e-17；q 与 T2 相对偏差 0.000e+00、0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤 3 热流 BR 在 B 端减去、在 R 端加上",
+   "expected": "BR 热阻经 overrides 由 1.0485 K/W 加倍为 2.09701 K/W，其余热阻不变；两端温差为正与为负时，C_B·ΔdT = −Δq，C_R·ΔdT = +Δq，其余四个节点不变，六节点合计为零，相对偏差 ≤ 1e-12；q_BR 在热阻加倍前后保留符号且等于 T2 手算值，其余热流不变",
+   "actual": "装配 BR 热阻 2.097005988023952 K/W，修改字段 contact_resistance_K_W；正向 q = 14.3061 W 变为 7.15306 W，Δq = -7.15306 W；B 端 C·ΔdT = 7.15306 W，R 端 -7.15306 W；其余节点最大 |C·ΔdT| = 0.000e+00 W，逐位为零 4/4；六节点合计 9.770e-15 W；相对偏差 两端 4.852e-17、其余节点 0.000e+00、合计 2.492e-18；q 与 T2 相对偏差 0.000e+00、0.000e+00；反向 q = -38.1496 W 变为 -19.0748 W，Δq = 19.0748 W；B 端 C·ΔdT = -19.0748 W，R 端 19.0748 W；其余节点最大 |C·ΔdT| = 0.000e+00 W，逐位为零 4/4；六节点合计 -1.776e-14 W；相对偏差 两端 8.429e-17、其余节点 0.000e+00、合计 6.162e-18；q 与 T2 相对偏差 0.000e+00、0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤 3 热流 DR 在 D 端减去、在 R 端加上",
+   "expected": "DR 热阻经 overrides 由 0.649202 K/W 加倍为 1.2984 K/W，其余热阻不变；两端温差为正与为负时，C_D·ΔdT = −Δq，C_R·ΔdT = +Δq，其余四个节点不变，六节点合计为零，相对偏差 ≤ 1e-12；q_DR 在热阻加倍前后保留符号且等于 T2 手算值，其余热流不变",
+   "actual": "装配 DR 热阻 1.2984031936127745 K/W，修改字段 contact_resistance_K_W；正向 q = 38.5088 W 变为 19.2544 W，Δq = -19.2544 W；D 端 C·ΔdT = 19.2544 W，R 端 -19.2544 W；其余节点最大 |C·ΔdT| = 0.000e+00 W，逐位为零 4/4；六节点合计 4.263e-14 W；相对偏差 两端 5.381e-17、其余节点 0.000e+00、合计 1.087e-17；q 与 T2 相对偏差 0.000e+00、0.000e+00；反向 q = -77.0177 W 变为 -38.5088 W，Δq = 38.5088 W；D 端 C·ΔdT = -38.5088 W，R 端 38.5088 W；其余节点最大 |C·ΔdT| = 0.000e+00 W，逐位为零 4/4；六节点合计 2.842e-14 W；相对偏差 两端 3.365e-17、其余节点 0.000e+00、合计 9.859e-18；q 与 T2 相对偏差 0.000e+00、0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤 3 随机输入下六个节点的储热变化率等于 T3 各行",
+   "expected": "1000 组中 C_i dT_i 与独立 T3 各行之差 ≤ 1e-12 倍该行各项绝对值之和；q 在第一个节点减去、在第二个节点加上",
+   "actual": "完成 1000 组，各节点最大相对偏差 {'S': '4.534e-16', 'J': '1.813e-16', 'C': '2.043e-16', 'B': '2.040e-16', 'D': '1.205e-16', 'R': '3.051e-16'}，六个节点最大 4.534e-16",
+   "passed": true
+  },
+  {
+   "name": "步骤 4 ThermalEvaluation 字段与维数",
+   "expected": "每次返回 ThermalEvaluation，字段依次为 run_id、time_s、dT_dt_K_s、q_W、Q_env_W、Q_emit_W、T_B_K、T_J_K，数组维数 6、5、2、2，run_id 与 time_s 等于输入状态",
+   "actual": "1000 组：类型与字段一致 True，字段 ('run_id', 'time_s', 'dT_dt_K_s', 'q_W', 'Q_env_W', 'Q_emit_W', 'T_B_K', 'T_J_K')；维数一致 True，((6,), (5,), (2,), (2,))；run_id 与 time_s 一致 True",
+   "passed": true
+  },
+  {
+   "name": "步骤 4 q_W、Q_env_W 与 Q_emit_W 的内容与顺序",
+   "expected": "q_W 按 SR、JC、CR、BR、DR 等于独立 T2，Q_env_W 与 Q_emit_W 按 S、R 等于独立 T4，相对偏差 ≤ 1e-12",
+   "actual": "1000 组最大相对偏差：q_W 0.000e+00，Q_env_W 9.381e-16，Q_emit_W 0.000e+00",
+   "passed": true
+  },
+  {
+   "name": "步骤 4 T_B_K 与 T_J_K 是本次输入温度",
+   "expected": "每组 T_B_K = temperature_K[3]、T_J_K = temperature_K[1]，为 float 且逐位相同；温度导数不为零时也未推进",
+   "actual": "1000 组逐位相同 True；其中 dT_B/dt 不为零 1000 组，dT_J/dt 不为零 1000 组",
+   "passed": true
+  },
+  {
+   "name": "步骤 4 T_B_K 与 T_J_K 不是新的积分状态",
+   "expected": "1000 组逐组再调用一次：ThermalEvaluation 没有温度数组，dT_dt_K_s 只有六个节点分量；重复调用结果逐位相同；输入状态、四个功率与环境输入不被修改；四个数组拒绝写入且不能恢复可写，八个字段拒绝改写；温度导数不为零时 T_B_K 与 T_J_K 仍等于输入温度",
+   "actual": "1000 组逐组再调用一次，报错 0 组 []；没有温度数组且温度导数只有六个分量 1000 组；两次结果逐位相同 1000 组；输入状态未被修改 1000 组；四个功率未被修改 1000 组；环境输入未被修改 1000 组；T_B_K 与 T_J_K 等于本次输入温度 1000 组；四个数组拒绝写入且不能恢复为可写 1000 组；八个字段拒绝改写 1000 组；示例第 0 组日照输入 dT_B/dt = 0.0130607 K/s 时 T_B_K = 287.90323115529594 K，输入 287.90323115529594 K；dT_J/dt = -0.879915 K/s 时 T_J_K = 295.65315326947126 K，输入 295.65315326947126 K",
+   "passed": true
+  }
+ ],
+ "metrics": {
+  "C_hand_J_K_sat01_like": {
+   "S": 2081.7,
+   "J": 625.0,
+   "C": 555.52,
+   "B": 1077.12,
+   "D": 936.78,
+   "R": 2646.4320000000002
+  },
+  "R_hand_K_W_sat01_like": {
+   "SR": 113.94029850746269,
+   "JC": 0.05133067198935463,
+   "CR": 0.12,
+   "BR": 1.048502994011976,
+   "DR": 0.6492015968063872
+  },
+  "C_hand_J_K_battery_example": {
+   "S": 2081.7,
+   "J": 625.0,
+   "C": 555.52,
+   "B": 1000.0,
+   "D": 936.78,
+   "R": 2646.4320000000002
+  },
+  "R_hand_K_W_battery_example": {
+   "SR": 113.94029850746269,
+   "JC": 0.05133067198935463,
+   "CR": 0.12,
+   "BR": 0.5,
+   "DR": 0.6492015968063872
+  },
+  "battery_example": {
+   "C_B_J_K": 1000.0,
+   "R_BR_K_W": 0.5,
+   "T_B_K": 303.0,
+   "T_R_K": 300.0,
+   "Q_B_W": 10.0,
+   "q_BR_W": 6.0,
+   "retained_W": 4.0,
+   "dT_B_dt_K_s": 0.004,
+   "error_K_s": 0.0,
+   "variants": 20,
+   "variants_max_error_K_s": 0.0,
+   "T_B_K_returned": 303.0,
+   "T_J_K_returned": 300.0
+  },
+  "random_cases": {
+   "seed": 20261005,
+   "n_requested": 1000,
+   "n_evaluated": 1000,
+   "errors": [],
+   "coverage": {
+    "eclipse": 279,
+    "Q_B_negative": 509,
+    "Q_B_positive": 491,
+    "P_pv_zero": 350,
+    "P_pv_at_absorbed": 69,
+    "P_pv_between": 581,
+    "P_load_zero": 98,
+    "Q_D_zero": 92,
+    "range_warnings": 0
+   },
+   "t1_ratio_max_heat_input": 8.747004885667695e-16,
+   "t1_ratio_max_ports_input": 8.669925858420768e-16,
+   "t1_ratio_max_gross": 5.230313305063033e-16,
+   "t1_residual_max_W": 6.821210263296962e-13,
+   "t1_residual_module_closure_max_W": 5.684341886080801e-13,
+   "p_in_heat_min_W": 298.15599689606785,
+   "t1_rhs_range_W": [
+    -1172.488105279151,
+    1453.053260426424
+   ],
+   "cos_incidence_max_diff": 7.771561172376096e-16,
+   "worst_case_index": 985,
+   "worst_case": {
+    "time_s": 59100.0,
+    "temperature_K": {
+     "S": 318.77237683423573,
+     "J": 279.08652790736875,
+     "C": 333.92774558660676,
+     "B": 309.9116743252236,
+     "D": 260.68873220889583,
+     "R": 207.69889960969888
+    },
+    "ports_W": {
+     "P_pv_W": 0.0,
+     "P_load_W": 210.14374132076398,
+     "Q_B_W": -5.777522736215769,
+     "Q_D_W": 10.547634679924764
+    },
+    "residual_W": -5.684341886080801e-13,
+    "p_in_heat_W": 649.8615195007853
+   }
+  },
+  "sign_bookkeeping": {
+   "SR_forward": {
+    "q_before_W": 0.351061042703694,
+    "q_after_W": 0.175530521351847,
+    "dq_hand_W": -0.175530521351847,
+    "delta_first_W": 0.17553052135179834,
+    "delta_second_W": -0.17553052135184208,
+    "sum_delta_W": -4.374278717023117e-14,
+    "ends_max_rel": 2.57945484759215e-17,
+    "rest_max_rel": 0.0,
+    "rest_exact_zero": 4,
+    "sum_rel": 1.1157157251853616e-17,
+    "q_rel_before": 0.0,
+    "q_rel_after": 0.0,
+    "sign_ok": true,
+    "others_q_unchanged": true,
+    "max_rel": 2.57945484759215e-17
+   },
+   "SR_reverse": {
+    "q_before_W": -1.053183128111082,
+    "q_after_W": -0.526591564055541,
+    "dq_hand_W": 0.526591564055541,
+    "delta_first_W": -0.5265915640554673,
+    "delta_second_W": 0.5265915640555997,
+    "sum_delta_W": 1.3244960683778118e-13,
+    "ends_max_rel": 6.952829425937257e-17,
+    "rest_max_rel": 0.0,
+    "rest_exact_zero": 4,
+    "sum_rel": 4.594242339028606e-17,
+    "q_rel_before": 0.0,
+    "q_rel_after": 0.0,
+    "sign_ok": true,
+    "others_q_unchanged": true,
+    "max_rel": 6.952829425937257e-17
+   },
+   "JC_forward": {
+    "q_before_W": 389.6305897602074,
+    "q_after_W": 194.8152948801037,
+    "dq_hand_W": -194.8152948801037,
+    "delta_first_W": 194.8152948801037,
+    "delta_second_W": -194.81529488010372,
+    "sum_delta_W": -2.842170943040401e-14,
+    "ends_max_rel": 4.443456877360898e-17,
+    "rest_max_rel": 0.0,
+    "rest_exact_zero": 4,
+    "sum_rel": 7.249320447904888e-18,
+    "q_rel_before": 0.0,
+    "q_rel_after": 0.0,
+    "sign_ok": true,
+    "others_q_unchanged": true,
+    "max_rel": 4.443456877360898e-17
+   },
+   "JC_reverse": {
+    "q_before_W": -194.8152948801037,
+    "q_after_W": -97.40764744005185,
+    "dq_hand_W": 97.40764744005185,
+    "delta_first_W": -97.40764744005186,
+    "delta_second_W": 97.40764744005186,
+    "sum_delta_W": 0.0,
+    "ends_max_rel": 5.109086752100506e-17,
+    "rest_max_rel": 0.0,
+    "rest_exact_zero": 4,
+    "sum_rel": 0.0,
+    "q_rel_before": 0.0,
+    "q_rel_after": 0.0,
+    "sign_ok": true,
+    "others_q_unchanged": true,
+    "max_rel": 5.109086752100506e-17
+   },
+   "CR_forward": {
+    "q_before_W": 250.0,
+    "q_after_W": 125.0,
+    "dq_hand_W": -125.0,
+    "delta_first_W": 124.99999999999999,
+    "delta_second_W": -125.0,
+    "sum_delta_W": -1.4210854715202004e-14,
+    "ends_max_rel": 2.221728438680449e-17,
+    "rest_max_rel": 0.0,
+    "rest_exact_zero": 4,
+    "sum_rel": 3.624660223952444e-18,
+    "q_rel_before": 0.0,
+    "q_rel_after": 0.0,
+    "sign_ok": true,
+    "others_q_unchanged": true,
+    "max_rel": 2.221728438680449e-17
+   },
+   "CR_reverse": {
+    "q_before_W": -83.33333333333334,
+    "q_after_W": -41.66666666666667,
+    "dq_hand_W": 41.66666666666667,
+    "delta_first_W": -41.66666666666666,
+    "delta_second_W": 41.66666666666669,
+    "sum_delta_W": 3.552713678800501e-14,
+    "ends_max_rel": 5.109086752100506e-17,
+    "rest_max_rel": 0.0,
+    "rest_exact_zero": 4,
+    "sum_rel": 1.232319822706751e-17,
+    "q_rel_before": 0.0,
+    "q_rel_after": 0.0,
+    "sign_ok": true,
+    "others_q_unchanged": true,
+    "max_rel": 5.109086752100506e-17
+   },
+   "BR_forward": {
+    "q_before_W": 14.306110793832095,
+    "q_after_W": 7.153055396916048,
+    "dq_hand_W": -7.153055396916048,
+    "delta_first_W": 7.153055396916049,
+    "delta_second_W": -7.153055396916039,
+    "sum_delta_W": 9.769962616701378e-15,
+    "ends_max_rel": 4.8518138544172933e-17,
+    "rest_max_rel": 0.0,
+    "rest_exact_zero": 4,
+    "sum_rel": 2.491953903967305e-18,
+    "q_rel_before": 0.0,
+    "q_rel_after": 0.0,
+    "sign_ok": true,
+    "others_q_unchanged": true,
+    "max_rel": 4.8518138544172933e-17
+   },
+   "BR_reverse": {
+    "q_before_W": -38.14962878355225,
+    "q_after_W": -19.074814391776126,
+    "dq_hand_W": 19.074814391776126,
+    "delta_first_W": -19.074814391776123,
+    "delta_second_W": 19.074814391776105,
+    "sum_delta_W": -1.7763568394002505e-14,
+    "ends_max_rel": 8.428813684325616e-17,
+    "rest_max_rel": 0.0,
+    "rest_exact_zero": 4,
+    "sum_rel": 6.161599113533755e-18,
+    "q_rel_before": 0.0,
+    "q_rel_after": 0.0,
+    "sign_ok": true,
+    "others_q_unchanged": true,
+    "max_rel": 8.428813684325616e-17
+   },
+   "DR_forward": {
+    "q_before_W": 38.50883935434281,
+    "q_after_W": 19.254419677171406,
+    "dq_hand_W": -19.254419677171406,
+    "delta_first_W": 19.254419677171406,
+    "delta_second_W": -19.254419677171363,
+    "sum_delta_W": 4.263256414560601e-14,
+    "ends_max_rel": 5.3811632471202055e-17,
+    "rest_max_rel": 0.0,
+    "rest_exact_zero": 4,
+    "sum_rel": 1.0873980671857331e-17,
+    "q_rel_before": 0.0,
+    "q_rel_after": 0.0,
+    "sign_ok": true,
+    "others_q_unchanged": true,
+    "max_rel": 5.3811632471202055e-17
+   },
+   "DR_reverse": {
+    "q_before_W": -77.01767870868562,
+    "q_after_W": -38.50883935434281,
+    "dq_hand_W": 38.50883935434281,
+    "delta_first_W": -38.50883935434281,
+    "delta_second_W": 38.50883935434284,
+    "sum_delta_W": 2.842170943040401e-14,
+    "ends_max_rel": 3.364696281739013e-17,
+    "rest_max_rel": 0.0,
+    "rest_exact_zero": 4,
+    "sum_rel": 9.858558581654008e-18,
+    "q_rel_before": 0.0,
+    "q_rel_after": 0.0,
+    "sign_ok": true,
+    "others_q_unchanged": true,
+    "max_rel": 3.364696281739013e-17
+   }
+  },
+  "sign_bookkeeping_max_rel": 8.428813684325616e-17,
+  "sign_bookkeeping_detail": {
+   "ends_max_rel": 8.428813684325616e-17,
+   "rest_max_rel": 0.0,
+   "rest_exact_zero": true,
+   "sum_abs_max_W": 1.3244960683778118e-13,
+   "sum_max_rel": 4.594242339028606e-17,
+   "failed_conditions": {
+    "SR": [],
+    "JC": [],
+    "CR": [],
+    "BR": [],
+    "DR": []
+   }
+  },
+  "t3_rows_max_rel": {
+   "S": 4.533890347474904e-16,
+   "J": 1.813190297735685e-16,
+   "C": 2.0427597616630316e-16,
+   "B": 2.0395732790176026e-16,
+   "D": 1.2050114578167332e-16,
+   "R": 3.050548761252233e-16
+  },
+  "t3_rows_evaluated": 1000,
+  "evaluation_fields": {
+   "fields": [
+    "run_id",
+    "time_s",
+    "dT_dt_K_s",
+    "q_W",
+    "Q_env_W",
+    "Q_emit_W",
+    "T_B_K",
+    "T_J_K"
+   ],
+   "cases": 1000,
+   "q_W_max_rel": 0.0,
+   "Q_env_W_max_rel": 9.38076001266415e-16,
+   "Q_emit_W_max_rel": 0.0,
+   "T_B_T_J_copies_bitwise": true,
+   "dT_B_nonzero_cases": 1000,
+   "dT_J_nonzero_cases": 1000,
+   "repeat_call": {
+    "cases": 1000,
+    "n_errors": 0,
+    "errors": [],
+    "no_state_field": 1000,
+    "repeat": 1000,
+    "state": 1000,
+    "ports": 1000,
+    "environment": 1000,
+    "copies": 1000,
+    "arrays": 1000,
+    "fields": 1000,
+    "example": {
+     "index": 0,
+     "dT_B_K_s": 0.013060701677384157,
+     "T_B_K": 287.90323115529594,
+     "T_B_in_K": 287.90323115529594,
+     "dT_J_K_s": -0.8799146421679319,
+     "T_J_K": 295.65315326947126,
+     "T_J_in_K": 295.65315326947126
+    }
+   }
+  }
+ },
+ "summary_cn": "按设计报告第 4.3 节电池算例装配参数，$C_B$ 为 1000 J/K，$R_BR$ 为 0.5 K/W，$T_B$ 为 303 K，$T_R$ 为 300 K，$Q_B$ 为 10 W。thermal_derivative 给出 $q_BR$ 为 6 W，$C_B$ 与电池温升速度之积为 4 W，电池温升速度为 0.004 K/s，与 0.004 K/s 之差为 0 K/s，验收限值为 1×10^{−12} K/s。其余节点温度、功率与环境另取 20 组随机值时，电池温升速度与 0.004 K/s 之差最大为 0 K/s。用固定随机种子生成 1000 组输入。温度在各节点适用温度范围内均匀取值；卫星位置、太阳位置与姿态四元数随机取值，日照时太阳辐照度取 1317 至 1419 W/m^{2}，各表面地球反照取 0 至 450 W/m^{2}，地球红外取 20 至 260 W/m^{2}，由 prepare_surface_environment 准备环境输入；$P_load$ 取 0 至 400 W，$Q_B$ 取 −25 W 至 25 W，$Q_D$ 取 0 至 30 W，$P_pv$ 取 0 至 absorbed_solar_S_W。完成计算 1000 组，其中日食 279 组，$Q_B$ 为负值 509 组，$P_pv$ 为零 350 组，$P_pv$ 等于 absorbed_solar_S_W 69 组；prepare_surface_environment 给出的入射角余弦与独立的四元数旋转计算之差最大为 7.8×10^{−16}，限值为 1×10^{−12}，未出现 ThermalRangeWarning。按独立实现的 T4 与输入功率计算 T1 右侧，T1 右侧在 −1172.5 W 至 1453.1 W 之间，各组件热容与温度导数的乘积之和与 T1 右侧的残差最大为 6.8×10^{−13} W，残差与输入总功率之比最大为 8.7×10^{−16}，验收限值为 1×10^{−12}。输入总功率取太阳能板与散热板的环境吸热、$P_load$、$Q_D$ 与正值 $Q_B$ 之和，最小为 298.2 W；改取环境吸热与四个功率绝对值之和时比值最大为 8.7×10^{−16}，改取 T1 右侧八项绝对值之和时比值最大为 5.2×10^{−16}。逐条将 SR、JC、CR、BR、DR 的热阻经 overrides 加倍，并在两端温差为正与为负时各计算一次。热阻加倍前后该热流均保留符号并等于 T2 手算值，其余四条热流不变；路径名称中第一个节点储存热能的变化率改变量等于该热流改变量的相反数，第二个节点的改变量等于该热流改变量，相对偏差最大为 8.4×10^{−17}，其余四个节点的改变量逐位为零，六个节点改变量之和与 T3 各项绝对值之和之比最大为 4.6×10^{−17}，限值均为 1×10^{−12}，每条热流在第一个节点减去、在第二个节点加上。1000 组随机输入下，六个节点热容与温度导数的乘积与独立实现的 T3 各行之差，与该行各项绝对值之和之比最大为 4.5×10^{−16}，限值为 1×10^{−12}。1000 组返回值均为 ThermalEvaluation，依次含 run_id、time_s、dT_dt_K_s、q_W、Q_env_W、Q_emit_W、T_B_K 与 T_J_K，没有温度数组，数组维数为 6、5、2、2，run_id 与 time_s 等于输入状态；q_W、Q_env_W 与 Q_emit_W 与独立计算的相对偏差最大为 9.4×10^{−16}，限值为 1×10^{−12}；1000 组的 T_B_K 与 T_J_K 均与本次输入的电池温度和计算节点温度逐位相同，其中电池温度导数不为零 1000 组，计算节点温度导数不为零 1000 组。对这 1000 组输入各再调用一次 thermal_derivative，两次结果逐位相同，输入状态、四个功率与环境输入未被修改，返回记录的四个数组拒绝写入且不能恢复为可写，八个字段均拒绝改写。",
+ "anomalies_cn": "无",
+ "environment": {
+  "python": "3.11.9",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "astropy": "8.0.1",
+  "pytest": "9.1.1",
+  "ntu_space_dynamics": "0.1.0",
+  "usd": "0.26.8"
+ },
+ "execution": {
+  "started_utc": "2026-10-05T23:17:02.838518+00:00",
+  "recorded_utc": "2026-10-05T23:40:12.023055+00:00",
+  "collected_functions": 6,
+  "finished_functions": 6,
+  "unexecuted_functions": [],
+  "source_sha256": {
+   "thermal/__init__.py": "ffb342305704801c8871a2af365af61877f7e6485b07ec381e0f777da9d294f5",
+   "thermal/environment.py": "5c3eba796dd28d41a4f1b6fa637ada3c0b8d2942ebc5f65b1e55f1384fa99f41",
+   "thermal/model.py": "9f758d46ea25844878e8cac7ccc402c31610548d255ded7d8d980ae95a965b9e",
+   "thermal/parameters.py": "792e7f5d1175e3564b7486a230039cf026fbad78074cfc8de4fbf352d9c946f9",
+   "thermal/types.py": "2c76359dfa9555ef7d51df83009a5985964c66080dc9062746815451e827a794",
+   "sdtwin_sim/__init__.py": "e2c3bee5849391a86fa79109339d001a75779dd93835d9e829f5f1591de81a31",
+   "sdtwin_sim/coupled.py": "f05e19e220284ad3a0c1e4188eb405fa66b6777f4226decfe95d2c559bca1dff",
+   "sdtwin_sim/earth_flux.py": "03b0d340d77e583cf73a3f0ec31ca0d9830c3bdc5f824903adae266b82a853a2",
+   "sdtwin_sim/power_stand_in.py": "3229251cdd2834bc2df18177c079e651f53a0827fb57cba21527ebdbf281c58f",
+   "sdtwin_sim/scene.py": "b7b1ad5328e6f6278354249e3087d47197895294af8607d21c7dcce354c7ab9b",
+   "tests/conftest.py": "345e7f788242083755505607636fa4af3e88cbf303a6a1728e4ab327e106d11e",
+   "tests/data/dm_001/reference.py": "3bba4938e76134c73272c00250517cc01c519da62f881382ddb42daa9c79fe2c",
+   "tests/data/en_001/en001_reference.py": "73370bd0a9fdc7e7c373e8dda1b5aa0c9a6970dc047fba3cf8a7c3fd808e6ea4",
+   "tests/data/en_003/earth_reference.py": "880154b92405e9af399b772296148219ca78f8ac62e9fcbeaeef67bb45ce117f",
+   "tests/data/en_003/fe_explore.py": "0cceaffd85c2d15b11fee6c7e6b5bbb00a17d94e63940b45a2db1863dfecd473",
+   "tests/data/en_003/fe_export.py": "b33fc7276138dc59e944c5cbfed73acc0d1f1ec2ce7d458b90eed62790aa8f85",
+   "tests/data/en_003/fe_refine.py": "6ad00122cb8f7a65d0f5c23f7c139b20e92d6f75fa0f472b16d2d97628995c43",
+   "tests/data/en_003/fe_refine_ladder.py": "587ffe012aa40955c6b615f68d6e257314ac0bc418765aaa358e17dc848e0580",
+   "tests/data/en_003/ladder_compare.py": "fdf7d4d74fb0f099934f5ef3c3bbdef67df6f7cf3605a5ad1984cb48450cc3ab",
+   "tests/data/fe_001/fe001_support.py": "d1bd978ad70120cf974e46cd996a8367bd5efc08e4d8755405c2a3a21be41051",
+   "tests/data/fe_002/fe002_support.py": "2c27a76b1fd972625293b26b8e1a07d0850ba78254c4457782607279205c4f7c",
+   "tests/data/fe_003/fe003_support.py": "00d548cb2c513707bfeb16f81bf130eded88fb09a87ba8785ad27ee341a985f2",
+   "tests/data/fe_004/fe004_support.py": "54a7d7d8ce2fa0e4f9b054f596a927f8531c0cc0b77a783dcd7ab6973c1f6e44",
+   "tests/data/ht_001/t2_reference.py": "2098ccd9080957ab24ff44712b3b8e688d2b41cfa077e95460a96c82f3d27f89",
+   "tests/data/ht_002/ht002_reference.py": "076d20dec2f98fb84bbbcda17b3a0313de6c8ffb44f4c2121282eb01387bd7e7",
+   "tests/data/ht_003/analytic.py": "5ee9b0e8d1c4e06067e44754c2dd2393218e4d2a6a3d91d64064d726cb06a3a5",
+   "tests/data/ni_001/ni001_support.py": "fc84c2b085ace6fa38819195dd85f0ae47846dbd8505432ef469dd19a276b0c7",
+   "tests/data/ni_002/ni002_reference.py": "b263602b77beb5b57e4b7360db586394228e18381b8f1e40abf20f1c3295665b",
+   "tests/data/ni_003/make_ni003_data.py": "d03cfe33141adc1f8288763c42009504dcdf076ba5e46d9539ddedca64eedce7",
+   "tests/data/ni_003/ni003_support.py": "bc563f0d0b9d56e461eac3e8db7c76b37ce1431468dd4b51d257a4a551257616",
+   "tests/data/ni_003/payload/ni003_payload.py": "4755abecf85fc0e3ee9006954b933ff3e1728e8647f725a0cb05e0bff654d433",
+   "tests/data/ni_003/probe_no_exec.py": "a2d7e9613788aa4f5eb24af6c8b5dac16a234a28b96df880b7a0bfef6672cc32",
+   "tests/data/ni_003/run_alone.py": "932a1b32033842df026eac9a1496ccd301c89291e980e969fbb3a5022acee0f6",
+   "tests/data/pa_001/pa001_inputs.py": "f1b685263ff6770efd7dd01f2f9b378230ab7fab12800b3e5a697d4cf17fc4b4",
+   "tests/data/simready/make_geometry.py": "2a4c7a5b278c7ddcbe2b673950b13c7bdaaf03921f8883693bc30e28c254094c",
+   "tests/data/simready/make_scene_variants.py": "994ca8d44a44023f7d778c0337ad5403420eea194bc8202194c440a28d1f1247",
+   "tests/test_dm_001_data_objects.py": "44d85eac05803a2bb04c5e1d0c2fea1c0c572c60299ee6f28eb7cb4986f897a8",
+   "tests/test_ec_001_power_ports.py": "cdb8dac627ff5e5bd56a852fd6344996658d8dc2df56beebb8efdd5a159c7f67",
+   "tests/test_en_001_surface_environment.py": "1b0f11127159690d57558aedcdece9c11559b2b6dda75637714d26090c0dd679",
+   "tests/test_en_002_surface_heat.py": "c45ab4a04ceaa6211d5aaf72befbf5d95e8e9c7be5b86454ccc4a6b5cae39e34",
+   "tests/test_en_003_earth_flux.py": "eaa1527e9722b6feb07abc9289f43680b60c59791ce838e072a5e24b90e62c79",
+   "tests/test_fe_001_solar_array_fe.py": "f23d462dbbd432308214db7d5634689b059f5e5b1bb4f46251c0836d139f3cd7",
+   "tests/test_fe_002_radiator_fe.py": "f1be285404e242cc6394363eac2ed1345233e1497ed83fff5f4e3dde09260aa1",
+   "tests/test_fe_003_compute_cold_plate_fe.py": "3a9bfdd73afca2fb2257235348b85702707b5c390b1814a3d15621fba39bafce",
+   "tests/test_fe_004_whole_satellite_chain.py": "6aaeec63a82a4031d916d063694f2aa9a6b750c1712ce2bb7ba036497f1e9a66",
+   "tests/test_ht_001_heat_flows.py": "2d91f41677820f09cdb4e6edac6582be56c9647cea59bfaa629e30da1e759049",
+   "tests/test_ht_002_derivative_balance.py": "728e57be7630d1be877a265ad0206e9ab0cef1374a9bd74f20f438f18a0d144b",
+   "tests/test_ht_003_analytic.py": "a66ffc2613929fbd9bb44a0f2a8f1d41879069d1b2d9584f8fb2041f1545e832",
+   "tests/test_ni_001_numerics_eclipse.py": "1f4cba777b1aba392d09bb130ec6652d2b04004a3ac97ea4e49a88424aacdf47",
+   "tests/test_ni_002_end_to_end.py": "fb33ca9517ced5761c63ae7d68cefc72e98c3c3e36c7a8665b0d89fc9d3c696e",
+   "tests/test_ni_003_scene_assembly.py": "2ce365771b66f67e78334bbb3358a210d8eabed0753d82b7abeb4f3e900e6226",
+   "tests/test_pa_001_t5_assembly.py": "fa1b1edba0b491daf8a6e06ecd6d3a1e8baa9307daf94b5d885659a0620e3293"
+  }
+ }
+}

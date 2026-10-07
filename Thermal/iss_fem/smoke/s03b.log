@@ -1,0 +1,89 @@
+geom: 4 domains 24 boundaries
+Sun dir ECS: 1.0 -0.0 0.0  T_orb 5572.069701428109
+PROPS sa1 ['primaryAxis', 'SPA', 'secondaryAxis', 'SSA', 'StudyStep', 'showPhysicsSymbols']
+      primaryAxis = z
+      SPA = 0
+      secondaryAxis = x
+      SSA = 0
+      StudyStep = 0
+      showPhysicsSymbols = 1
+PROPS so1 ['primaryOrientation', 'SPO', 'primaryDeclination', 'primaryRightAscension', 'secondaryOrientation', 'SSO', 'secondaryDeclination', 'secondaryRightAscension', 'primaryRotation', 'primaryDummyAngularPosition', 'primaryAngularRate', 'primaryAngularPosition', 'secondaryRotation', 'secondaryDummyAngularPosition', 'secondaryAngularRate', 'secondaryAngularPosition', 'tertiaryRotation', 'tertiaryDummyAngularPosition', 'tertiaryAngularRate', 'tertiaryAngularPosition', 'StudyStep', 'showPhysicsSymbols']
+      primaryOrientation = nadir
+      SPO = 0
+      primaryDeclination = 0[deg]
+      primaryRightAscension = (0[h]+0[min])+0[s]
+      secondaryOrientation = velocity
+      SSO = 0
+      secondaryDeclination = 0[deg]
+      secondaryRightAscension = (0[h]+0[min])+0[s]
+      primaryRotation = none
+      primaryDummyAngularPosition = 0[deg]
+      primaryAngularRate = 0[deg/s]
+      primaryAngularPosition = 0[deg]
+      secondaryRotation = none
+      secondaryDummyAngularPosition = 0[deg]
+      secondaryAngularRate = 0[deg/s]
+      secondaryAngularPosition = 0[deg]
+      tertiaryRotation = none
+      tertiaryDummyAngularPosition = 0[deg]
+      tertiaryAngularRate = 0[deg/s]
+      tertiaryAngularPosition = 0[deg]
+      StudyStep = 0
+      showPhysicsSymbols = 1
+PROPS et1 ['initFastTumbling', 'initAxesFeature', 'initOrientationFeature', 'eventType', 'implicitAxesFeatures', 'implicitOrientationFeatures', 'implicitFastTumbling', 'implicitDescription', 'startEvent', 'periodEvent', 'explicitFastTumbling', 'explicitAxesFeatures', 'explicitOrientationFeatures', 'explicitDescription', 'StudyStep', 'showPhysicsSymbols']
+      initFastTumbling = 0
+      initAxesFeature = sa1
+      initOrientationFeature = so1
+      eventType = []
+      implicitAxesFeatures = []
+      implicitOrientationFeatures = []
+      implicitFastTumbling = []
+      implicitDescription = []
+      startEvent = []
+      periodEvent = []
+      explicitFastTumbling = []
+      explicitAxesFeatures = []
+      explicitOrientationFeatures = []
+      explicitDescription = []
+      StudyStep = 0
+      showPhysicsSymbols = 1
+PROPS otl interface ERR 'com.comsol.clientapi.physics.impl.PhysicsClient' object has no attribute 'properties'
+otl selection props: ['1', '2', '3', '4', '5']
+--- building three OTL interfaces
+set OK otl_b.sa1 primaryAxis = z
+set OK otl_b.sa1 secondaryAxis = x
+set OK otl_b.so1 primaryOrientation = nadir
+set OK otl_b.so1 secondaryOrientation = velocity
+set OK otl_r.sa1 primaryAxis = y
+set OK otl_r.sa1 secondaryAxis = z
+set OK otl_r.so1 primaryOrientation = antinormal
+set OK otl_r.so1 secondaryOrientation = antisun
+set OK otl_s.sa1 primaryAxis = z
+set OK otl_s.sa1 secondaryAxis = y
+set OK otl_s.so1 primaryOrientation = sun
+set OK otl_s.so1 secondaryOrientation = antinormal
+three OTL created 4.6s
+sa2 created with ('sa2', 'SpacecraftAxes', -1)
+so2 created with ('so2', 'SpacecraftOrientation', -1)
+set OK sa2 primaryAxis = y
+set OK sa2 secondaryAxis = x
+set OK so2 primaryOrientation = antinormal
+set OK so2 secondaryOrientation = nadir
+PROPS et1 (otl_r) ['initFastTumbling', 'initAxesFeature', 'initOrientationFeature', 'eventType', 'implicitAxesFeatures', 'implicitOrientationFeatures', 'implicitFastTumbling', 'implicitDescription', 'startEvent', 'periodEvent', 'explicitFastTumbling', 'explicitAxesFeatures', 'explicitOrientationFeatures', 'explicitDescription', 'StudyStep', 'showPhysicsSymbols']
+events timeline set
+mesh 0.6s
+LOADS SOLVED in 23.0s
+dset1 A_top otl_b.Gext1: ERR Exception: 	com.comsol.util.exceptions.FlException: 无法计算表达式。 Messages: 	未定义变量。 	- 变量: otl_b.Gext1 	- 几何: geom1 	- 边界: 21  	无法计算表达式。 	- 表达式: otl_b.Gext1 	- 特征: 表面平均值 1 
+dset1 A_top otl_b.Gext2: ERR Exception: 	com.comsol.util.exceptions.FlException: 无法计算表达式。 Messages: 	未定义变量。 	- 变量: otl_b.Gext2 	- 几何: geom1 	- 边界: 21  	无法计算表达式。 	- 表达式: otl_b.Gext2 	- 特征: 表面平均值 2 
+dset1 S_top otl_s.Gext1: ERR Exception: 	com.comsol.util.exceptions.FlException: 无法计算表达式。 Messages: 	未定义变量。 	- 变量: otl_s.Gext1 	- 几何: geom1 	- 边界: 4  	无法计算表达式。 	- 表达式: otl_s.Gext1 	- 特征: 表面平均值 1a 
+dset1 S_top otl_s.Gext2: ERR Exception: 	com.comsol.util.exceptions.FlException: 无法计算表达式。 Messages: 	未定义变量。 	- 变量: otl_s.Gext2 	- 几何: geom1 	- 边界: 4  	无法计算表达式。 	- 表达式: otl_s.Gext2 	- 特征: 表面平均值 2a 
+dset1 R_px otl_r.Gext1: ERR Exception: 	com.comsol.util.exceptions.FlException: 无法计算表达式。 Messages: 	未定义变量。 	- 变量: otl_r.Gext1 	- 几何: geom1 	- 边界: 16  	无法计算表达式。 	- 表达式: otl_r.Gext1 	- 特征: 表面平均值 1b 
+dset1 R_px otl_r.Gext2: ERR Exception: 	com.comsol.util.exceptions.FlException: 无法计算表达式。 Messages: 	未定义变量。 	- 变量: otl_r.Gext2 	- 几何: geom1 	- 边界: 16  	无法计算表达式。 	- 表达式: otl_r.Gext2 	- 特征: 表面平均值 2b 
+dset2 A_top otl_b.Gext1: ERR Exception: 	com.comsol.util.exceptions.FlException: 无法计算表达式。 Messages: 	未定义变量。 	- 变量: otl_b.Gext1 	- 几何: geom1 	- 边界: 21  	无法计算表达式。 	- 表达式: otl_b.Gext1 	- 特征: 表面平均值 1c 
+dset2 A_top otl_b.Gext2: ERR Exception: 	com.comsol.util.exceptions.FlException: 无法计算表达式。 Messages: 	未定义变量。 	- 变量: otl_b.Gext2 	- 几何: geom1 	- 边界: 21  	无法计算表达式。 	- 表达式: otl_b.Gext2 	- 特征: 表面平均值 2c 
+dset2 S_top otl_s.Gext1: ERR Exception: 	com.comsol.util.exceptions.FlException: 无法计算表达式。 Messages: 	未定义变量。 	- 变量: otl_s.Gext1 	- 几何: geom1 	- 边界: 4  	无法计算表达式。 	- 表达式: otl_s.Gext1 	- 特征: 表面平均值 1d 
+dset2 S_top otl_s.Gext2: ERR Exception: 	com.comsol.util.exceptions.FlException: 无法计算表达式。 Messages: 	未定义变量。 	- 变量: otl_s.Gext2 	- 几何: geom1 	- 边界: 4  	无法计算表达式。 	- 表达式: otl_s.Gext2 	- 特征: 表面平均值 2d 
+dset2 R_px otl_r.Gext1: ERR Exception: 	com.comsol.util.exceptions.FlException: 无法计算表达式。 Messages: 	未定义变量。 	- 变量: otl_r.Gext1 	- 几何: geom1 	- 边界: 16  	无法计算表达式。 	- 表达式: otl_r.Gext1 	- 特征: 表面平均值 1e 
+dset2 R_px otl_r.Gext2: ERR Exception: 	com.comsol.util.exceptions.FlException: 无法计算表达式。 Messages: 	未定义变量。 	- 变量: otl_r.Gext2 	- 几何: geom1 	- 边界: 16  	无法计算表达式。 	- 表达式: otl_r.Gext2 	- 特征: 表面平均值 2e 
+u(deg) at outputs: [0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345, 360]
+total 44s

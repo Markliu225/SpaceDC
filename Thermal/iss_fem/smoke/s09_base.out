@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "SourceFile", line 55, in com.comsol.clientapi.impl.ModelEntityListIterator.next
+Exception: Java Exception
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Workspace\SpaceDC\Thermal\iss_fem\smoke\s09_bisect.py", line 40, in <module>
+    for sol in j.sol():
+  File "C:\Workspace\SpaceDC\space-compute-demo\backend\.venv\Lib\site-packages\jpype\_jcollection.py", line 260, in __next__
+    return self.next()
+           ^^^^^^^^^^^
+java.util.java.util.ConcurrentModificationException: java.util.ConcurrentModificationException

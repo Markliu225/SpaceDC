@@ -1,0 +1,783 @@
+{
+ "case_id": "NI-002",
+ "run_id": "ni002.run",
+ "epoch_utc": "2026-03-20T12:00:00+00:00",
+ "scene": {
+  "scene_id": "sdtwin.example.sat01",
+  "scene_version": "0.1.0",
+  "path": "C:\\Workspace\\SpaceDC\\Thermal\\tests\\data\\simready\\sat01_scene.json",
+  "sha256": "5cf1052c752bbaf98dce8f5102d1c4a474d433ecf2fd3ab8af74065983aa2f3d",
+  "status": "illustrative_test_value",
+  "note": "Example scene for tests; every value is an illustrative test value, not a measured or selected device parameter. Explicit battery input correction before execution: x_p 0.45 -> 0.364343000358038 from Power P5 lithium inventory using the illustrative cell pack."
+ },
+ "assets": {
+  "sdtwin.example.solar_array_panel": {
+   "asset_version": "0.1.0",
+   "path": "C:\\Workspace\\SpaceDC\\Thermal\\tests\\data\\simready\\assets\\solar_array_panel.json",
+   "sha256": "405dbbab56a97fedf478512773f01e194ca7229080c437d6171968a63e446cde",
+   "geometry_uri": "../geometry/solar_array_panel.usda",
+   "geometry_sha256": "ca1a1a8a7bc493527ddcd8b8ef5ac3088f6669d6519e4841e6c60a34e1028653",
+   "meters_per_unit": 1.0,
+   "status": "illustrative_test_value",
+   "note": "All values are illustrative test values for a small computing satellite; no device has been selected.",
+   "models": {
+    "thermal": "sdtwin.thermal.solar_array/1",
+    "power": "sdtwin.power.solar_array.fixed_efficiency/1"
+   }
+  },
+  "sdtwin.example.battery_pack": {
+   "asset_version": "0.1.0",
+   "path": "C:\\Workspace\\SpaceDC\\Thermal\\tests\\data\\simready\\assets\\battery_pack.json",
+   "sha256": "d1f7d3e977267a1ca29e803b925cf2fa04117936dec4f4cf1b4fa937c7c995d1",
+   "geometry_uri": "../geometry/battery_pack.usda",
+   "geometry_sha256": "193f494e3441e06d4c8a3556ce773605394f08d9ac5a1433edea350ea351c9ca",
+   "meters_per_unit": 1.0,
+   "status": "illustrative_test_value",
+   "note": "All values are illustrative test values for a small computing satellite; no device has been selected.",
+   "models": {
+    "thermal": "sdtwin.thermal.battery_pack/1",
+    "power": "sdtwin.power.battery.spm2/1"
+   }
+  },
+  "sdtwin.example.power_controller": {
+   "asset_version": "0.1.0",
+   "path": "C:\\Workspace\\SpaceDC\\Thermal\\tests\\data\\simready\\assets\\power_controller.json",
+   "sha256": "607f5d575fc9283c27691db5482479325e2c824e17682ee1ad402cbffb66c30d",
+   "geometry_uri": "../geometry/power_controller.usda",
+   "geometry_sha256": "7c3f7072decc361d19971cfdd578d18722fb9ed53a9c98e3b2439a5eb8cb1e7b",
+   "meters_per_unit": 1.0,
+   "status": "illustrative_test_value",
+   "note": "All values are illustrative test values for a small computing satellite; no device has been selected.",
+   "models": {
+    "thermal": "sdtwin.thermal.power_equipment/1",
+    "power": "sdtwin.power.controller.ideal_mppt/1"
+   }
+  },
+  "sdtwin.example.pdu": {
+   "asset_version": "0.1.0",
+   "path": "C:\\Workspace\\SpaceDC\\Thermal\\tests\\data\\simready\\assets\\pdu.json",
+   "sha256": "7b8df76a2ec56ac371e5708c1ee580975e803fe9825083ce94e79d5c4e63ec69",
+   "geometry_uri": "../geometry/pdu.usda",
+   "geometry_sha256": "f1ed60af1cde3e389edaa73f39fd134926b1cfbe5d653e59707507be5e87571c",
+   "meters_per_unit": 1.0,
+   "status": "illustrative_test_value",
+   "note": "All values are illustrative test values for a small computing satellite; no device has been selected.",
+   "models": {
+    "thermal": "sdtwin.thermal.power_equipment/1",
+    "power": "sdtwin.power.pdu.fixed_efficiency/1"
+   }
+  },
+  "sdtwin.example.compute_board": {
+   "asset_version": "0.1.0",
+   "path": "C:\\Workspace\\SpaceDC\\Thermal\\tests\\data\\simready\\assets\\compute_board.json",
+   "sha256": "cfef46fe4b0a740838cbd06aa0ae8df4fb7a568c88b10105a1c124978c6648d3",
+   "geometry_uri": "../geometry/compute_board.usda",
+   "geometry_sha256": "a4746740a0cc54b04ad2697045784ef7867fcc3ff556735633461d3c2d248f74",
+   "meters_per_unit": 0.001,
+   "status": "illustrative_test_value",
+   "note": "All values are illustrative test values for a small computing satellite; no device has been selected.",
+   "models": {
+    "thermal": "sdtwin.thermal.compute_board/1",
+    "power": "sdtwin.power.load.compute_request/1"
+   }
+  },
+  "sdtwin.example.cold_plate": {
+   "asset_version": "0.1.0",
+   "path": "C:\\Workspace\\SpaceDC\\Thermal\\tests\\data\\simready\\assets\\cold_plate.json",
+   "sha256": "3c27c69d44ec0a03507435b1d3339735976b92755dedab180c4963c98be4fe22",
+   "geometry_uri": "../geometry/cold_plate.usda",
+   "geometry_sha256": "6c0be2756d7d71950ec7a7d17e851b35ceb5cc6f508f54bed5d4bb195e7a207a",
+   "meters_per_unit": 0.01,
+   "status": "illustrative_test_value",
+   "note": "All values are illustrative test values for a small computing satellite; no device has been selected.",
+   "models": {
+    "thermal": "sdtwin.thermal.cold_plate/1"
+   }
+  },
+  "sdtwin.example.radiator_panel": {
+   "asset_version": "0.1.0",
+   "path": "C:\\Workspace\\SpaceDC\\Thermal\\tests\\data\\simready\\assets\\radiator_panel.json",
+   "sha256": "ef9d1c8c248663b16175887ac2547850ad5a4542163a758c4da4d33be2531bdb",
+   "geometry_uri": "../geometry/radiator_panel.usda",
+   "geometry_sha256": "c7a55c0c72cbf4aeb20165c22869a61eab55770dd8bea437a607823c933d796a",
+   "meters_per_unit": 1.0,
+   "status": "illustrative_test_value",
+   "note": "All values are illustrative test values for a small computing satellite; no device has been selected.",
+   "models": {
+    "thermal": "sdtwin.thermal.radiator/1"
+   }
+  }
+ },
+ "value_status": [
+  "illustrative_test_value"
+ ],
+ "thermal_parameters": {
+  "C_J_K": {
+   "S": 2081.7,
+   "J": 435.78240000000005,
+   "C": 696.7296,
+   "B": 1077.12,
+   "D": 936.78,
+   "R": 2646.4320000000002
+  },
+  "R_K_W": {
+   "SR": 113.94029850746269,
+   "JC": 0.05133067198935463,
+   "CR": 0.12,
+   "BR": 1.048502994011976,
+   "DR": 0.6492015968063872
+  },
+  "surfaces": [
+   {
+    "surface_id": "SolarArray01/front",
+    "node_id": "S",
+    "area_m2": 0.6,
+    "normal_body": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "absorptivity": 0.91,
+    "emissivity": 0.85
+   },
+   {
+    "surface_id": "SolarArray01/back",
+    "node_id": "S",
+    "area_m2": 0.6,
+    "normal_body": [
+     -1.0,
+     0.0,
+     0.0
+    ],
+    "absorptivity": 0.88,
+    "emissivity": 0.86
+   },
+   {
+    "surface_id": "Radiator01/front",
+    "node_id": "R",
+    "area_m2": 0.48,
+    "normal_body": [
+     0.0,
+     -1.0,
+     0.0
+    ],
+    "absorptivity": 0.2,
+    "emissivity": 0.88
+   },
+   {
+    "surface_id": "Radiator01/back",
+    "node_id": "R",
+    "area_m2": 0.48,
+    "normal_body": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "absorptivity": 0.3,
+    "emissivity": 0.8
+   }
+  ],
+  "provenance": {
+   "node_order": [
+    "S",
+    "J",
+    "C",
+    "B",
+    "D",
+    "R"
+   ],
+   "path_order": [
+    "SR",
+    "JC",
+    "CR",
+    "BR",
+    "DR"
+   ],
+   "units": {
+    "C_J_K": "J/K",
+    "R_K_W": "K/W",
+    "area_m2": "m^2",
+    "temperature": "K"
+   },
+   "capacitance": {
+    "S": {
+     "value_J_K": 2081.7,
+     "portions": [
+      {
+       "instance_id": "SolarArray01",
+       "material_id": "SolarArray01/substrate_honeycomb_cfrp",
+       "mass_kg": 1.65,
+       "cp_J_kgK": 930.0,
+       "C_J_K": 1534.5,
+       "source": "sdtwin.example.solar_array_panel@0.1.0 materials[substrate_honeycomb_cfrp].mass_kg recorded: illustrative test value: aluminium honeycomb with CFRP facesheets, about 2.75 kg/m^2"
+      },
+      {
+       "instance_id": "SolarArray01",
+       "material_id": "SolarArray01/cells_and_coverglass",
+       "mass_kg": 0.72,
+       "cp_J_kgK": 760.0,
+       "C_J_K": 547.1999999999999,
+       "source": "sdtwin.example.solar_array_panel@0.1.0 materials[cells_and_coverglass].mass_kg recorded: illustrative test value: triple-junction cells with coverglass, about 1.2 kg/m^2"
+      }
+     ]
+    },
+    "J": {
+     "value_J_K": 435.78240000000005,
+     "portions": [
+      {
+       "instance_id": "Compute01",
+       "material_id": "Compute01/pcb_laminate",
+       "mass_kg": 0.04864,
+       "cp_J_kgK": 1100.0,
+       "C_J_K": 53.504000000000005,
+       "source": "sdtwin.example.compute_board@0.1.0 materials[pcb_laminate].mass_kg = density 1900 kg/m^3 x extent box 0.16 m x 0.1 m x 0.0016 m x solid fraction 1 of /ComputeBoard/Board in compute_board.usda: illustrative test value: FR-4 class laminate density and specific heat"
+      },
+      {
+       "instance_id": "Compute01",
+       "material_id": "Compute01/copper_spreader",
+       "mass_kg": 0.48384,
+       "cp_J_kgK": 385.0,
+       "C_J_K": 186.2784,
+       "source": "sdtwin.example.compute_board@0.1.0 materials[copper_spreader].mass_kg = density 8960 kg/m^3 x extent box 0.09 m x 0.15 m x 0.004 m x solid fraction 1 of /ComputeBoard/Spreader in compute_board.usda: illustrative test value: copper density and specific heat"
+      },
+      {
+       "instance_id": "Compute01",
+       "material_id": "Compute01/soc_module_package",
+       "mass_kg": 0.28,
+       "cp_J_kgK": 700.0,
+       "C_J_K": 196.00000000000003,
+       "source": "sdtwin.example.compute_board@0.1.0 materials[soc_module_package].mass_kg recorded: illustrative test value: system-on-module with lid and memory"
+      }
+     ]
+    },
+    "C": {
+     "value_J_K": 696.7296,
+     "portions": [
+      {
+       "instance_id": "ColdPlate01",
+       "material_id": "ColdPlate01/plate_al6061",
+       "mass_kg": 0.7776,
+       "cp_J_kgK": 896.0,
+       "C_J_K": 696.7296,
+       "source": "sdtwin.example.cold_plate@0.1.0 materials[plate_al6061].mass_kg = density 2700 kg/m^3 x extent box 0.2 m x 0.15 m x 0.012 m x solid fraction 0.8 of /ColdPlate/Plate in cold_plate.usda: illustrative test value: Al 6061 density and specific heat, 80 percent solid after machining"
+      }
+     ]
+    },
+    "B": {
+     "value_J_K": 1077.12,
+     "portions": [
+      {
+       "instance_id": "Battery01",
+       "material_id": "Battery01/li_ion_cells",
+       "mass_kg": 0.76,
+       "cp_J_kgK": 1040.0,
+       "C_J_K": 790.4,
+       "source": "sdtwin.example.battery_pack@0.1.0 materials[li_ion_cells].mass_kg recorded: illustrative test value: sixteen cells of 47.5 g, lumped cell specific heat"
+      },
+      {
+       "instance_id": "Battery01",
+       "material_id": "Battery01/enclosure_al",
+       "mass_kg": 0.32,
+       "cp_J_kgK": 896.0,
+       "C_J_K": 286.72,
+       "source": "sdtwin.example.battery_pack@0.1.0 materials[enclosure_al].mass_kg recorded: illustrative test value: aluminium enclosure and cell holders"
+      }
+     ]
+    },
+    "D": {
+     "value_J_K": 936.78,
+     "portions": [
+      {
+       "instance_id": "Controller01",
+       "material_id": "Controller01/housing_al",
+       "mass_kg": 0.42,
+       "cp_J_kgK": 896.0,
+       "C_J_K": 376.32,
+       "source": "sdtwin.example.power_controller@0.1.0 materials[housing_al].mass_kg recorded: illustrative test value: aluminium housing"
+      },
+      {
+       "instance_id": "Controller01",
+       "material_id": "Controller01/electronics_pcb",
+       "mass_kg": 0.18,
+       "cp_J_kgK": 1100.0,
+       "C_J_K": 198.0,
+       "source": "sdtwin.example.power_controller@0.1.0 materials[electronics_pcb].mass_kg recorded: illustrative test value: populated control boards"
+      },
+      {
+       "instance_id": "PDU01",
+       "material_id": "PDU01/housing_al",
+       "mass_kg": 0.31,
+       "cp_J_kgK": 896.0,
+       "C_J_K": 277.76,
+       "source": "sdtwin.example.pdu@0.1.0 materials[housing_al].mass_kg recorded: illustrative test value: aluminium housing"
+      },
+      {
+       "instance_id": "PDU01",
+       "material_id": "PDU01/assigned_harness_cu",
+       "mass_kg": 0.22,
+       "cp_J_kgK": 385.0,
+       "C_J_K": 84.7,
+       "source": "sdtwin.example.pdu@0.1.0 materials[assigned_harness_cu].mass_kg recorded: illustrative test value: copper conductor mass of the harness assigned to node D"
+      }
+     ]
+    },
+    "R": {
+     "value_J_K": 2646.4320000000002,
+     "portions": [
+      {
+       "instance_id": "Radiator01",
+       "material_id": "Radiator01/facesheet_al6061",
+       "mass_kg": 2.592,
+       "cp_J_kgK": 896.0,
+       "C_J_K": 2322.4320000000002,
+       "source": "sdtwin.example.radiator_panel@0.1.0 materials[facesheet_al6061].mass_kg = density 2700 kg/m^3 x extent box 0.8 m x 0.6 m x 0.002 m x solid fraction 1 of /RadiatorPanel/Panel in radiator_panel.usda: illustrative test value: Al 6061 density and specific heat"
+      },
+      {
+       "instance_id": "Radiator01",
+       "material_id": "Radiator01/embedded_heat_pipes",
+       "mass_kg": 0.36,
+       "cp_J_kgK": 900.0,
+       "C_J_K": 324.0,
+       "source": "sdtwin.example.radiator_panel@0.1.0 materials[embedded_heat_pipes].mass_kg recorded: illustrative test value: aluminium-ammonia heat-pipe sections counted once, in the radiator"
+      }
+     ]
+    }
+   },
+   "resistance": {
+    "SR": {
+     "value_K_W": 113.94029850746269,
+     "method": "conduction_plus_contact",
+     "inputs": {
+      "length_m": 0.15,
+      "conductivity_W_mK": 6.7,
+      "area_m2": 0.0002,
+      "contact_resistance_K_W": 2.0,
+      "conduction_K_W": 111.94029850746269
+     },
+     "source": "illustrative test value: titanium hinge bracket, conduction plus bolted contact"
+    },
+    "JC": {
+     "value_K_W": 0.05133067198935463,
+     "method": "conduction_plus_contact",
+     "inputs": {
+      "length_m": 0.003,
+      "conductivity_W_mK": 167.0,
+      "area_m2": 0.0135,
+      "contact_resistance_K_W": 0.05,
+      "conduction_K_W": 0.0013306719893546241
+     },
+     "source": "illustrative test value: spreader-to-plate aluminium pedestal with gap pad contact"
+    },
+    "CR": {
+     "value_K_W": 0.12,
+     "method": "equivalent_total",
+     "inputs": {
+      "equivalent_total_resistance_K_W": 0.12,
+      "includes_contact": true
+     },
+     "source": "illustrative test value: equivalent total resistance of a two heat-pipe path including both saddle contacts"
+    },
+    "BR": {
+     "value_K_W": 1.048502994011976,
+     "method": "conduction_plus_contact",
+     "inputs": {
+      "length_m": 0.05,
+      "conductivity_W_mK": 167.0,
+      "area_m2": 0.0004,
+      "contact_resistance_K_W": 0.3,
+      "conduction_K_W": 0.7485029940119761
+     },
+     "source": "illustrative test value: aluminium bracket from pack enclosure to radiator, conduction plus contact"
+    },
+    "DR": {
+     "value_K_W": 0.6492015968063872,
+     "method": "conduction_plus_contact",
+     "inputs": {
+      "length_m": 0.04,
+      "conductivity_W_mK": 167.0,
+      "area_m2": 0.0006,
+      "contact_resistance_K_W": 0.25,
+      "conduction_K_W": 0.3992015968063872
+     },
+     "source": "illustrative test value: shared aluminium mounting deck of Controller01 and PDU01, conduction plus contact"
+    }
+   },
+   "surfaces": {
+    "SolarArray01/front": {
+     "instance_id": "SolarArray01",
+     "node_id": "S",
+     "area_m2": 0.6,
+     "normal_body": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "absorptivity": 0.91,
+     "emissivity": 0.85,
+     "source": "sdtwin.example.solar_array_panel@0.1.0 surfaces[front]: area of face +Z of /SolarArrayPanel/Panel in solar_array_panel.usda, normal rotated by the scene mounting; optical properties: illustrative test value: typical coverglass cell side"
+    },
+    "SolarArray01/back": {
+     "instance_id": "SolarArray01",
+     "node_id": "S",
+     "area_m2": 0.6,
+     "normal_body": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "absorptivity": 0.88,
+     "emissivity": 0.86,
+     "source": "sdtwin.example.solar_array_panel@0.1.0 surfaces[back]: area of face -Z of /SolarArrayPanel/Panel in solar_array_panel.usda, normal rotated by the scene mounting; optical properties: illustrative test value: typical black CFRP facesheet"
+    },
+    "Radiator01/front": {
+     "instance_id": "Radiator01",
+     "node_id": "R",
+     "area_m2": 0.48,
+     "normal_body": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "absorptivity": 0.2,
+     "emissivity": 0.88,
+     "source": "sdtwin.example.radiator_panel@0.1.0 surfaces[front]: area of face +Z of /RadiatorPanel/Panel in radiator_panel.usda, normal rotated by the scene mounting; optical properties: illustrative test value: typical white silicone paint"
+    },
+    "Radiator01/back": {
+     "instance_id": "Radiator01",
+     "node_id": "R",
+     "area_m2": 0.48,
+     "normal_body": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "absorptivity": 0.3,
+     "emissivity": 0.8,
+     "source": "sdtwin.example.radiator_panel@0.1.0 surfaces[back]: area of face -Z of /RadiatorPanel/Panel in radiator_panel.usda, normal rotated by the scene mounting; optical properties: illustrative test value: typical treated aluminium back face"
+    }
+   },
+   "assets": {
+    "SolarArray01": {
+     "asset_id": "sdtwin.example.solar_array_panel",
+     "asset_version": "0.1.0",
+     "node_id": "S",
+     "temperature_range_K": [
+      173.15,
+      383.15
+     ]
+    },
+    "Battery01": {
+     "asset_id": "sdtwin.example.battery_pack",
+     "asset_version": "0.1.0",
+     "node_id": "B",
+     "temperature_range_K": [
+      263.15,
+      318.15
+     ]
+    },
+    "Controller01": {
+     "asset_id": "sdtwin.example.power_controller",
+     "asset_version": "0.1.0",
+     "node_id": "D",
+     "temperature_range_K": [
+      243.15,
+      343.15
+     ]
+    },
+    "PDU01": {
+     "asset_id": "sdtwin.example.pdu",
+     "asset_version": "0.1.0",
+     "node_id": "D",
+     "temperature_range_K": [
+      243.15,
+      343.15
+     ]
+    },
+    "Compute01": {
+     "asset_id": "sdtwin.example.compute_board",
+     "asset_version": "0.1.0",
+     "node_id": "J",
+     "temperature_range_K": [
+      253.15,
+      358.15
+     ]
+    },
+    "ColdPlate01": {
+     "asset_id": "sdtwin.example.cold_plate",
+     "asset_version": "0.1.0",
+     "node_id": "C",
+     "temperature_range_K": [
+      243.15,
+      343.15
+     ]
+    },
+    "Radiator01": {
+     "asset_id": "sdtwin.example.radiator_panel",
+     "asset_version": "0.1.0",
+     "node_id": "R",
+     "temperature_range_K": [
+      173.15,
+      343.15
+     ]
+    }
+   },
+   "overrides_applied": [],
+   "temperature_range_K": {
+    "S": [
+     173.15,
+     383.15
+    ],
+    "J": [
+     253.15,
+     358.15
+    ],
+    "C": [
+     243.15,
+     343.15
+    ],
+    "B": [
+     263.15,
+     318.15
+    ],
+    "D": [
+     243.15,
+     343.15
+    ],
+    "R": [
+     173.15,
+     343.15
+    ]
+   }
+  }
+ },
+ "initial_state": {
+  "time_s": 0.0,
+  "temperature_K": {
+   "S": 280.0,
+   "J": 293.15,
+   "C": 293.15,
+   "B": 293.15,
+   "D": 293.15,
+   "R": 283.15
+  },
+  "x_n": 0.75,
+  "x_p": 0.364343000358038,
+  "load_connected": true,
+  "trip_latched": false
+ },
+ "power_parameters": {
+  "provenance": {
+   "instance_id": "Sat01",
+   "data_status": "illustrative test values for the SDTwin thermal tests; not a selected, qualified or measured device. The SPM geometry and kinetics are of the order of published NMC and graphite cells, the open-circuit potentials are simple monotone polynomials chosen for these tests, not fitted material curves.",
+   "assets": {
+    "solar": {
+     "asset_id": "example.solar_array",
+     "asset_version": "test-1",
+     "source": "illustrative test value, not a selected device (sdtwin_sim.power_stand_in.example_power_records)"
+    },
+    "battery": {
+     "asset_id": "example.battery_pack",
+     "asset_version": "test-1",
+     "source": "illustrative test value, not a selected device (sdtwin_sim.power_stand_in.example_power_records)"
+    },
+    "pdu": {
+     "asset_id": "example.pdu",
+     "asset_version": "test-1",
+     "source": "illustrative test value, not a selected device (sdtwin_sim.power_stand_in.example_power_records)",
+     "covered_wiring": "PDU01 conversion and the PDU01 to Compute01 harness; battery and array harness resistance is not included (battery ohmic resistance is in R_ohm_ohm)"
+    }
+   },
+   "overrides_applied": [
+    {
+     "target": "solar",
+     "field": "area_m2",
+     "old": 1.8,
+     "new": 0.51,
+     "source": "Sat01 scene power capabilities of SolarArray01, Battery01 and PDU01"
+    },
+    {
+     "target": "solar",
+     "field": "efficiency",
+     "old": 0.3,
+     "new": 0.295,
+     "source": "Sat01 scene power capabilities of SolarArray01, Battery01 and PDU01"
+    },
+    {
+     "target": "solar",
+     "field": "normal_body",
+     "old": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "new": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "source": "Sat01 scene power capabilities of SolarArray01, Battery01 and PDU01"
+    },
+    {
+     "target": "battery",
+     "field": "N_s",
+     "old": 8,
+     "new": 4,
+     "source": "Sat01 scene power capabilities of SolarArray01, Battery01 and PDU01"
+    },
+    {
+     "target": "battery",
+     "field": "N_p",
+     "old": 6,
+     "new": 2,
+     "source": "Sat01 scene power capabilities of SolarArray01, Battery01 and PDU01"
+    },
+    {
+     "target": "pdu",
+     "field": "eta_D",
+     "old": 0.95,
+     "new": 0.95,
+     "source": "Sat01 scene power capabilities of SolarArray01, Battery01 and PDU01"
+    }
+   ],
+   "derived": {
+    "Q_n_C": 11440.748256129002,
+    "Q_p_C": 18190.1384512533,
+    "reference_inventory_mol": 0.15761992500000002
+   },
+   "initial_state": {
+    "time_s": 0.0,
+    "x_n": 0.75,
+    "x_p": 0.364343000358038,
+    "T_B_K": 293.15,
+    "load_connected": true,
+    "trip_latched": false
+   },
+   "initial_checks": {
+    "zero_current_voltage_V": 4.033038586821669,
+    "SOC": 0.8275862068965517,
+    "inventory_relative_difference": 1.760917956002638e-16
+   },
+   "units": {
+    "power": "W",
+    "current": "A",
+    "voltage": "V",
+    "temperature": "K",
+    "time": "s",
+    "charge": "C",
+    "length": "m"
+   },
+   "sign_convention": "cell current and battery port power positive on discharge; Q_B_W keeps its sign",
+   "model": "sdtwin_sim.power_stand_in: P1 to P11 of the Power design report, not the production Power module"
+  },
+  "links": {
+   "P_pv_W": "SolarArray01",
+   "P_load_W": "Compute01",
+   "Q_B_W": "Battery01",
+   "Q_D_W": "PDU01"
+  }
+ },
+ "environment": {
+  "mode": "orbit_ephemeris",
+  "irradiance": "ntu_space_dynamics.sun_intensity(include_eclipse=True)",
+  "eclipse_phases": "ntu_space_dynamics.eclipse_fraction, conical umbra and penumbra",
+  "position_interpolation": "cubic Hermite polynomials with the ephemeris velocities",
+  "attitude_interpolation": "spherical linear interpolation of the body-to-GCRS quaternions",
+  "sun_interpolation": "cubic spline of the Earth-to-Sun vectors",
+  "ephemeris": {
+   "frame": "GCRS",
+   "samples": 2885,
+   "first_s": 0.0,
+   "last_s": 86520.0,
+   "max_spacing_s": 30.0
+  },
+  "attitude": {
+   "samples": 2885,
+   "first_s": 0.0,
+   "last_s": 86520.0,
+   "max_spacing_s": 30.0
+  },
+  "sun": {
+   "samples": 146,
+   "first_s": 0.0,
+   "last_s": 87000.0
+  },
+  "run_id": "ni002.run",
+  "epoch_utc": "2026-03-20T12:00:00+00:00",
+  "frame": "GCRS",
+  "time_range_s": [
+   0.0,
+   86520.0
+  ],
+  "earth_flux": {
+   "albedo": 0.3,
+   "olr_W_m2": 237.0,
+   "solar_constant_W_m2": 1361.0,
+   "earth_radius_m": 6378137.0,
+   "resolution": [
+    24,
+    48
+   ],
+   "disabled_reason": null
+  },
+  "surface_ids": [
+   "SolarArray01/front",
+   "SolarArray01/back",
+   "Radiator01/front",
+   "Radiator01/back"
+  ],
+  "power_environment": "sdtwin_sim.power_stand_in.PowerEnvironment"
+ },
+ "solver_settings": {
+  "method": "RK45",
+  "rtol": 1e-06,
+  "atol_T_K": 1e-06,
+  "max_step_s": 60.0,
+  "output_step_s": 60.0,
+  "environment_step_s": 10.0,
+  "event_time_tol_s": 0.001,
+  "atol_x": 1e-09,
+  "first_step_s": null
+ },
+ "commands": [
+  {
+   "time_s": 3108.5,
+   "kind": "start",
+   "command_id": "ni002.start.in_window"
+  },
+  {
+   "time_s": 3408.5,
+   "kind": "start",
+   "command_id": "ni002.start.after_window"
+  },
+  {
+   "time_s": 20701.5,
+   "kind": "stop",
+   "command_id": "ni002.stop.ops"
+  },
+  {
+   "time_s": 21301.5,
+   "kind": "start",
+   "command_id": "ni002.start.ops"
+  },
+  {
+   "time_s": 53598.5,
+   "kind": "start",
+   "command_id": "ni002.start.in_ramp"
+  },
+  {
+   "time_s": 54148.5,
+   "kind": "start",
+   "command_id": "ni002.start.after_ramp"
+  }
+ ],
+ "request": {
+  "base_W": 60.0,
+  "ramp": {
+   "start_s": 52898.5,
+   "end_s": 53798.5,
+   "start_W": 60.0,
+   "end_W": 250.0,
+   "comment": "Request rises for 900 s and returns to base at end_s, about 50 s before eclipse exit."
+  }
+ }
+}

@@ -1,0 +1,23 @@
+{
+  "hot75/2x6@range(10920,360,16560)": {
+    "raw_sample_count": 16,
+    "excluded_event_times_s": []
+  },
+  "hot75/4x12@range(10920,360,16560)": {
+    "raw_sample_count": 16,
+    "excluded_event_times_s": []
+  },
+  "hot75/8x24@range(10920,360,16560)": {
+    "raw_sample_count": 16,
+    "excluded_event_times_s": []
+  },
+  "nom0/4x12@range(10920,360,16560)": {
+    "raw_sample_count": 20,
+    "excluded_event_times_s": [
+      12802.43571702451,
+      12802.435717024524,
+      14968.787702716583,
+      14968.787702716585
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "asset_id": "sdtwin.example.battery_pack",
+  "asset_version": "0.1.0",
+  "description": "Lithium-ion pack of sixteen cylindrical cells in four series by two parallel blocks, in an aluminium enclosure.",
+  "geometry_uri": "../geometry/battery_pack.usda",
+  "capabilities": [
+    {
+      "domain": "thermal",
+      "model_id": "sdtwin.thermal.battery_pack/1",
+      "parameter_set": {
+        "materials": [
+          {"material_id": "li_ion_cells", "mass_kg": 0.76, "cp_J_kgK": 1040.0,
+           "source": "illustrative test value: sixteen cells of 47.5 g, lumped cell specific heat"},
+          {"material_id": "enclosure_al", "mass_kg": 0.32, "cp_J_kgK": 896.0,
+           "source": "illustrative test value: aluminium enclosure and cell holders"}
+        ],
+        "surfaces": [],
+        "temperature_range_K": [263.15, 318.15]
+      }
+    },
+    {
+      "domain": "power",
+      "model_id": "sdtwin.power.battery.spm2/1",
+      "parameter_set": {
+        "N_s": 4,
+        "N_p": 2,
+        "cell_parameter_pack": "illustrative cell parameter pack of sdtwin_sim.power_stand_in; electrochemical parameters are not inferred from geometry or mass"
+      }
+    }
+  ],
+  "ports": [
+    {"name": "Q_B_W", "kind": "power_port", "unit": "W", "description": "signed net battery heat from Power into node B"},
+    {"name": "battery_terminal", "kind": "electrical", "unit": "W", "description": "bidirectional terminal to Controller01"},
+    {"name": "T_B_K", "kind": "temperature", "unit": "K", "description": "battery temperature owned by Thermal and returned to Power"},
+    {"name": "radiator_link", "kind": "thermal_interface", "unit": "W", "description": "bracket path BR to the radiator"}
+  ],
+  "provenance": {
+    "status": "illustrative_test_value",
+    "note": "All values are illustrative test values for a small computing satellite; no device has been selected.",
+    "references": []
+  }
+}

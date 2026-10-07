@@ -1,0 +1,6 @@
+20:52:52 hot75 loaded 24.2 s
+20:52:56 hot75 otl_saw planet 10 36
+20:52:58 hot75 otl_hrs planet 10 36
+20:52:58 hot75 stdL activate before ['ht', 'on', 'htlsh', 'on', 'ge', 'on', 'otl_body', 'on', 'otl_hrs', 'on', 'otl_sarj', 'on', 'otl_saw', 'on', 'frame:spatial1', 'on', 'frame:material1', 'on']
+20:52:59 hot75 stdL activate after ['ht', 'on', 'htlsh', 'on', 'ge', 'on', 'otl_body', 'off', 'otl_hrs', 'on', 'otl_sarj', 'off', 'otl_saw', 'on', 'frame:spatial1', 'on', 'frame:material1', 'on']
+20:52:59 hot75 stdL tlist range(0,120,5553.6243)

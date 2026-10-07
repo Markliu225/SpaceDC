@@ -1,0 +1,176 @@
+04:31:07 overrides applied: k_c 3000[K*s] f_init A 0.2 T_init hrs 262.0
+04:31:07 case nom0 tag nom0_test period 5553.6 s tlist range(0,60.0,2100.0)
+04:31:07 solving stdO
+04:46:35 stdO done 928 s
+04:46:38 saved C:\Workspace\SpaceDC\Thermal\iss_fem\out\comsol\iss_nom0_test_10860.mph
+04:46:39 temperature dataset dset4 of [('dset4', 'sol4'), ('dset5', 'sol5')]
+The solution has not been computed.
+04:46:39 global eval failed f_A The solution has not been computed.
+The solution has not been computed.
+04:46:39 global eval failed feff_A The solution has not been computed.
+The solution has not been computed.
+04:46:39 global eval failed Q_A The solution has not been computed.
+The solution has not been computed.
+04:46:39 global eval failed Qrad_A The solution has not been computed.
+The solution has not been computed.
+04:46:39 global eval failed Tret_A-273.15 The solution has not been computed.
+The solution has not been computed.
+04:46:39 global eval failed Tout_A-273.15 The solution has not been computed.
+The solution has not been computed.
+04:46:40 global eval failed Tmix_A-273.15 The solution has not been computed.
+The solution has not been computed.
+04:46:40 global eval failed f_B The solution has not been computed.
+The solution has not been computed.
+04:46:40 global eval failed feff_B The solution has not been computed.
+The solution has not been computed.
+04:46:40 global eval failed Q_B The solution has not been computed.
+The solution has not been computed.
+04:46:40 global eval failed Qrad_B The solution has not been computed.
+The solution has not been computed.
+04:46:40 global eval failed Tret_B-273.15 The solution has not been computed.
+The solution has not been computed.
+04:46:40 global eval failed Tout_B-273.15 The solution has not been computed.
+The solution has not been computed.
+04:46:40 global eval failed Tmix_B-273.15 The solution has not been computed.
+The solution has not been computed.
+04:46:40 global eval failed f_PVP4 The solution has not been computed.
+The solution has not been computed.
+04:46:40 global eval failed feff_PVP4 The solution has not been computed.
+The solution has not been computed.
+04:46:40 global eval failed Q_PVP4 The solution has not been computed.
+The solution has not been computed.
+04:46:40 global eval failed Qrad_PVP4 The solution has not been computed.
+The solution has not been computed.
+04:46:41 global eval failed Tret_PVP4-273.15 The solution has not been computed.
+The solution has not been computed.
+04:46:41 global eval failed Tout_PVP4-273.15 The solution has not been computed.
+The solution has not been computed.
+04:46:41 global eval failed Tmix_PVP4-273.15 The solution has not been computed.
+The solution has not been computed.
+04:46:41 global eval failed f_PVP6 The solution has not been computed.
+The solution has not been computed.
+04:46:41 global eval failed feff_PVP6 The solution has not been computed.
+The solution has not been computed.
+04:46:41 global eval failed Q_PVP6 The solution has not been computed.
+The solution has not been computed.
+04:46:41 global eval failed Qrad_PVP6 The solution has not been computed.
+The solution has not been computed.
+04:46:41 global eval failed Tret_PVP6-273.15 The solution has not been computed.
+The solution has not been computed.
+04:46:41 global eval failed Tout_PVP6-273.15 The solution has not been computed.
+The solution has not been computed.
+04:46:41 global eval failed Tmix_PVP6-273.15 The solution has not been computed.
+The solution has not been computed.
+04:46:41 global eval failed f_PVS4 The solution has not been computed.
+The solution has not been computed.
+04:46:41 global eval failed feff_PVS4 The solution has not been computed.
+The solution has not been computed.
+04:46:41 global eval failed Q_PVS4 The solution has not been computed.
+The solution has not been computed.
+04:46:41 global eval failed Qrad_PVS4 The solution has not been computed.
+The solution has not been computed.
+04:46:42 global eval failed Tret_PVS4-273.15 The solution has not been computed.
+The solution has not been computed.
+04:46:42 global eval failed Tout_PVS4-273.15 The solution has not been computed.
+The solution has not been computed.
+04:46:42 global eval failed Tmix_PVS4-273.15 The solution has not been computed.
+The solution has not been computed.
+04:46:42 global eval failed f_PVS6 The solution has not been computed.
+The solution has not been computed.
+04:46:42 global eval failed feff_PVS6 The solution has not been computed.
+The solution has not been computed.
+04:46:42 global eval failed Q_PVS6 The solution has not been computed.
+The solution has not been computed.
+04:46:42 global eval failed Qrad_PVS6 The solution has not been computed.
+The solution has not been computed.
+04:46:42 global eval failed Tret_PVS6-273.15 The solution has not been computed.
+The solution has not been computed.
+04:46:42 global eval failed Tout_PVS6-273.15 The solution has not been computed.
+The solution has not been computed.
+04:46:42 global eval failed Tmix_PVS6-273.15 The solution has not been computed.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed f_A Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed feff_A Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Q_A Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Qrad_A Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Tret_A-273.15 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Tout_A-273.15 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Tmix_A-273.15 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed f_B Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed feff_B Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Q_B Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Qrad_B Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Tret_B-273.15 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Tout_B-273.15 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Tmix_B-273.15 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed f_PVP4 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed feff_PVP4 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Q_PVP4 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Qrad_PVP4 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Tret_PVP4-273.15 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Tout_PVP4-273.15 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Tmix_PVP4-273.15 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed f_PVP6 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed feff_PVP6 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Q_PVP6 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Qrad_PVP6 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Tret_PVP6-273.15 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Tout_PVP6-273.15 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed Tmix_PVP6-273.15 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed f_PVS4 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:42 global eval failed feff_PVS4 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:43 global eval failed Q_PVS4 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:43 global eval failed Qrad_PVS4 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:43 global eval failed Tret_PVS4-273.15 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:43 global eval failed Tout_PVS4-273.15 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:43 global eval failed Tmix_PVS4-273.15 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:43 global eval failed f_PVS6 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:43 global eval failed feff_PVS6 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:43 global eval failed Q_PVS6 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:43 global eval failed Qrad_PVS6 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:43 global eval failed Tret_PVS6-273.15 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:43 global eval failed Tout_PVS6-273.15 Dataset "解 4" does not exist.
+Dataset "解 4" does not exist.
+04:46:43 global eval failed Tmix_PVS6-273.15 Dataset "解 4" does not exist.
+04:46:48 series.csv 36 rows 42 columns
+04:47:22 probes written to C:\Workspace\SpaceDC\Thermal\iss_fem\out\nom0_test

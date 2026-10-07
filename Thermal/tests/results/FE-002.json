@@ -1,0 +1,921 @@
+{
+ "case_id": "FE-002",
+ "status": "pass",
+ "checks": [
+  {
+   "name": "输入数据 每个回路24块面板 单面面积与热容按T5手算",
+   "expected": "每个回路 3 个 ORU 共 24 块面板，单面面积 220.7 m2，C_R 为面板质量乘比热加 24 kJ/K 液氨热容，共 1.61 MJ/K，与 iss_spec HRS、MATERIALS hrs_pan 与 PARAMS C_f 一致",
+   "actual": "loop ORUs {'A': ['S1-1', 'S1-2', 'S1-3'], 'B': ['P1-1', 'P1-2', 'P1-3']}, panels {'A': 24, 'B': 24}; panel 2.705000 m x 3.4 m; one side 220.728000 m2 (iss_spec 220.728000); panel mass 1765.824000 kg x 900.0 J/kgK = 1589241.6 J/K; NH3 24 x 1000 J/K = 24000.0 J/K (5.206074 kg x 4610 J/kgK); C_R 1613241.6 J/K",
+   "passed": true
+  },
+  {
+   "name": "输入数据 assemble_thermal_parameters 按T5装配散热板与注入节点",
+   "expected": "C_R 与手算相对误差不超过 1e-12；两面各 220.728 m2，法向 +Z 与 −Z，吸收率与发射率取本工况白色涂层值；C_D 为 100 J/K，DR 1e-4 K/W，SR、JC、CR、BR 1e12 K/W；Q_D_W 来自 PDU01",
+   "actual": "{'cold0': {'C_R_J_K': 1613241.5999999996, 'C_R_rel': 0.0, 'C_D_J_K': 100.0, 'C_D_over_C_R': 6.198699562421401e-05, 'R_K_W': {'SR': 1000000000000.0, 'JC': 1000000000000.0, 'CR': 1000000000000.0, 'BR': 1000000000000.0, 'DR': 0.0001}, 'R_surfaces_ok': True, 'Q_D_W_from': 'PDU01'}, 'nom0': {'C_R_J_K': 1613241.5999999996, 'C_R_rel': 0.0, 'C_D_J_K': 100.0, 'C_D_over_C_R': 6.198699562421401e-05, 'R_K_W': {'SR': 1000000000000.0, 'JC': 1000000000000.0, 'CR': 1000000000000.0, 'BR': 1000000000000.0, 'DR': 0.0001}, 'R_surfaces_ok': True, 'Q_D_W_from': 'PDU01'}, 'hot75': {'C_R_J_K': 1613241.5999999996, 'C_R_rel': 0.0, 'C_D_J_K': 100.0, 'C_D_over_C_R': 6.198699562421401e-05, 'R_K_W': {'SR': 1000000000000.0, 'JC': 1000000000000.0, 'CR': 1000000000000.0, 'BR': 1000000000000.0, 'DR': 0.0001}, 'R_surfaces_ok': True, 'Q_D_W_from': 'PDU01'}}",
+   "passed": true
+  },
+  {
+   "name": "输入数据 白色涂层吸收率发射率与三个工况环境值",
+   "expected": "冷工况 0.15 与 0.91，平均工况 0.20 与 0.91，热工况 0.24 与 0.90；β、太阳常数、反照率与地球红外同 ENV_LINES，由 sun_ecs 与轨道法向算得的 β 与 iss_spec 相差不超过 1e-6°",
+   "actual": "{'cold0': {'alpha': 0.15, 'eps': 0.91, 'S_sun': 1321.0, 'albedo': 0.2, 'olr': 206.0, 'beta_spec_deg': 0.0, 'beta_from_sun_ecs_deg': 0.0, 'hrs_law': 'zero'}, 'nom0': {'alpha': 0.2, 'eps': 0.91, 'S_sun': 1371.0, 'albedo': 0.31, 'olr': 241.0, 'beta_spec_deg': 0.0, 'beta_from_sun_ecs_deg': 0.0, 'hrs_law': 'zero'}, 'hot75': {'alpha': 0.24, 'eps': 0.9, 'S_sun': 1423.0, 'albedo': 0.4, 'olr': 286.0, 'beta_spec_deg': 75.0, 'beta_from_sun_ecs_deg': 75.00000000000001, 'hrs_law': 'track'}}",
+   "passed": true
+  },
+  {
+   "name": "输入数据 有限元轨道函数 高度400 km 周期5553.6 s",
+   "expected": "轨道半径 6778137 m，周期与开普勒周期相差不超过 1e-6 s，倾角 51.64°",
+   "actual": "{'cold0': {'radius_m': 6778137.0, 'period_summary_s': 5553.624271252228, 'period_function_s': 5553.6243, 'period_kepler_s': 5553.624271252228, 'inclination_deg': 51.64000024466033, 'sun_ecs': [1.0, -0.0, 0.0]}, 'nom0': {'radius_m': 6778137.0, 'period_summary_s': 5553.624271252228, 'period_function_s': 5553.6243, 'period_kepler_s': 5553.624271252228, 'inclination_deg': 51.64000024466033, 'sun_ecs': [1.0, -0.0, 0.0]}, 'hot75': {'radius_m': 6778137.0, 'period_summary_s': 5553.624271252228, 'period_function_s': 5553.6243, 'period_kepler_s': 5553.624271252228, 'inclination_deg': 51.64000024466033, 'sun_ecs': [0.25881904510252074, -0.7574084327478404, 0.5994540582018604]}}",
+   "passed": true
+  },
+  {
+   "name": "前置条件 有限元回路进热量与三个散热器单元面板平均温度可用",
+   "expected": "series.csv 含 Qrad_A、Qrad_B 与六个 ORU 面板平均温度，0 s 至 16560 s，事件重复行数值相同，初始面板平均温度等于 iss_spec T_INIT hrs 262.0 K，进热量全程为正",
+   "actual": "{'cold0': {'rows': 151, 'unique_times': 145, 't_first_s': 0.0, 't_last_s': 16560.0, 'event_times_s': [1695.23, 3861.55, 7248.87, 9415.18, 12802.5, 14968.8], 'duplicate_value_spread': 0.0, 'missing_columns': [], 'initial_loop_mean_C': {'A': -11.15, 'B': -11.15}, 'min_heat_input_W': {'A': 14326.9, 'B': 15140.2}}, 'nom0': {'rows': 151, 'unique_times': 145, 't_first_s': 0.0, 't_last_s': 16560.0, 'event_times_s': [1695.22, 3861.55, 7248.87, 9415.18, 12802.5, 14968.8], 'duplicate_value_spread': 0.0, 'missing_columns': [], 'initial_loop_mean_C': {'A': -11.15, 'B': -11.15}, 'min_heat_input_W': {'A': 14326.9, 'B': 15140.2}}, 'hot75': {'rows': 139, 'unique_times': 139, 't_first_s': 0.0, 't_last_s': 16560.0, 'event_times_s': [], 'duplicate_value_spread': 0.0, 'missing_columns': [], 'initial_loop_mean_C': {'A': -11.15, 'B': -11.15}, 'min_heat_input_W': {'A': 14326.9, 'B': 15140.2}}}",
+   "passed": true
+  },
+  {
+   "name": "前置条件 q_SR q_CR q_BR q_DR 之和用有限元进热量代替 按第9.4节记录",
+   "expected": "有限元进热量经 D 节点注入：Q_D_W 等于有限元进热量，C_D 远小于 C_R，R_DR 使时间常数远小于有限元 120 s 输出间隔；其余三条到 R 的连接 1e12 K/W；测试配置写入运行归档 provenance",
+   "actual": "{'C_D_J_K': 100.0, 'C_D_over_C_R': 6.198699562421401e-05, 'R_DR_K_W': 0.0001, 'time_constant_s': 0.01, 'no_conduction_K_W': 1000000000000.0, 'record': 'FE-002 test configuration recorded per thermal design 9.4: the precondition of the case replaces q_SR + q_CR + q_BR + q_DR by the FE radiator heat input. The FE input enters through the D node: Q_D_W equals the FE input, C_D = 100 J/K (0.006 percent of C_R) and R_DR = 1e-4 K/W (equivalent total), so q_DR follows Q_D with a time constant of 0.01 s and T_D stays 1.4 K to 2.6 K above T_R. Controller01 and PDU01 here are this injection device, not ISS equipment.'}",
+   "passed": true
+  },
+  {
+   "name": "前置条件 姿态四元数按有限元散热器指向规律 受晒段侧边对日 日食段正面对地",
+   "expected": "体轴 +Z 等于指向规律给出的正面法向；受晒段正面法向与卫星指向太阳方向的点积绝对值不超过 1e-09，β 为 0 时法向沿轨道法向，β 为 75° 时法向垂直于速度方向；日食段正面法向指向天底；模块 prepare_surface_environment 的两面入射余弦与独立点积之差不超过 1e-09",
+   "actual": "{'cold0': {'instants': 68, 'sunlit': 41, 'shadow': 27, 'quaternion_axis': '4.87e-16', 'edge_to_sun': '3.54e-21', 'law': '0.00e+00', 'nadir': '0.00e+00', 'cos_module': '2.22e-16'}, 'nom0': {'instants': 68, 'sunlit': 41, 'shadow': 27, 'quaternion_axis': '4.87e-16', 'edge_to_sun': '3.54e-21', 'law': '0.00e+00', 'nadir': '0.00e+00', 'cos_module': '2.22e-16'}, 'hot75': {'instants': 56, 'sunlit': 56, 'shadow': 0, 'quaternion_axis': '4.45e-16', 'edge_to_sun': '1.38e-16', 'law': '1.48e-16', 'nadir': '0.00e+00', 'cos_module': '2.02e-16'}}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 cold0 回路A 从有限元初始温度起算三圈 运行完成",
+   "expected": "status completed，0 s 至 16560 s 即有限元时段，初值等于有限元初始面板平均温度 262.00 K，Radau 方法，全部输出样本有效，无温区越限记录",
+   "actual": "{'status': 'completed', 't_end_s': 16560.0, 'orbits': 2.9818365793525423, 'T_R0_K': 262.0, 'method': 'Radau', 'accepted_steps': 914, 'rejected_steps': 30, 'function_evaluations': 8777, 'segments': 150, 'invalid_output_samples': 0, 'range_warnings': 0, 'wall_time_s': 42.3, 'warnings': []}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 cold0 回路A 在日食边界分段积分",
+   "expected": "日食进出时刻与圆柱地影解析值之差不超过 0.001 s，共 6 个边界，没有已接受步跨越边界，每个边界结束一个积分段",
+   "actual": "{'closed_form_s': [1693.5788, 3860.0455, 7247.2031, 9413.6698, 12800.8274, 14967.2941], 'located_s': [1693.5788, 3860.0455, 7247.2031, 9413.6698, 12800.8274, 14967.2941], 'worst_s': 3.637978807091713e-12, 'steps_across_boundary': 0, 'segments_ending_at_eclipse': 6, 'segments': 150, 'fe_event_rows_s': [1695.23, 3861.55, 7248.87, 9415.18, 12802.5, 14968.8]}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 cold0 回路A 有限元进热量时程驱动散热板节点",
+   "expected": "归档 Q_D_W 与有限元进热量线性插值相对差不超过 1e-12；SR、CR、BR 热流绝对值不超过 1e-06 W；到达 R 的热流与按 T2 手算之差相对不超过 1e-12",
+   "actual": "{'Q_D_rel': '0.00e+00', 'leak_W': '4.65e-11', 'T2_rel': '0.00e+00'}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 cold0 回路A 到达散热板的累计热量等于有限元进热量",
+   "expected": "q_SR + q_CR + q_BR + q_DR 的时间积分与有限元进热量积分的相对差不超过 0.001，全程与第三圈分别检查",
+   "actual": "{'module_full_J': 357670904.9, 'fe_full_J': 357666593.7, 'relative_full': '1.21e-05', 'module_orbit3_J': 126965817.1, 'fe_orbit3_J': 126965925.1, 'relative_orbit3': '-8.51e-07', 'D_storage_change_J': -4197.2}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 cold0 回路A 式T3第六行 环境吸热 双面表面辐射与热容",
+   "expected": "Q_env_R 与独立 T4 计算相对差不超过 0.0001，两面独立积分地球视角系数；Q_emit_R 与手算 2 ε σ A T_R⁴ 相对差不超过 1e-12；C_R 手算值乘 dT_R/dt 与各支路进热加 Q_env_R 减 Q_emit_R 之差相对总量不超过 1e-10",
+   "actual": "{'env_rel': '3.85e-05', 'env_abs_W': 1.0521, 'emit_rel': '0.00e+00', 'T3_rel': '4.84e-17', 'Q_env_R_range_W': [23894.0, 36638.2]}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 cold0 回路A 散热板温度与独立积分程序一致",
+   "expected": "同一输出时刻模块 T_R 与独立实现的式 T3 第六行积分之差不超过 0.02 K",
+   "actual": "{'max_abs_K': '9.70e-04', 'third_orbit_mean_module_C': -53.4615, 'third_orbit_mean_independent_C': -53.4615}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 cold0 回路B 从有限元初始温度起算三圈 运行完成",
+   "expected": "status completed，0 s 至 16560 s 即有限元时段，初值等于有限元初始面板平均温度 262.00 K，Radau 方法，全部输出样本有效，无温区越限记录",
+   "actual": "{'status': 'completed', 't_end_s': 16560.0, 'orbits': 2.9818365793525423, 'T_R0_K': 262.0, 'method': 'Radau', 'accepted_steps': 924, 'rejected_steps': 24, 'function_evaluations': 8836, 'segments': 150, 'invalid_output_samples': 0, 'range_warnings': 0, 'wall_time_s': 41.6, 'warnings': []}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 cold0 回路B 在日食边界分段积分",
+   "expected": "日食进出时刻与圆柱地影解析值之差不超过 0.001 s，共 6 个边界，没有已接受步跨越边界，每个边界结束一个积分段",
+   "actual": "{'closed_form_s': [1693.5788, 3860.0455, 7247.2031, 9413.6698, 12800.8274, 14967.2941], 'located_s': [1693.5788, 3860.0455, 7247.2031, 9413.6698, 12800.8274, 14967.2941], 'worst_s': 3.637978807091713e-12, 'steps_across_boundary': 0, 'segments_ending_at_eclipse': 6, 'segments': 150, 'fe_event_rows_s': [1695.23, 3861.55, 7248.87, 9415.18, 12802.5, 14968.8]}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 cold0 回路B 有限元进热量时程驱动散热板节点",
+   "expected": "归档 Q_D_W 与有限元进热量线性插值相对差不超过 1e-12；SR、CR、BR 热流绝对值不超过 1e-06 W；到达 R 的热流与按 T2 手算之差相对不超过 1e-12",
+   "actual": "{'Q_D_rel': '0.00e+00', 'leak_W': '4.44e-11', 'T2_rel': '0.00e+00'}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 cold0 回路B 到达散热板的累计热量等于有限元进热量",
+   "expected": "q_SR + q_CR + q_BR + q_DR 的时间积分与有限元进热量积分的相对差不超过 0.001，全程与第三圈分别检查",
+   "actual": "{'module_full_J': 392134908.3, 'fe_full_J': 392130888.5, 'relative_full': '1.03e-05', 'module_orbit3_J': 139120193.5, 'fe_orbit3_J': 139120310.4, 'relative_orbit3': '-8.40e-07', 'D_storage_change_J': -3967.8}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 cold0 回路B 式T3第六行 环境吸热 双面表面辐射与热容",
+   "expected": "Q_env_R 与独立 T4 计算相对差不超过 0.0001，两面独立积分地球视角系数；Q_emit_R 与手算 2 ε σ A T_R⁴ 相对差不超过 1e-12；C_R 手算值乘 dT_R/dt 与各支路进热加 Q_env_R 减 Q_emit_R 之差相对总量不超过 1e-10",
+   "actual": "{'env_rel': '3.85e-05', 'env_abs_W': 1.0521, 'emit_rel': '0.00e+00', 'T3_rel': '4.80e-17', 'Q_env_R_range_W': [23894.0, 36638.2]}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 cold0 回路B 散热板温度与独立积分程序一致",
+   "expected": "同一输出时刻模块 T_R 与独立实现的式 T3 第六行积分之差不超过 0.02 K",
+   "actual": "{'max_abs_K': '9.21e-04', 'third_orbit_mean_module_C': -51.2485, 'third_orbit_mean_independent_C': -51.2484}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 nom0 回路A 从有限元初始温度起算三圈 运行完成",
+   "expected": "status completed，0 s 至 16560 s 即有限元时段，初值等于有限元初始面板平均温度 262.00 K，Radau 方法，全部输出样本有效，无温区越限记录",
+   "actual": "{'status': 'completed', 't_end_s': 16560.0, 'orbits': 2.9818365793525423, 'T_R0_K': 262.0, 'method': 'Radau', 'accepted_steps': 939, 'rejected_steps': 48, 'function_evaluations': 9041, 'segments': 150, 'invalid_output_samples': 0, 'range_warnings': 0, 'wall_time_s': 42.7, 'warnings': []}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 nom0 回路A 在日食边界分段积分",
+   "expected": "日食进出时刻与圆柱地影解析值之差不超过 0.001 s，共 6 个边界，没有已接受步跨越边界，每个边界结束一个积分段",
+   "actual": "{'closed_form_s': [1693.5788, 3860.0455, 7247.2031, 9413.6698, 12800.8274, 14967.2941], 'located_s': [1693.5788, 3860.0455, 7247.2031, 9413.6698, 12800.8274, 14967.2941], 'worst_s': 3.637978807091713e-12, 'steps_across_boundary': 0, 'segments_ending_at_eclipse': 6, 'segments': 150, 'fe_event_rows_s': [1695.22, 3861.55, 7248.87, 9415.18, 12802.5, 14968.8]}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 nom0 回路A 有限元进热量时程驱动散热板节点",
+   "expected": "归档 Q_D_W 与有限元进热量线性插值相对差不超过 1e-12；SR、CR、BR 热流绝对值不超过 1e-06 W；到达 R 的热流与按 T2 手算之差相对不超过 1e-12",
+   "actual": "{'Q_D_rel': '0.00e+00', 'leak_W': '3.97e-11', 'T2_rel': '0.00e+00'}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 nom0 回路A 到达散热板的累计热量等于有限元进热量",
+   "expected": "q_SR + q_CR + q_BR + q_DR 的时间积分与有限元进热量积分的相对差不超过 0.001，全程与第三圈分别检查",
+   "actual": "{'module_full_J': 359888132.9, 'fe_full_J': 359884767.3, 'relative_full': '9.35e-06', 'module_orbit3_J': 127946974.0, 'fe_orbit3_J': 127947105.0, 'relative_orbit3': '-1.02e-06', 'D_storage_change_J': -3485.9}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 nom0 回路A 式T3第六行 环境吸热 双面表面辐射与热容",
+   "expected": "Q_env_R 与独立 T4 计算相对差不超过 0.0001，两面独立积分地球视角系数；Q_emit_R 与手算 2 ε σ A T_R⁴ 相对差不超过 1e-12；C_R 手算值乘 dT_R/dt 与各支路进热加 Q_env_R 减 Q_emit_R 之差相对总量不超过 1e-10",
+   "actual": "{'env_rel': '3.76e-05', 'env_abs_W': 1.3271, 'emit_rel': '0.00e+00', 'T3_rel': '2.78e-17', 'Q_env_R_range_W': [27953.6, 42863.2]}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 nom0 回路A 散热板温度与独立积分程序一致",
+   "expected": "同一输出时刻模块 T_R 与独立实现的式 T3 第六行积分之差不超过 0.02 K",
+   "actual": "{'max_abs_K': '8.46e-04', 'third_orbit_mean_module_C': -46.6111, 'third_orbit_mean_independent_C': -46.611}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 nom0 回路B 从有限元初始温度起算三圈 运行完成",
+   "expected": "status completed，0 s 至 16560 s 即有限元时段，初值等于有限元初始面板平均温度 262.00 K，Radau 方法，全部输出样本有效，无温区越限记录",
+   "actual": "{'status': 'completed', 't_end_s': 16560.0, 'orbits': 2.9818365793525423, 'T_R0_K': 262.0, 'method': 'Radau', 'accepted_steps': 941, 'rejected_steps': 40, 'function_evaluations': 9014, 'segments': 150, 'invalid_output_samples': 0, 'range_warnings': 0, 'wall_time_s': 42.1, 'warnings': []}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 nom0 回路B 在日食边界分段积分",
+   "expected": "日食进出时刻与圆柱地影解析值之差不超过 0.001 s，共 6 个边界，没有已接受步跨越边界，每个边界结束一个积分段",
+   "actual": "{'closed_form_s': [1693.5788, 3860.0455, 7247.2031, 9413.6698, 12800.8274, 14967.2941], 'located_s': [1693.5788, 3860.0455, 7247.2031, 9413.6698, 12800.8274, 14967.2941], 'worst_s': 3.637978807091713e-12, 'steps_across_boundary': 0, 'segments_ending_at_eclipse': 6, 'segments': 150, 'fe_event_rows_s': [1695.22, 3861.55, 7248.87, 9415.18, 12802.5, 14968.8]}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 nom0 回路B 有限元进热量时程驱动散热板节点",
+   "expected": "归档 Q_D_W 与有限元进热量线性插值相对差不超过 1e-12；SR、CR、BR 热流绝对值不超过 1e-06 W；到达 R 的热流与按 T2 手算之差相对不超过 1e-12",
+   "actual": "{'Q_D_rel': '0.00e+00', 'leak_W': '3.77e-11', 'T2_rel': '0.00e+00'}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 nom0 回路B 到达散热板的累计热量等于有限元进热量",
+   "expected": "q_SR + q_CR + q_BR + q_DR 的时间积分与有限元进热量积分的相对差不超过 0.001，全程与第三圈分别检查",
+   "actual": "{'module_full_J': 394541854.1, 'fe_full_J': 394538695.0, 'relative_full': '8.01e-06', 'module_orbit3_J': 140182182.3, 'fe_orbit3_J': 140182312.4, 'relative_orbit3': '-9.28e-07', 'D_storage_change_J': -3273.6}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 nom0 回路B 式T3第六行 环境吸热 双面表面辐射与热容",
+   "expected": "Q_env_R 与独立 T4 计算相对差不超过 0.0001，两面独立积分地球视角系数；Q_emit_R 与手算 2 ε σ A T_R⁴ 相对差不超过 1e-12；C_R 手算值乘 dT_R/dt 与各支路进热加 Q_env_R 减 Q_emit_R 之差相对总量不超过 1e-10",
+   "actual": "{'env_rel': '3.76e-05', 'env_abs_W': 1.3271, 'emit_rel': '0.00e+00', 'T3_rel': '2.64e-17', 'Q_env_R_range_W': [27953.6, 42863.2]}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 nom0 回路B 散热板温度与独立积分程序一致",
+   "expected": "同一输出时刻模块 T_R 与独立实现的式 T3 第六行积分之差不超过 0.02 K",
+   "actual": "{'max_abs_K': '8.03e-04', 'third_orbit_mean_module_C': -44.5738, 'third_orbit_mean_independent_C': -44.5738}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 hot75 回路A 从有限元初始温度起算三圈 运行完成",
+   "expected": "status completed，0 s 至 16560 s 即有限元时段，初值等于有限元初始面板平均温度 262.00 K，Radau 方法，全部输出样本有效，无温区越限记录",
+   "actual": "{'status': 'completed', 't_end_s': 16560.0, 'orbits': 2.9818365793525423, 'T_R0_K': 262.0, 'method': 'Radau', 'accepted_steps': 825, 'rejected_steps': 0, 'function_evaluations': 7738, 'segments': 138, 'invalid_output_samples': 0, 'range_warnings': 0, 'wall_time_s': 36.6, 'warnings': []}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 hot75 回路A 在日食边界分段积分",
+   "expected": "日食进出时刻与圆柱地影解析值之差不超过 0.001 s，共 0 个边界，没有已接受步跨越边界，每个边界结束一个积分段",
+   "actual": "{'closed_form_s': [], 'located_s': [], 'worst_s': 0.0, 'steps_across_boundary': 0, 'segments_ending_at_eclipse': 0, 'segments': 138, 'fe_event_rows_s': []}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 hot75 回路A 有限元进热量时程驱动散热板节点",
+   "expected": "归档 Q_D_W 与有限元进热量线性插值相对差不超过 1e-12；SR、CR、BR 热流绝对值不超过 1e-06 W；到达 R 的热流与按 T2 手算之差相对不超过 1e-12",
+   "actual": "{'Q_D_rel': '0.00e+00', 'leak_W': '2.49e-11', 'T2_rel': '0.00e+00'}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 hot75 回路A 到达散热板的累计热量等于有限元进热量",
+   "expected": "q_SR + q_CR + q_BR + q_DR 的时间积分与有限元进热量积分的相对差不超过 0.001，全程与第三圈分别检查",
+   "actual": "{'module_full_J': 359290102.3, 'fe_full_J': 359288112.0, 'relative_full': '5.54e-06', 'module_orbit3_J': 127605506.5, 'fe_orbit3_J': 127605578.8, 'relative_orbit3': '-5.67e-07', 'D_storage_change_J': -2023.8}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 hot75 回路A 式T3第六行 环境吸热 双面表面辐射与热容",
+   "expected": "Q_env_R 与独立 T4 计算相对差不超过 0.0001，两面独立积分地球视角系数；Q_emit_R 与手算 2 ε σ A T_R⁴ 相对差不超过 1e-12；C_R 手算值乘 dT_R/dt 与各支路进热加 Q_env_R 减 Q_emit_R 之差相对总量不超过 1e-10",
+   "actual": "{'env_rel': '2.86e-06', 'env_abs_W': 0.139, 'emit_rel': '0.00e+00', 'T3_rel': '2.04e-17', 'Q_env_R_range_W': [48593.2, 55598.2]}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 hot75 回路A 散热板温度与独立积分程序一致",
+   "expected": "同一输出时刻模块 T_R 与独立实现的式 T3 第六行积分之差不超过 0.02 K",
+   "actual": "{'max_abs_K': '5.55e-04', 'third_orbit_mean_module_C': -33.3192, 'third_orbit_mean_independent_C': -33.3193}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 hot75 回路B 从有限元初始温度起算三圈 运行完成",
+   "expected": "status completed，0 s 至 16560 s 即有限元时段，初值等于有限元初始面板平均温度 262.00 K，Radau 方法，全部输出样本有效，无温区越限记录",
+   "actual": "{'status': 'completed', 't_end_s': 16560.0, 'orbits': 2.9818365793525423, 'T_R0_K': 262.0, 'method': 'Radau', 'accepted_steps': 816, 'rejected_steps': 0, 'function_evaluations': 7645, 'segments': 138, 'invalid_output_samples': 0, 'range_warnings': 0, 'wall_time_s': 35.9, 'warnings': []}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 hot75 回路B 在日食边界分段积分",
+   "expected": "日食进出时刻与圆柱地影解析值之差不超过 0.001 s，共 0 个边界，没有已接受步跨越边界，每个边界结束一个积分段",
+   "actual": "{'closed_form_s': [], 'located_s': [], 'worst_s': 0.0, 'steps_across_boundary': 0, 'segments_ending_at_eclipse': 0, 'segments': 138, 'fe_event_rows_s': []}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 hot75 回路B 有限元进热量时程驱动散热板节点",
+   "expected": "归档 Q_D_W 与有限元进热量线性插值相对差不超过 1e-12；SR、CR、BR 热流绝对值不超过 1e-06 W；到达 R 的热流与按 T2 手算之差相对不超过 1e-12",
+   "actual": "{'Q_D_rel': '0.00e+00', 'leak_W': '2.34e-11', 'T2_rel': '0.00e+00'}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 hot75 回路B 到达散热板的累计热量等于有限元进热量",
+   "expected": "q_SR + q_CR + q_BR + q_DR 的时间积分与有限元进热量积分的相对差不超过 0.001，全程与第三圈分别检查",
+   "actual": "{'module_full_J': 392021603.0, 'fe_full_J': 392019786.0, 'relative_full': '4.63e-06', 'module_orbit3_J': 139060534.9, 'fe_orbit3_J': 139060611.8, 'relative_orbit3': '-5.53e-07', 'D_storage_change_J': -1849.7}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 hot75 回路B 式T3第六行 环境吸热 双面表面辐射与热容",
+   "expected": "Q_env_R 与独立 T4 计算相对差不超过 0.0001，两面独立积分地球视角系数；Q_emit_R 与手算 2 ε σ A T_R⁴ 相对差不超过 1e-12；C_R 手算值乘 dT_R/dt 与各支路进热加 Q_env_R 减 Q_emit_R 之差相对总量不超过 1e-10",
+   "actual": "{'env_rel': '2.86e-06', 'env_abs_W': 0.139, 'emit_rel': '0.00e+00', 'T3_rel': '2.03e-17', 'Q_env_R_range_W': [48593.2, 55598.2]}",
+   "passed": true
+  },
+  {
+   "name": "步骤1 hot75 回路B 散热板温度与独立积分程序一致",
+   "expected": "同一输出时刻模块 T_R 与独立实现的式 T3 第六行积分之差不超过 0.02 K",
+   "actual": "{'max_abs_K': '5.20e-04', 'third_orbit_mean_module_C': -31.6855, 'third_orbit_mean_independent_C': -31.6855}",
+   "passed": true
+  },
+  {
+   "name": "验收判据 cold0 回路A 第三圈平均温度差不超过5 K",
+   "expected": "模块第三圈时间加权平均温度与三个 ORU 面板平均温度之平均的差绝对值不超过 5.0 K",
+   "actual": "{'module_C': {'min': -56.731, 'mean': -53.462, 'max': -49.649}, 'fe_C': {'min': -57.99, 'mean': -54.851, 'max': -51.203}, 'difference_K': {'min': 1.26, 'mean': 1.389, 'max': 1.554}}",
+   "passed": true
+  },
+  {
+   "name": "验收判据 cold0 回路B 第三圈平均温度差不超过5 K",
+   "expected": "模块第三圈时间加权平均温度与三个 ORU 面板平均温度之平均的差绝对值不超过 5.0 K",
+   "actual": "{'module_C': {'min': -54.473, 'mean': -51.248, 'max': -47.429}, 'fe_C': {'min': -56.386, 'mean': -54.638, 'max': -52.669}, 'difference_K': {'min': 1.914, 'mean': 3.389, 'max': 5.24}}",
+   "passed": true
+  },
+  {
+   "name": "验收判据 nom0 回路A 第三圈平均温度差不超过5 K",
+   "expected": "模块第三圈时间加权平均温度与三个 ORU 面板平均温度之平均的差绝对值不超过 5.0 K",
+   "actual": "{'module_C': {'min': -49.792, 'mean': -46.611, 'max': -43.29}, 'fe_C': {'min': -50.357, 'mean': -47.316, 'max': -44.187}, 'difference_K': {'min': 0.565, 'mean': 0.705, 'max': 0.897}}",
+   "passed": true
+  },
+  {
+   "name": "验收判据 nom0 回路B 第三圈平均温度差不超过5 K",
+   "expected": "模块第三圈时间加权平均温度与三个 ORU 面板平均温度之平均的差绝对值不超过 5.0 K",
+   "actual": "{'module_C': {'min': -47.719, 'mean': -44.574, 'max': -41.242}, 'fe_C': {'min': -48.84, 'mean': -47.379, 'max': -46.171}, 'difference_K': {'min': 1.121, 'mean': 2.805, 'max': 4.929}}",
+   "passed": true
+  },
+  {
+   "name": "验收判据 hot75 回路A 第三圈平均温度差不超过5 K",
+   "expected": "模块第三圈时间加权平均温度与三个 ORU 面板平均温度之平均的差绝对值不超过 5.0 K",
+   "actual": "{'module_C': {'min': -34.68, 'mean': -33.319, 'max': -31.806}, 'fe_C': {'min': -37.565, 'mean': -36.248, 'max': -34.544}, 'difference_K': {'min': 2.885, 'mean': 2.929, 'max': 2.738}}",
+   "passed": true
+  },
+  {
+   "name": "验收判据 hot75 回路B 第三圈平均温度差不超过5 K",
+   "expected": "模块第三圈时间加权平均温度与三个 ORU 面板平均温度之平均的差绝对值不超过 5.0 K",
+   "actual": "{'module_C': {'min': -32.977, 'mean': -31.685, 'max': -30.247}, 'fe_C': {'min': -32.934, 'mean': -31.558, 'max': -30.03}, 'difference_K': {'min': -0.044, 'mean': -0.127, 'max': -0.216}}",
+   "passed": true
+  },
+  {
+   "name": "步骤2 取第三圈与三个散热器单元面板平均温度的平均值比较",
+   "expected": "第三圈为最后一个精确轨道周期 11006.38 s 至 16560 s；有限元取每个回路三个 ORU 面板平均温度之平均，按时间加权；模块在已接受解上按 5 s 加密并含全部已接受状态",
+   "actual": "{'cold0_A': {'t0_s': 11006.3757, 't1_s': 16560.0, 'fe_samples': 50, 'module_points': 1468}, 'cold0_B': {'t0_s': 11006.3757, 't1_s': 16560.0, 'fe_samples': 50, 'module_points': 1470}, 'nom0_A': {'t0_s': 11006.3757, 't1_s': 16560.0, 'fe_samples': 50, 'module_points': 1477}, 'nom0_B': {'t0_s': 11006.3757, 't1_s': 16560.0, 'fe_samples': 50, 'module_points': 1477}, 'hot75_A': {'t0_s': 11006.3757, 't1_s': 16560.0, 'fe_samples': 48, 'module_points': 1429}, 'hot75_B': {'t0_s': 11006.3757, 't1_s': 16560.0, 'fe_samples': 48, 'module_points': 1423}}",
+   "passed": true
+  },
+  {
+   "name": "步骤3 记录同一时刻有限元最冷面板与平均温度之差",
+   "expected": "第三圈内有限元全部散热器面板最低温度出现的时刻，记录该时刻 hrs_Tmean_C 减 hrs_Tmin_C 与模块 T_R",
+   "actual": "{'cold0': {'time_s': 12802.5, 'coldest_panel_C': -77.81, 'radiator_mean_C': -57.188, 'mean_minus_coldest_K': 20.622, 'orbit3_mean_minus_min_K': [20.026300000000006, 21.232000000000006], 'orbit3_max_minus_min_K': [62.5066, 65.6507], 'module_T_R_loopA_C': -56.721, 'module_minus_coldest_loopA_K': 21.089, 'module_T_R_loopB_C': -54.462, 'module_minus_coldest_loopB_K': 23.348}, 'nom0': {'time_s': 12802.5, 'coldest_panel_C': -68.417, 'radiator_mean_C': -49.599, 'mean_minus_coldest_K': 18.818, 'orbit3_mean_minus_min_K': [18.234, 19.666199999999996], 'orbit3_max_minus_min_K': [56.5036, 58.55792000000001], 'module_T_R_loopA_C': -49.783, 'module_minus_coldest_loopA_K': 18.634, 'module_T_R_loopB_C': -47.71, 'module_minus_coldest_loopB_K': 20.707}, 'hot75': {'time_s': 15240.0, 'coldest_panel_C': -54.54, 'radiator_mean_C': -35.168, 'mean_minus_coldest_K': 19.372, 'orbit3_mean_minus_min_K': [17.5886, 19.374700000000004], 'orbit3_max_minus_min_K': [47.642630000000004, 50.48263], 'module_T_R_loopA_C': -34.55, 'module_minus_coldest_loopA_K': 19.99, 'module_T_R_loopB_C': -32.841, 'module_minus_coldest_loopB_K': 21.699}}",
+   "passed": true
+  },
+  {
+   "name": "预期结果 集总模型两个回路之差只来自进热量 不计两翼相互遮挡",
+   "expected": "模块回路 B 减回路 A 的第三圈平均温度与按进热量差除以线性化辐射热导 4 ε σ 2A T³ 的手算之差不超过 0.05 K；有限元两回路之差与模块之差的差值记为两翼相互遮挡等集总模型不表示的效应，见设计报告第 4.4 节与第 10 章",
+   "actual": "{'cold0': {'heat_input_B_minus_A_W': 2188.55, 'radiative_conductance_W_K': 980.773, 'hand_B_minus_A_K': 2.231, 'module_B_minus_A_K': 2.213, 'fe_B_minus_A_K': 0.213, 'fe_minus_module_K': -2.0, 'residual_K': {'A': 1.389, 'B': 3.389}, 'fe_panel_spread_orbit3_K': [62.51, 65.65]}, 'nom0': {'heat_input_B_minus_A_W': 2203.103, 'radiative_conductance_W_K': 1073.679, 'hand_B_minus_A_K': 2.052, 'module_B_minus_A_K': 2.037, 'fe_B_minus_A_K': -0.063, 'fe_minus_module_K': -2.1, 'residual_K': {'A': 0.705, 'B': 2.805}, 'fe_panel_spread_orbit3_K': [56.5, 58.56]}, 'hot75': {'heat_input_B_minus_A_W': 2062.623, 'radiative_conductance_W_K': 1255.874, 'hand_B_minus_A_K': 1.642, 'module_B_minus_A_K': 1.634, 'fe_B_minus_A_K': 4.69, 'fe_minus_module_K': 3.056, 'residual_K': {'A': 2.929, 'B': -0.127}, 'fe_panel_spread_orbit3_K': [47.64, 50.48]}}",
+   "passed": true
+  },
+  {
+   "name": "预期结果 平均温度残差小于有限元面板沿流向的温差",
+   "expected": "六个第三圈平均温度残差的最大值小于有限元同一时刻散热器面板最高与最低温度之差在第三圈的最小值；每个 ORU 的 8 块面板沿流向串联，入口面板最热，出口面板最冷，见有限元报告第 5.2 节；集总温度不表示局部温差，见设计报告第 10 章",
+   "actual": "{'max_residual_K': 3.389, 'min_fe_panel_spread_K': 47.64}",
+   "passed": true
+  },
+  {
+   "name": "结果归档 报告曲线所需时程写入 FE-002_series.json",
+   "expected": "六次运行的模块 T_R、独立积分 T_R、进热量、环境吸热、表面辐射与有限元面板平均温度和进热量时程",
+   "actual": "FE-002_series.json, 246757 bytes",
+   "passed": true
+  }
+ ],
+ "metrics": {
+  "radiator_area_one_side_m2": 220.72799999999995,
+  "radiator_capacity_J_K": 1613241.5999999996,
+  "radiator_panel_capacity_J_K": 1589241.5999999996,
+  "radiator_nh3_capacity_J_K": 24000.0,
+  "assembled_parameters": {
+   "cold0": {
+    "C_R_J_K": 1613241.5999999996,
+    "C_R_rel": 0.0,
+    "C_D_J_K": 100.0,
+    "C_D_over_C_R": 6.198699562421401e-05,
+    "R_K_W": {
+     "SR": 1000000000000.0,
+     "JC": 1000000000000.0,
+     "CR": 1000000000000.0,
+     "BR": 1000000000000.0,
+     "DR": 0.0001
+    },
+    "R_surfaces_ok": true,
+    "Q_D_W_from": "PDU01"
+   },
+   "nom0": {
+    "C_R_J_K": 1613241.5999999996,
+    "C_R_rel": 0.0,
+    "C_D_J_K": 100.0,
+    "C_D_over_C_R": 6.198699562421401e-05,
+    "R_K_W": {
+     "SR": 1000000000000.0,
+     "JC": 1000000000000.0,
+     "CR": 1000000000000.0,
+     "BR": 1000000000000.0,
+     "DR": 0.0001
+    },
+    "R_surfaces_ok": true,
+    "Q_D_W_from": "PDU01"
+   },
+   "hot75": {
+    "C_R_J_K": 1613241.5999999996,
+    "C_R_rel": 0.0,
+    "C_D_J_K": 100.0,
+    "C_D_over_C_R": 6.198699562421401e-05,
+    "R_K_W": {
+     "SR": 1000000000000.0,
+     "JC": 1000000000000.0,
+     "CR": 1000000000000.0,
+     "BR": 1000000000000.0,
+     "DR": 0.0001
+    },
+    "R_surfaces_ok": true,
+    "Q_D_W_from": "PDU01"
+   }
+  },
+  "orbit": {
+   "cold0": {
+    "radius_m": 6778137.0,
+    "period_summary_s": 5553.624271252228,
+    "period_function_s": 5553.6243,
+    "period_kepler_s": 5553.624271252228,
+    "inclination_deg": 51.64000024466033,
+    "sun_ecs": [
+     1.0,
+     -0.0,
+     0.0
+    ]
+   },
+   "nom0": {
+    "radius_m": 6778137.0,
+    "period_summary_s": 5553.624271252228,
+    "period_function_s": 5553.6243,
+    "period_kepler_s": 5553.624271252228,
+    "inclination_deg": 51.64000024466033,
+    "sun_ecs": [
+     1.0,
+     -0.0,
+     0.0
+    ]
+   },
+   "hot75": {
+    "radius_m": 6778137.0,
+    "period_summary_s": 5553.624271252228,
+    "period_function_s": 5553.6243,
+    "period_kepler_s": 5553.624271252228,
+    "inclination_deg": 51.64000024466033,
+    "sun_ecs": [
+     0.25881904510252074,
+     -0.7574084327478404,
+     0.5994540582018604
+    ]
+   }
+  },
+  "fe_data": {
+   "cold0": {
+    "rows": 151,
+    "unique_times": 145,
+    "t_first_s": 0.0,
+    "t_last_s": 16560.0,
+    "event_times_s": [
+     1695.23,
+     3861.55,
+     7248.87,
+     9415.18,
+     12802.5,
+     14968.8
+    ],
+    "duplicate_value_spread": 0.0,
+    "missing_columns": [],
+    "initial_loop_mean_C": {
+     "A": -11.15,
+     "B": -11.15
+    },
+    "min_heat_input_W": {
+     "A": 14326.9,
+     "B": 15140.2
+    }
+   },
+   "nom0": {
+    "rows": 151,
+    "unique_times": 145,
+    "t_first_s": 0.0,
+    "t_last_s": 16560.0,
+    "event_times_s": [
+     1695.22,
+     3861.55,
+     7248.87,
+     9415.18,
+     12802.5,
+     14968.8
+    ],
+    "duplicate_value_spread": 0.0,
+    "missing_columns": [],
+    "initial_loop_mean_C": {
+     "A": -11.15,
+     "B": -11.15
+    },
+    "min_heat_input_W": {
+     "A": 14326.9,
+     "B": 15140.2
+    }
+   },
+   "hot75": {
+    "rows": 139,
+    "unique_times": 139,
+    "t_first_s": 0.0,
+    "t_last_s": 16560.0,
+    "event_times_s": [],
+    "duplicate_value_spread": 0.0,
+    "missing_columns": [],
+    "initial_loop_mean_C": {
+     "A": -11.15,
+     "B": -11.15
+    },
+    "min_heat_input_W": {
+     "A": 14326.9,
+     "B": 15140.2
+    }
+   }
+  },
+  "injection": {
+   "C_D_J_K": 100.0,
+   "R_DR_K_W": 0.0001,
+   "time_constant_s": 0.01
+  },
+  "attitude": {
+   "cold0": {
+    "instants": 68,
+    "sunlit": 41,
+    "shadow": 27,
+    "quaternion_axis": "4.87e-16",
+    "edge_to_sun": "3.54e-21",
+    "law": "0.00e+00",
+    "nadir": "0.00e+00",
+    "cos_module": "2.22e-16"
+   },
+   "nom0": {
+    "instants": 68,
+    "sunlit": 41,
+    "shadow": 27,
+    "quaternion_axis": "4.87e-16",
+    "edge_to_sun": "3.54e-21",
+    "law": "0.00e+00",
+    "nadir": "0.00e+00",
+    "cos_module": "2.22e-16"
+   },
+   "hot75": {
+    "instants": 56,
+    "sunlit": 56,
+    "shadow": 0,
+    "quaternion_axis": "4.45e-16",
+    "edge_to_sun": "1.38e-16",
+    "law": "1.48e-16",
+    "nadir": "0.00e+00",
+    "cos_module": "2.02e-16"
+   }
+  },
+  "cold0_A_accepted_steps": 914,
+  "cold0_A_rejected_steps": 30,
+  "cold0_A_function_evaluations": 8777,
+  "cold0_A_segments": 150,
+  "cold0_A_solver_njev": 187,
+  "cold0_A_wall_time_s": 42.3,
+  "cold0_A_eclipse_worst_s": 3.637978807091713e-12,
+  "cold0_A_fe_event_minus_closed_form_s": [
+   1.651,
+   1.504,
+   1.667,
+   1.51,
+   1.673,
+   1.506
+  ],
+  "cold0_A_heat_relative_full": 1.2053856467393457e-05,
+  "cold0_A_heat_relative_orbit3": -8.505342563692239e-07,
+  "cold0_A_environment_relative": 3.849048275735652e-05,
+  "cold0_A_independent_max_K": 0.0009697760458493576,
+  "cold0_B_accepted_steps": 924,
+  "cold0_B_rejected_steps": 24,
+  "cold0_B_function_evaluations": 8836,
+  "cold0_B_segments": 150,
+  "cold0_B_solver_njev": 188,
+  "cold0_B_wall_time_s": 41.6,
+  "cold0_B_eclipse_worst_s": 3.637978807091713e-12,
+  "cold0_B_fe_event_minus_closed_form_s": [
+   1.651,
+   1.504,
+   1.667,
+   1.51,
+   1.673,
+   1.506
+  ],
+  "cold0_B_heat_relative_full": 1.0251050284909912e-05,
+  "cold0_B_heat_relative_orbit3": -8.403231500781841e-07,
+  "cold0_B_environment_relative": 3.849048275735652e-05,
+  "cold0_B_independent_max_K": 0.0009211719211066338,
+  "nom0_A_accepted_steps": 939,
+  "nom0_A_rejected_steps": 48,
+  "nom0_A_function_evaluations": 9041,
+  "nom0_A_segments": 150,
+  "nom0_A_solver_njev": 182,
+  "nom0_A_wall_time_s": 42.72,
+  "nom0_A_eclipse_worst_s": 3.637978807091713e-12,
+  "nom0_A_fe_event_minus_closed_form_s": [
+   1.641,
+   1.504,
+   1.667,
+   1.51,
+   1.673,
+   1.506
+  ],
+  "nom0_A_heat_relative_full": 9.351928926861855e-06,
+  "nom0_A_heat_relative_orbit3": -1.023620639290989e-06,
+  "nom0_A_environment_relative": 3.755912216934024e-05,
+  "nom0_A_independent_max_K": 0.0008464809467056966,
+  "nom0_B_accepted_steps": 941,
+  "nom0_B_rejected_steps": 40,
+  "nom0_B_function_evaluations": 9014,
+  "nom0_B_segments": 150,
+  "nom0_B_solver_njev": 184,
+  "nom0_B_wall_time_s": 42.05,
+  "nom0_B_eclipse_worst_s": 3.637978807091713e-12,
+  "nom0_B_fe_event_minus_closed_form_s": [
+   1.641,
+   1.504,
+   1.667,
+   1.51,
+   1.673,
+   1.506
+  ],
+  "nom0_B_heat_relative_full": 8.007025018847994e-06,
+  "nom0_B_heat_relative_orbit3": -9.281238295750962e-07,
+  "nom0_B_environment_relative": 3.755912216934024e-05,
+  "nom0_B_independent_max_K": 0.0008027910607779631,
+  "hot75_A_accepted_steps": 825,
+  "hot75_A_rejected_steps": 0,
+  "hot75_A_function_evaluations": 7738,
+  "hot75_A_segments": 138,
+  "hot75_A_solver_njev": 163,
+  "hot75_A_wall_time_s": 36.57,
+  "hot75_A_eclipse_worst_s": 0.0,
+  "hot75_A_heat_relative_full": 5.5396654578442174e-06,
+  "hot75_A_heat_relative_orbit3": -5.665878546133673e-07,
+  "hot75_A_environment_relative": 2.859514900912148e-06,
+  "hot75_A_independent_max_K": 0.0005550632597532967,
+  "hot75_B_accepted_steps": 816,
+  "hot75_B_rejected_steps": 0,
+  "hot75_B_function_evaluations": 7645,
+  "hot75_B_segments": 138,
+  "hot75_B_solver_njev": 160,
+  "hot75_B_wall_time_s": 35.87,
+  "hot75_B_eclipse_worst_s": 0.0,
+  "hot75_B_heat_relative_full": 4.634954548964274e-06,
+  "hot75_B_heat_relative_orbit3": -5.526008423259746e-07,
+  "hot75_B_environment_relative": 2.859514900912148e-06,
+  "hot75_B_independent_max_K": 0.0005203646275901974,
+  "cold0_A_module_orbit3_C": {
+   "min": -56.73073682888523,
+   "mean": -53.461518600365295,
+   "max": -49.64930976682086
+  },
+  "cold0_A_fe_orbit3_C": {
+   "min": -57.9904,
+   "mean": -54.850523559126025,
+   "max": -51.20286666666667
+  },
+  "cold0_A_difference_orbit3_K": {
+   "min": 1.2596631711147737,
+   "mean": 1.3890049587607294,
+   "max": 1.553556899845809
+  },
+  "cold0_B_module_orbit3_C": {
+   "min": -54.47253612304013,
+   "mean": -51.24845759460079,
+   "max": -47.42887897832435
+  },
+  "cold0_B_fe_orbit3_C": {
+   "min": -56.3864,
+   "mean": -54.637600177171386,
+   "max": -52.668933333333335
+  },
+  "cold0_B_difference_orbit3_K": {
+   "min": 1.9138638769598728,
+   "mean": 3.3891425825705994,
+   "max": 5.240054355008986
+  },
+  "nom0_A_module_orbit3_C": {
+   "min": -49.792476092322914,
+   "mean": -46.61109372826706,
+   "max": -43.290068502738535
+  },
+  "nom0_A_fe_orbit3_C": {
+   "min": -50.3572,
+   "mean": -47.31631241850623,
+   "max": -44.1869
+  },
+  "nom0_A_difference_orbit3_K": {
+   "min": 0.5647239076770845,
+   "mean": 0.705218690239171,
+   "max": 0.8968314972614664
+  },
+  "nom0_B_module_orbit3_C": {
+   "min": -47.71942659261427,
+   "mean": -44.57382236112406,
+   "max": -41.24194325078582
+  },
+  "nom0_B_fe_orbit3_C": {
+   "min": -48.84003333333334,
+   "mean": -47.378886672616666,
+   "max": -46.17133333333334
+  },
+  "nom0_B_difference_orbit3_K": {
+   "min": 1.1206067407190687,
+   "mean": 2.8050643114926075,
+   "max": 4.929390082547513
+  },
+  "hot75_A_module_orbit3_C": {
+   "min": -34.680083291988154,
+   "mean": -33.31920324509914,
+   "max": -31.80642880298788
+  },
+  "hot75_A_fe_orbit3_C": {
+   "min": -37.56523333333333,
+   "mean": -36.24771833971298,
+   "max": -34.54423333333333
+  },
+  "hot75_A_difference_orbit3_K": {
+   "min": 2.8851500413451774,
+   "mean": 2.928515094613843,
+   "max": 2.73780453034545
+  },
+  "hot75_B_module_orbit3_C": {
+   "min": -32.97724669459336,
+   "mean": -31.685491146937938,
+   "max": -30.24662272696068
+  },
+  "hot75_B_fe_orbit3_C": {
+   "min": -32.9335,
+   "mean": -31.5581605638539,
+   "max": -30.03043333333333
+  },
+  "hot75_B_difference_orbit3_K": {
+   "min": -0.043746694593359337,
+   "mean": -0.12733058308403855,
+   "max": -0.21618939362734935
+  },
+  "coldest_panel": {
+   "cold0": {
+    "time_s": 12802.5,
+    "coldest_panel_C": -77.8102,
+    "radiator_mean_C": -57.1884,
+    "mean_minus_coldest_K": 20.621799999999993,
+    "orbit3_mean_minus_min_K": [
+     20.026300000000006,
+     21.232000000000006
+    ],
+    "orbit3_max_minus_min_K": [
+     62.5066,
+     65.6507
+    ],
+    "items_orbit3_min_C": {
+     "HRS_S1-1": -77.8101731358224,
+     "HRS_S1-2": -77.74667666305544,
+     "HRS_S1-3": -77.8091151316548,
+     "HRS_P1-1": -77.35329322969781,
+     "HRS_P1-2": -77.29287532029488,
+     "HRS_P1-3": -77.35284616569132
+    },
+    "module_T_R_loopA_C": -56.720768358696375,
+    "module_minus_coldest_loopA_K": 21.08943164130362,
+    "module_T_R_loopB_C": -54.462391137143044,
+    "module_minus_coldest_loopB_K": 23.34780886285695
+   },
+   "nom0": {
+    "time_s": 12802.5,
+    "coldest_panel_C": -68.4167,
+    "radiator_mean_C": -49.5986,
+    "mean_minus_coldest_K": 18.81810000000001,
+    "orbit3_mean_minus_min_K": [
+     18.234,
+     19.666199999999996
+    ],
+    "orbit3_max_minus_min_K": [
+     56.5036,
+     58.55792000000001
+    ],
+    "items_orbit3_min_C": {
+     "HRS_S1-1": -68.41671936928657,
+     "HRS_S1-2": -68.350927815054,
+     "HRS_S1-3": -68.41575118626815,
+     "HRS_P1-1": -67.87124442102262,
+     "HRS_P1-2": -67.80845361609758,
+     "HRS_P1-3": -67.87075346762046
+    },
+    "module_T_R_loopA_C": -49.782783390814956,
+    "module_minus_coldest_loopA_K": 18.63391660918505,
+    "module_T_R_loopB_C": -47.70955466560849,
+    "module_minus_coldest_loopB_K": 20.707145334391512
+   },
+   "hot75": {
+    "time_s": 15240.0,
+    "coldest_panel_C": -54.5399,
+    "radiator_mean_C": -35.1679,
+    "mean_minus_coldest_K": 19.372,
+    "orbit3_mean_minus_min_K": [
+     17.5886,
+     19.374700000000004
+    ],
+    "orbit3_max_minus_min_K": [
+     47.642630000000004,
+     50.48263
+    ],
+    "items_orbit3_min_C": {
+     "HRS_S1-1": -52.09760930506505,
+     "HRS_S1-2": -52.924148741905384,
+     "HRS_S1-3": -54.53985846458363,
+     "HRS_P1-1": -47.99841933151174,
+     "HRS_P1-2": -47.94060519386568,
+     "HRS_P1-3": -48.00028493823376
+    },
+    "module_T_R_loopA_C": -34.549816093337625,
+    "module_minus_coldest_loopA_K": 19.990083906662377,
+    "module_T_R_loopB_C": -32.841385121080606,
+    "module_minus_coldest_loopB_K": 21.698514878919397
+   }
+  },
+  "loop_difference": {
+   "cold0": {
+    "heat_input_B_minus_A_W": 2188.5501713523336,
+    "radiative_conductance_W_K": 980.7733851048988,
+    "hand_B_minus_A_K": 2.23145346783473,
+    "module_B_minus_A_K": 2.2130610057645086,
+    "fe_B_minus_A_K": 0.21292338195463856,
+    "fe_minus_module_K": -2.00013762380987,
+    "residual_K": {
+     "A": 1.3890049587607294,
+     "B": 3.3891425825705994
+    },
+    "fe_panel_spread_orbit3_K": [
+     62.5066,
+     65.6507
+    ]
+   },
+   "nom0": {
+    "heat_input_B_minus_A_W": 2203.1031981010383,
+    "radiative_conductance_W_K": 1073.6793892704231,
+    "hand_B_minus_A_K": 2.051919055275962,
+    "module_B_minus_A_K": 2.037271367142999,
+    "fe_B_minus_A_K": -0.06257425411043727,
+    "fe_minus_module_K": -2.0998456212534364,
+    "residual_K": {
+     "A": 0.705218690239171,
+     "B": 2.8050643114926075
+    },
+    "fe_panel_spread_orbit3_K": [
+     56.5036,
+     58.55792000000001
+    ]
+   },
+   "hot75": {
+    "heat_input_B_minus_A_W": 2062.622968255895,
+    "radiative_conductance_W_K": 1255.8744785441877,
+    "hand_B_minus_A_K": 1.642379874338152,
+    "module_B_minus_A_K": 1.633712098161201,
+    "fe_B_minus_A_K": 4.6895577758590825,
+    "fe_minus_module_K": 3.0558456776978815,
+    "residual_K": {
+     "A": 2.928515094613843,
+     "B": -0.12733058308403855
+    },
+    "fe_panel_spread_orbit3_K": [
+     47.642630000000004,
+     50.48263
+    ]
+   }
+  },
+  "residual_vs_spread": {
+   "max_residual_K": 3.3891425825705994,
+   "min_spread_K": 47.642630000000004
+  },
+  "series_file": "tests/results/FE-002_series.json",
+  "total_wall_time_s": 263.6
+ },
+ "summary_cn": "本用例按设计报告式 T3 第六行、式 T4 与式 T5，用 thermal_derivative 经 sdtwin_sim.coupled 与 sdtwin_sim.earth_flux 计算国际空间站舱外主动热控系统散热器的公共散热板温度，设计冷工况、平均环境工况与设计热工况各算回路 A 与回路 B，共 6 次运行，完成 6 次。散热板按每个回路 24 块面板建模，单面面积 220.728 m²，两面按本工况白色涂层的吸收率与发射率计算环境吸热与表面辐射；热容按式 T5 由面板质量 1765.824 kg 乘比热 900 J·kg⁻¹·K⁻¹ 再加 24 个液氨节点共 24 kJ/K 求得 1.6132 MJ/K，装配所得散热板热容与手算的相对差最大为 0。有限元散热器进热量按第 9.4 节记录的测试配置经电源设备节点注入，该节点热容 100 J/K，DR 热阻 1×10⁻⁴ K/W，SR、JC、CR 与 BR 取 1×10¹² K/W 表示不导热。到达散热板的累计热量与有限元进热量的相对差全程最大 1.2×10⁻⁵，第三圈最大 1.0×10⁻⁶，判据为 1×10⁻³。姿态四元数使散热板在受晒段侧边对日，在日食段正面对地，模块算得的两面入射余弦与独立计算之差最大 2.2×10⁻¹⁶。每次运行从有限元初始温度 262.00 K 起算到 16560 s，即有限元计算时段，合 2.98 个轨道周期，采用第 8 章表 8 中用于时间尺度差别较大情形的 Radau 方法，相对容限 1×10⁻⁸，温度绝对容限 1×10⁻⁶ K，最大步长 60 s，在日食边界与有限元进热量采样时刻分段积分；日食进出时刻与圆柱地影解析值之差最大为 3.6×10⁻¹² s，没有积分步跨越日食边界。散热板环境吸热与独立数值积分的相对差最大为 3.8×10⁻⁵，判据为 1×10⁻⁴；双面表面辐射与手算的相对差最大为 0；热容乘温度导数与各支路进热、环境吸热及表面辐射之和的相对差最大为 4.8×10⁻¹⁷；散热板温度与独立积分程序之差最大为 0.0010 K，判据为 0.02 K。第三圈时间加权平均温度，回路 A 与回路 B 依次排列，设计冷工况模块为 −53.46 °C 与 −51.25 °C，有限元为 −54.85 °C 与 −54.64 °C；平均环境工况模块为 −46.61 °C 与 −44.57 °C，有限元为 −47.32 °C 与 −47.38 °C；设计热工况模块为 −33.32 °C 与 −31.69 °C，有限元为 −36.25 °C 与 −31.56 °C。模块减有限元三个散热器单元面板平均温度之平均，设计冷工况回路 A 与回路 B 分别为 1.39 K 与 3.39 K，平均环境工况回路 A 与回路 B 分别为 0.71 K 与 2.81 K，设计热工况回路 A 与回路 B 分别为 2.93 K 与 −0.13 K，绝对值最大 3.39 K，验收门限 5 K。验收判据只针对平均温度，第三圈最低温度之差为 −0.04 至 2.89 K，最高温度之差为 −0.22 至 5.24 K，有限元按 120 s 输出点统计，模块按已接受解加密统计。模块中回路 B 的第三圈平均温度比回路 A 高 1.63 至 2.21 K，按两回路进热量差除以线性化辐射热导手算为 1.64 至 2.23 K，两者之差最大为 0.018 K，判据为不超过 0.05 K；有限元回路 B 与回路 A 之差在三个工况依次为 0.21、−0.06、4.69 K。设计热工况有限元回路 B 比回路 A 高 4.69 K，比模块多 3.06 K，有限元报告把这一差别归于两翼整体转动后上下相叠造成的相互遮挡，设计报告第 4.4 节与第 10 章说明本版不计组件间相互遮挡、相互辐射与局部温差。同一时刻有限元最冷面板比散热器平均温度低 18.8 至 20.6 K，第三圈各时刻有限元面板最高与最低温度之差为 47.6 至 65.7 K，平均温度残差最大 3.39 K，集总温度不能代替最冷点。",
+ "anomalies_cn": "无",
+ "environment": {
+  "python": "3.11.9",
+  "numpy": "2.4.6",
+  "scipy": "1.17.1",
+  "astropy": "8.0.1",
+  "pytest": "9.1.1",
+  "ntu_space_dynamics": "0.1.0",
+  "usd": "0.26.8"
+ },
+ "execution": {
+  "started_utc": "2026-10-05T23:17:02.838518+00:00",
+  "recorded_utc": "2026-10-05T23:40:12.138632+00:00",
+  "collected_functions": 6,
+  "finished_functions": 6,
+  "unexecuted_functions": [],
+  "source_sha256": {
+   "thermal/__init__.py": "ffb342305704801c8871a2af365af61877f7e6485b07ec381e0f777da9d294f5",
+   "thermal/environment.py": "5c3eba796dd28d41a4f1b6fa637ada3c0b8d2942ebc5f65b1e55f1384fa99f41",
+   "thermal/model.py": "9f758d46ea25844878e8cac7ccc402c31610548d255ded7d8d980ae95a965b9e",
+   "thermal/parameters.py": "792e7f5d1175e3564b7486a230039cf026fbad78074cfc8de4fbf352d9c946f9",
+   "thermal/types.py": "2c76359dfa9555ef7d51df83009a5985964c66080dc9062746815451e827a794",
+   "sdtwin_sim/__init__.py": "e2c3bee5849391a86fa79109339d001a75779dd93835d9e829f5f1591de81a31",
+   "sdtwin_sim/coupled.py": "f05e19e220284ad3a0c1e4188eb405fa66b6777f4226decfe95d2c559bca1dff",
+   "sdtwin_sim/earth_flux.py": "03b0d340d77e583cf73a3f0ec31ca0d9830c3bdc5f824903adae266b82a853a2",
+   "sdtwin_sim/power_stand_in.py": "3229251cdd2834bc2df18177c079e651f53a0827fb57cba21527ebdbf281c58f",
+   "sdtwin_sim/scene.py": "b7b1ad5328e6f6278354249e3087d47197895294af8607d21c7dcce354c7ab9b",
+   "tests/conftest.py": "345e7f788242083755505607636fa4af3e88cbf303a6a1728e4ab327e106d11e",
+   "tests/data/dm_001/reference.py": "3bba4938e76134c73272c00250517cc01c519da62f881382ddb42daa9c79fe2c",
+   "tests/data/en_001/en001_reference.py": "73370bd0a9fdc7e7c373e8dda1b5aa0c9a6970dc047fba3cf8a7c3fd808e6ea4",
+   "tests/data/en_003/earth_reference.py": "880154b92405e9af399b772296148219ca78f8ac62e9fcbeaeef67bb45ce117f",
+   "tests/data/en_003/fe_explore.py": "0cceaffd85c2d15b11fee6c7e6b5bbb00a17d94e63940b45a2db1863dfecd473",
+   "tests/data/en_003/fe_export.py": "b33fc7276138dc59e944c5cbfed73acc0d1f1ec2ce7d458b90eed62790aa8f85",
+   "tests/data/en_003/fe_refine.py": "6ad00122cb8f7a65d0f5c23f7c139b20e92d6f75fa0f472b16d2d97628995c43",
+   "tests/data/en_003/fe_refine_ladder.py": "587ffe012aa40955c6b615f68d6e257314ac0bc418765aaa358e17dc848e0580",
+   "tests/data/en_003/ladder_compare.py": "fdf7d4d74fb0f099934f5ef3c3bbdef67df6f7cf3605a5ad1984cb48450cc3ab",
+   "tests/data/fe_001/fe001_support.py": "d1bd978ad70120cf974e46cd996a8367bd5efc08e4d8755405c2a3a21be41051",
+   "tests/data/fe_002/fe002_support.py": "2c27a76b1fd972625293b26b8e1a07d0850ba78254c4457782607279205c4f7c",
+   "tests/data/fe_003/fe003_support.py": "00d548cb2c513707bfeb16f81bf130eded88fb09a87ba8785ad27ee341a985f2",
+   "tests/data/fe_004/fe004_support.py": "54a7d7d8ce2fa0e4f9b054f596a927f8531c0cc0b77a783dcd7ab6973c1f6e44",
+   "tests/data/ht_001/t2_reference.py": "2098ccd9080957ab24ff44712b3b8e688d2b41cfa077e95460a96c82f3d27f89",
+   "tests/data/ht_002/ht002_reference.py": "076d20dec2f98fb84bbbcda17b3a0313de6c8ffb44f4c2121282eb01387bd7e7",
+   "tests/data/ht_003/analytic.py": "5ee9b0e8d1c4e06067e44754c2dd2393218e4d2a6a3d91d64064d726cb06a3a5",
+   "tests/data/ni_001/ni001_support.py": "fc84c2b085ace6fa38819195dd85f0ae47846dbd8505432ef469dd19a276b0c7",
+   "tests/data/ni_002/ni002_reference.py": "b263602b77beb5b57e4b7360db586394228e18381b8f1e40abf20f1c3295665b",
+   "tests/data/ni_003/make_ni003_data.py": "d03cfe33141adc1f8288763c42009504dcdf076ba5e46d9539ddedca64eedce7",
+   "tests/data/ni_003/ni003_support.py": "bc563f0d0b9d56e461eac3e8db7c76b37ce1431468dd4b51d257a4a551257616",
+   "tests/data/ni_003/payload/ni003_payload.py": "4755abecf85fc0e3ee9006954b933ff3e1728e8647f725a0cb05e0bff654d433",
+   "tests/data/ni_003/probe_no_exec.py": "a2d7e9613788aa4f5eb24af6c8b5dac16a234a28b96df880b7a0bfef6672cc32",
+   "tests/data/ni_003/run_alone.py": "932a1b32033842df026eac9a1496ccd301c89291e980e969fbb3a5022acee0f6",
+   "tests/data/pa_001/pa001_inputs.py": "f1b685263ff6770efd7dd01f2f9b378230ab7fab12800b3e5a697d4cf17fc4b4",
+   "tests/data/simready/make_geometry.py": "2a4c7a5b278c7ddcbe2b673950b13c7bdaaf03921f8883693bc30e28c254094c",
+   "tests/data/simready/make_scene_variants.py": "994ca8d44a44023f7d778c0337ad5403420eea194bc8202194c440a28d1f1247",
+   "tests/test_dm_001_data_objects.py": "44d85eac05803a2bb04c5e1d0c2fea1c0c572c60299ee6f28eb7cb4986f897a8",
+   "tests/test_ec_001_power_ports.py": "cdb8dac627ff5e5bd56a852fd6344996658d8dc2df56beebb8efdd5a159c7f67",
+   "tests/test_en_001_surface_environment.py": "1b0f11127159690d57558aedcdece9c11559b2b6dda75637714d26090c0dd679",
+   "tests/test_en_002_surface_heat.py": "c45ab4a04ceaa6211d5aaf72befbf5d95e8e9c7be5b86454ccc4a6b5cae39e34",
+   "tests/test_en_003_earth_flux.py": "eaa1527e9722b6feb07abc9289f43680b60c59791ce838e072a5e24b90e62c79",
+   "tests/test_fe_001_solar_array_fe.py": "f23d462dbbd432308214db7d5634689b059f5e5b1bb4f46251c0836d139f3cd7",
+   "tests/test_fe_002_radiator_fe.py": "f1be285404e242cc6394363eac2ed1345233e1497ed83fff5f4e3dde09260aa1",
+   "tests/test_fe_003_compute_cold_plate_fe.py": "3a9bfdd73afca2fb2257235348b85702707b5c390b1814a3d15621fba39bafce",
+   "tests/test_fe_004_whole_satellite_chain.py": "6aaeec63a82a4031d916d063694f2aa9a6b750c1712ce2bb7ba036497f1e9a66",
+   "tests/test_ht_001_heat_flows.py": "2d91f41677820f09cdb4e6edac6582be56c9647cea59bfaa629e30da1e759049",
+   "tests/test_ht_002_derivative_balance.py": "728e57be7630d1be877a265ad0206e9ab0cef1374a9bd74f20f438f18a0d144b",
+   "tests/test_ht_003_analytic.py": "a66ffc2613929fbd9bb44a0f2a8f1d41879069d1b2d9584f8fb2041f1545e832",
+   "tests/test_ni_001_numerics_eclipse.py": "1f4cba777b1aba392d09bb130ec6652d2b04004a3ac97ea4e49a88424aacdf47",
+   "tests/test_ni_002_end_to_end.py": "fb33ca9517ced5761c63ae7d68cefc72e98c3c3e36c7a8665b0d89fc9d3c696e",
+   "tests/test_ni_003_scene_assembly.py": "2ce365771b66f67e78334bbb3358a210d8eabed0753d82b7abeb4f3e900e6226",
+   "tests/test_pa_001_t5_assembly.py": "fa1b1edba0b491daf8a6e06ecd6d3a1e8baa9307daf94b5d885659a0620e3293"
+  }
+ }
+}

@@ -1,0 +1,4345 @@
+{
+ "case_id": "FE-001",
+ "record": "thermal design 9.4: resolved parameters, provenance, initial state, environment configuration, solver settings and statistics of every run",
+ "runs": [
+  {
+   "format": "sdtwin.coupled_archive/1",
+   "run_id": "FE-001-cold0-earth-0",
+   "epoch_utc": "2019-06-01T00:00:00+00:00",
+   "status": "completed",
+   "error": null,
+   "t_start_s": 0.0,
+   "t_end_s": 16560.0,
+   "node_order": [
+    "S",
+    "J",
+    "C",
+    "B",
+    "D",
+    "R"
+   ],
+   "path_order": [
+    "SR",
+    "JC",
+    "CR",
+    "BR",
+    "DR"
+   ],
+   "exposed_node_order": [
+    "S",
+    "R"
+   ],
+   "port_order": [
+    "P_pv_W",
+    "P_load_W",
+    "Q_B_W",
+    "Q_D_W"
+   ],
+   "instance_map": {
+    "nodes": {
+     "S": [
+      "SolarArray01"
+     ],
+     "J": [
+      "Compute01"
+     ],
+     "C": [
+      "ColdPlate01"
+     ],
+     "B": [
+      "Battery01"
+     ],
+     "D": [
+      "Controller01",
+      "PDU01"
+     ],
+     "R": [
+      "Radiator01"
+     ]
+    },
+    "ports": {
+     "P_pv_W": "SolarArray01",
+     "P_load_W": "Compute01",
+     "Q_B_W": "Battery01",
+     "Q_D_W": "PDU01"
+    }
+   },
+   "eclipse_boundaries": [
+    {
+     "time_s": 1693.57879039055,
+     "time_left_s": 1693.5787903905498,
+     "time_right_s": 1693.57879039055,
+     "phase_before": "sunlit",
+     "phase_after": "umbra",
+     "kind": "sunlit_to_umbra"
+    },
+    {
+     "time_s": 3860.045509609451,
+     "time_left_s": 3860.0455096094506,
+     "time_right_s": 3860.045509609451,
+     "phase_before": "umbra",
+     "phase_after": "sunlit",
+     "kind": "umbra_to_sunlit"
+    },
+    {
+     "time_s": 7247.203090390552,
+     "time_left_s": 7247.203090390551,
+     "time_right_s": 7247.203090390552,
+     "phase_before": "sunlit",
+     "phase_after": "umbra",
+     "kind": "sunlit_to_umbra"
+    },
+    {
+     "time_s": 9413.669809609453,
+     "time_left_s": 9413.669809609451,
+     "time_right_s": 9413.669809609453,
+     "phase_before": "umbra",
+     "phase_after": "sunlit",
+     "kind": "umbra_to_sunlit"
+    },
+    {
+     "time_s": 12800.827390390552,
+     "time_left_s": 12800.82739039055,
+     "time_right_s": 12800.827390390552,
+     "phase_before": "sunlit",
+     "phase_after": "umbra",
+     "kind": "sunlit_to_umbra"
+    },
+    {
+     "time_s": 14967.294109609453,
+     "time_left_s": 14967.294109609451,
+     "time_right_s": 14967.294109609453,
+     "phase_before": "umbra",
+     "phase_after": "sunlit",
+     "kind": "umbra_to_sunlit"
+    }
+   ],
+   "segments": [
+    {
+     "index": 0,
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ],
+     "end_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 1693.5787903905498
+    },
+    {
+     "index": 1,
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "end_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 3860.0455096094506
+    },
+    {
+     "index": 2,
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "end_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 7247.203090390551
+    },
+    {
+     "index": 3,
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "end_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 9413.669809609451
+    },
+    {
+     "index": 4,
+     "start_s": 9413.669809609453,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "end_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 12800.82739039055
+    },
+    {
+     "index": 5,
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "end_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 14967.294109609451
+    },
+    {
+     "index": 6,
+     "start_s": 14967.294109609453,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "end_reasons": [
+      "run_end"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 16560.0
+    }
+   ],
+   "solver_settings": {
+    "method": "RK45",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-06,
+    "max_step_s": 30.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "statistics": {
+    "accepted_steps": 577,
+    "accepted_steps_by_context": {
+     "integration": 577,
+     "event_location": 0
+    },
+    "bridge_steps": 0,
+    "accepted_states": 584,
+    "rejected_steps": 0,
+    "event_aborted_attempts": 0,
+    "discarded_event_search_steps": 0,
+    "discarded_event_search_rejections": 0,
+    "rejected_steps_total": 0,
+    "rejected_step_rule": "RK45: each attempt costs n_stages = 6 evaluations; attempts per accepted step are its evaluations divided by n_stages; rejected = attempts - 1",
+    "attempt_count_anomalies": 0,
+    "function_evaluations": 5133,
+    "function_evaluations_by_context": {
+     "integration": 3476,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_construction_evaluations": 14,
+    "power_calls": 0,
+    "power_calls_by_context": {
+     "integration": 0,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 0,
+     "energy_audit": 0
+    },
+    "solver_instances": 7,
+    "solver_nfev": 3476,
+    "solver_njev": 0,
+    "solver_nlu": 0,
+    "segments": 7,
+    "eclipse_boundaries": 6,
+    "event_searches": 0,
+    "located_events": 0,
+    "unconfirmed_event_searches": 0,
+    "bisection_iterations": 0,
+    "applied_events": 0,
+    "charge_limit_transitions": 0,
+    "charge_limit_searches": 0,
+    "charge_limit_bisection_iterations": 0,
+    "charge_limit_splits": 0,
+    "charge_limit_reason_reuses": 0,
+    "range_excursions_accepted_states": 0,
+    "output_samples": 1657,
+    "invalid_output_samples": 0,
+    "wall_time_s": 52.44339770000079
+   },
+   "range_warnings": [],
+   "notes": [
+    "ThermalRangeWarning is not emitted for trial states; every accepted state is checked against the declared node ranges and excursions, like out-of-range output samples, are recorded in range_warnings"
+   ],
+   "final_state": {
+    "time_s": 16560.0,
+    "temperature_K": [
+     329.9535738452274,
+     196.29680802590804,
+     195.19077822909517,
+     199.17006103079365,
+     198.2860538295816,
+     193.39340510567433
+    ]
+   },
+   "provenance": {
+    "procedure": {
+     "module": "sdtwin_sim.coupled",
+     "design": "thermal design chapters 7 and 8 with table 8; Power design chapters 7 and 8 with table 7",
+     "state_vector": [
+      "S",
+      "J",
+      "C",
+      "B",
+      "D",
+      "R"
+     ],
+     "segmentation": "eclipse boundaries from the environment provider, load commands, declared input discontinuities, located Power events and located starts and ends of charge limiting (a step that crosses one is ended at the crossing and the solver restarts there)",
+     "event_location": "bisection of sub-integrations from the last accepted state to within event_time_tol_s, the final interval bridged by one explicit Euler step",
+     "orbit_power_considering_thermal": "not called; temperatures come only from the integrated state"
+    },
+    "thermal_parameters": {
+     "node_order": [
+      "S",
+      "J",
+      "C",
+      "B",
+      "D",
+      "R"
+     ],
+     "path_order": [
+      "SR",
+      "JC",
+      "CR",
+      "BR",
+      "DR"
+     ],
+     "units": {
+      "C_J_K": "J/K",
+      "R_K_W": "K/W",
+      "area_m2": "m^2",
+      "temperature": "K"
+     },
+     "capacitance": {
+      "S": {
+       "value_J_K": 3954880.5119999996,
+       "portions": [
+        {
+         "instance_id": "SolarArray01",
+         "material_id": "SolarArray01_blanket",
+         "mass_kg": 4943.60064,
+         "cp_J_kgK": 800.0,
+         "C_J_K": 3954880.5119999996,
+         "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+        }
+       ]
+      },
+      "J": {
+       "value_J_K": 1800.0,
+       "portions": [
+        {
+         "instance_id": "Compute01",
+         "material_id": "Compute01_material",
+         "mass_kg": 2.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 1800.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "C": {
+       "value_J_K": 1800.0,
+       "portions": [
+        {
+         "instance_id": "ColdPlate01",
+         "material_id": "ColdPlate01_material",
+         "mass_kg": 2.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 1800.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "B": {
+       "value_J_K": 2000.0,
+       "portions": [
+        {
+         "instance_id": "Battery01",
+         "material_id": "Battery01_material",
+         "mass_kg": 2.0,
+         "cp_J_kgK": 1000.0,
+         "C_J_K": 2000.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "D": {
+       "value_J_K": 1800.0,
+       "portions": [
+        {
+         "instance_id": "Controller01",
+         "material_id": "Controller01_material",
+         "mass_kg": 1.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 900.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        },
+        {
+         "instance_id": "PDU01",
+         "material_id": "PDU01_material",
+         "mass_kg": 1.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 900.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "R": {
+       "value_J_K": 18000.0,
+       "portions": [
+        {
+         "instance_id": "Radiator01",
+         "material_id": "Radiator01_material",
+         "mass_kg": 20.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 18000.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      }
+     },
+     "resistance": {
+      "SR": {
+       "value_K_W": 1000000000000.0,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 1000000000000.0,
+        "includes_contact": true
+       },
+       "source": "FE-001 test configuration recorded per thermal design 9.4: the FE model has no conduction between the solar array and the radiators (FE report 3.9 simplification 2), so SR takes a very large resistance that represents no conduction"
+      },
+      "JC": {
+       "value_K_W": 0.5,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 0.5,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "CR": {
+       "value_K_W": 0.5,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 0.5,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "BR": {
+       "value_K_W": 2.0,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 2.0,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "DR": {
+       "value_K_W": 2.0,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 2.0,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      }
+     },
+     "surfaces": {
+      "SolarArray01_front": {
+       "instance_id": "SolarArray01",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        1.0
+       ],
+       "absorptivity": 0.72,
+       "emissivity": 0.82,
+       "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+      },
+      "SolarArray01_back": {
+       "instance_id": "SolarArray01",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       "absorptivity": 0.55,
+       "emissivity": 0.85,
+       "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+      },
+      "Radiator01_a": {
+       "instance_id": "Radiator01",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9,
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "Radiator01_b": {
+       "instance_id": "Radiator01",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        -1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9,
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      }
+     },
+     "assets": {
+      "SolarArray01": {
+       "asset_id": "fe001_iss_us_solar_array_blankets",
+       "asset_version": "iss_fem-2026-09-30",
+       "node_id": "S",
+       "temperature_range_K": [
+        100.0,
+        420.0
+       ]
+      },
+      "Compute01": {
+       "asset_id": "fe001_aux_compute01",
+       "asset_version": "1",
+       "node_id": "J",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "ColdPlate01": {
+       "asset_id": "fe001_aux_coldplate01",
+       "asset_version": "1",
+       "node_id": "C",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "Battery01": {
+       "asset_id": "fe001_aux_battery01",
+       "asset_version": "1",
+       "node_id": "B",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "Controller01": {
+       "asset_id": "fe001_aux_controller01",
+       "asset_version": "1",
+       "node_id": "D",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "PDU01": {
+       "asset_id": "fe001_aux_pdu01",
+       "asset_version": "1",
+       "node_id": "D",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "Radiator01": {
+       "asset_id": "fe001_aux_radiator01",
+       "asset_version": "1",
+       "node_id": "R",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      }
+     },
+     "overrides_applied": [],
+     "temperature_range_K": {
+      "S": [
+       100.0,
+       420.0
+      ],
+      "J": [
+       100.0,
+       450.0
+      ],
+      "C": [
+       100.0,
+       450.0
+      ],
+      "B": [
+       100.0,
+       450.0
+      ],
+      "D": [
+       100.0,
+       450.0
+      ],
+      "R": [
+       100.0,
+       450.0
+      ]
+     }
+    },
+    "thermal_values": {
+     "C_J_K": {
+      "S": 3954880.5119999996,
+      "J": 1800.0,
+      "C": 1800.0,
+      "B": 2000.0,
+      "D": 1800.0,
+      "R": 18000.0
+     },
+     "R_K_W": {
+      "SR": 1000000000000.0,
+      "JC": 0.5,
+      "CR": 0.5,
+      "BR": 2.0,
+      "DR": 2.0
+     },
+     "surfaces": [
+      {
+       "surface_id": "SolarArray01_front",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        1.0
+       ],
+       "absorptivity": 0.72,
+       "emissivity": 0.82
+      },
+      {
+       "surface_id": "SolarArray01_back",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       "absorptivity": 0.55,
+       "emissivity": 0.85
+      },
+      {
+       "surface_id": "Radiator01_a",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9
+      },
+      {
+       "surface_id": "Radiator01_b",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        -1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9
+      }
+     ]
+    },
+    "environment": {
+     "mode": "analytic_callables",
+     "position": "fe001_support.FEOrbit.position",
+     "sun_position": "fe001_support.FEOrbit.sun_position",
+     "quaternion": "fe001_support.FEOrbit.quaternion",
+     "irradiance": "caller G(t): fe001_support.FEOrbit.irradiance.<locals>.G",
+     "eclipse_phases": "G(t) > 0 is sunlit, G(t) = 0 is umbra",
+     "run_id": "FE-001-cold0-earth-0",
+     "epoch_utc": "2019-06-01T00:00:00+00:00",
+     "frame": "GCRS",
+     "time_range_s": [
+      null,
+      null
+     ],
+     "earth_flux": {
+      "albedo": 0.2,
+      "olr_W_m2": 206.0,
+      "solar_constant_W_m2": 1321.0,
+      "earth_radius_m": 6378137.0,
+      "resolution": [
+       240,
+       360
+      ],
+      "disabled_reason": null
+     },
+     "surface_ids": [
+      "SolarArray01_front",
+      "SolarArray01_back",
+      "Radiator01_a",
+      "Radiator01_b"
+     ],
+     "power_environment": "sdtwin_sim.power_stand_in.PowerEnvironment"
+    },
+    "power": null,
+    "prescribed_ports": "test_fe_001_solar_array_fe._ports.<locals>.prescribed_ports",
+    "declared_boundaries": [],
+    "caller": {
+     "case_id": "FE-001",
+     "fe_case": "cold0",
+     "fe_label_cn": "设计冷工况",
+     "fe_data": "iss_fem/out/cold0/series.csv column saw_Tmean_C",
+     "environment": {
+      "label_cn": "设计冷工况",
+      "beta_deg": 0.0,
+      "solar_constant_W_m2": 1321.0,
+      "albedo": 0.2,
+      "olr_W_m2": 206.0
+     },
+     "earth_flux": "on",
+     "time_origin": "orbit noon of the FE run; positions from the FE orbit functions of summary.json",
+     "eclipse": "cylindrical Earth shadow along the FE sun_ecs direction, G already includes the eclipse",
+     "attitude": "body +Z (front normal of SolarArray01) points at the Sun at every instant, like the FE solar array group; body +X along the orbit normal component perpendicular to the Sun line",
+     "P_pv_rule": "P_pv_W = 0.073 x front area x G x max(0, cos incidence of the front), the actual electrical output given to Thermal; P_load_W = Q_B_W = Q_D_W = 0",
+     "SR_configuration": "FE-001 test configuration recorded per thermal design 9.4: the FE model has no conduction between the solar array and the radiators (FE report 3.9 simplification 2), so SR takes a very large resistance that represents no conduction",
+     "auxiliary_nodes": "J, C, B, D and R are not compared in FE-001. Their explicit values only complete the six-node model; P_load_W, Q_B_W and Q_D_W are zero and SR decouples S from R.",
+     "integration_span_s": 16560.0,
+     "extra_orbits_for_repetition": 0,
+     "epoch_note": "nominal UTC epoch; the FE environment is fixed by beta and the case values, not by a date"
+    },
+    "software": {
+     "python": "3.11.9",
+     "numpy": "2.4.6",
+     "scipy": "1.17.1",
+     "ntu_space_dynamics": "0.1.0",
+     "coupled_module": "sdtwin_sim.coupled"
+    }
+   },
+   "initial_state_K": {
+    "S": 290.0,
+    "J": 250.0,
+    "C": 250.0,
+    "B": 250.0,
+    "D": 250.0,
+    "R": 250.0
+   },
+   "last_accepted_s": 16560.0,
+   "repetition_K": 4.884293502982473e-08,
+   "wall_s": 52.44513469999947
+  },
+  {
+   "format": "sdtwin.coupled_archive/1",
+   "run_id": "FE-001-cold0-no-earth-0",
+   "epoch_utc": "2019-06-01T00:00:00+00:00",
+   "status": "completed",
+   "error": null,
+   "t_start_s": 0.0,
+   "t_end_s": 16560.0,
+   "node_order": [
+    "S",
+    "J",
+    "C",
+    "B",
+    "D",
+    "R"
+   ],
+   "path_order": [
+    "SR",
+    "JC",
+    "CR",
+    "BR",
+    "DR"
+   ],
+   "exposed_node_order": [
+    "S",
+    "R"
+   ],
+   "port_order": [
+    "P_pv_W",
+    "P_load_W",
+    "Q_B_W",
+    "Q_D_W"
+   ],
+   "instance_map": {
+    "nodes": {
+     "S": [
+      "SolarArray01"
+     ],
+     "J": [
+      "Compute01"
+     ],
+     "C": [
+      "ColdPlate01"
+     ],
+     "B": [
+      "Battery01"
+     ],
+     "D": [
+      "Controller01",
+      "PDU01"
+     ],
+     "R": [
+      "Radiator01"
+     ]
+    },
+    "ports": {
+     "P_pv_W": "SolarArray01",
+     "P_load_W": "Compute01",
+     "Q_B_W": "Battery01",
+     "Q_D_W": "PDU01"
+    }
+   },
+   "eclipse_boundaries": [
+    {
+     "time_s": 1693.57879039055,
+     "time_left_s": 1693.5787903905498,
+     "time_right_s": 1693.57879039055,
+     "phase_before": "sunlit",
+     "phase_after": "umbra",
+     "kind": "sunlit_to_umbra"
+    },
+    {
+     "time_s": 3860.045509609451,
+     "time_left_s": 3860.0455096094506,
+     "time_right_s": 3860.045509609451,
+     "phase_before": "umbra",
+     "phase_after": "sunlit",
+     "kind": "umbra_to_sunlit"
+    },
+    {
+     "time_s": 7247.203090390552,
+     "time_left_s": 7247.203090390551,
+     "time_right_s": 7247.203090390552,
+     "phase_before": "sunlit",
+     "phase_after": "umbra",
+     "kind": "sunlit_to_umbra"
+    },
+    {
+     "time_s": 9413.669809609453,
+     "time_left_s": 9413.669809609451,
+     "time_right_s": 9413.669809609453,
+     "phase_before": "umbra",
+     "phase_after": "sunlit",
+     "kind": "umbra_to_sunlit"
+    },
+    {
+     "time_s": 12800.827390390552,
+     "time_left_s": 12800.82739039055,
+     "time_right_s": 12800.827390390552,
+     "phase_before": "sunlit",
+     "phase_after": "umbra",
+     "kind": "sunlit_to_umbra"
+    },
+    {
+     "time_s": 14967.294109609453,
+     "time_left_s": 14967.294109609451,
+     "time_right_s": 14967.294109609453,
+     "phase_before": "umbra",
+     "phase_after": "sunlit",
+     "kind": "umbra_to_sunlit"
+    }
+   ],
+   "segments": [
+    {
+     "index": 0,
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ],
+     "end_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 1693.5787903905498
+    },
+    {
+     "index": 1,
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "end_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 3860.0455096094506
+    },
+    {
+     "index": 2,
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "end_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 7247.203090390551
+    },
+    {
+     "index": 3,
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "end_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 9413.669809609451
+    },
+    {
+     "index": 4,
+     "start_s": 9413.669809609453,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "end_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 12800.82739039055
+    },
+    {
+     "index": 5,
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "end_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 14967.294109609451
+    },
+    {
+     "index": 6,
+     "start_s": 14967.294109609453,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "end_reasons": [
+      "run_end"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 16560.0
+    }
+   ],
+   "solver_settings": {
+    "method": "RK45",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-06,
+    "max_step_s": 30.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "statistics": {
+    "accepted_steps": 576,
+    "accepted_steps_by_context": {
+     "integration": 576,
+     "event_location": 0
+    },
+    "bridge_steps": 0,
+    "accepted_states": 583,
+    "rejected_steps": 0,
+    "event_aborted_attempts": 0,
+    "discarded_event_search_steps": 0,
+    "discarded_event_search_rejections": 0,
+    "rejected_steps_total": 0,
+    "rejected_step_rule": "RK45: each attempt costs n_stages = 6 evaluations; attempts per accepted step are its evaluations divided by n_stages; rejected = attempts - 1",
+    "attempt_count_anomalies": 0,
+    "function_evaluations": 5127,
+    "function_evaluations_by_context": {
+     "integration": 3470,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_construction_evaluations": 14,
+    "power_calls": 0,
+    "power_calls_by_context": {
+     "integration": 0,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 0,
+     "energy_audit": 0
+    },
+    "solver_instances": 7,
+    "solver_nfev": 3470,
+    "solver_njev": 0,
+    "solver_nlu": 0,
+    "segments": 7,
+    "eclipse_boundaries": 6,
+    "event_searches": 0,
+    "located_events": 0,
+    "unconfirmed_event_searches": 0,
+    "bisection_iterations": 0,
+    "applied_events": 0,
+    "charge_limit_transitions": 0,
+    "charge_limit_searches": 0,
+    "charge_limit_bisection_iterations": 0,
+    "charge_limit_splits": 0,
+    "charge_limit_reason_reuses": 0,
+    "range_excursions_accepted_states": 0,
+    "output_samples": 1657,
+    "invalid_output_samples": 0,
+    "wall_time_s": 4.027880499997991
+   },
+   "range_warnings": [],
+   "notes": [
+    "Earth albedo and infrared switched off: FE-001 step 4: Earth albedo and infrared switched off to record their effect on the solar array temperature (thermal design 9.4 and appendix B: an explicitly labelled simplification, not a complete orbital environment)",
+    "ThermalRangeWarning is not emitted for trial states; every accepted state is checked against the declared node ranges and excursions, like out-of-range output samples, are recorded in range_warnings"
+   ],
+   "final_state": {
+    "time_s": 16560.0,
+    "temperature_K": [
+     308.21803701965223,
+     164.311266321597,
+     161.8444362309287,
+     169.3569704368223,
+     167.7995149059586,
+     157.05481790241475
+    ]
+   },
+   "provenance": {
+    "procedure": {
+     "module": "sdtwin_sim.coupled",
+     "design": "thermal design chapters 7 and 8 with table 8; Power design chapters 7 and 8 with table 7",
+     "state_vector": [
+      "S",
+      "J",
+      "C",
+      "B",
+      "D",
+      "R"
+     ],
+     "segmentation": "eclipse boundaries from the environment provider, load commands, declared input discontinuities, located Power events and located starts and ends of charge limiting (a step that crosses one is ended at the crossing and the solver restarts there)",
+     "event_location": "bisection of sub-integrations from the last accepted state to within event_time_tol_s, the final interval bridged by one explicit Euler step",
+     "orbit_power_considering_thermal": "not called; temperatures come only from the integrated state"
+    },
+    "thermal_parameters": {
+     "node_order": [
+      "S",
+      "J",
+      "C",
+      "B",
+      "D",
+      "R"
+     ],
+     "path_order": [
+      "SR",
+      "JC",
+      "CR",
+      "BR",
+      "DR"
+     ],
+     "units": {
+      "C_J_K": "J/K",
+      "R_K_W": "K/W",
+      "area_m2": "m^2",
+      "temperature": "K"
+     },
+     "capacitance": {
+      "S": {
+       "value_J_K": 3954880.5119999996,
+       "portions": [
+        {
+         "instance_id": "SolarArray01",
+         "material_id": "SolarArray01_blanket",
+         "mass_kg": 4943.60064,
+         "cp_J_kgK": 800.0,
+         "C_J_K": 3954880.5119999996,
+         "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+        }
+       ]
+      },
+      "J": {
+       "value_J_K": 1800.0,
+       "portions": [
+        {
+         "instance_id": "Compute01",
+         "material_id": "Compute01_material",
+         "mass_kg": 2.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 1800.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "C": {
+       "value_J_K": 1800.0,
+       "portions": [
+        {
+         "instance_id": "ColdPlate01",
+         "material_id": "ColdPlate01_material",
+         "mass_kg": 2.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 1800.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "B": {
+       "value_J_K": 2000.0,
+       "portions": [
+        {
+         "instance_id": "Battery01",
+         "material_id": "Battery01_material",
+         "mass_kg": 2.0,
+         "cp_J_kgK": 1000.0,
+         "C_J_K": 2000.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "D": {
+       "value_J_K": 1800.0,
+       "portions": [
+        {
+         "instance_id": "Controller01",
+         "material_id": "Controller01_material",
+         "mass_kg": 1.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 900.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        },
+        {
+         "instance_id": "PDU01",
+         "material_id": "PDU01_material",
+         "mass_kg": 1.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 900.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "R": {
+       "value_J_K": 18000.0,
+       "portions": [
+        {
+         "instance_id": "Radiator01",
+         "material_id": "Radiator01_material",
+         "mass_kg": 20.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 18000.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      }
+     },
+     "resistance": {
+      "SR": {
+       "value_K_W": 1000000000000.0,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 1000000000000.0,
+        "includes_contact": true
+       },
+       "source": "FE-001 test configuration recorded per thermal design 9.4: the FE model has no conduction between the solar array and the radiators (FE report 3.9 simplification 2), so SR takes a very large resistance that represents no conduction"
+      },
+      "JC": {
+       "value_K_W": 0.5,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 0.5,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "CR": {
+       "value_K_W": 0.5,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 0.5,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "BR": {
+       "value_K_W": 2.0,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 2.0,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "DR": {
+       "value_K_W": 2.0,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 2.0,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      }
+     },
+     "surfaces": {
+      "SolarArray01_front": {
+       "instance_id": "SolarArray01",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        1.0
+       ],
+       "absorptivity": 0.72,
+       "emissivity": 0.82,
+       "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+      },
+      "SolarArray01_back": {
+       "instance_id": "SolarArray01",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       "absorptivity": 0.55,
+       "emissivity": 0.85,
+       "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+      },
+      "Radiator01_a": {
+       "instance_id": "Radiator01",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9,
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "Radiator01_b": {
+       "instance_id": "Radiator01",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        -1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9,
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      }
+     },
+     "assets": {
+      "SolarArray01": {
+       "asset_id": "fe001_iss_us_solar_array_blankets",
+       "asset_version": "iss_fem-2026-09-30",
+       "node_id": "S",
+       "temperature_range_K": [
+        100.0,
+        420.0
+       ]
+      },
+      "Compute01": {
+       "asset_id": "fe001_aux_compute01",
+       "asset_version": "1",
+       "node_id": "J",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "ColdPlate01": {
+       "asset_id": "fe001_aux_coldplate01",
+       "asset_version": "1",
+       "node_id": "C",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "Battery01": {
+       "asset_id": "fe001_aux_battery01",
+       "asset_version": "1",
+       "node_id": "B",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "Controller01": {
+       "asset_id": "fe001_aux_controller01",
+       "asset_version": "1",
+       "node_id": "D",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "PDU01": {
+       "asset_id": "fe001_aux_pdu01",
+       "asset_version": "1",
+       "node_id": "D",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "Radiator01": {
+       "asset_id": "fe001_aux_radiator01",
+       "asset_version": "1",
+       "node_id": "R",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      }
+     },
+     "overrides_applied": [],
+     "temperature_range_K": {
+      "S": [
+       100.0,
+       420.0
+      ],
+      "J": [
+       100.0,
+       450.0
+      ],
+      "C": [
+       100.0,
+       450.0
+      ],
+      "B": [
+       100.0,
+       450.0
+      ],
+      "D": [
+       100.0,
+       450.0
+      ],
+      "R": [
+       100.0,
+       450.0
+      ]
+     }
+    },
+    "thermal_values": {
+     "C_J_K": {
+      "S": 3954880.5119999996,
+      "J": 1800.0,
+      "C": 1800.0,
+      "B": 2000.0,
+      "D": 1800.0,
+      "R": 18000.0
+     },
+     "R_K_W": {
+      "SR": 1000000000000.0,
+      "JC": 0.5,
+      "CR": 0.5,
+      "BR": 2.0,
+      "DR": 2.0
+     },
+     "surfaces": [
+      {
+       "surface_id": "SolarArray01_front",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        1.0
+       ],
+       "absorptivity": 0.72,
+       "emissivity": 0.82
+      },
+      {
+       "surface_id": "SolarArray01_back",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       "absorptivity": 0.55,
+       "emissivity": 0.85
+      },
+      {
+       "surface_id": "Radiator01_a",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9
+      },
+      {
+       "surface_id": "Radiator01_b",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        -1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9
+      }
+     ]
+    },
+    "environment": {
+     "mode": "analytic_callables",
+     "position": "fe001_support.FEOrbit.position",
+     "sun_position": "fe001_support.FEOrbit.sun_position",
+     "quaternion": "fe001_support.FEOrbit.quaternion",
+     "irradiance": "caller G(t): fe001_support.FEOrbit.irradiance.<locals>.G",
+     "eclipse_phases": "G(t) > 0 is sunlit, G(t) = 0 is umbra",
+     "run_id": "FE-001-cold0-no-earth-0",
+     "epoch_utc": "2019-06-01T00:00:00+00:00",
+     "frame": "GCRS",
+     "time_range_s": [
+      null,
+      null
+     ],
+     "earth_flux": {
+      "albedo": null,
+      "olr_W_m2": null,
+      "solar_constant_W_m2": null,
+      "earth_radius_m": 6378137.0,
+      "resolution": [
+       240,
+       360
+      ],
+      "disabled_reason": "FE-001 step 4: Earth albedo and infrared switched off to record their effect on the solar array temperature (thermal design 9.4 and appendix B: an explicitly labelled simplification, not a complete orbital environment)"
+     },
+     "surface_ids": [
+      "SolarArray01_front",
+      "SolarArray01_back",
+      "Radiator01_a",
+      "Radiator01_b"
+     ],
+     "power_environment": "sdtwin_sim.power_stand_in.PowerEnvironment"
+    },
+    "power": null,
+    "prescribed_ports": "test_fe_001_solar_array_fe._ports.<locals>.prescribed_ports",
+    "declared_boundaries": [],
+    "caller": {
+     "case_id": "FE-001",
+     "fe_case": "cold0",
+     "fe_label_cn": "设计冷工况",
+     "fe_data": "iss_fem/out/cold0/series.csv column saw_Tmean_C",
+     "environment": {
+      "label_cn": "设计冷工况",
+      "beta_deg": 0.0,
+      "solar_constant_W_m2": 1321.0,
+      "albedo": 0.2,
+      "olr_W_m2": 206.0
+     },
+     "earth_flux": "off: FE-001 step 4: Earth albedo and infrared switched off to record their effect on the solar array temperature (thermal design 9.4 and appendix B: an explicitly labelled simplification, not a complete orbital environment)",
+     "time_origin": "orbit noon of the FE run; positions from the FE orbit functions of summary.json",
+     "eclipse": "cylindrical Earth shadow along the FE sun_ecs direction, G already includes the eclipse",
+     "attitude": "body +Z (front normal of SolarArray01) points at the Sun at every instant, like the FE solar array group; body +X along the orbit normal component perpendicular to the Sun line",
+     "P_pv_rule": "P_pv_W = 0.073 x front area x G x max(0, cos incidence of the front), the actual electrical output given to Thermal; P_load_W = Q_B_W = Q_D_W = 0",
+     "SR_configuration": "FE-001 test configuration recorded per thermal design 9.4: the FE model has no conduction between the solar array and the radiators (FE report 3.9 simplification 2), so SR takes a very large resistance that represents no conduction",
+     "auxiliary_nodes": "J, C, B, D and R are not compared in FE-001. Their explicit values only complete the six-node model; P_load_W, Q_B_W and Q_D_W are zero and SR decouples S from R.",
+     "integration_span_s": 16560.0,
+     "extra_orbits_for_repetition": 0,
+     "epoch_note": "nominal UTC epoch; the FE environment is fixed by beta and the case values, not by a date"
+    },
+    "software": {
+     "python": "3.11.9",
+     "numpy": "2.4.6",
+     "scipy": "1.17.1",
+     "ntu_space_dynamics": "0.1.0",
+     "coupled_module": "sdtwin_sim.coupled"
+    }
+   },
+   "initial_state_K": {
+    "S": 290.0,
+    "J": 250.0,
+    "C": 250.0,
+    "B": 250.0,
+    "D": 250.0,
+    "R": 250.0
+   },
+   "last_accepted_s": 16560.0,
+   "repetition_K": 6.619984560529701e-10,
+   "wall_s": 4.029528200000641
+  },
+  {
+   "format": "sdtwin.coupled_archive/1",
+   "run_id": "FE-001-nom0-earth-0",
+   "epoch_utc": "2019-06-01T00:00:00+00:00",
+   "status": "completed",
+   "error": null,
+   "t_start_s": 0.0,
+   "t_end_s": 16560.0,
+   "node_order": [
+    "S",
+    "J",
+    "C",
+    "B",
+    "D",
+    "R"
+   ],
+   "path_order": [
+    "SR",
+    "JC",
+    "CR",
+    "BR",
+    "DR"
+   ],
+   "exposed_node_order": [
+    "S",
+    "R"
+   ],
+   "port_order": [
+    "P_pv_W",
+    "P_load_W",
+    "Q_B_W",
+    "Q_D_W"
+   ],
+   "instance_map": {
+    "nodes": {
+     "S": [
+      "SolarArray01"
+     ],
+     "J": [
+      "Compute01"
+     ],
+     "C": [
+      "ColdPlate01"
+     ],
+     "B": [
+      "Battery01"
+     ],
+     "D": [
+      "Controller01",
+      "PDU01"
+     ],
+     "R": [
+      "Radiator01"
+     ]
+    },
+    "ports": {
+     "P_pv_W": "SolarArray01",
+     "P_load_W": "Compute01",
+     "Q_B_W": "Battery01",
+     "Q_D_W": "PDU01"
+    }
+   },
+   "eclipse_boundaries": [
+    {
+     "time_s": 1693.57879039055,
+     "time_left_s": 1693.5787903905498,
+     "time_right_s": 1693.57879039055,
+     "phase_before": "sunlit",
+     "phase_after": "umbra",
+     "kind": "sunlit_to_umbra"
+    },
+    {
+     "time_s": 3860.045509609451,
+     "time_left_s": 3860.0455096094506,
+     "time_right_s": 3860.045509609451,
+     "phase_before": "umbra",
+     "phase_after": "sunlit",
+     "kind": "umbra_to_sunlit"
+    },
+    {
+     "time_s": 7247.203090390552,
+     "time_left_s": 7247.203090390551,
+     "time_right_s": 7247.203090390552,
+     "phase_before": "sunlit",
+     "phase_after": "umbra",
+     "kind": "sunlit_to_umbra"
+    },
+    {
+     "time_s": 9413.669809609453,
+     "time_left_s": 9413.669809609451,
+     "time_right_s": 9413.669809609453,
+     "phase_before": "umbra",
+     "phase_after": "sunlit",
+     "kind": "umbra_to_sunlit"
+    },
+    {
+     "time_s": 12800.827390390552,
+     "time_left_s": 12800.82739039055,
+     "time_right_s": 12800.827390390552,
+     "phase_before": "sunlit",
+     "phase_after": "umbra",
+     "kind": "sunlit_to_umbra"
+    },
+    {
+     "time_s": 14967.294109609453,
+     "time_left_s": 14967.294109609451,
+     "time_right_s": 14967.294109609453,
+     "phase_before": "umbra",
+     "phase_after": "sunlit",
+     "kind": "umbra_to_sunlit"
+    }
+   ],
+   "segments": [
+    {
+     "index": 0,
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ],
+     "end_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 1693.5787903905498
+    },
+    {
+     "index": 1,
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "end_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 3860.0455096094506
+    },
+    {
+     "index": 2,
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "end_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 7247.203090390551
+    },
+    {
+     "index": 3,
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "end_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 9413.669809609451
+    },
+    {
+     "index": 4,
+     "start_s": 9413.669809609453,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "end_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 12800.82739039055
+    },
+    {
+     "index": 5,
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "end_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 14967.294109609451
+    },
+    {
+     "index": 6,
+     "start_s": 14967.294109609453,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "end_reasons": [
+      "run_end"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 16560.0
+    }
+   ],
+   "solver_settings": {
+    "method": "RK45",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-06,
+    "max_step_s": 30.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "statistics": {
+    "accepted_steps": 580,
+    "accepted_steps_by_context": {
+     "integration": 580,
+     "event_location": 0
+    },
+    "bridge_steps": 0,
+    "accepted_states": 587,
+    "rejected_steps": 0,
+    "event_aborted_attempts": 0,
+    "discarded_event_search_steps": 0,
+    "discarded_event_search_rejections": 0,
+    "rejected_steps_total": 0,
+    "rejected_step_rule": "RK45: each attempt costs n_stages = 6 evaluations; attempts per accepted step are its evaluations divided by n_stages; rejected = attempts - 1",
+    "attempt_count_anomalies": 0,
+    "function_evaluations": 5151,
+    "function_evaluations_by_context": {
+     "integration": 3494,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_construction_evaluations": 14,
+    "power_calls": 0,
+    "power_calls_by_context": {
+     "integration": 0,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 0,
+     "energy_audit": 0
+    },
+    "solver_instances": 7,
+    "solver_nfev": 3494,
+    "solver_njev": 0,
+    "solver_nlu": 0,
+    "segments": 7,
+    "eclipse_boundaries": 6,
+    "event_searches": 0,
+    "located_events": 0,
+    "unconfirmed_event_searches": 0,
+    "bisection_iterations": 0,
+    "applied_events": 0,
+    "charge_limit_transitions": 0,
+    "charge_limit_searches": 0,
+    "charge_limit_bisection_iterations": 0,
+    "charge_limit_splits": 0,
+    "charge_limit_reason_reuses": 0,
+    "range_excursions_accepted_states": 0,
+    "output_samples": 1657,
+    "invalid_output_samples": 0,
+    "wall_time_s": 52.61082929999975
+   },
+   "range_warnings": [],
+   "notes": [
+    "ThermalRangeWarning is not emitted for trial states; every accepted state is checked against the declared node ranges and excursions, like out-of-range output samples, are recorded in range_warnings"
+   ],
+   "final_state": {
+    "time_s": 16560.0,
+    "temperature_K": [
+     339.2302373557025,
+     201.87841779942127,
+     200.9656760013587,
+     204.44373458518726,
+     203.66129532441545,
+     199.72963720248262
+    ]
+   },
+   "provenance": {
+    "procedure": {
+     "module": "sdtwin_sim.coupled",
+     "design": "thermal design chapters 7 and 8 with table 8; Power design chapters 7 and 8 with table 7",
+     "state_vector": [
+      "S",
+      "J",
+      "C",
+      "B",
+      "D",
+      "R"
+     ],
+     "segmentation": "eclipse boundaries from the environment provider, load commands, declared input discontinuities, located Power events and located starts and ends of charge limiting (a step that crosses one is ended at the crossing and the solver restarts there)",
+     "event_location": "bisection of sub-integrations from the last accepted state to within event_time_tol_s, the final interval bridged by one explicit Euler step",
+     "orbit_power_considering_thermal": "not called; temperatures come only from the integrated state"
+    },
+    "thermal_parameters": {
+     "node_order": [
+      "S",
+      "J",
+      "C",
+      "B",
+      "D",
+      "R"
+     ],
+     "path_order": [
+      "SR",
+      "JC",
+      "CR",
+      "BR",
+      "DR"
+     ],
+     "units": {
+      "C_J_K": "J/K",
+      "R_K_W": "K/W",
+      "area_m2": "m^2",
+      "temperature": "K"
+     },
+     "capacitance": {
+      "S": {
+       "value_J_K": 3954880.5119999996,
+       "portions": [
+        {
+         "instance_id": "SolarArray01",
+         "material_id": "SolarArray01_blanket",
+         "mass_kg": 4943.60064,
+         "cp_J_kgK": 800.0,
+         "C_J_K": 3954880.5119999996,
+         "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+        }
+       ]
+      },
+      "J": {
+       "value_J_K": 1800.0,
+       "portions": [
+        {
+         "instance_id": "Compute01",
+         "material_id": "Compute01_material",
+         "mass_kg": 2.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 1800.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "C": {
+       "value_J_K": 1800.0,
+       "portions": [
+        {
+         "instance_id": "ColdPlate01",
+         "material_id": "ColdPlate01_material",
+         "mass_kg": 2.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 1800.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "B": {
+       "value_J_K": 2000.0,
+       "portions": [
+        {
+         "instance_id": "Battery01",
+         "material_id": "Battery01_material",
+         "mass_kg": 2.0,
+         "cp_J_kgK": 1000.0,
+         "C_J_K": 2000.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "D": {
+       "value_J_K": 1800.0,
+       "portions": [
+        {
+         "instance_id": "Controller01",
+         "material_id": "Controller01_material",
+         "mass_kg": 1.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 900.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        },
+        {
+         "instance_id": "PDU01",
+         "material_id": "PDU01_material",
+         "mass_kg": 1.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 900.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "R": {
+       "value_J_K": 18000.0,
+       "portions": [
+        {
+         "instance_id": "Radiator01",
+         "material_id": "Radiator01_material",
+         "mass_kg": 20.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 18000.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      }
+     },
+     "resistance": {
+      "SR": {
+       "value_K_W": 1000000000000.0,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 1000000000000.0,
+        "includes_contact": true
+       },
+       "source": "FE-001 test configuration recorded per thermal design 9.4: the FE model has no conduction between the solar array and the radiators (FE report 3.9 simplification 2), so SR takes a very large resistance that represents no conduction"
+      },
+      "JC": {
+       "value_K_W": 0.5,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 0.5,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "CR": {
+       "value_K_W": 0.5,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 0.5,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "BR": {
+       "value_K_W": 2.0,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 2.0,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "DR": {
+       "value_K_W": 2.0,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 2.0,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      }
+     },
+     "surfaces": {
+      "SolarArray01_front": {
+       "instance_id": "SolarArray01",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        1.0
+       ],
+       "absorptivity": 0.72,
+       "emissivity": 0.82,
+       "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+      },
+      "SolarArray01_back": {
+       "instance_id": "SolarArray01",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       "absorptivity": 0.55,
+       "emissivity": 0.85,
+       "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+      },
+      "Radiator01_a": {
+       "instance_id": "Radiator01",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9,
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "Radiator01_b": {
+       "instance_id": "Radiator01",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        -1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9,
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      }
+     },
+     "assets": {
+      "SolarArray01": {
+       "asset_id": "fe001_iss_us_solar_array_blankets",
+       "asset_version": "iss_fem-2026-09-30",
+       "node_id": "S",
+       "temperature_range_K": [
+        100.0,
+        420.0
+       ]
+      },
+      "Compute01": {
+       "asset_id": "fe001_aux_compute01",
+       "asset_version": "1",
+       "node_id": "J",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "ColdPlate01": {
+       "asset_id": "fe001_aux_coldplate01",
+       "asset_version": "1",
+       "node_id": "C",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "Battery01": {
+       "asset_id": "fe001_aux_battery01",
+       "asset_version": "1",
+       "node_id": "B",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "Controller01": {
+       "asset_id": "fe001_aux_controller01",
+       "asset_version": "1",
+       "node_id": "D",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "PDU01": {
+       "asset_id": "fe001_aux_pdu01",
+       "asset_version": "1",
+       "node_id": "D",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "Radiator01": {
+       "asset_id": "fe001_aux_radiator01",
+       "asset_version": "1",
+       "node_id": "R",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      }
+     },
+     "overrides_applied": [],
+     "temperature_range_K": {
+      "S": [
+       100.0,
+       420.0
+      ],
+      "J": [
+       100.0,
+       450.0
+      ],
+      "C": [
+       100.0,
+       450.0
+      ],
+      "B": [
+       100.0,
+       450.0
+      ],
+      "D": [
+       100.0,
+       450.0
+      ],
+      "R": [
+       100.0,
+       450.0
+      ]
+     }
+    },
+    "thermal_values": {
+     "C_J_K": {
+      "S": 3954880.5119999996,
+      "J": 1800.0,
+      "C": 1800.0,
+      "B": 2000.0,
+      "D": 1800.0,
+      "R": 18000.0
+     },
+     "R_K_W": {
+      "SR": 1000000000000.0,
+      "JC": 0.5,
+      "CR": 0.5,
+      "BR": 2.0,
+      "DR": 2.0
+     },
+     "surfaces": [
+      {
+       "surface_id": "SolarArray01_front",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        1.0
+       ],
+       "absorptivity": 0.72,
+       "emissivity": 0.82
+      },
+      {
+       "surface_id": "SolarArray01_back",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       "absorptivity": 0.55,
+       "emissivity": 0.85
+      },
+      {
+       "surface_id": "Radiator01_a",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9
+      },
+      {
+       "surface_id": "Radiator01_b",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        -1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9
+      }
+     ]
+    },
+    "environment": {
+     "mode": "analytic_callables",
+     "position": "fe001_support.FEOrbit.position",
+     "sun_position": "fe001_support.FEOrbit.sun_position",
+     "quaternion": "fe001_support.FEOrbit.quaternion",
+     "irradiance": "caller G(t): fe001_support.FEOrbit.irradiance.<locals>.G",
+     "eclipse_phases": "G(t) > 0 is sunlit, G(t) = 0 is umbra",
+     "run_id": "FE-001-nom0-earth-0",
+     "epoch_utc": "2019-06-01T00:00:00+00:00",
+     "frame": "GCRS",
+     "time_range_s": [
+      null,
+      null
+     ],
+     "earth_flux": {
+      "albedo": 0.31,
+      "olr_W_m2": 241.0,
+      "solar_constant_W_m2": 1371.0,
+      "earth_radius_m": 6378137.0,
+      "resolution": [
+       240,
+       360
+      ],
+      "disabled_reason": null
+     },
+     "surface_ids": [
+      "SolarArray01_front",
+      "SolarArray01_back",
+      "Radiator01_a",
+      "Radiator01_b"
+     ],
+     "power_environment": "sdtwin_sim.power_stand_in.PowerEnvironment"
+    },
+    "power": null,
+    "prescribed_ports": "test_fe_001_solar_array_fe._ports.<locals>.prescribed_ports",
+    "declared_boundaries": [],
+    "caller": {
+     "case_id": "FE-001",
+     "fe_case": "nom0",
+     "fe_label_cn": "平均环境工况",
+     "fe_data": "iss_fem/out/nom0/series.csv column saw_Tmean_C",
+     "environment": {
+      "label_cn": "平均环境工况",
+      "beta_deg": 0.0,
+      "solar_constant_W_m2": 1371.0,
+      "albedo": 0.31,
+      "olr_W_m2": 241.0
+     },
+     "earth_flux": "on",
+     "time_origin": "orbit noon of the FE run; positions from the FE orbit functions of summary.json",
+     "eclipse": "cylindrical Earth shadow along the FE sun_ecs direction, G already includes the eclipse",
+     "attitude": "body +Z (front normal of SolarArray01) points at the Sun at every instant, like the FE solar array group; body +X along the orbit normal component perpendicular to the Sun line",
+     "P_pv_rule": "P_pv_W = 0.073 x front area x G x max(0, cos incidence of the front), the actual electrical output given to Thermal; P_load_W = Q_B_W = Q_D_W = 0",
+     "SR_configuration": "FE-001 test configuration recorded per thermal design 9.4: the FE model has no conduction between the solar array and the radiators (FE report 3.9 simplification 2), so SR takes a very large resistance that represents no conduction",
+     "auxiliary_nodes": "J, C, B, D and R are not compared in FE-001. Their explicit values only complete the six-node model; P_load_W, Q_B_W and Q_D_W are zero and SR decouples S from R.",
+     "integration_span_s": 16560.0,
+     "extra_orbits_for_repetition": 0,
+     "epoch_note": "nominal UTC epoch; the FE environment is fixed by beta and the case values, not by a date"
+    },
+    "software": {
+     "python": "3.11.9",
+     "numpy": "2.4.6",
+     "scipy": "1.17.1",
+     "ntu_space_dynamics": "0.1.0",
+     "coupled_module": "sdtwin_sim.coupled"
+    }
+   },
+   "initial_state_K": {
+    "S": 290.0,
+    "J": 250.0,
+    "C": 250.0,
+    "B": 250.0,
+    "D": 250.0,
+    "R": 250.0
+   },
+   "last_accepted_s": 16560.0,
+   "repetition_K": 1.747416717989836e-07,
+   "wall_s": 52.61213680000219
+  },
+  {
+   "format": "sdtwin.coupled_archive/1",
+   "run_id": "FE-001-nom0-no-earth-0",
+   "epoch_utc": "2019-06-01T00:00:00+00:00",
+   "status": "completed",
+   "error": null,
+   "t_start_s": 0.0,
+   "t_end_s": 16560.0,
+   "node_order": [
+    "S",
+    "J",
+    "C",
+    "B",
+    "D",
+    "R"
+   ],
+   "path_order": [
+    "SR",
+    "JC",
+    "CR",
+    "BR",
+    "DR"
+   ],
+   "exposed_node_order": [
+    "S",
+    "R"
+   ],
+   "port_order": [
+    "P_pv_W",
+    "P_load_W",
+    "Q_B_W",
+    "Q_D_W"
+   ],
+   "instance_map": {
+    "nodes": {
+     "S": [
+      "SolarArray01"
+     ],
+     "J": [
+      "Compute01"
+     ],
+     "C": [
+      "ColdPlate01"
+     ],
+     "B": [
+      "Battery01"
+     ],
+     "D": [
+      "Controller01",
+      "PDU01"
+     ],
+     "R": [
+      "Radiator01"
+     ]
+    },
+    "ports": {
+     "P_pv_W": "SolarArray01",
+     "P_load_W": "Compute01",
+     "Q_B_W": "Battery01",
+     "Q_D_W": "PDU01"
+    }
+   },
+   "eclipse_boundaries": [
+    {
+     "time_s": 1693.57879039055,
+     "time_left_s": 1693.5787903905498,
+     "time_right_s": 1693.57879039055,
+     "phase_before": "sunlit",
+     "phase_after": "umbra",
+     "kind": "sunlit_to_umbra"
+    },
+    {
+     "time_s": 3860.045509609451,
+     "time_left_s": 3860.0455096094506,
+     "time_right_s": 3860.045509609451,
+     "phase_before": "umbra",
+     "phase_after": "sunlit",
+     "kind": "umbra_to_sunlit"
+    },
+    {
+     "time_s": 7247.203090390552,
+     "time_left_s": 7247.203090390551,
+     "time_right_s": 7247.203090390552,
+     "phase_before": "sunlit",
+     "phase_after": "umbra",
+     "kind": "sunlit_to_umbra"
+    },
+    {
+     "time_s": 9413.669809609453,
+     "time_left_s": 9413.669809609451,
+     "time_right_s": 9413.669809609453,
+     "phase_before": "umbra",
+     "phase_after": "sunlit",
+     "kind": "umbra_to_sunlit"
+    },
+    {
+     "time_s": 12800.827390390552,
+     "time_left_s": 12800.82739039055,
+     "time_right_s": 12800.827390390552,
+     "phase_before": "sunlit",
+     "phase_after": "umbra",
+     "kind": "sunlit_to_umbra"
+    },
+    {
+     "time_s": 14967.294109609453,
+     "time_left_s": 14967.294109609451,
+     "time_right_s": 14967.294109609453,
+     "phase_before": "umbra",
+     "phase_after": "sunlit",
+     "kind": "umbra_to_sunlit"
+    }
+   ],
+   "segments": [
+    {
+     "index": 0,
+     "start_s": 0.0,
+     "end_s": 1693.5787903905498,
+     "start_reasons": [
+      "run_start"
+     ],
+     "end_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 1693.5787903905498
+    },
+    {
+     "index": 1,
+     "start_s": 1693.57879039055,
+     "end_s": 3860.0455096094506,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "end_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 3860.0455096094506
+    },
+    {
+     "index": 2,
+     "start_s": 3860.045509609451,
+     "end_s": 7247.203090390551,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "end_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 7247.203090390551
+    },
+    {
+     "index": 3,
+     "start_s": 7247.203090390552,
+     "end_s": 9413.669809609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "end_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 9413.669809609451
+    },
+    {
+     "index": 4,
+     "start_s": 9413.669809609453,
+     "end_s": 12800.82739039055,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "end_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 12800.82739039055
+    },
+    {
+     "index": 5,
+     "start_s": 12800.827390390552,
+     "end_s": 14967.294109609451,
+     "start_reasons": [
+      "eclipse:sunlit_to_umbra"
+     ],
+     "end_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 14967.294109609451
+    },
+    {
+     "index": 6,
+     "start_s": 14967.294109609453,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "eclipse:umbra_to_sunlit"
+     ],
+     "end_reasons": [
+      "run_end"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 16560.0
+    }
+   ],
+   "solver_settings": {
+    "method": "RK45",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-06,
+    "max_step_s": 30.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "statistics": {
+    "accepted_steps": 576,
+    "accepted_steps_by_context": {
+     "integration": 576,
+     "event_location": 0
+    },
+    "bridge_steps": 0,
+    "accepted_states": 583,
+    "rejected_steps": 0,
+    "event_aborted_attempts": 0,
+    "discarded_event_search_steps": 0,
+    "discarded_event_search_rejections": 0,
+    "rejected_steps_total": 0,
+    "rejected_step_rule": "RK45: each attempt costs n_stages = 6 evaluations; attempts per accepted step are its evaluations divided by n_stages; rejected = attempts - 1",
+    "attempt_count_anomalies": 0,
+    "function_evaluations": 5127,
+    "function_evaluations_by_context": {
+     "integration": 3470,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_construction_evaluations": 14,
+    "power_calls": 0,
+    "power_calls_by_context": {
+     "integration": 0,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 0,
+     "energy_audit": 0
+    },
+    "solver_instances": 7,
+    "solver_nfev": 3470,
+    "solver_njev": 0,
+    "solver_nlu": 0,
+    "segments": 7,
+    "eclipse_boundaries": 6,
+    "event_searches": 0,
+    "located_events": 0,
+    "unconfirmed_event_searches": 0,
+    "bisection_iterations": 0,
+    "applied_events": 0,
+    "charge_limit_transitions": 0,
+    "charge_limit_searches": 0,
+    "charge_limit_bisection_iterations": 0,
+    "charge_limit_splits": 0,
+    "charge_limit_reason_reuses": 0,
+    "range_excursions_accepted_states": 0,
+    "output_samples": 1657,
+    "invalid_output_samples": 0,
+    "wall_time_s": 3.6511822000029497
+   },
+   "range_warnings": [],
+   "notes": [
+    "Earth albedo and infrared switched off: FE-001 step 4: Earth albedo and infrared switched off to record their effect on the solar array temperature (thermal design 9.4 and appendix B: an explicitly labelled simplification, not a complete orbital environment)",
+    "ThermalRangeWarning is not emitted for trial states; every accepted state is checked against the declared node ranges and excursions, like out-of-range output samples, are recorded in range_warnings"
+   ],
+   "final_state": {
+    "time_s": 16560.0,
+    "temperature_K": [
+     311.0961998083044,
+     164.31126632159769,
+     161.84443623092932,
+     169.35697043682285,
+     167.799514905959,
+     157.05481790241544
+    ]
+   },
+   "provenance": {
+    "procedure": {
+     "module": "sdtwin_sim.coupled",
+     "design": "thermal design chapters 7 and 8 with table 8; Power design chapters 7 and 8 with table 7",
+     "state_vector": [
+      "S",
+      "J",
+      "C",
+      "B",
+      "D",
+      "R"
+     ],
+     "segmentation": "eclipse boundaries from the environment provider, load commands, declared input discontinuities, located Power events and located starts and ends of charge limiting (a step that crosses one is ended at the crossing and the solver restarts there)",
+     "event_location": "bisection of sub-integrations from the last accepted state to within event_time_tol_s, the final interval bridged by one explicit Euler step",
+     "orbit_power_considering_thermal": "not called; temperatures come only from the integrated state"
+    },
+    "thermal_parameters": {
+     "node_order": [
+      "S",
+      "J",
+      "C",
+      "B",
+      "D",
+      "R"
+     ],
+     "path_order": [
+      "SR",
+      "JC",
+      "CR",
+      "BR",
+      "DR"
+     ],
+     "units": {
+      "C_J_K": "J/K",
+      "R_K_W": "K/W",
+      "area_m2": "m^2",
+      "temperature": "K"
+     },
+     "capacitance": {
+      "S": {
+       "value_J_K": 3954880.5119999996,
+       "portions": [
+        {
+         "instance_id": "SolarArray01",
+         "material_id": "SolarArray01_blanket",
+         "mass_kg": 4943.60064,
+         "cp_J_kgK": 800.0,
+         "C_J_K": 3954880.5119999996,
+         "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+        }
+       ]
+      },
+      "J": {
+       "value_J_K": 1800.0,
+       "portions": [
+        {
+         "instance_id": "Compute01",
+         "material_id": "Compute01_material",
+         "mass_kg": 2.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 1800.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "C": {
+       "value_J_K": 1800.0,
+       "portions": [
+        {
+         "instance_id": "ColdPlate01",
+         "material_id": "ColdPlate01_material",
+         "mass_kg": 2.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 1800.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "B": {
+       "value_J_K": 2000.0,
+       "portions": [
+        {
+         "instance_id": "Battery01",
+         "material_id": "Battery01_material",
+         "mass_kg": 2.0,
+         "cp_J_kgK": 1000.0,
+         "C_J_K": 2000.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "D": {
+       "value_J_K": 1800.0,
+       "portions": [
+        {
+         "instance_id": "Controller01",
+         "material_id": "Controller01_material",
+         "mass_kg": 1.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 900.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        },
+        {
+         "instance_id": "PDU01",
+         "material_id": "PDU01_material",
+         "mass_kg": 1.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 900.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "R": {
+       "value_J_K": 18000.0,
+       "portions": [
+        {
+         "instance_id": "Radiator01",
+         "material_id": "Radiator01_material",
+         "mass_kg": 20.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 18000.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      }
+     },
+     "resistance": {
+      "SR": {
+       "value_K_W": 1000000000000.0,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 1000000000000.0,
+        "includes_contact": true
+       },
+       "source": "FE-001 test configuration recorded per thermal design 9.4: the FE model has no conduction between the solar array and the radiators (FE report 3.9 simplification 2), so SR takes a very large resistance that represents no conduction"
+      },
+      "JC": {
+       "value_K_W": 0.5,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 0.5,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "CR": {
+       "value_K_W": 0.5,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 0.5,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "BR": {
+       "value_K_W": 2.0,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 2.0,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "DR": {
+       "value_K_W": 2.0,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 2.0,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      }
+     },
+     "surfaces": {
+      "SolarArray01_front": {
+       "instance_id": "SolarArray01",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        1.0
+       ],
+       "absorptivity": 0.72,
+       "emissivity": 0.82,
+       "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+      },
+      "SolarArray01_back": {
+       "instance_id": "SolarArray01",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       "absorptivity": 0.55,
+       "emissivity": 0.85,
+       "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+      },
+      "Radiator01_a": {
+       "instance_id": "Radiator01",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9,
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "Radiator01_b": {
+       "instance_id": "Radiator01",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        -1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9,
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      }
+     },
+     "assets": {
+      "SolarArray01": {
+       "asset_id": "fe001_iss_us_solar_array_blankets",
+       "asset_version": "iss_fem-2026-09-30",
+       "node_id": "S",
+       "temperature_range_K": [
+        100.0,
+        420.0
+       ]
+      },
+      "Compute01": {
+       "asset_id": "fe001_aux_compute01",
+       "asset_version": "1",
+       "node_id": "J",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "ColdPlate01": {
+       "asset_id": "fe001_aux_coldplate01",
+       "asset_version": "1",
+       "node_id": "C",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "Battery01": {
+       "asset_id": "fe001_aux_battery01",
+       "asset_version": "1",
+       "node_id": "B",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "Controller01": {
+       "asset_id": "fe001_aux_controller01",
+       "asset_version": "1",
+       "node_id": "D",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "PDU01": {
+       "asset_id": "fe001_aux_pdu01",
+       "asset_version": "1",
+       "node_id": "D",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "Radiator01": {
+       "asset_id": "fe001_aux_radiator01",
+       "asset_version": "1",
+       "node_id": "R",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      }
+     },
+     "overrides_applied": [],
+     "temperature_range_K": {
+      "S": [
+       100.0,
+       420.0
+      ],
+      "J": [
+       100.0,
+       450.0
+      ],
+      "C": [
+       100.0,
+       450.0
+      ],
+      "B": [
+       100.0,
+       450.0
+      ],
+      "D": [
+       100.0,
+       450.0
+      ],
+      "R": [
+       100.0,
+       450.0
+      ]
+     }
+    },
+    "thermal_values": {
+     "C_J_K": {
+      "S": 3954880.5119999996,
+      "J": 1800.0,
+      "C": 1800.0,
+      "B": 2000.0,
+      "D": 1800.0,
+      "R": 18000.0
+     },
+     "R_K_W": {
+      "SR": 1000000000000.0,
+      "JC": 0.5,
+      "CR": 0.5,
+      "BR": 2.0,
+      "DR": 2.0
+     },
+     "surfaces": [
+      {
+       "surface_id": "SolarArray01_front",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        1.0
+       ],
+       "absorptivity": 0.72,
+       "emissivity": 0.82
+      },
+      {
+       "surface_id": "SolarArray01_back",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       "absorptivity": 0.55,
+       "emissivity": 0.85
+      },
+      {
+       "surface_id": "Radiator01_a",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9
+      },
+      {
+       "surface_id": "Radiator01_b",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        -1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9
+      }
+     ]
+    },
+    "environment": {
+     "mode": "analytic_callables",
+     "position": "fe001_support.FEOrbit.position",
+     "sun_position": "fe001_support.FEOrbit.sun_position",
+     "quaternion": "fe001_support.FEOrbit.quaternion",
+     "irradiance": "caller G(t): fe001_support.FEOrbit.irradiance.<locals>.G",
+     "eclipse_phases": "G(t) > 0 is sunlit, G(t) = 0 is umbra",
+     "run_id": "FE-001-nom0-no-earth-0",
+     "epoch_utc": "2019-06-01T00:00:00+00:00",
+     "frame": "GCRS",
+     "time_range_s": [
+      null,
+      null
+     ],
+     "earth_flux": {
+      "albedo": null,
+      "olr_W_m2": null,
+      "solar_constant_W_m2": null,
+      "earth_radius_m": 6378137.0,
+      "resolution": [
+       240,
+       360
+      ],
+      "disabled_reason": "FE-001 step 4: Earth albedo and infrared switched off to record their effect on the solar array temperature (thermal design 9.4 and appendix B: an explicitly labelled simplification, not a complete orbital environment)"
+     },
+     "surface_ids": [
+      "SolarArray01_front",
+      "SolarArray01_back",
+      "Radiator01_a",
+      "Radiator01_b"
+     ],
+     "power_environment": "sdtwin_sim.power_stand_in.PowerEnvironment"
+    },
+    "power": null,
+    "prescribed_ports": "test_fe_001_solar_array_fe._ports.<locals>.prescribed_ports",
+    "declared_boundaries": [],
+    "caller": {
+     "case_id": "FE-001",
+     "fe_case": "nom0",
+     "fe_label_cn": "平均环境工况",
+     "fe_data": "iss_fem/out/nom0/series.csv column saw_Tmean_C",
+     "environment": {
+      "label_cn": "平均环境工况",
+      "beta_deg": 0.0,
+      "solar_constant_W_m2": 1371.0,
+      "albedo": 0.31,
+      "olr_W_m2": 241.0
+     },
+     "earth_flux": "off: FE-001 step 4: Earth albedo and infrared switched off to record their effect on the solar array temperature (thermal design 9.4 and appendix B: an explicitly labelled simplification, not a complete orbital environment)",
+     "time_origin": "orbit noon of the FE run; positions from the FE orbit functions of summary.json",
+     "eclipse": "cylindrical Earth shadow along the FE sun_ecs direction, G already includes the eclipse",
+     "attitude": "body +Z (front normal of SolarArray01) points at the Sun at every instant, like the FE solar array group; body +X along the orbit normal component perpendicular to the Sun line",
+     "P_pv_rule": "P_pv_W = 0.073 x front area x G x max(0, cos incidence of the front), the actual electrical output given to Thermal; P_load_W = Q_B_W = Q_D_W = 0",
+     "SR_configuration": "FE-001 test configuration recorded per thermal design 9.4: the FE model has no conduction between the solar array and the radiators (FE report 3.9 simplification 2), so SR takes a very large resistance that represents no conduction",
+     "auxiliary_nodes": "J, C, B, D and R are not compared in FE-001. Their explicit values only complete the six-node model; P_load_W, Q_B_W and Q_D_W are zero and SR decouples S from R.",
+     "integration_span_s": 16560.0,
+     "extra_orbits_for_repetition": 0,
+     "epoch_note": "nominal UTC epoch; the FE environment is fixed by beta and the case values, not by a date"
+    },
+    "software": {
+     "python": "3.11.9",
+     "numpy": "2.4.6",
+     "scipy": "1.17.1",
+     "ntu_space_dynamics": "0.1.0",
+     "coupled_module": "sdtwin_sim.coupled"
+    }
+   },
+   "initial_state_K": {
+    "S": 290.0,
+    "J": 250.0,
+    "C": 250.0,
+    "B": 250.0,
+    "D": 250.0,
+    "R": 250.0
+   },
+   "last_accepted_s": 16560.0,
+   "repetition_K": 6.35111518931808e-10,
+   "wall_s": 3.652883799994015
+  },
+  {
+   "format": "sdtwin.coupled_archive/1",
+   "run_id": "FE-001-hot75-earth-0",
+   "epoch_utc": "2019-06-01T00:00:00+00:00",
+   "status": "completed",
+   "error": null,
+   "t_start_s": 0.0,
+   "t_end_s": 16560.0,
+   "node_order": [
+    "S",
+    "J",
+    "C",
+    "B",
+    "D",
+    "R"
+   ],
+   "path_order": [
+    "SR",
+    "JC",
+    "CR",
+    "BR",
+    "DR"
+   ],
+   "exposed_node_order": [
+    "S",
+    "R"
+   ],
+   "port_order": [
+    "P_pv_W",
+    "P_load_W",
+    "Q_B_W",
+    "Q_D_W"
+   ],
+   "instance_map": {
+    "nodes": {
+     "S": [
+      "SolarArray01"
+     ],
+     "J": [
+      "Compute01"
+     ],
+     "C": [
+      "ColdPlate01"
+     ],
+     "B": [
+      "Battery01"
+     ],
+     "D": [
+      "Controller01",
+      "PDU01"
+     ],
+     "R": [
+      "Radiator01"
+     ]
+    },
+    "ports": {
+     "P_pv_W": "SolarArray01",
+     "P_load_W": "Compute01",
+     "Q_B_W": "Battery01",
+     "Q_D_W": "PDU01"
+    }
+   },
+   "eclipse_boundaries": [],
+   "segments": [
+    {
+     "index": 0,
+     "start_s": 0.0,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "run_start"
+     ],
+     "end_reasons": [
+      "run_end"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 16560.0
+    }
+   ],
+   "solver_settings": {
+    "method": "RK45",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-06,
+    "max_step_s": 30.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "statistics": {
+    "accepted_steps": 556,
+    "accepted_steps_by_context": {
+     "integration": 556,
+     "event_location": 0
+    },
+    "bridge_steps": 0,
+    "accepted_states": 557,
+    "rejected_steps": 0,
+    "event_aborted_attempts": 0,
+    "discarded_event_search_steps": 0,
+    "discarded_event_search_rejections": 0,
+    "rejected_steps_total": 0,
+    "rejected_step_rule": "RK45: each attempt costs n_stages = 6 evaluations; attempts per accepted step are its evaluations divided by n_stages; rejected = attempts - 1",
+    "attempt_count_anomalies": 0,
+    "function_evaluations": 4995,
+    "function_evaluations_by_context": {
+     "integration": 3338,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_construction_evaluations": 2,
+    "power_calls": 0,
+    "power_calls_by_context": {
+     "integration": 0,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 0,
+     "energy_audit": 0
+    },
+    "solver_instances": 1,
+    "solver_nfev": 3338,
+    "solver_njev": 0,
+    "solver_nlu": 0,
+    "segments": 1,
+    "eclipse_boundaries": 0,
+    "event_searches": 0,
+    "located_events": 0,
+    "unconfirmed_event_searches": 0,
+    "bisection_iterations": 0,
+    "applied_events": 0,
+    "charge_limit_transitions": 0,
+    "charge_limit_searches": 0,
+    "charge_limit_bisection_iterations": 0,
+    "charge_limit_splits": 0,
+    "charge_limit_reason_reuses": 0,
+    "range_excursions_accepted_states": 0,
+    "output_samples": 1657,
+    "invalid_output_samples": 0,
+    "wall_time_s": 51.062947300000815
+   },
+   "range_warnings": [],
+   "notes": [
+    "ThermalRangeWarning is not emitted for trial states; every accepted state is checked against the declared node ranges and excursions, like out-of-range output samples, are recorded in range_warnings"
+   ],
+   "final_state": {
+    "time_s": 16560.0,
+    "temperature_K": [
+     329.13802878044856,
+     212.41754338146362,
+     211.6451358688598,
+     214.30104423077287,
+     213.7109473307171,
+     210.87294335843958
+    ]
+   },
+   "provenance": {
+    "procedure": {
+     "module": "sdtwin_sim.coupled",
+     "design": "thermal design chapters 7 and 8 with table 8; Power design chapters 7 and 8 with table 7",
+     "state_vector": [
+      "S",
+      "J",
+      "C",
+      "B",
+      "D",
+      "R"
+     ],
+     "segmentation": "eclipse boundaries from the environment provider, load commands, declared input discontinuities, located Power events and located starts and ends of charge limiting (a step that crosses one is ended at the crossing and the solver restarts there)",
+     "event_location": "bisection of sub-integrations from the last accepted state to within event_time_tol_s, the final interval bridged by one explicit Euler step",
+     "orbit_power_considering_thermal": "not called; temperatures come only from the integrated state"
+    },
+    "thermal_parameters": {
+     "node_order": [
+      "S",
+      "J",
+      "C",
+      "B",
+      "D",
+      "R"
+     ],
+     "path_order": [
+      "SR",
+      "JC",
+      "CR",
+      "BR",
+      "DR"
+     ],
+     "units": {
+      "C_J_K": "J/K",
+      "R_K_W": "K/W",
+      "area_m2": "m^2",
+      "temperature": "K"
+     },
+     "capacitance": {
+      "S": {
+       "value_J_K": 3954880.5119999996,
+       "portions": [
+        {
+         "instance_id": "SolarArray01",
+         "material_id": "SolarArray01_blanket",
+         "mass_kg": 4943.60064,
+         "cp_J_kgK": 800.0,
+         "C_J_K": 3954880.5119999996,
+         "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+        }
+       ]
+      },
+      "J": {
+       "value_J_K": 1800.0,
+       "portions": [
+        {
+         "instance_id": "Compute01",
+         "material_id": "Compute01_material",
+         "mass_kg": 2.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 1800.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "C": {
+       "value_J_K": 1800.0,
+       "portions": [
+        {
+         "instance_id": "ColdPlate01",
+         "material_id": "ColdPlate01_material",
+         "mass_kg": 2.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 1800.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "B": {
+       "value_J_K": 2000.0,
+       "portions": [
+        {
+         "instance_id": "Battery01",
+         "material_id": "Battery01_material",
+         "mass_kg": 2.0,
+         "cp_J_kgK": 1000.0,
+         "C_J_K": 2000.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "D": {
+       "value_J_K": 1800.0,
+       "portions": [
+        {
+         "instance_id": "Controller01",
+         "material_id": "Controller01_material",
+         "mass_kg": 1.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 900.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        },
+        {
+         "instance_id": "PDU01",
+         "material_id": "PDU01_material",
+         "mass_kg": 1.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 900.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "R": {
+       "value_J_K": 18000.0,
+       "portions": [
+        {
+         "instance_id": "Radiator01",
+         "material_id": "Radiator01_material",
+         "mass_kg": 20.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 18000.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      }
+     },
+     "resistance": {
+      "SR": {
+       "value_K_W": 1000000000000.0,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 1000000000000.0,
+        "includes_contact": true
+       },
+       "source": "FE-001 test configuration recorded per thermal design 9.4: the FE model has no conduction between the solar array and the radiators (FE report 3.9 simplification 2), so SR takes a very large resistance that represents no conduction"
+      },
+      "JC": {
+       "value_K_W": 0.5,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 0.5,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "CR": {
+       "value_K_W": 0.5,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 0.5,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "BR": {
+       "value_K_W": 2.0,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 2.0,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "DR": {
+       "value_K_W": 2.0,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 2.0,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      }
+     },
+     "surfaces": {
+      "SolarArray01_front": {
+       "instance_id": "SolarArray01",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        1.0
+       ],
+       "absorptivity": 0.72,
+       "emissivity": 0.82,
+       "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+      },
+      "SolarArray01_back": {
+       "instance_id": "SolarArray01",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       "absorptivity": 0.55,
+       "emissivity": 0.85,
+       "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+      },
+      "Radiator01_a": {
+       "instance_id": "Radiator01",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9,
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "Radiator01_b": {
+       "instance_id": "Radiator01",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        -1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9,
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      }
+     },
+     "assets": {
+      "SolarArray01": {
+       "asset_id": "fe001_iss_us_solar_array_blankets",
+       "asset_version": "iss_fem-2026-09-30",
+       "node_id": "S",
+       "temperature_range_K": [
+        100.0,
+        420.0
+       ]
+      },
+      "Compute01": {
+       "asset_id": "fe001_aux_compute01",
+       "asset_version": "1",
+       "node_id": "J",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "ColdPlate01": {
+       "asset_id": "fe001_aux_coldplate01",
+       "asset_version": "1",
+       "node_id": "C",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "Battery01": {
+       "asset_id": "fe001_aux_battery01",
+       "asset_version": "1",
+       "node_id": "B",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "Controller01": {
+       "asset_id": "fe001_aux_controller01",
+       "asset_version": "1",
+       "node_id": "D",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "PDU01": {
+       "asset_id": "fe001_aux_pdu01",
+       "asset_version": "1",
+       "node_id": "D",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "Radiator01": {
+       "asset_id": "fe001_aux_radiator01",
+       "asset_version": "1",
+       "node_id": "R",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      }
+     },
+     "overrides_applied": [],
+     "temperature_range_K": {
+      "S": [
+       100.0,
+       420.0
+      ],
+      "J": [
+       100.0,
+       450.0
+      ],
+      "C": [
+       100.0,
+       450.0
+      ],
+      "B": [
+       100.0,
+       450.0
+      ],
+      "D": [
+       100.0,
+       450.0
+      ],
+      "R": [
+       100.0,
+       450.0
+      ]
+     }
+    },
+    "thermal_values": {
+     "C_J_K": {
+      "S": 3954880.5119999996,
+      "J": 1800.0,
+      "C": 1800.0,
+      "B": 2000.0,
+      "D": 1800.0,
+      "R": 18000.0
+     },
+     "R_K_W": {
+      "SR": 1000000000000.0,
+      "JC": 0.5,
+      "CR": 0.5,
+      "BR": 2.0,
+      "DR": 2.0
+     },
+     "surfaces": [
+      {
+       "surface_id": "SolarArray01_front",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        1.0
+       ],
+       "absorptivity": 0.72,
+       "emissivity": 0.82
+      },
+      {
+       "surface_id": "SolarArray01_back",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       "absorptivity": 0.55,
+       "emissivity": 0.85
+      },
+      {
+       "surface_id": "Radiator01_a",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9
+      },
+      {
+       "surface_id": "Radiator01_b",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        -1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9
+      }
+     ]
+    },
+    "environment": {
+     "mode": "analytic_callables",
+     "position": "fe001_support.FEOrbit.position",
+     "sun_position": "fe001_support.FEOrbit.sun_position",
+     "quaternion": "fe001_support.FEOrbit.quaternion",
+     "irradiance": "caller G(t): fe001_support.FEOrbit.irradiance.<locals>.G",
+     "eclipse_phases": "G(t) > 0 is sunlit, G(t) = 0 is umbra",
+     "run_id": "FE-001-hot75-earth-0",
+     "epoch_utc": "2019-06-01T00:00:00+00:00",
+     "frame": "GCRS",
+     "time_range_s": [
+      null,
+      null
+     ],
+     "earth_flux": {
+      "albedo": 0.4,
+      "olr_W_m2": 286.0,
+      "solar_constant_W_m2": 1423.0,
+      "earth_radius_m": 6378137.0,
+      "resolution": [
+       240,
+       360
+      ],
+      "disabled_reason": null
+     },
+     "surface_ids": [
+      "SolarArray01_front",
+      "SolarArray01_back",
+      "Radiator01_a",
+      "Radiator01_b"
+     ],
+     "power_environment": "sdtwin_sim.power_stand_in.PowerEnvironment"
+    },
+    "power": null,
+    "prescribed_ports": "test_fe_001_solar_array_fe._ports.<locals>.prescribed_ports",
+    "declared_boundaries": [],
+    "caller": {
+     "case_id": "FE-001",
+     "fe_case": "hot75",
+     "fe_label_cn": "设计热工况",
+     "fe_data": "iss_fem/out/hot75/series.csv column saw_Tmean_C",
+     "environment": {
+      "label_cn": "设计热工况",
+      "beta_deg": 75.0,
+      "solar_constant_W_m2": 1423.0,
+      "albedo": 0.4,
+      "olr_W_m2": 286.0
+     },
+     "earth_flux": "on",
+     "time_origin": "orbit noon of the FE run; positions from the FE orbit functions of summary.json",
+     "eclipse": "cylindrical Earth shadow along the FE sun_ecs direction, G already includes the eclipse",
+     "attitude": "body +Z (front normal of SolarArray01) points at the Sun at every instant, like the FE solar array group; body +X along the orbit normal component perpendicular to the Sun line",
+     "P_pv_rule": "P_pv_W = 0.073 x front area x G x max(0, cos incidence of the front), the actual electrical output given to Thermal; P_load_W = Q_B_W = Q_D_W = 0",
+     "SR_configuration": "FE-001 test configuration recorded per thermal design 9.4: the FE model has no conduction between the solar array and the radiators (FE report 3.9 simplification 2), so SR takes a very large resistance that represents no conduction",
+     "auxiliary_nodes": "J, C, B, D and R are not compared in FE-001. Their explicit values only complete the six-node model; P_load_W, Q_B_W and Q_D_W are zero and SR decouples S from R.",
+     "integration_span_s": 16560.0,
+     "extra_orbits_for_repetition": 0,
+     "epoch_note": "nominal UTC epoch; the FE environment is fixed by beta and the case values, not by a date"
+    },
+    "software": {
+     "python": "3.11.9",
+     "numpy": "2.4.6",
+     "scipy": "1.17.1",
+     "ntu_space_dynamics": "0.1.0",
+     "coupled_module": "sdtwin_sim.coupled"
+    }
+   },
+   "initial_state_K": {
+    "S": 290.0,
+    "J": 250.0,
+    "C": 250.0,
+    "B": 250.0,
+    "D": 250.0,
+    "R": 250.0
+   },
+   "last_accepted_s": 16560.0,
+   "repetition_K": 7.429207471432164e-07,
+   "wall_s": 51.06437079999887
+  },
+  {
+   "format": "sdtwin.coupled_archive/1",
+   "run_id": "FE-001-hot75-no-earth-0",
+   "epoch_utc": "2019-06-01T00:00:00+00:00",
+   "status": "completed",
+   "error": null,
+   "t_start_s": 0.0,
+   "t_end_s": 16560.0,
+   "node_order": [
+    "S",
+    "J",
+    "C",
+    "B",
+    "D",
+    "R"
+   ],
+   "path_order": [
+    "SR",
+    "JC",
+    "CR",
+    "BR",
+    "DR"
+   ],
+   "exposed_node_order": [
+    "S",
+    "R"
+   ],
+   "port_order": [
+    "P_pv_W",
+    "P_load_W",
+    "Q_B_W",
+    "Q_D_W"
+   ],
+   "instance_map": {
+    "nodes": {
+     "S": [
+      "SolarArray01"
+     ],
+     "J": [
+      "Compute01"
+     ],
+     "C": [
+      "ColdPlate01"
+     ],
+     "B": [
+      "Battery01"
+     ],
+     "D": [
+      "Controller01",
+      "PDU01"
+     ],
+     "R": [
+      "Radiator01"
+     ]
+    },
+    "ports": {
+     "P_pv_W": "SolarArray01",
+     "P_load_W": "Compute01",
+     "Q_B_W": "Battery01",
+     "Q_D_W": "PDU01"
+    }
+   },
+   "eclipse_boundaries": [],
+   "segments": [
+    {
+     "index": 0,
+     "start_s": 0.0,
+     "end_s": 16560.0,
+     "start_reasons": [
+      "run_start"
+     ],
+     "end_reasons": [
+      "run_end"
+     ],
+     "commands": [],
+     "load_connected_at_start": null,
+     "trip_latched_at_start": null,
+     "integrated": true,
+     "reached_s": 16560.0
+    }
+   ],
+   "solver_settings": {
+    "method": "RK45",
+    "rtol": 1e-08,
+    "atol_T_K": 1e-06,
+    "max_step_s": 30.0,
+    "output_step_s": 10.0,
+    "environment_step_s": 10.0,
+    "event_time_tol_s": 0.001,
+    "atol_x": null,
+    "first_step_s": null
+   },
+   "statistics": {
+    "accepted_steps": 555,
+    "accepted_steps_by_context": {
+     "integration": 555,
+     "event_location": 0
+    },
+    "bridge_steps": 0,
+    "accepted_states": 556,
+    "rejected_steps": 0,
+    "event_aborted_attempts": 0,
+    "discarded_event_search_steps": 0,
+    "discarded_event_search_rejections": 0,
+    "rejected_steps_total": 0,
+    "rejected_step_rule": "RK45: each attempt costs n_stages = 6 evaluations; attempts per accepted step are its evaluations divided by n_stages; rejected = attempts - 1",
+    "attempt_count_anomalies": 0,
+    "function_evaluations": 4989,
+    "function_evaluations_by_context": {
+     "integration": 3332,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 1657,
+     "energy_audit": 0
+    },
+    "solver_construction_evaluations": 2,
+    "power_calls": 0,
+    "power_calls_by_context": {
+     "integration": 0,
+     "event_location": 0,
+     "boundary": 0,
+     "output": 0,
+     "energy_audit": 0
+    },
+    "solver_instances": 1,
+    "solver_nfev": 3332,
+    "solver_njev": 0,
+    "solver_nlu": 0,
+    "segments": 1,
+    "eclipse_boundaries": 0,
+    "event_searches": 0,
+    "located_events": 0,
+    "unconfirmed_event_searches": 0,
+    "bisection_iterations": 0,
+    "applied_events": 0,
+    "charge_limit_transitions": 0,
+    "charge_limit_searches": 0,
+    "charge_limit_bisection_iterations": 0,
+    "charge_limit_splits": 0,
+    "charge_limit_reason_reuses": 0,
+    "range_excursions_accepted_states": 0,
+    "output_samples": 1657,
+    "invalid_output_samples": 0,
+    "wall_time_s": 3.6281191000016406
+   },
+   "range_warnings": [],
+   "notes": [
+    "Earth albedo and infrared switched off: FE-001 step 4: Earth albedo and infrared switched off to record their effect on the solar array temperature (thermal design 9.4 and appendix B: an explicitly labelled simplification, not a complete orbital environment)",
+    "ThermalRangeWarning is not emitted for trial states; every accepted state is checked against the declared node ranges and excursions, like out-of-range output samples, are recorded in range_warnings"
+   ],
+   "final_state": {
+    "time_s": 16560.0,
+    "temperature_K": [
+     314.01127569461414,
+     164.31126632161832,
+     161.84443623095112,
+     169.3569704368414,
+     167.79951490597833,
+     157.05481790243832
+    ]
+   },
+   "provenance": {
+    "procedure": {
+     "module": "sdtwin_sim.coupled",
+     "design": "thermal design chapters 7 and 8 with table 8; Power design chapters 7 and 8 with table 7",
+     "state_vector": [
+      "S",
+      "J",
+      "C",
+      "B",
+      "D",
+      "R"
+     ],
+     "segmentation": "eclipse boundaries from the environment provider, load commands, declared input discontinuities, located Power events and located starts and ends of charge limiting (a step that crosses one is ended at the crossing and the solver restarts there)",
+     "event_location": "bisection of sub-integrations from the last accepted state to within event_time_tol_s, the final interval bridged by one explicit Euler step",
+     "orbit_power_considering_thermal": "not called; temperatures come only from the integrated state"
+    },
+    "thermal_parameters": {
+     "node_order": [
+      "S",
+      "J",
+      "C",
+      "B",
+      "D",
+      "R"
+     ],
+     "path_order": [
+      "SR",
+      "JC",
+      "CR",
+      "BR",
+      "DR"
+     ],
+     "units": {
+      "C_J_K": "J/K",
+      "R_K_W": "K/W",
+      "area_m2": "m^2",
+      "temperature": "K"
+     },
+     "capacitance": {
+      "S": {
+       "value_J_K": 3954880.5119999996,
+       "portions": [
+        {
+         "instance_id": "SolarArray01",
+         "material_id": "SolarArray01_blanket",
+         "mass_kg": 4943.60064,
+         "cp_J_kgK": 800.0,
+         "C_J_K": 3954880.5119999996,
+         "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+        }
+       ]
+      },
+      "J": {
+       "value_J_K": 1800.0,
+       "portions": [
+        {
+         "instance_id": "Compute01",
+         "material_id": "Compute01_material",
+         "mass_kg": 2.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 1800.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "C": {
+       "value_J_K": 1800.0,
+       "portions": [
+        {
+         "instance_id": "ColdPlate01",
+         "material_id": "ColdPlate01_material",
+         "mass_kg": 2.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 1800.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "B": {
+       "value_J_K": 2000.0,
+       "portions": [
+        {
+         "instance_id": "Battery01",
+         "material_id": "Battery01_material",
+         "mass_kg": 2.0,
+         "cp_J_kgK": 1000.0,
+         "C_J_K": 2000.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "D": {
+       "value_J_K": 1800.0,
+       "portions": [
+        {
+         "instance_id": "Controller01",
+         "material_id": "Controller01_material",
+         "mass_kg": 1.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 900.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        },
+        {
+         "instance_id": "PDU01",
+         "material_id": "PDU01_material",
+         "mass_kg": 1.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 900.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      },
+      "R": {
+       "value_J_K": 18000.0,
+       "portions": [
+        {
+         "instance_id": "Radiator01",
+         "material_id": "Radiator01_material",
+         "mass_kg": 20.0,
+         "cp_J_kgK": 900.0,
+         "C_J_K": 18000.0,
+         "source": "FE-001 auxiliary node, not compared; explicit test value"
+        }
+       ]
+      }
+     },
+     "resistance": {
+      "SR": {
+       "value_K_W": 1000000000000.0,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 1000000000000.0,
+        "includes_contact": true
+       },
+       "source": "FE-001 test configuration recorded per thermal design 9.4: the FE model has no conduction between the solar array and the radiators (FE report 3.9 simplification 2), so SR takes a very large resistance that represents no conduction"
+      },
+      "JC": {
+       "value_K_W": 0.5,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 0.5,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "CR": {
+       "value_K_W": 0.5,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 0.5,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "BR": {
+       "value_K_W": 2.0,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 2.0,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "DR": {
+       "value_K_W": 2.0,
+       "method": "equivalent_total",
+       "inputs": {
+        "equivalent_total_resistance_K_W": 2.0,
+        "includes_contact": true
+       },
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      }
+     },
+     "surfaces": {
+      "SolarArray01_front": {
+       "instance_id": "SolarArray01",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        1.0
+       ],
+       "absorptivity": 0.72,
+       "emissivity": 0.82,
+       "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+      },
+      "SolarArray01_back": {
+       "instance_id": "SolarArray01",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       "absorptivity": 0.55,
+       "emissivity": 0.85,
+       "source": "FE-001 inputs taken from the FE parameter table iss_spec.py: OPTICS saw_cells (alpha 0.72 minus 0.073, eps 0.82) and saw_back (0.55, 0.85), MATERIALS saw_blk (rho 2000 kg/m3, cp 800 J/kgK, t 1 mm, 1.6 kJ/m2K), SAW blanket geometry (16 US blankets, 32.51 m by 4.752 m), T_INIT saw 290 K; the FE uses constant properties, the declared range covers the temperatures of both runs of this case"
+      },
+      "Radiator01_a": {
+       "instance_id": "Radiator01",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9,
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      },
+      "Radiator01_b": {
+       "instance_id": "Radiator01",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        -1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9,
+       "source": "FE-001 auxiliary node, not compared; explicit test value"
+      }
+     },
+     "assets": {
+      "SolarArray01": {
+       "asset_id": "fe001_iss_us_solar_array_blankets",
+       "asset_version": "iss_fem-2026-09-30",
+       "node_id": "S",
+       "temperature_range_K": [
+        100.0,
+        420.0
+       ]
+      },
+      "Compute01": {
+       "asset_id": "fe001_aux_compute01",
+       "asset_version": "1",
+       "node_id": "J",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "ColdPlate01": {
+       "asset_id": "fe001_aux_coldplate01",
+       "asset_version": "1",
+       "node_id": "C",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "Battery01": {
+       "asset_id": "fe001_aux_battery01",
+       "asset_version": "1",
+       "node_id": "B",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "Controller01": {
+       "asset_id": "fe001_aux_controller01",
+       "asset_version": "1",
+       "node_id": "D",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "PDU01": {
+       "asset_id": "fe001_aux_pdu01",
+       "asset_version": "1",
+       "node_id": "D",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      },
+      "Radiator01": {
+       "asset_id": "fe001_aux_radiator01",
+       "asset_version": "1",
+       "node_id": "R",
+       "temperature_range_K": [
+        100.0,
+        450.0
+       ]
+      }
+     },
+     "overrides_applied": [],
+     "temperature_range_K": {
+      "S": [
+       100.0,
+       420.0
+      ],
+      "J": [
+       100.0,
+       450.0
+      ],
+      "C": [
+       100.0,
+       450.0
+      ],
+      "B": [
+       100.0,
+       450.0
+      ],
+      "D": [
+       100.0,
+       450.0
+      ],
+      "R": [
+       100.0,
+       450.0
+      ]
+     }
+    },
+    "thermal_values": {
+     "C_J_K": {
+      "S": 3954880.5119999996,
+      "J": 1800.0,
+      "C": 1800.0,
+      "B": 2000.0,
+      "D": 1800.0,
+      "R": 18000.0
+     },
+     "R_K_W": {
+      "SR": 1000000000000.0,
+      "JC": 0.5,
+      "CR": 0.5,
+      "BR": 2.0,
+      "DR": 2.0
+     },
+     "surfaces": [
+      {
+       "surface_id": "SolarArray01_front",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        1.0
+       ],
+       "absorptivity": 0.72,
+       "emissivity": 0.82
+      },
+      {
+       "surface_id": "SolarArray01_back",
+       "node_id": "S",
+       "area_m2": 2471.80032,
+       "normal_body": [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       "absorptivity": 0.55,
+       "emissivity": 0.85
+      },
+      {
+       "surface_id": "Radiator01_a",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9
+      },
+      {
+       "surface_id": "Radiator01_b",
+       "node_id": "R",
+       "area_m2": 1.0,
+       "normal_body": [
+        -1.0,
+        0.0,
+        0.0
+       ],
+       "absorptivity": 0.2,
+       "emissivity": 0.9
+      }
+     ]
+    },
+    "environment": {
+     "mode": "analytic_callables",
+     "position": "fe001_support.FEOrbit.position",
+     "sun_position": "fe001_support.FEOrbit.sun_position",
+     "quaternion": "fe001_support.FEOrbit.quaternion",
+     "irradiance": "caller G(t): fe001_support.FEOrbit.irradiance.<locals>.G",
+     "eclipse_phases": "G(t) > 0 is sunlit, G(t) = 0 is umbra",
+     "run_id": "FE-001-hot75-no-earth-0",
+     "epoch_utc": "2019-06-01T00:00:00+00:00",
+     "frame": "GCRS",
+     "time_range_s": [
+      null,
+      null
+     ],
+     "earth_flux": {
+      "albedo": null,
+      "olr_W_m2": null,
+      "solar_constant_W_m2": null,
+      "earth_radius_m": 6378137.0,
+      "resolution": [
+       240,
+       360
+      ],
+      "disabled_reason": "FE-001 step 4: Earth albedo and infrared switched off to record their effect on the solar array temperature (thermal design 9.4 and appendix B: an explicitly labelled simplification, not a complete orbital environment)"
+     },
+     "surface_ids": [
+      "SolarArray01_front",
+      "SolarArray01_back",
+      "Radiator01_a",
+      "Radiator01_b"
+     ],
+     "power_environment": "sdtwin_sim.power_stand_in.PowerEnvironment"
+    },
+    "power": null,
+    "prescribed_ports": "test_fe_001_solar_array_fe._ports.<locals>.prescribed_ports",
+    "declared_boundaries": [],
+    "caller": {
+     "case_id": "FE-001",
+     "fe_case": "hot75",
+     "fe_label_cn": "设计热工况",
+     "fe_data": "iss_fem/out/hot75/series.csv column saw_Tmean_C",
+     "environment": {
+      "label_cn": "设计热工况",
+      "beta_deg": 75.0,
+      "solar_constant_W_m2": 1423.0,
+      "albedo": 0.4,
+      "olr_W_m2": 286.0
+     },
+     "earth_flux": "off: FE-001 step 4: Earth albedo and infrared switched off to record their effect on the solar array temperature (thermal design 9.4 and appendix B: an explicitly labelled simplification, not a complete orbital environment)",
+     "time_origin": "orbit noon of the FE run; positions from the FE orbit functions of summary.json",
+     "eclipse": "cylindrical Earth shadow along the FE sun_ecs direction, G already includes the eclipse",
+     "attitude": "body +Z (front normal of SolarArray01) points at the Sun at every instant, like the FE solar array group; body +X along the orbit normal component perpendicular to the Sun line",
+     "P_pv_rule": "P_pv_W = 0.073 x front area x G x max(0, cos incidence of the front), the actual electrical output given to Thermal; P_load_W = Q_B_W = Q_D_W = 0",
+     "SR_configuration": "FE-001 test configuration recorded per thermal design 9.4: the FE model has no conduction between the solar array and the radiators (FE report 3.9 simplification 2), so SR takes a very large resistance that represents no conduction",
+     "auxiliary_nodes": "J, C, B, D and R are not compared in FE-001. Their explicit values only complete the six-node model; P_load_W, Q_B_W and Q_D_W are zero and SR decouples S from R.",
+     "integration_span_s": 16560.0,
+     "extra_orbits_for_repetition": 0,
+     "epoch_note": "nominal UTC epoch; the FE environment is fixed by beta and the case values, not by a date"
+    },
+    "software": {
+     "python": "3.11.9",
+     "numpy": "2.4.6",
+     "scipy": "1.17.1",
+     "ntu_space_dynamics": "0.1.0",
+     "coupled_module": "sdtwin_sim.coupled"
+    }
+   },
+   "initial_state_K": {
+    "S": 290.0,
+    "J": 250.0,
+    "C": 250.0,
+    "B": 250.0,
+    "D": 250.0,
+    "R": 250.0
+   },
+   "last_accepted_s": 16560.0,
+   "repetition_K": 5.684341886080802e-14,
+   "wall_s": 3.6295528000046033
+  }
+ ]
+}

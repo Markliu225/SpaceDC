@@ -1,0 +1,17 @@
+joint,node,origin_X_m,origin_Y_m,origin_Z_m,axis_X,axis_Y,axis_Z,note
+PORT_BETA,PORT_BETA_ROT_2A,-2.738,-33.435,-0.660,1.0,0.0,0.0,"BGA: mast axis parallel to X through (Y,Z) of node origin"
+PORT_BETA,PORT_BETA_ROT_4A,2.033,-33.435,0.661,1.0,0.0,0.0,"BGA: mast axis parallel to X through (Y,Z) of node origin"
+PORT_BETA,PORT_BETA_ROT_2B,2.033,-48.447,0.655,1.0,0.0,0.0,"BGA: mast axis parallel to X through (Y,Z) of node origin"
+PORT_BETA,PORT_BETA_ROT_4B,-2.738,-48.445,-0.664,1.0,0.0,0.0,"BGA: mast axis parallel to X through (Y,Z) of node origin"
+PORT_ALPHA,PORT_ALPHA_ROT,0.000,-17.780,0.000,0.0,1.0,0.0,"SARJ: axis = Y axis (X=0,Z=0); node origin Y is arbitrary on the axis; S3/S4 interface at |Y|~25.9 m"
+STBD_BETA,STBD_BETA_ROT_1A,2.751,33.371,-0.661,1.0,0.0,0.0,"BGA: mast axis parallel to X through (Y,Z) of node origin"
+STBD_BETA,STBD_BETA_ROT_3A,-2.040,33.371,0.661,1.0,0.0,0.0,"BGA: mast axis parallel to X through (Y,Z) of node origin"
+STBD_BETA,STBD_BETA_ROT_1B,-2.040,48.445,0.664,1.0,0.0,0.0,"BGA: mast axis parallel to X through (Y,Z) of node origin"
+STBD_BETA,STBD_BETA_ROT_3B,2.751,48.447,-0.657,1.0,0.0,0.0,"BGA: mast axis parallel to X through (Y,Z) of node origin"
+STBD_ALPHA,STBD_ALPHA_ROT,0.000,17.780,0.000,0.0,1.0,0.0,"SARJ: axis = Y axis (X=0,Z=0); node origin Y is arbitrary on the axis; S3/S4 interface at |Y|~25.9 m"
+PORT_TRRJ_GAMMA,PORT_TRRJ_GAMMA_ROT,-6.775,-14.681,0.000,0.0,1.0,0.0,"TRRJ rig node of IGOAL (origin 6.8 m aft of truss, not a physical hinge line); radiator beam centre line is at X~-0.6 m, Z~0 (see HRS rows)"
+STBD_TRRJ_GAMMA,STBD_TRRJ_GAMMA_ROT,-6.775,14.681,0.000,0.0,1.0,0.0,"TRRJ rig node of IGOAL (origin 6.8 m aft of truss, not a physical hinge line); radiator beam centre line is at X~-0.6 m, Z~0 (see HRS rows)"
+C tcs-p-ani.lwo#L1,model C scene pivot,0.000,-14.732,-0.000,0,1,0,model C radiator pivot on the truss centre line
+C tcs-s-ani.lwo#L1,model C scene pivot,0.000,14.732,-0.000,0,1,0,model C radiator pivot on the truss centre line
+S1_Radiator beam,IGOAL beam vertices -1.0<X<-0.3 m,-0.663,14.681,-0.035,0,1,0,beam box X -0.96..-0.36 Y 9.18..20.18 Z -2.15..2.08 m
+P1_Radiator beam,IGOAL beam vertices -1.0<X<-0.3 m,-0.648,-14.681,0.012,0,1,0,beam box X -0.93..-0.37 Y -20.18..-9.18 Z -2.08..2.11 m

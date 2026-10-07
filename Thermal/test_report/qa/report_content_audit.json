@@ -1,0 +1,253 @@
+{
+  "cases": {
+    "DM-001": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true,
+      "scenario_explained": true,
+      "physical_context_defined": true,
+      "quantitative_result_table": true
+    },
+    "PA-001": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true,
+      "scenario_explained": true,
+      "physical_context_defined": true,
+      "quantitative_result_table": true
+    },
+    "EN-001": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true,
+      "scenario_explained": true,
+      "physical_context_defined": true,
+      "quantitative_result_table": true
+    },
+    "EN-002": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true,
+      "scenario_explained": true,
+      "physical_context_defined": true,
+      "quantitative_result_table": true
+    },
+    "EN-003": {
+      "status": "fail",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true,
+      "scenario_explained": true,
+      "physical_context_defined": true,
+      "quantitative_result_table": true
+    },
+    "HT-001": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true,
+      "scenario_explained": true,
+      "physical_context_defined": true,
+      "quantitative_result_table": true
+    },
+    "HT-002": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true,
+      "scenario_explained": true,
+      "physical_context_defined": true,
+      "quantitative_result_table": true
+    },
+    "HT-003": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true,
+      "scenario_explained": true,
+      "physical_context_defined": true,
+      "quantitative_result_table": true
+    },
+    "EC-001": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true,
+      "scenario_explained": true,
+      "physical_context_defined": true,
+      "quantitative_result_table": true
+    },
+    "FE-001": {
+      "status": "fail",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true,
+      "scenario_explained": true,
+      "physical_context_defined": true,
+      "quantitative_result_table": true
+    },
+    "FE-002": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true,
+      "scenario_explained": true,
+      "physical_context_defined": true,
+      "quantitative_result_table": true
+    },
+    "FE-003": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true,
+      "scenario_explained": true,
+      "physical_context_defined": true,
+      "quantitative_result_table": true
+    },
+    "FE-004": {
+      "status": "fail",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true,
+      "scenario_explained": true,
+      "physical_context_defined": true,
+      "quantitative_result_table": true
+    },
+    "NI-001": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true,
+      "scenario_explained": true,
+      "physical_context_defined": true,
+      "quantitative_result_table": true
+    },
+    "NI-002": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true,
+      "scenario_explained": true,
+      "physical_context_defined": true,
+      "quantitative_result_table": true
+    },
+    "NI-003": {
+      "status": "pass",
+      "input_and_criteria_numbers_aligned": true,
+      "actual_result_numbers_aligned": true,
+      "scenario_explained": true,
+      "physical_context_defined": true,
+      "quantitative_result_table": true
+    }
+  },
+  "reports": {
+    "CN": {
+      "pages": 45,
+      "tables": 46,
+      "figures": 6,
+      "page_characters": [
+        164,
+        313,
+        3317,
+        976,
+        831,
+        1039,
+        985,
+        1128,
+        1162,
+        1071,
+        1192,
+        1140,
+        1248,
+        1060,
+        1265,
+        1107,
+        1041,
+        1117,
+        993,
+        1210,
+        934,
+        1067,
+        1155,
+        656,
+        1357,
+        433,
+        741,
+        1255,
+        651,
+        726,
+        1352,
+        1231,
+        1190,
+        556,
+        953,
+        1204,
+        1275,
+        1188,
+        1076,
+        1020,
+        881,
+        1125,
+        918,
+        1448,
+        1307
+      ],
+      "sha256": {
+        "docx": "7f5defe81a1a85eb90da36d49fa1cc65b6148d48de8520e95d7e012f85fe1f80",
+        "pdf": "c78536172d63446400bd2078fd7e3df7fdb4071f7d4b37a30dfbd734d937891f"
+      }
+    },
+    "EN": {
+      "pages": 51,
+      "tables": 46,
+      "figures": 6,
+      "page_characters": [
+        400,
+        825,
+        3491,
+        2345,
+        2511,
+        1698,
+        2604,
+        2623,
+        2681,
+        2991,
+        2469,
+        3159,
+        2570,
+        2573,
+        2475,
+        2559,
+        2050,
+        2166,
+        2050,
+        2455,
+        2906,
+        2112,
+        2457,
+        2722,
+        2327,
+        1692,
+        2849,
+        1817,
+        1206,
+        1763,
+        2530,
+        1375,
+        1370,
+        1846,
+        2954,
+        2523,
+        2390,
+        1241,
+        2319,
+        2759,
+        2946,
+        2616,
+        3089,
+        1943,
+        1914,
+        2026,
+        1596,
+        1925,
+        1611,
+        2761,
+        3068
+      ],
+      "sha256": {
+        "docx": "919b2e5e3232b4a7ff771185315eb9bfa166b3b8b9904e0be1ac90167750b5b8",
+        "pdf": "d049be26832e86fa19ab89cdbe0aed4de2174be005f89219e6fc5d8dfeb46899"
+      }
+    }
+  },
+  "visual_review": "See rendered page images and separate visual inspection record."
+}

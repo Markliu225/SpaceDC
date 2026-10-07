@@ -1,0 +1,7 @@
+time_s,P_pv_max_W,P_pv_W,P_load_W,P_B_W,V_B_V,I_B_A,Q_B_W,Q_D_W,SOC,x_n,x_p,T_B_K,connected,latched,valid,event_required,can_supply,reason,i_A,v_cell_V,dx_n_dt,dx_p_dt,q_reversible_cell_W,min_margin,action
+0,734.94000000000005,nan,nan,nan,nan,nan,nan,nan,0.65517241379310298,0.59999999999999998,0.45868600071607601,293.14999999999998,1,0,0,0,0,6,nan,nan,nan,nan,nan,nan,0
+1,nan,nan,nan,nan,nan,nan,nan,nan,0.65517241379310298,0.59999999999999998,0.45868600071607601,293.14999999999998,1,0,0,0,0,7,nan,nan,nan,nan,nan,nan,0
+2,nan,nan,nan,nan,nan,nan,nan,nan,0.65517241379310298,0.59999999999999998,0.45868600071607601,293.14999999999998,1,0,0,0,0,7,nan,nan,nan,nan,nan,nan,0
+3,nan,nan,nan,nan,nan,nan,nan,nan,0.65517241379310298,0.59999999999999998,0.45868600071607601,293.14999999999998,1,0,0,0,0,7,nan,nan,nan,nan,nan,nan,0
+4,nan,nan,nan,nan,nan,nan,nan,nan,0.65517241379310298,0.59999999999999998,0.45868600071607601,293.14999999999998,1,0,0,0,0,7,nan,nan,nan,nan,nan,nan,0
+5,734.94000000000005,nan,nan,nan,nan,nan,nan,nan,0.65517241379310298,0.59999999999999998,0.45868600071607601,293.14999999999998,1,0,1,1,0,5,nan,nan,nan,nan,nan,nan,0

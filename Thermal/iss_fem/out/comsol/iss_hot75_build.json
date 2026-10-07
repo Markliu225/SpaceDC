@@ -1,0 +1,26 @@
+{
+ "case": "hot75",
+ "lite": false,
+ "mesh": {
+  "tri": 17748,
+  "tet": 19907
+ },
+ "args": {
+  "case": "hot75",
+  "cores": 2,
+  "lite": false,
+  "no_solve": true,
+  "hemicube": 128,
+  "vf_tol": 0.02,
+  "planet_rings": 2,
+  "planet_points": 6,
+  "h_default": 2.0,
+  "dt_loads": 60.0,
+  "dt_frozen": 2000.0,
+  "t_frozen": 40000.0,
+  "dt_out": 60.0,
+  "orbits": 3.0,
+  "tag": "hot75"
+ },
+ "mph": "C:\\Workspace\\SpaceDC\\Thermal\\iss_fem\\out\\comsol\\iss_hot75.mph"
+}
