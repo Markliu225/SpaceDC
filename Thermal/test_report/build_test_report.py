@@ -32,6 +32,7 @@ OUT = HERE / 'out'
 EN_DIR = OUT / 'en'
 sys.path.insert(0, str(HERE))
 import content_cn  # noqa: E402
+import case_evidence  # noqa: E402
 
 try:
     import content_en  # noqa: E402
@@ -62,6 +63,7 @@ L = {
         keywords='集总热网络; 测试用例; 有限元对标; 验收判据',
         version1=['1.0', '初稿', FIRST_ISO, '', '测试框架与对比方案初稿'],
         version2=['2.0', '执行测试用例', DATE_ISO, '', '按已实现的热模块执行全部用例，记录实际结果、测试结论与证据'],
+        version3=['2.1', '结果与图表说明', DATE_ISO, '', '明确环境与场景含义，补充输入与结果表，统一温差采样并增加放大图'],
         title='SDTwin 热模块软件模块测试报告',
     ),
     'en': dict(
@@ -82,6 +84,8 @@ L = {
         version1=['1.0', 'Initial issue', FIRST_ISO, '', 'Test framework and comparison plan'],
         version2=['2.0', 'Case execution', DATE_ISO, '', 'All cases executed on the implemented thermal module; actual '
                   'results, conclusions and evidence recorded'],
+        version3=['2.1', 'Results and figure explanations', DATE_ISO, '', 'Environment definitions, scenarios, inputs and result '
+                  'tables added; temperature-difference plot samples aligned and local views added'],
         title='Test Report for Thermal Module of SDTwin',
     ),
 }
@@ -545,9 +549,9 @@ def prepare(doc, lang, abstract):
     vt = docx.table.Table(kids[12], doc)
     set_cell(vt.rows[0].cells[1], abstract)
     set_cell(vt.rows[1].cells[1], t['keywords'])
-    for row, values in ((4, t['version1']), (5, t['version2'])):
+    for row, values in ((4, t['version1']), (5, t['version2']), (6, t['version3'])):
         for k, (cell, txt) in enumerate(zip(vt.rows[row].cells, values)):
-            if row == 5:
+            if row >= 5:
                 # the empty template row carries no paragraph formatting: take the alignment of the row above
                 src = vt.rows[4].cells[k].paragraphs[0]._p.find(qn('w:pPr'))
                 dst = cell.paragraphs[0]._p
@@ -603,6 +607,35 @@ CASE_NAME = {'cn': {'cold0': '设计冷工况', 'nom0': '平均环境工况', 'h
 
 
 # =============================================================== finite element result blocks after the case tables
+def iss_temperature_figure(w, lang, key):
+    captions = {
+        'nom0_T_iso_noon': ('ISS 平均环境工况第三圈正午附近的有限元表面温度',
+                          'ISS FE surface temperatures near third-orbit noon, mean environment'),
+        'cold0_T_iso_ecl': ('ISS 设计冷工况第三圈地影中点附近的有限元表面温度',
+                          'ISS FE surface temperatures near third-orbit mid-eclipse, design cold'),
+        'hot75_T_hrs_noon': ('ISS 设计热工况第三圈正午附近的散热器局部温度场',
+                           'ISS radiator FE temperature field near third-orbit noon, design hot'),
+    }
+    notes = {
+        'nom0_T_iso_noon': (
+            '本图给出对标对象的空间布局：两端长条为太阳翼，中央成组面板为散热器，其余为桁架、舱体及设备。工况为 nom0，β=0°，本时刻处于日照；具体辐射输入见第 2 章。它说明有限元保留各部件的空间温度分布，而热模块对每个节点只输出一个代表温度。',
+            'This locates the benchmark objects: long strips at the ends are solar arrays, grouped central panels are radiators, and the remainder includes truss, modules and equipment. The case is nom0, β=0°, sunlit at this instant; Chapter 2 gives its radiation inputs. FE retains spatial temperature distributions, while the thermal module gives one representative temperature per node.'),
+        'cold0_T_iso_ecl': (
+            '本图对应 cold0、β=0° 的日食阶段，太阳直射被地球挡住，太阳翼仍继续辐射散热。它帮助定位 FE-001 的太阳翼对象，并把降温曲线与空间温度场对应起来；整站表面云图不能直接当作太阳翼平均温度。FE-001 的定量判定仍用前述同一时刻的太阳翼平均温度及差值。',
+            'This shows eclipse in cold0 at β=0°: Earth blocks direct sunlight while the array continues radiating. It identifies the FE-001 arrays and connects the cooling history with a spatial field. The station-wide surface map is not an array-mean temperature. FE-001 acceptance still uses the preceding simultaneous array means and their differences.'),
+        'hot75_T_hrs_noon': (
+            '本图对应 hot75、β=75° 的连续日照环境，从右舷上方观察散热器。中央三排为右舷散热器面板，最上一排为后方左舷面板，前景横条为太阳翼。局部颜色变化显示面板间及面板内的温差，说明 FE-002 的回路平均温度不能代表最冷点；图中的局部颜色不作为单独的验收数值。',
+            'This is the continuously sunlit hot75 case at β=75°, viewed from above the starboard side. The central three rows are starboard radiator panels, the uppermost row is the port wing behind them, and foreground strips are solar arrays. Spatial colour variation shows differences within and between panels, explaining why the FE-002 loop mean cannot represent the coldest point. Local colour is not a separate acceptance value.'),
+    }
+    index = 0 if lang == 'cn' else 1
+    w.picture(OUT / f'fig_iss_{key}_{lang}.png', 14.0)
+    w.caption(captions[key][index], kind='figure')
+    w.para(notes[key][index])
+    phase = '13884.1' if key == 'cold0_T_iso_ecl' else '11107.2'
+    w.para((f'来源：已求解 COMSOL 模型的 {key}.png；绘图目标时刻 t={phase} s，导出程序取最近的已保存解。色标为表面温度 −80 至 80°C，超出范围时颜色饱和；它不是温差色标。图像保留原有限元温度场，仅重绘同范围色标。' if lang == 'cn' else
+            f'Source: {key}.png from the solved COMSOL model. The requested time is t={phase} s; export selects the nearest saved solution. The scale is surface temperature from −80 to 80°C, with saturation outside that range, not temperature difference. The original FE field is retained; only the same-range colour bar is redrawn.'))
+
+
 def block_en003(w, lang):
     m = metrics('EN-003')
     loads = [('太阳翼', '反照'), ('太阳翼', '红外'), ('散热器', '反照'), ('散热器', '红外')]
@@ -785,7 +818,8 @@ def block_fe001(w, lang):
                 [2300, 2000, 2000, 2009], center_cols=(0, 1, 2, 3))
         w.picture(OUT / 'fig_fe001_solar_cn.png', 14.6)
         w.caption('FE-001 太阳能板最后一圈温度对比', kind='figure')
-        w.para('图中下排在有限元输出时刻比较温度差，绿色带表示 ±3 K 限值。统计温度接近仍可能伴随日食转换后的局部曲线超差。')
+        w.para('这里的冷、平均工况均为 β=0°：每圈地球遮挡太阳约 36.1 min，直射吸热中断，而太阳翼仍向外辐射，因此出现明显降温。热工况为 β=75°，全圈日照，所以没有同样的日食降温段。三组辐射输入见第 2 章环境表；这些名称不是上排曲线的温度等级。')
+        w.para('三列依次为冷、平均、热工况，蓝线为有限元，橙线为热模块。横轴从最后一圈起点计时，单位 min；上、中排纵轴为 °C。上排统一温度刻度，紫色区域在中排放大，灰色区域表示日食。两条曲线使用相同的有限元输出时刻，点间直线连接；下排为热模块减有限元，绿色带为 ±3 K。平均环境工况在 32.56 min 为 −7.0428 − 5.0425 = −12.0853 K，按两位小数显示为 −12.09 K。')
         if peak:
             w.para(f'关闭地球反照与红外后，最高温度低 {fmt(min(peak))} 至 {fmt(max(peak))} K，有日食工况的最低温度低 '
                    f'{fmt(min(low))} 至 {fmt(max(low))} K，说明设计报告第 5.3 节要求的 earth_flux 不可缺少。')
@@ -800,7 +834,8 @@ def block_fe001(w, lang):
                 [2300, 2000, 2000, 2009], center_cols=(0, 1, 2, 3))
         w.picture(OUT / 'fig_fe001_solar_en.png', 14.6)
         w.caption('FE-001 solar array temperatures over the last orbit', kind='figure')
-        w.para('The lower panels compare temperatures at FE output instants; the green band denotes ±3 K. Close temperature statistics can coexist with local curve exceedances after eclipse transitions.')
+        w.para('Cold and mean here use β=0°: Earth blocks sunlight for about 36.1 min per orbit. Direct solar heating stops while the array continues radiating, producing marked cooling. Hot uses β=75° and remains sunlit, so it has no corresponding eclipse-cooling interval. Chapter 2 lists the radiation inputs; the names do not rank temperatures in the upper curves.')
+        w.para('Columns show cold, mean and hot cases; blue is FE and orange is the module. Time in min starts at the last-orbit boundary; top and middle temperatures are in °C. The top row shares one temperature scale, purple windows are enlarged in the middle row, and grey marks eclipse. Both curves use the same FE output instants, joined by straight lines. The bottom row is module minus FE; green denotes ±3 K. At 32.56 min in the mean case, −7.0428 − 5.0425 = −12.0853 K, displayed as −12.09 K to two decimal places.')
         if peak:
             w.para(f'With Earth albedo and infrared switched off, the maximum temperature is {fmt(min(peak))} to '
                    f'{fmt(max(peak))} K lower and the minimum temperature of the cases with eclipse is {fmt(min(low))} to '
@@ -827,6 +862,8 @@ def block_fe002(w, lang):
                 center_cols=(0, 1, 2, 3, 4))
         w.picture(OUT / 'fig_fe002_radiator_cn.png', 14.6)
         w.caption('FE-002 公共散热板第三圈温度对比', kind='figure')
+        w.para('三列环境按第 2 章定义：前两列 β=0°、有日食，第三列 β=75°、无日食。A、B 回路各接收自己的有限元废热输入，面板在日照时侧对太阳、日食时朝地。各曲线是回路面板的平均温度；低于 0°C 指面板本身的温度，不是周围空气温度。')
+        w.para('图中上、下排分别是 A、B 回路，三列依次为冷、平均、热环境，灰色区域表示日食。横轴从第三圈起点计时，单位 min；纵轴为回路面板平均温度，单位 °C，各子图刻度不同。蓝实线为有限元，橙虚线为给定同一进热时程后的热模块。曲线显示相位和波动，验收则比较上表的第三圈时间平均值；不能把图中的任一瞬时差直接当作 5 K 平均温度判据。')
         if gaps:
             w.para(f'同一时刻有限元最冷面板比散热器平均温度低 {fmt(min(gaps))} 至 {fmt(max(gaps))} K。设计报告第 10 章说明散热板只用集总温度，'
                    '不计算局部温差，防冻判断需要另算最冷点。有限元包含翼间遮挡，设计报告第 4.4 节说明本版不计组件间遮挡；其独立温度影响尚未分离。')
@@ -839,6 +876,8 @@ def block_fe002(w, lang):
                 center_cols=(0, 1, 2, 3, 4))
         w.picture(OUT / 'fig_fe002_radiator_en.png', 14.6)
         w.caption('FE-002 common radiator temperatures over the third orbit', kind='figure')
+        w.para('Chapter 2 defines the environments: the first two columns have β=0° and eclipse; the third has β=75° and no eclipse. Loops A and B receive their own prescribed FE waste-heat inputs. Panels face edge-on to sunlight and toward Earth in eclipse. Each curve is a loop panel-mean temperature; below 0°C describes the panels, not surrounding air.')
+        w.para('Rows show loops A and B; columns show cold, mean and hot environments, with grey marking eclipse. Time in min is measured from the third-orbit start. The vertical axis is loop panel-mean temperature in °C, with different scales across panels. Blue solid curves are FE results; orange dashed curves are the module response to the same prescribed heat-input history. Curves show phase and variation, while acceptance compares the time means in the preceding table. An instantaneous gap is not the 5 K mean-temperature criterion.')
         if gaps:
             w.para(f'At the same instant the coldest FE panel is {fmt(min(gaps))} to {fmt(max(gaps))} K below the radiator '
                    'mean. Chapter 10 of the design report states that the radiator uses one lumped temperature without '
@@ -884,6 +923,16 @@ def block_fe004(w, lang):
     om = m['orbit_means_K']
     bp = m['bus_and_heat_paths']
     gpu = {'caseA': '12 × V100', 'caseB': '12 × A100'}
+    s = series('FE-004')
+    input_rows = [[gpu[c], fmt(v['solar_irradiance_W_m2'], 2),
+                   fmt(min(v['fe']['P_sources_W']), 2) + '–' + fmt(max(v['fe']['P_sources_W']), 2),
+                   fmt(v['initial_temperature_K'], 2)] for c, v in s['cases'].items()]
+    w.para((f'两组输入均重放周期 {fmt(s["period_s"], 2)} s 的有限元轨迹。下表的热源范围是完整时程的最小值至最大值，运行中使用原时程，并非以区间中值代替。' if lang == 'cn' else
+            f'Both inputs replay the FE trajectory with period {fmt(s["period_s"], 2)} s. The heat-source range below is the minimum to maximum of the full history. The simulation uses that history, not its range midpoint.'), keep_next=True)
+    w.caption('FE-004 整星场景输入' if lang == 'cn' else 'FE-004 Whole-Satellite Scene Inputs')
+    w.table(['算例', '太阳常数 W/m²', '有限元总热源 W', '初始温度 K'] if lang == 'cn' else
+            ['Case', 'Solar constant W/m²', 'FE total heat source W', 'Initial temperature K'],
+            input_rows, [1900, 2100, 2300, 2009], center_cols=(0, 1, 2, 3))
     rows, rows2 = [], []
     for case in ('caseA', 'caseB'):
         for orb in ('4', '5'):
@@ -902,6 +951,7 @@ def block_fe004(w, lang):
                 [1250, 560, 1100, 1100, 900, 1100, 1100, 1199], center_cols=tuple(range(8)))
         w.picture(OUT / 'fig_fe004_chain_cn.png', 14.6)
         w.caption('FE-004 GPU 基板、计算节点与散热板温度时程', kind='figure')
+        w.para('上、下子图分别为 12 块 V100 与 12 块 A100，两者是不同 GPU 配置，采用本项目独立的轨道与功率时程。横轴为从仿真开始计的轨道周期数，纵轴为 °C。蓝色比较有限元 GPU 基板与热模块 J，绿色比较有限元散热板与热模块 R；实线为有限元，虚线为热模块。浅色区域 3–5 个周期对应第四、五圈验收窗口，不表示日食。判定采用窗口内各圈的平均温度。GPU 基板是芯片安装和传热的底板，曲线不代表芯片结温；两个模型也不包含完全相同的辐射表面。')
         w.caption('FE-004 有限元能量收支剩余项')
         w.table(['算例', '圈', '热源 W', '四个主表面及蓄热项 W', '剩余项 W', '占热源 %'], rows2,
                 [1400, 600, 1300, 2100, 1500, 1409], center_cols=tuple(range(6)))
@@ -916,6 +966,7 @@ def block_fe004(w, lang):
                 [1250, 560, 1100, 1100, 900, 1100, 1100, 1199], center_cols=tuple(range(8)))
         w.picture(OUT / 'fig_fe004_chain_en.png', 14.6)
         w.caption('FE-004 GPU baseplate, computing node and radiator temperature histories', kind='figure')
+        w.para('The upper and lower panels contain 12 V100 and 12 A100 devices: different GPU configurations using this project’s separate orbital and power histories. The horizontal axis counts orbit periods from simulation start; temperature is in °C. Blue compares FE GPU baseplate with module J, and green compares FE radiator with module R. Solid curves are FE and dashed curves are the module. Shading from 3–5 periods marks the fourth- and fifth-orbit acceptance window, not eclipse. Acceptance uses each orbit mean. The baseplate mounts the chip and conducts its heat; its temperature is not GPU junction temperature. The models also do not include identical radiating surfaces.')
         w.caption('FE-004 FE energy-budget remainder')
         w.table(['Case', 'Orb.', 'Sources W', 'Four main faces and storage W', 'Remainder W', 'Share %'], rows2,
                 [1400, 600, 1300, 2100, 1500, 1409], center_cols=tuple(range(6)))
@@ -1065,11 +1116,10 @@ def build(lang, out_name=None):
     w.heading(2, t['h'][3])
     w.table(['术语', '说明'] if lang == 'cn' else ['Term', 'Definition'], C['abbr'], [2000, 6309], center_cols=(0,))
     if lang == 'cn':
-        w.para('模块内部温度使用 K。有限元对比结果以 °C 给出温度、以 K 给出温度差，最低、平均与最高温度均为按精确轨道周期时间加权的统计值。')
+        w.para('模块内部温度使用 K。有限元对比以 °C 给出温度、以 K 给出温差。最低与最高取比较窗口内极值；平均值按时间加权，另有注明时采用采样均值。')
     else:
-        w.para('Temperatures inside the module are in K. The finite element comparisons give temperatures in °C and '
-               'temperature differences in K; minimum, mean and maximum temperatures are time-weighted over the exact '
-               'orbit period.')
+        w.para('Internal temperatures are in K. FE comparisons use °C for temperatures and K for differences. '
+               'Minima and maxima are window extrema; means are time-weighted unless a sample mean is explicitly stated.')
 
     # ------------------------------------------------------------ 2 test content
     w.heading(1, t['h'][4])
@@ -1094,16 +1144,24 @@ def build(lang, out_name=None):
             [600, 950, 2600, 1800, 1400, 959], center_cols=(0, 1, 4, 5))
     trace_table = w.tab
 
+    env = case_evidence.ENVIRONMENT[lang]
+    w.para(env['intro'])
+    w.caption(env['caption'])
+    w.table(env['headers'], env['rows'], [1550, 650, 1300, 950, 1400, 2459], center_cols=tuple(range(6)))
+    for paragraph in env['notes']:
+        w.para(paragraph)
+
     # ------------------------------------------------------------ 3 detailed test projects
     w.heading(1, t['h'][5])
     if lang == 'cn':
         w.para('以下用例采用统一的执行记录格式，设计依据栏注明用例所验证的设计报告内容。验收判据为本版默认门限，模块需求给出更严格的数值时以需求为准。'
-               '有限元对比用例在用例表之后给出对比表与曲线。')
+               '每个项目先说明场景与输入，在用例表后列出实测结果表；涉及温度时程的对比另给曲线及读图说明。')
     else:
         w.para('The following records use the same execution structure as the reference outline; the Design Basis row '
                'names the design report content each case verifies. The numerical thresholds are default verification '
-               'gates and shall be tightened when an approved module requirement defines a stricter value. Cases with '
-               'finite element comparisons give the comparison tables and curves after the case table.')
+               'gates and shall be tightened when an approved module requirement defines a stricter value. Each project '
+               'explains its scene and inputs and provides a measured result table after the case record. Temperature-history '
+               'comparisons also include curves with explicit reading instructions.')
     k = 0
     for g, ids in C['groups']:
         w.heading(2, g)
@@ -1114,6 +1172,7 @@ def build(lang, out_name=None):
                 w.para('This group compares thermal module results with finite element results. The module represents each '
                        'component by one temperature, so the comparison uses the mean temperature of the same part in '
                        'the finite element model. The finite element result files are listed in Chapter 6.')
+            iss_temperature_figure(w, lang, 'nom0_T_iso_noon')
         for cid in ids:
             k += 1
             c = dict(C['cases'][cid], id=cid)
@@ -1123,11 +1182,22 @@ def build(lang, out_name=None):
                 c.update(actual='未执行。' if lang == 'cn' else 'Not executed.',
                          anomaly='无，用例未执行。' if lang == 'cn' else 'None recorded; case not executed.', status='not_run')
             w.heading(3, t['project'].format(k=k, name=c['name']))
-            w.para(c['intro'])
+            w.para(case_evidence.context(cid, lang))
+            w.para(case_evidence.scenario(cid, lang))
             w.caption(t['case_caption'].format(cid=cid, name=c['name']))
             w.case_table(c)
+            support = case_evidence.table_spec(cid, lang, metrics(cid))
+            if support:
+                w.para(('下表把代表性输入、独立参照和实际输出并列，便于核对本用例的判定。' if lang == 'cn' else
+                        'The following table aligns representative inputs, independent references and measured outputs for checking the verdict.'), keep_next=True)
+                w.caption(support['caption'])
+                w.table(support['headers'], support['rows'], [2600, 2800, 2909])
             if cid in BLOCKS and cid in RESULTS:
                 BLOCKS[cid](w, lang)
+            if cid == 'FE-001':
+                iss_temperature_figure(w, lang, 'cold0_T_iso_ecl')
+            elif cid == 'FE-002':
+                iss_temperature_figure(w, lang, 'hot75_T_hrs_noon')
 
     # ------------------------------------------------------------ 4 sufficiency
     w.heading(1, t['h'][6])
@@ -1194,7 +1264,8 @@ def build(lang, out_name=None):
 
     # ------------------------------------------------------------ 5 conditions
     conditions_heading = w.heading(1, t['h'][7])
-    ppr(conditions_heading).append(w_el('w:pageBreakBefore'))
+    if lang == 'en':
+        ppr(conditions_heading).append(w_el('w:pageBreakBefore'))
     for line in C['conditions']:
         w.bullet(line)
     if RESULTS:

@@ -246,6 +246,8 @@ python test_report/build_test_report.py en
 powershell -NoProfile -ExecutionPolicy Bypass -File test_report/finalize.ps1 -Name SDTwin_Thermal_Test_Report_CN
 powershell -NoProfile -ExecutionPolicy Bypass -File test_report/finalize.ps1 -Name SDTwin_Thermal_Test_Report_EN
 python test_report/qa/render_review.py SDTwin_Thermal_Test_Report_CN.pdf SDTwin_Thermal_Test_Report_EN.pdf
+python test_report/qa/audit_fe001_plot.py
+python test_report/qa/audit_reports.py
 .venv/Scripts/python.exe test_report/evidence_manifest.py
 ```
 
@@ -255,6 +257,32 @@ each raw result by SHA-256; the builder refuses stale prose. Raw checks and deta
 binds the final source, inputs, evidence and four report files. It rejects missing refinement cases, incomplete
 functions, infrastructure errors or results from a different core implementation. Final page images are inspected
 after Word export. The existing draft and pre-handoff sources are preserved under `test_report/qa`.
+
+Report revision 2.1 adds a scene and input explanation for every test project, 11 measured-input/reference/result
+tables for the non-FE projects and a whole-satellite input table. The five benchmark projects retain their detailed
+comparison tables. `case_evidence.py` supplies the bilingual explanations and reads measured values from case records;
+`audit_reports.py` checks scenario and result-table coverage and numerical agreement in both languages.
+
+The same revision now defines the physical meaning before listing input values for all 16 projects. Chapter 2
+tabulates the ISS cold/mean/hot radiation inputs, defines beta angle, and explains why the beta-zero cases have
+about 36.1 min eclipse while beta 75 remains sunlit. These are prescribed environments, not air temperatures or
+rankings of every component's computed temperature. Per-project context explains the test object, heat path,
+boundary conditions and terminology; the independent FE-004 and NI environments are kept distinct. Figure titles
+show beta and eclipse status, and captions explain the physical scenario as well as the axes and acceptance window.
+The content audit checks environment values and eclipse duration against the retained configuration and FE summaries.
+Three solved ISS FE views are included: the nom0 whole-station field near orbital noon, the cold0 field near
+mid-eclipse, and the hot75 radiator field near noon. The original COMSOL image fields are retained and the
+original Plasma range (-80 to 80 degrees C) is reproduced with bilingual colour bars. Captions identify the
+parts, environment, requested output phase, nearest-saved-solution convention and limits of colour-map reading.
+The manifest binds the original three image files and rendering scripts as well as the report-ready figures.
+
+FE-001 figure rows show the common-scale whole-orbit temperatures, local views around the largest difference,
+and the signed module-minus-FE difference. All rows now use the exact FE output instants in the acceptance record,
+with the same piecewise-linear sample connections. The earlier figure re-interpolated the 10 s module export at
+two eclipse-event instants, differing from the test by up to 0.4832 K, although the reported maxima were unchanged.
+`out/fe001_plot_data.json` retains the paired data. `qa/audit_fe001_plot.py` compares every FE point with its original
+CSV and every residual with the test record, including the subtraction identity between plotted samples. This is
+a report-figure correction; it does not change the experiment records, acceptance thresholds, or case verdicts.
 
 The measured limitations must remain explicit: FE-001 meets the statistic criterion but fails simultaneous
 temperature-curve comparison; EN-003 has weak-albedo relative-accuracy and original FE-load exceedances; FE-004

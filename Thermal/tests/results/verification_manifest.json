@@ -1,5 +1,5 @@
 {
-  "created_utc": "2026-10-06T02:41:11.235708+00:00",
+  "created_utc": "2026-10-06T03:17:30.434294+00:00",
   "scope": "Thermal software tests with illustrative Power stand-in; no hardware calibration claim",
   "execution_complete": true,
   "all_acceptance_criteria_pass": false,
@@ -797,16 +797,20 @@
   },
   "report_sources": {
     "IMPLEMENTATION.md": {
-      "bytes": 20441,
-      "sha256": "9a78f1153037b679a91049e775bacc5972097ec076e623da6820917f4129ff92"
+      "bytes": 23110,
+      "sha256": "f0c49a8fb0e9687a3a933d2d4e7606ac864eee608adba5f3de70b1e0673c6515"
     },
     "test_report/build_test_report.py": {
-      "bytes": 78991,
-      "sha256": "c86d5fc4d5f27a1b52398900e75d784bc5473378583a41af33235e8a2eaad49f"
+      "bytes": 90242,
+      "sha256": "49f64d11167402fef90e60ace388a3ccf9cf67ac17082a230fb8591dbd865d5c"
     },
     "test_report/build_test_report_cn.py": {
       "bytes": 77726,
       "sha256": "082f1cf66e77b2572edb0982bf1def763976afbe40dd3c074f5f413bb51a0119"
+    },
+    "test_report/case_evidence.py": {
+      "bytes": 44762,
+      "sha256": "13eb5235807c7a1357e196fbf4b84292cf4221e59f58f5a3df9f7efa4d839994"
     },
     "test_report/content_cn.py": {
       "bytes": 38183,
@@ -817,8 +821,8 @@
       "sha256": "7e7e9ef625eae94fce93cdb6dbcbafac34075f361103189eb32329d63d9b363f"
     },
     "test_report/evidence_manifest.py": {
-      "bytes": 6364,
-      "sha256": "b93922f7295b6cd1730750cea643e97ee612389487d1bcf078bb991e226f95cf"
+      "bytes": 6869,
+      "sha256": "04880290783e29ee98c090aa92322f3eecf5ab36c8713696fcfae6c9ebe5731b"
     },
     "test_report/fe_compare.py": {
       "bytes": 14711,
@@ -829,8 +833,8 @@
       "sha256": "b9fc333351a4730bc0aaa25d8f1cabd59d767ee563f20701a5869dece7a3ece0"
     },
     "test_report/figures_results.py": {
-      "bytes": 9094,
-      "sha256": "9aea45e1d4e0692fb09e4987431ce6e2d2f99e77e79b291c6cadb736d3babd88"
+      "bytes": 13384,
+      "sha256": "645974477076b73a5452783895028e435efaecf9d23311ef2f869581563397f6"
     },
     "test_report/finalize.ps1": {
       "bytes": 1452,
@@ -840,21 +844,25 @@
       "bytes": 4491,
       "sha256": "8f46a6b664de94567967e20de5e5d1b4bda66963a3ef860eab8ab64c4457822d"
     },
+    "test_report/out/fe001_plot_data.json": {
+      "bytes": 17224,
+      "sha256": "70fe2d6f25fbb4d53a80a84e840547ded1c166f02b64eb74b4fa2740cb88d816"
+    },
     "test_report/out/fig_fe001_solar_cn.png": {
-      "bytes": 127148,
-      "sha256": "c24bc06302ee476cd0e41e0157227fc128e354647743e76b320971871fea7124"
+      "bytes": 207794,
+      "sha256": "462520677d297fca5a09be0a617632689ea0b3f14f8fc13a0043fcc9098ac58e"
     },
     "test_report/out/fig_fe001_solar_en.png": {
-      "bytes": 128222,
-      "sha256": "058684252f276d1b6c072ec5769c16badfbda3035938444d406def4b9254298a"
+      "bytes": 204904,
+      "sha256": "7307cc483e683024214de3ed794c14193fddd6031db78b36eb9d19fb6834ef07"
     },
     "test_report/out/fig_fe002_radiator_cn.png": {
-      "bytes": 158713,
-      "sha256": "f38a3ba2e8a884c8a3a0808f13bd0124602bdd0bd67e33295bb5a52caa93e9cf"
+      "bytes": 163415,
+      "sha256": "5b81487fd31c11640e9a5bc605d7d5b4256d43633b121971b95464ed24b49236"
     },
     "test_report/out/fig_fe002_radiator_en.png": {
-      "bytes": 154915,
-      "sha256": "7ce03474bbb8886e34db39e994c00c94f3edae2a09da58f69a3fbad2920fe1d1"
+      "bytes": 161491,
+      "sha256": "e30448fa47faa2f26b960652d94dabbe7920123765700dcd028ab5c5f8296e80"
     },
     "test_report/out/fig_fe004_chain_cn.png": {
       "bytes": 159084,
@@ -863,6 +871,30 @@
     "test_report/out/fig_fe004_chain_en.png": {
       "bytes": 162914,
       "sha256": "2742820bf2d46c60f62dd98fffe6e9d081e365b024983e7aa4dd54a233e55c79"
+    },
+    "test_report/out/fig_iss_cold0_T_iso_ecl_cn.png": {
+      "bytes": 262366,
+      "sha256": "abd857f24ad30cc854fb75a887fb6b7700d13e82a4a8a835e315f8c7178fb356"
+    },
+    "test_report/out/fig_iss_cold0_T_iso_ecl_en.png": {
+      "bytes": 263215,
+      "sha256": "a38977da33169ed824f6bdc48c649425906d9a2855d8cb10de866d48d36cd867"
+    },
+    "test_report/out/fig_iss_hot75_T_hrs_noon_cn.png": {
+      "bytes": 194019,
+      "sha256": "85150afea21ebdd62e6cb462611c823082243ad007e99f8b112fd861dfa84c06"
+    },
+    "test_report/out/fig_iss_hot75_T_hrs_noon_en.png": {
+      "bytes": 194826,
+      "sha256": "f2c87398503f5ed370395aa9f097bf24b7bc757709b0fe77cd8ce341ddd9e078"
+    },
+    "test_report/out/fig_iss_nom0_T_iso_noon_cn.png": {
+      "bytes": 287589,
+      "sha256": "721e1e67642f99b24131caf447952d494f873bf30bf7c5c282984a948cf63aeb"
+    },
+    "test_report/out/fig_iss_nom0_T_iso_noon_en.png": {
+      "bytes": 288402,
+      "sha256": "2cbd3807cd30c0b7d89d1987ffd0996c23b61a33dad8d5e0d51aca23872e6b9e"
     },
     "test_report/out/fig_radiator_node.png": {
       "bytes": 150386,
@@ -879,6 +911,32 @@
     "test_report/reviewed_results.py": {
       "bytes": 23711,
       "sha256": "5712b2e6f2f14a74892898acce46b875610dcbc4e3b45b16f6b25bf005c84222"
+    }
+  },
+  "iss_figure_sources": {
+    "iss_fem/model/iss_plots.py": {
+      "bytes": 10764,
+      "sha256": "4577dba1f6039da3cd06c97b619aa0fa94e5932a4da5eede8456436815d6ede8"
+    },
+    "iss_fem/model/iss_render.py": {
+      "bytes": 9083,
+      "sha256": "b37142d854ce81ebad1f11300f73663e14169b07aa72c06eb1b11a3b342dc692"
+    },
+    "iss_fem/model/post_all.py": {
+      "bytes": 2939,
+      "sha256": "ab28a3261d5146723ad07f9cefeba8a8d311db830e97dd528985f487c3985907"
+    },
+    "iss_fem/out/figures/cold0_T_iso_ecl.png": {
+      "bytes": 285652,
+      "sha256": "891fd67a03a8c23e7aa9382379d23929ca8d8263eaf302d5c4cdecbf11ee7076"
+    },
+    "iss_fem/out/figures/hot75_T_hrs_noon.png": {
+      "bytes": 262328,
+      "sha256": "f4e5596a594d9dc5ebdf639ad22010e779ceac316026bb1fb679ac3e311cf317"
+    },
+    "iss_fem/out/figures/nom0_T_iso_noon.png": {
+      "bytes": 345252,
+      "sha256": "fd5afedfb473ec60c869564776df1e5efce2c9e9d1ff3852ec32738098acae4b"
     }
   },
   "comsol_model_files": {
@@ -1023,26 +1081,30 @@
   },
   "reports": {
     "SDTwin_Thermal_Test_Report_CN.docx": {
-      "bytes": 570552,
-      "sha256": "033f8c2f6d6a8bc3dc53b5b34287b5fa0830d7895c79c221bb783a6155eb9a1f"
+      "bytes": 1423150,
+      "sha256": "7f5defe81a1a85eb90da36d49fa1cc65b6148d48de8520e95d7e012f85fe1f80"
     },
     "SDTwin_Thermal_Test_Report_CN.pdf": {
-      "bytes": 1312670,
-      "sha256": "6c5d8b37bfa06090135bcab2f4c45482cdc9d40c201e855efc3efb93f8403df6"
+      "bytes": 1903674,
+      "sha256": "c78536172d63446400bd2078fd7e3df7fdb4071f7d4b37a30dfbd734d937891f"
     },
     "SDTwin_Thermal_Test_Report_EN.docx": {
-      "bytes": 559159,
-      "sha256": "4b5087c97aaac5f98afef02abd928376b74110a444acf1acd53dfaa0e0082605"
+      "bytes": 1412230,
+      "sha256": "919b2e5e3232b4a7ff771185315eb9bfa166b3b8b9904e0be1ac90167750b5b8"
     },
     "SDTwin_Thermal_Test_Report_EN.pdf": {
-      "bytes": 1143768,
-      "sha256": "7438bda9d0a8182e0737cf28942b96a15a50343086f0c98f020599a4ae981be0"
+      "bytes": 1713999,
+      "sha256": "d049be26832e86fa19ab89cdbe0aed4de2174be005f89219e6fc5d8dfeb46899"
     }
   },
   "quality_assurance": {
     "test_report/qa/adaptive_reference_validation.json": {
       "bytes": 1829,
       "sha256": "7dca68b9814d390e8a1ab41e0fbb7819a557c234c8310f35ef3f964c6aadb244"
+    },
+    "test_report/qa/fe001_plot_audit.json": {
+      "bytes": 2197,
+      "sha256": "3a6af4f307a4efe7b3c53ac253789f53e46b12f27ccb567966097e0a5d34398b"
     },
     "test_report/qa/ladder_baseline_reproduction.json": {
       "bytes": 858,
@@ -1053,12 +1115,12 @@
       "sha256": "e9aabb671b841f84b2ff5270eafafde556506c0e68d69b2ac96e460bdb4144fe"
     },
     "test_report/qa/report_content_audit.json": {
-      "bytes": 4191,
-      "sha256": "73741e90bc05362b16027b6db4b9340899b015a820c46f28fad21cfc6ed8f098"
+      "bytes": 6408,
+      "sha256": "7abe2a793eb542c86221a6529653d3ee751ac460790caae694ceb39ce0c487c0"
     },
     "test_report/qa/visual_inspection.json": {
-      "bytes": 3854,
-      "sha256": "452ffa7b066135b0ec2733104ba3cc01e2277bc86c185f7707de4ad0ff859759"
+      "bytes": 5455,
+      "sha256": "bb1f185161e55d4ef65ace940170a88a378e3c9fcbc184f632403cbd413c5aec"
     }
   },
   "comsol_refinement": {

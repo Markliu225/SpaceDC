@@ -78,12 +78,17 @@ def build():
         'report_sources': inventory(list((ROOT / 'test_report').glob('*.py')) +
                                     list((ROOT / 'test_report' / 'out').glob('fig_*.png')) +
                                     [ROOT / 'test_report' / 'out' / 'reviewed_results.json',
+                                     ROOT / 'test_report' / 'out' / 'fe001_plot_data.json',
                                      ROOT / 'test_report' / 'finalize.ps1', ROOT / 'IMPLEMENTATION.md']),
+        'iss_figure_sources': inventory([ROOT / 'iss_fem' / 'out' / 'figures' / (name + '.png') for name in
+                                        ('nom0_T_iso_noon', 'cold0_T_iso_ecl', 'hot75_T_hrs_noon')] +
+                                       [ROOT / 'iss_fem' / 'model' / name for name in
+                                        ('iss_render.py', 'iss_plots.py', 'post_all.py')]),
         'comsol_model_files': inventory([ROOT / 'iss_fem' / 'out' / 'comsol' / name for name in
                                         ('iss_nom0_29756.mph', 'iss_cold0_34584.mph', 'iss_hot75_2404.mph')]),
         'evidence_files': inventory(result_paths), 'reports': inventory(reports),
         'quality_assurance': inventory([ROOT / 'test_report' / 'qa' / name for name in
-                                       ('report_content_audit.json', 'visual_inspection.json',
+                                       ('report_content_audit.json', 'visual_inspection.json', 'fe001_plot_audit.json',
                                         'adaptive_reference_validation.json', 'ladder_baseline_reproduction.json',
                                         'ladder_sampling_validation.json')]),
         'comsol_refinement': {
