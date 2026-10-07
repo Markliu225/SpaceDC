@@ -1,0 +1,16 @@
+{
+  "case_count": 19,
+  "suite_sha256": "e908a714800ee15cc5b452b34f4699239b841e09b098a87ce10e74ec30c74a10",
+  "tolerances": {
+    "conservation_W": 2e-06,
+    "current_A": 0.0001,
+    "derivative": 1e-08,
+    "energy_relative": 1e-05,
+    "event_time_s": 0.001,
+    "fraction": 1e-06,
+    "power_W": 0.001,
+    "static_power_W": 1e-06,
+    "temperature_K": 0.001,
+    "voltage_V": 0.0001
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "cases": [
+    {
+      "id": "PV-001",
+      "samples": 21,
+      "seconds": 0.009193000005325302,
+      "status": "executed"
+    },
+    {
+      "id": "BT-001",
+      "samples": 9,
+      "seconds": 0.004663500003516674,
+      "status": "executed"
+    },
+    {
+      "id": "BT-002",
+      "samples": 18,
+      "seconds": 0.006957500008866191,
+      "status": "executed"
+    },
+    {
+      "id": "BT-003",
+      "samples": 12,
+      "seconds": 0.005204699991736561,
+      "status": "executed"
+    },
+    {
+      "id": "BT-004",
+      "samples": 5,
+      "seconds": 0.0036678999895229936,
+      "status": "executed"
+    },
+    {
+      "id": "PD-001",
+      "samples": 24,
+      "seconds": 0.02514589999918826,
+      "status": "executed"
+    },
+    {
+      "id": "PD-002",
+      "samples": 9,
+      "seconds": 0.006625199981499463,
+      "status": "executed"
+    },
+    {
+      "id": "CT-001",
+      "samples": 6,
+      "seconds": 0.008595999999670312,
+      "status": "executed"
+    },
+    {
+      "id": "CT-002",
+      "samples": 12,
+      "seconds": 0.010688799986382946,
+      "status": "executed"
+    },
+    {
+      "id": "CT-003",
+      "samples": 3,
+      "seconds": 0.004681599995819852,
+      "status": "executed"
+    },
+    {
+      "id": "PR-001",
+      "samples": 8,
+      "seconds": 0.013669899984961376,
+      "status": "executed"
+    },
+    {
+      "id": "IV-001",
+      "samples": 6,
+      "seconds": 0.003902700002072379,
+      "status": "executed"
+    },
+    {
+      "id": "DY-001",
+      "samples": 91,
+      "seconds": 1.0752483999822289,
+      "status": "executed"
+    },
+    {
+      "id": "DY-002",
+      "samples": 273,
+      "seconds": 5.868382499989821,
+      "status": "executed"
+    },
+    {
+      "id": "DY-003",
+      "samples": 164,
+      "seconds": 0.5505012999929022,
+      "status": "executed"
+    },
+    {
+      "id": "DY-004",
+      "samples": 91,
+      "seconds": 1.3863205999950878,
+      "status": "executed"
+    },
+    {
+      "id": "DY-005",
+      "samples": 126,
+      "seconds": 1.2208658000163268,
+      "status": "executed"
+    },
+    {
+      "id": "DY-006",
+      "samples": 181,
+      "seconds": 1.092446499998914,
+      "status": "executed"
+    },
+    {
+      "id": "DY-007",
+      "samples": 552,
+      "seconds": 18.225718799978495,
+      "status": "executed"
+    },
+    {
+      "id": "NU-001",
+      "samples": 121,
+      "seconds": 4.084722400002647,
+      "status": "executed"
+    }
+  ],
+  "solver": "SciPy DOP853",
+  "source": "C:\\Workspace\\SpaceDC\\Thermal\\sdtwin_sim\\power_stand_in.py"
+}

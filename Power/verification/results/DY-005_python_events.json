@@ -1,0 +1,26 @@
+[
+  {
+    "action": 2,
+    "connected": 0,
+    "latched": 1,
+    "time_s": 100.0
+  },
+  {
+    "action": 3,
+    "connected": 1,
+    "latched": 0,
+    "time_s": 300.0
+  },
+  {
+    "action": 1,
+    "connected": 0,
+    "latched": 0,
+    "time_s": 400.0
+  },
+  {
+    "action": 3,
+    "connected": 1,
+    "latched": 0,
+    "time_s": 500.0
+  }
+]
