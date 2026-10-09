@@ -1,0 +1,20 @@
+{
+  "full_numerical_checks": 54,
+  "transient_numerical_checks": 87,
+  "physical_findings": [
+    "missing diffusion recovery",
+    "cycle energy imbalance",
+    "no irreversible first-cycle evolution"
+  ],
+  "accepted_full_steps": 216013,
+  "full_export_rows": 216006,
+  "pdf_pages": 4,
+  "pdf_sha256": "a11d7ce4faa51eb36b1f121343f08400cf319d8477d87062dc7544d4a767c0c5",
+  "model_source_unchanged": true,
+  "pdf_pages_visually_reviewed": [
+    1,
+    2,
+    3,
+    4
+  ]
+}

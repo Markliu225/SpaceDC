@@ -1,0 +1,439 @@
+{
+  "contract": {
+    "revision": "1.0",
+    "date": "2026-10-08",
+    "model": "First-order Thevenin ECM with separate forgetting-factor RLS and EKF observer",
+    "current_sign": "positive discharge; negate the source data current",
+    "capacity_Ah": 2.84,
+    "initial_raw_soc": 0.055,
+    "calibration_temperature_C": 25,
+    "training_discharge_pulses_1based": [
+      1,
+      2,
+      5,
+      7,
+      9
+    ],
+    "validation_discharge_pulses_1based": [
+      4,
+      6,
+      8
+    ],
+    "excluded_from_calibration_pulses_1based": [
+      3
+    ],
+    "exclusion_reason": "MathWorks documents a missing initial rest voltage in the third 25 C pulse; retained as an anomaly case, not repaired.",
+    "training_window_s": [
+      0,
+      30
+    ],
+    "validation_window_s": [
+      0,
+      120
+    ],
+    "sampling_s": 0.1,
+    "measurement_resampling": "Current zero order hold; voltage linear within each current regime only, with no interpolation across a current edge. Every transition is retained in the raw data and preprocessing manifest.",
+    "other_temperatures": "Raw data retained. No calibrated capacity or initial SOC at these temperatures; not used to claim temperature validation.",
+    "criteria": {
+      "measured_open_loop_rmse_V": 0.03,
+      "measured_open_loop_max_V": 0.1,
+      "observer_prior_rmse_V": 0.03,
+      "synthetic_final_soc_error": 0.02,
+      "synthetic_parameter_relative_error": 0.2,
+      "simulink_max_voltage_V": 1e-06,
+      "simulink_max_state": 1e-06,
+      "analytic_max_voltage_V": 1e-09
+    },
+    "criteria_note": "Engineering verification targets frozen before fitting. Not cell safety qualification. Failures remain failures.",
+    "observer": {
+      "forgetting_factor": 0.9995,
+      "measurement_std_V": 0.003,
+      "process_variance_per_s": [
+        1e-08,
+        1e-06
+      ],
+      "initial_state_variance": [
+        0.01,
+        0.0001
+      ],
+      "rls_covariance": [
+        0.1,
+        0.01,
+        0.01
+      ],
+      "minimum_current_A": 0.05,
+      "excitation_window_samples": 200,
+      "minimum_current_std_A": 0.15,
+      "R0_bounds_ohm": [
+        0.001,
+        0.2
+      ],
+      "R1_bounds_ohm": [
+        0.001,
+        0.3
+      ],
+      "tau_bounds_s": [
+        1.0,
+        500.0
+      ]
+    }
+  },
+  "checks": {
+    "analytic_rc_max_error_V": 2.949029909160572e-17,
+    "energy_max_residual_J": 5.252099026244642e-16,
+    "charge_at_upper_soc_A": 0.0,
+    "discharge_at_lower_soc_A": 0.0,
+    "temperature_rejection": true,
+    "soc_crossing_rejection": true,
+    "pack_scaling_error": 0.0,
+    "pass": true
+  },
+  "cycles": {
+    "soc_low": 0.12,
+    "soc_high": 0.96,
+    "current_A": 0.284,
+    "capacity_per_branch_Ah": 2.3855999999999997,
+    "duration_s": 181440.0,
+    "max_step_s": 1.0,
+    "rows": 181446,
+    "aging": false,
+    "measurement_validation": false
+  },
+  "cases": [
+    {
+      "id": "EXACT",
+      "rows": 6001,
+      "duration_s": 600.0,
+      "open_loop": {
+        "rmse_V": 0.008457149543261495,
+        "max_V": 0.01975481438423632
+      },
+      "prior": {
+        "rmse_V": 0.002151734034522162,
+        "max_V": 0.024021973105819328
+      },
+      "posterior": {
+        "rmse_V": 0.001945106870325584,
+        "max_V": 0.0217150806163926
+      },
+      "initial_soc_error": 0.0,
+      "final_soc_error": 0.0027282800751632363,
+      "soc_rmse": 0.00808003205250369,
+      "accepted": 5900,
+      "rejected": 0,
+      "frozen": 101,
+      "boundary_hits": 0,
+      "final_parameters": {
+        "r0": 0.04605957217229491,
+        "r1": 0.021406854663842435,
+        "tau": 21.589714040447145,
+        "c1": 1008.5420945522451
+      },
+      "reference": "synthetic known truth",
+      "parameter_relative_error": {
+        "r0": 0.03541448846106032,
+        "r1": 0.9108562885589919,
+        "tau": 1.0848377402580516
+      },
+      "pass": false
+    },
+    {
+      "id": "NOISE",
+      "rows": 6001,
+      "duration_s": 600.0,
+      "open_loop": {
+        "rmse_V": 0.008968001781931238,
+        "max_V": 0.027956909107650585
+      },
+      "prior": {
+        "rmse_V": 0.003927562744013425,
+        "max_V": 0.07178203252526405
+      },
+      "posterior": {
+        "rmse_V": 0.0034646298996184382,
+        "max_V": 0.023793371477422998
+      },
+      "initial_soc_error": 0.09999999999999998,
+      "final_soc_error": -0.0006882620152353081,
+      "soc_rmse": 0.008065289344614493,
+      "accepted": 5900,
+      "rejected": 0,
+      "frozen": 101,
+      "boundary_hits": 0,
+      "final_parameters": {
+        "r0": 0.046195515300317805,
+        "r1": 0.004136626695934758,
+        "tau": 3.186720444161588,
+        "c1": 770.3669386684847
+      },
+      "reference": "synthetic known truth",
+      "parameter_relative_error": {
+        "r0": 0.03847047612492949,
+        "r1": 0.6307491567783123,
+        "tau": 0.6922703544292808
+      },
+      "pass": false
+    },
+    {
+      "id": "FIXED_EKF",
+      "rows": 6001,
+      "duration_s": 600.0,
+      "open_loop": {
+        "rmse_V": 0.008968001781931238,
+        "max_V": 0.027956909107650585
+      },
+      "prior": {
+        "rmse_V": 0.00458937179613392,
+        "max_V": 0.07178203252526405
+      },
+      "posterior": {
+        "rmse_V": 0.004068480484489857,
+        "max_V": 0.027197154669675427
+      },
+      "initial_soc_error": 0.09999999999999998,
+      "final_soc_error": 0.0006455913945609959,
+      "soc_rmse": 0.0032554905305366153,
+      "accepted": 0,
+      "rejected": 0,
+      "frozen": 6001,
+      "boundary_hits": 0,
+      "final_parameters": {
+        "r0": 0.05338102491583256,
+        "r1": 0.008962203925858055,
+        "tau": 12.426701775520353,
+        "c1": 1386.567620902534
+      },
+      "reference": "synthetic known truth",
+      "pass": true
+    },
+    {
+      "id": "DRIFT",
+      "rows": 6001,
+      "duration_s": 600.0,
+      "open_loop": {
+        "rmse_V": 0.007791908175455669,
+        "max_V": 0.027956909107650585
+      },
+      "prior": {
+        "rmse_V": 0.004061530109020916,
+        "max_V": 0.07178203252526405
+      },
+      "posterior": {
+        "rmse_V": 0.0035922171918290505,
+        "max_V": 0.023793371477422998
+      },
+      "initial_soc_error": 0.09999999999999998,
+      "final_soc_error": -0.0012630387342699168,
+      "soc_rmse": 0.008173911432963255,
+      "accepted": 5900,
+      "rejected": 0,
+      "frozen": 101,
+      "boundary_hits": 0,
+      "final_parameters": {
+        "r0": 0.05521024615415914,
+        "r1": 0.004985710060979985,
+        "tau": 2.929335498306943,
+        "c1": 587.5462998205628
+      },
+      "reference": "synthetic known truth",
+      "parameter_relative_error": {
+        "r0": 0.04529176383076028,
+        "r1": 0.6576590653730714,
+        "tau": 0.7824038874286133
+      },
+      "pass": false
+    },
+    {
+      "id": "REST",
+      "rows": 6001,
+      "duration_s": 600.0,
+      "open_loop": {
+        "rmse_V": 0.0,
+        "max_V": 0.0
+      },
+      "prior": {
+        "rmse_V": 0.0,
+        "max_V": 0.0
+      },
+      "posterior": {
+        "rmse_V": 0.0,
+        "max_V": 0.0
+      },
+      "initial_soc_error": 0.0,
+      "final_soc_error": 0.0,
+      "soc_rmse": 0.0,
+      "accepted": 0,
+      "rejected": 0,
+      "frozen": 6001,
+      "boundary_hits": 0,
+      "final_parameters": {
+        "r0": 0.04448418742986047,
+        "r1": 0.011202754907322568,
+        "tau": 10.355584812933628,
+        "c1": 924.3784139350228
+      },
+      "reference": "synthetic known truth",
+      "parameter_relative_error": {
+        "r0": 0.0,
+        "r1": 0.0,
+        "tau": 0.0
+      },
+      "pass": true
+    },
+    {
+      "id": "MEASURED_03",
+      "rows": 1200,
+      "duration_s": 119.9,
+      "open_loop": {
+        "rmse_V": 0.01824518958876077,
+        "max_V": 0.05838396533111245
+      },
+      "prior": {
+        "rmse_V": 0.0067172888854507215,
+        "max_V": 0.06818291664172405
+      },
+      "posterior": {
+        "rmse_V": 0.00579608491694329,
+        "max_V": 0.06175173152112823
+      },
+      "initial_soc_error": 0.0,
+      "final_soc_error": -0.033203593349434235,
+      "soc_rmse": 0.028627392709489545,
+      "accepted": 498,
+      "rejected": 1,
+      "frozen": 701,
+      "boundary_hits": 0,
+      "final_parameters": {
+        "r0": 0.043606483030106835,
+        "r1": 0.029497839879758583,
+        "tau": 11.194531444919477,
+        "c1": 379.50343111738033
+      },
+      "reference": "measured voltage; SOC is coulomb-count reference, not independent truth",
+      "pulse": 3,
+      "anomaly_case": true,
+      "pass": true
+    },
+    {
+      "id": "MEASURED_04",
+      "rows": 1200,
+      "duration_s": 119.9,
+      "open_loop": {
+        "rmse_V": 0.026699694055753904,
+        "max_V": 0.060250450703503766
+      },
+      "prior": {
+        "rmse_V": 0.006760789739252233,
+        "max_V": 0.0690821106368591
+      },
+      "posterior": {
+        "rmse_V": 0.005899765269624999,
+        "max_V": 0.06256366569787364
+      },
+      "initial_soc_error": 0.0,
+      "final_soc_error": -0.05048394799875622,
+      "soc_rmse": 0.03972015213213942,
+      "accepted": 498,
+      "rejected": 1,
+      "frozen": 701,
+      "boundary_hits": 0,
+      "final_parameters": {
+        "r0": 0.04354869355999376,
+        "r1": 0.029081832004910803,
+        "tau": 11.24181188621138,
+        "c1": 386.55789925177584
+      },
+      "reference": "measured voltage; SOC is coulomb-count reference, not independent truth",
+      "pulse": 4,
+      "anomaly_case": false,
+      "pass": true
+    },
+    {
+      "id": "MEASURED_06",
+      "rows": 1200,
+      "duration_s": 119.9,
+      "open_loop": {
+        "rmse_V": 0.02864587606728072,
+        "max_V": 0.05946506523178341
+      },
+      "prior": {
+        "rmse_V": 0.006358274689756463,
+        "max_V": 0.07217763755721718
+      },
+      "posterior": {
+        "rmse_V": 0.005650892775058223,
+        "max_V": 0.0653560168363998
+      },
+      "initial_soc_error": 0.0,
+      "final_soc_error": -0.04241781634213748,
+      "soc_rmse": 0.03175438475515601,
+      "accepted": 498,
+      "rejected": 1,
+      "frozen": 701,
+      "boundary_hits": 0,
+      "final_parameters": {
+        "r0": 0.043679408588185274,
+        "r1": 0.0260256416309552,
+        "tau": 11.117116208930714,
+        "c1": 427.16012026031615
+      },
+      "reference": "measured voltage; SOC is coulomb-count reference, not independent truth",
+      "pulse": 6,
+      "anomaly_case": false,
+      "pass": true
+    },
+    {
+      "id": "MEASURED_08",
+      "rows": 1200,
+      "duration_s": 119.9,
+      "open_loop": {
+        "rmse_V": 0.01726596970742976,
+        "max_V": 0.050505492910077
+      },
+      "prior": {
+        "rmse_V": 0.005675305848628452,
+        "max_V": 0.07070919638260964
+      },
+      "posterior": {
+        "rmse_V": 0.004977612098759152,
+        "max_V": 0.0640622634512873
+      },
+      "initial_soc_error": 0.0,
+      "final_soc_error": -0.04614203425135713,
+      "soc_rmse": 0.040035621788263,
+      "accepted": 498,
+      "rejected": 1,
+      "frozen": 701,
+      "boundary_hits": 0,
+      "final_parameters": {
+        "r0": 0.04397330924443513,
+        "r1": 0.02357402590138808,
+        "tau": 10.891809363605644,
+        "c1": 462.0258503645877
+      },
+      "reference": "measured voltage; SOC is coulomb-count reference, not independent truth",
+      "pulse": 8,
+      "anomaly_case": false,
+      "pass": true
+    }
+  ],
+  "environment": {
+    "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]"
+  },
+  "hashes": {
+    "contract.json": "24401978ee215992330f062c9f79d9b258eabacb8de082083b3cefe0de441701",
+    "ecm.py": "57198d6f858e4b043c75c67b45d5a59cb538bbd5f3b40e8fc087cbf832c4f6aa",
+    "run.py": "a17e19af9fb8e2d670c5bbdd96a7bf4fb2fecb181a0e6d31717f4a76295a1313",
+    "data\\BAK_0C.csv": "a715d0e484c1e9a1712dfbf03271b197b1c3c041d00ec74a5319c2e68a7154cb",
+    "data\\BAK_10C.csv": "a931800e8001d589115a25d87bc8695c8752f17135ba64b178a86cbf35e9c035",
+    "data\\BAK_25C.csv": "7fba19867cf66e81152917cf265868bf572892ea7142cd61bb5c9e014ea4f84b",
+    "data\\BAK_35C.csv": "b25492dc84a64396262d31d0cb81422d41d255e5c153e1379e90e75060249ab4",
+    "data\\BAK_45C.csv": "692a69d2bc347e86c25d2b57c8adef96038fb42c73401a83c3f89e8e4974528e"
+  },
+  "sources": [
+    "Provided PDF pages 3-7",
+    "https://www.mathworks.com/help/simscape-battery/ug/estimate-battery-model-parameters-from-hppc-data.html",
+    "https://www.mathworks.com/help/ident/ref/recursiveleastsquaresestimator.html",
+    "https://www.mathworks.com/help/simscape-battery/ref/socestimatorkalmanfilter.html"
+  ]
+}

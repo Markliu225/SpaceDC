@@ -1,0 +1,140 @@
+[
+  {
+    "id": "BT01_1S1P_I+0",
+    "expected": {
+      "voltage_V": 3.78,
+      "power_W": 0.0,
+      "heat_W": 0.02,
+      "polarization_energy_J": 0.1,
+      "dsoc_dt": 0.0,
+      "du1_dt": -0.002,
+      "pack_current_A": 0,
+      "pack_voltage_V": 3.78
+    },
+    "actual": {
+      "voltage_V": 3.78,
+      "power_W": 0.0,
+      "heat_W": 0.02,
+      "polarization_energy_J": 0.1,
+      "dsoc_dt": -0.0,
+      "du1_dt": -0.002,
+      "pack_current_A": 0.0,
+      "pack_voltage_V": 3.78
+    }
+  },
+  {
+    "id": "BT01_1S1P_I+2",
+    "expected": {
+      "voltage_V": 3.6799999999999997,
+      "power_W": 7.359999999999999,
+      "heat_W": 0.22,
+      "polarization_energy_J": 0.1,
+      "dsoc_dt": -0.0002777777777777778,
+      "du1_dt": 0.002,
+      "pack_current_A": 2,
+      "pack_voltage_V": 3.6799999999999997
+    },
+    "actual": {
+      "voltage_V": 3.68,
+      "power_W": 7.36,
+      "heat_W": 0.22,
+      "polarization_energy_J": 0.1,
+      "dsoc_dt": -0.000277777777777778,
+      "du1_dt": 0.002,
+      "pack_current_A": 2.0,
+      "pack_voltage_V": 3.68
+    }
+  },
+  {
+    "id": "BT01_1S1P_I-2",
+    "expected": {
+      "voltage_V": 3.88,
+      "power_W": -7.76,
+      "heat_W": 0.22,
+      "polarization_energy_J": 0.1,
+      "dsoc_dt": 0.0002777777777777778,
+      "du1_dt": -0.006,
+      "pack_current_A": -2,
+      "pack_voltage_V": 3.88
+    },
+    "actual": {
+      "voltage_V": 3.88,
+      "power_W": -7.76,
+      "heat_W": 0.22,
+      "polarization_energy_J": 0.1,
+      "dsoc_dt": 0.000277777777777778,
+      "du1_dt": -0.006,
+      "pack_current_A": -2.0,
+      "pack_voltage_V": 3.88
+    }
+  },
+  {
+    "id": "BT01_4S2P_I+0",
+    "expected": {
+      "voltage_V": 3.78,
+      "power_W": 0.0,
+      "heat_W": 0.16,
+      "polarization_energy_J": 0.8,
+      "dsoc_dt": 0.0,
+      "du1_dt": -0.002,
+      "pack_current_A": 0,
+      "pack_voltage_V": 15.12
+    },
+    "actual": {
+      "voltage_V": 3.78,
+      "power_W": 0.0,
+      "heat_W": 0.16,
+      "polarization_energy_J": 0.8,
+      "dsoc_dt": -0.0,
+      "du1_dt": -0.002,
+      "pack_current_A": 0.0,
+      "pack_voltage_V": 15.12
+    }
+  },
+  {
+    "id": "BT01_4S2P_I+2",
+    "expected": {
+      "voltage_V": 3.6799999999999997,
+      "power_W": 58.879999999999995,
+      "heat_W": 1.76,
+      "polarization_energy_J": 0.8,
+      "dsoc_dt": -0.0002777777777777778,
+      "du1_dt": 0.002,
+      "pack_current_A": 4,
+      "pack_voltage_V": 14.719999999999999
+    },
+    "actual": {
+      "voltage_V": 3.68,
+      "power_W": 58.88,
+      "heat_W": 1.76,
+      "polarization_energy_J": 0.8,
+      "dsoc_dt": -0.000277777777777778,
+      "du1_dt": 0.002,
+      "pack_current_A": 4.0,
+      "pack_voltage_V": 14.72
+    }
+  },
+  {
+    "id": "BT01_4S2P_I-2",
+    "expected": {
+      "voltage_V": 3.88,
+      "power_W": -62.08,
+      "heat_W": 1.76,
+      "polarization_energy_J": 0.8,
+      "dsoc_dt": 0.0002777777777777778,
+      "du1_dt": -0.006,
+      "pack_current_A": -4,
+      "pack_voltage_V": 15.52
+    },
+    "actual": {
+      "voltage_V": 3.88,
+      "power_W": -62.08,
+      "heat_W": 1.76,
+      "polarization_energy_J": 0.8,
+      "dsoc_dt": 0.000277777777777778,
+      "du1_dt": -0.006,
+      "pack_current_A": -4.0,
+      "pack_voltage_V": 15.52
+    }
+  }
+]

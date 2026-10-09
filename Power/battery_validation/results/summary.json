@@ -1,0 +1,1277 @@
+{
+  "contract": {
+    "version": 2,
+    "date": "2026-10-08",
+    "time_scale": "seconds; all cases 30 s",
+    "parameters": {
+      "data_status": "illustrative test values for the SDTwin thermal tests; not a selected, qualified or measured device. The SPM geometry and kinetics are of the order of published NMC and graphite cells, the open-circuit potentials are simple monotone polynomials chosen for these tests, not fitted material curves.",
+      "solar": {
+        "asset_id": "example.solar_array",
+        "asset_version": "test-1",
+        "source": "illustrative test value, not a selected device (sdtwin_sim.power_stand_in.example_power_records)",
+        "area_m2": 1.8,
+        "efficiency": 0.3,
+        "normal_body": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      "battery": {
+        "asset_id": "example.battery_pack",
+        "asset_version": "test-1",
+        "source": "illustrative test value, not a selected device (sdtwin_sim.power_stand_in.example_power_records)",
+        "parameter_level": "cell",
+        "N_s": 1,
+        "N_p": 1,
+        "R_ohm_ohm": 0.025,
+        "T_ref_K": 298.15,
+        "electrodes": {
+          "n": {
+            "radius_m": 6e-06,
+            "active_fraction": 0.75,
+            "electrode_area_m2": 0.06,
+            "thickness_m": 8.5e-05,
+            "c_max_mol_m3": 31000.0,
+            "D_ref_m2_s": 3.3e-14,
+            "I0_ref_A": 2.5,
+            "E_D_J_mol": 30300.0,
+            "E_I_J_mol": 35000.0,
+            "b_V": [
+              0.65,
+              -1.6,
+              2.0,
+              -0.95
+            ],
+            "d_V_K": [
+              0.00012,
+              -0.0003,
+              0.00015,
+              0.0
+            ],
+            "source": "illustrative test value, not a selected device (sdtwin_sim.power_stand_in.example_power_records)"
+          },
+          "p": {
+            "radius_m": 5e-06,
+            "active_fraction": 0.665,
+            "electrode_area_m2": 0.06,
+            "thickness_m": 7.5e-05,
+            "c_max_mol_m3": 63000.0,
+            "D_ref_m2_s": 1e-14,
+            "I0_ref_A": 3.0,
+            "E_D_J_mol": 25000.0,
+            "E_I_J_mol": 17500.0,
+            "b_V": [
+              4.6,
+              -1.3,
+              0.9,
+              -0.8
+            ],
+            "d_V_K": [
+              -6e-05,
+              4e-05,
+              0.0,
+              0.0
+            ],
+            "source": "illustrative test value, not a selected device (sdtwin_sim.power_stand_in.example_power_records)"
+          }
+        },
+        "x_n_0": 0.03,
+        "x_n_100": 0.9,
+        "x_p_100": 0.27,
+        "limits": {
+          "i_min_A": -3.0,
+          "i_max_A": 6.0,
+          "v_min_V": 3.0,
+          "v_max_V": 4.2,
+          "x_n_range": [
+            0.01,
+            0.95
+          ],
+          "x_p_range": [
+            0.2,
+            0.95
+          ],
+          "T_range_K": [
+            253.15,
+            333.15
+          ]
+        }
+      },
+      "pdu": {
+        "asset_id": "example.pdu",
+        "asset_version": "test-1",
+        "source": "illustrative test value, not a selected device (sdtwin_sim.power_stand_in.example_power_records)",
+        "eta_D": 0.95,
+        "covered_wiring": "PDU01 conversion and the PDU01 to Compute01 harness; battery and array harness resistance is not included (battery ohmic resistance is in R_ohm_ohm)"
+      }
+    },
+    "scene": {
+      "instance_id": "Sat01",
+      "asset_refs": {
+        "solar": {
+          "asset_id": "example.solar_array",
+          "asset_version": "test-1"
+        },
+        "battery": {
+          "asset_id": "example.battery_pack",
+          "asset_version": "test-1"
+        },
+        "pdu": {
+          "asset_id": "example.pdu",
+          "asset_version": "test-1"
+        }
+      },
+      "links": {
+        "P_pv_W": "SolarArray01",
+        "P_load_W": "Compute01",
+        "Q_B_W": "Battery01",
+        "Q_D_W": "PDU01"
+      },
+      "overrides": {},
+      "initial_state": {
+        "time_s": 0.0,
+        "x_n": 0.465,
+        "x_p": 0.5435947010383101,
+        "T_B_K": 298.15,
+        "load_connected": true,
+        "trip_latched": false
+      },
+      "numerics": {
+        "rtol": 1e-06,
+        "atol_x": 1e-09,
+        "atol_T_K": 1e-06,
+        "current_xtol_A": 1e-12,
+        "power_residual_tol_W": 1e-06,
+        "event_time_tol_s": 0.001,
+        "max_step_s": 60.0,
+        "environment_step_s": 10.0,
+        "output_step_s": 60.0,
+        "current_scan_points": 32,
+        "inventory_rtol": 1e-09
+      }
+    },
+    "initial": {
+      "xn": 0.465,
+      "xp": 0.5435947010383101,
+      "soc": 0.5,
+      "temperature_K": 298.15,
+      "uniform_particle_profiles": true
+    },
+    "capacity_Ah": 2.7648474952311752,
+    "electrode_capacity_C": {
+      "n": 11440.748256129002,
+      "p": 18190.1384512533
+    },
+    "numerics": {
+      "output_interval_s": 0.01,
+      "max_step_s": 0.01,
+      "rtol": 1e-09,
+      "atol": 1e-11,
+      "scipy_solver": "DOP853",
+      "simulink_solver": "ode45",
+      "diffusion_shells": [
+        128,
+        256
+      ]
+    },
+    "acceptance": {
+      "simulink_voltage_V": 1e-06,
+      "simulink_fraction": 1e-09,
+      "simulink_energy_J": 1e-05,
+      "analytic_soc": 1e-09,
+      "inventory_relative": 1e-10,
+      "decomposition": 1e-10,
+      "fv_mean_fraction": 1e-08,
+      "fv_mesh_voltage_V": 0.0001,
+      "energy_quadrature_J": 1e-05
+    },
+    "scope": "Illustrative single cell, prescribed current, isothermal; no calibrated cell, charger, PDU or orbit.",
+    "cases": [
+      {
+        "id": "BAT-T01",
+        "title": "20秒恒流充电",
+        "segments": [
+          {
+            "start_s": 0,
+            "end_s": 2,
+            "current_A": 0
+          },
+          {
+            "start_s": 2,
+            "end_s": 22,
+            "current_A": -0.5
+          },
+          {
+            "start_s": 22,
+            "end_s": 30,
+            "current_A": 0
+          }
+        ]
+      },
+      {
+        "id": "BAT-T02",
+        "title": "20秒恒流放电",
+        "segments": [
+          {
+            "start_s": 0,
+            "end_s": 2,
+            "current_A": 0
+          },
+          {
+            "start_s": 2,
+            "end_s": 22,
+            "current_A": 0.5
+          },
+          {
+            "start_s": 22,
+            "end_s": 30,
+            "current_A": 0
+          }
+        ]
+      },
+      {
+        "id": "BAT-T03",
+        "title": "各10秒充放电切换",
+        "segments": [
+          {
+            "start_s": 0,
+            "end_s": 2,
+            "current_A": 0
+          },
+          {
+            "start_s": 2,
+            "end_s": 12,
+            "current_A": -0.5
+          },
+          {
+            "start_s": 12,
+            "end_s": 15,
+            "current_A": 0
+          },
+          {
+            "start_s": 15,
+            "end_s": 25,
+            "current_A": 0.5
+          },
+          {
+            "start_s": 25,
+            "end_s": 30,
+            "current_A": 0
+          }
+        ]
+      },
+      {
+        "id": "BAT-T04",
+        "title": "5秒放电脉冲",
+        "segments": [
+          {
+            "start_s": 0,
+            "end_s": 2,
+            "current_A": 0
+          },
+          {
+            "start_s": 2,
+            "end_s": 7,
+            "current_A": 1
+          },
+          {
+            "start_s": 7,
+            "end_s": 30,
+            "current_A": 0
+          }
+        ]
+      }
+    ]
+  },
+  "checks": [
+    {
+      "case": "BAT-T01",
+      "check": "charge voltage monotonic segment 1",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "analytic SOC",
+      "value": 5.795364188543317e-14,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "lithium inventory relative",
+      "value": 7.415653790055598e-14,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "voltage decomposition V",
+      "value": 4.440892098500626e-16,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "heat decomposition W",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "negative irreversible heat W",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "charge/discharge polarization sign W",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "negative operating margin",
+      "value": 0.0,
+      "limit": 0.0,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "port energy independent quadrature J",
+      "value": 1.0658141036401503e-13,
+      "limit": 1e-05,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "heat energy independent quadrature J",
+      "value": 1.4835355166553654e-14,
+      "limit": 1e-05,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "Simulink voltage V",
+      "value": 6.217248937900877e-15,
+      "limit": 1e-06,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "Simulink xn",
+      "value": 5.551115123125783e-16,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "Simulink xp",
+      "value": 5.551115123125783e-16,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "Simulink soc",
+      "value": 5.551115123125783e-16,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "Simulink energy_port_J",
+      "value": 7.815970093361102e-14,
+      "limit": 1e-05,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "Simulink energy_heat_J",
+      "value": 2.0816681711721685e-16,
+      "limit": 1e-05,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "FV 128 to 256 shells V",
+      "value": 3.815508419258151e-05,
+      "limit": 0.0001,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "FV mean fractions",
+      "value": 5.551115123125783e-16,
+      "limit": 1e-08,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "FV versus exact sphere series V",
+      "value": 3.8035794409641e-05,
+      "limit": 0.0001,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "mean state continuity event 1",
+      "value": 0.0,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "case": "BAT-T01",
+      "check": "mean state continuity event 2",
+      "value": 0.0,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "discharge voltage monotonic segment 1",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "analytic SOC",
+      "value": 5.800915303666443e-14,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "lithium inventory relative",
+      "value": 7.415653790055598e-14,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "voltage decomposition V",
+      "value": 4.440892098500626e-16,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "heat decomposition W",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "negative irreversible heat W",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "charge/discharge polarization sign W",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "negative operating margin",
+      "value": 0.0,
+      "limit": 0.0,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "port energy independent quadrature J",
+      "value": 7.105427357601002e-14,
+      "limit": 1e-05,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "heat energy independent quadrature J",
+      "value": 1.5654144647214707e-14,
+      "limit": 1e-05,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "Simulink voltage V",
+      "value": 5.773159728050814e-15,
+      "limit": 1e-06,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "Simulink xn",
+      "value": 5.551115123125783e-16,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "Simulink xp",
+      "value": 5.551115123125783e-16,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "Simulink soc",
+      "value": 6.661338147750939e-16,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "Simulink energy_port_J",
+      "value": 9.237055564881302e-14,
+      "limit": 1e-05,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "Simulink energy_heat_J",
+      "value": 1.5543122344752192e-15,
+      "limit": 1e-05,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "FV 128 to 256 shells V",
+      "value": 3.842688513300274e-05,
+      "limit": 0.0001,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "FV mean fractions",
+      "value": 6.661338147750939e-16,
+      "limit": 1e-08,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "FV versus exact sphere series V",
+      "value": 3.8309579706741204e-05,
+      "limit": 0.0001,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "mean state continuity event 1",
+      "value": 0.0,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "case": "BAT-T02",
+      "check": "mean state continuity event 2",
+      "value": 0.0,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "charge voltage monotonic segment 1",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "discharge voltage monotonic segment 3",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "analytic SOC",
+      "value": 2.886579864025407e-14,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "lithium inventory relative",
+      "value": 3.707826895027799e-14,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "voltage decomposition V",
+      "value": 4.440892098500626e-16,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "heat decomposition W",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "negative irreversible heat W",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "charge/discharge polarization sign W",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "negative operating margin",
+      "value": 0.0,
+      "limit": 0.0,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "port energy independent quadrature J",
+      "value": 1.2989609388114332e-14,
+      "limit": 1e-05,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "heat energy independent quadrature J",
+      "value": 1.887379141862766e-15,
+      "limit": 1e-05,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "Simulink voltage V",
+      "value": 6.217248937900877e-15,
+      "limit": 1e-06,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "Simulink xn",
+      "value": 6.106226635438361e-16,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "Simulink xp",
+      "value": 5.551115123125783e-16,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "Simulink soc",
+      "value": 6.661338147750939e-16,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "Simulink energy_port_J",
+      "value": 6.394884621840902e-14,
+      "limit": 1e-05,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "Simulink energy_heat_J",
+      "value": 6.38378239159465e-16,
+      "limit": 1e-05,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "FV 128 to 256 shells V",
+      "value": 3.858801343037399e-05,
+      "limit": 0.0001,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "FV mean fractions",
+      "value": 8.881784197001252e-16,
+      "limit": 1e-08,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "FV versus exact sphere series V",
+      "value": 3.830689476647109e-05,
+      "limit": 0.0001,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "mean state continuity event 1",
+      "value": 0.0,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "mean state continuity event 2",
+      "value": 0.0,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "mean state continuity event 3",
+      "value": 0.0,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "case": "BAT-T03",
+      "check": "mean state continuity event 4",
+      "value": 0.0,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "discharge voltage monotonic segment 1",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "analytic SOC",
+      "value": 2.942091015256665e-15,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "lithium inventory relative",
+      "value": 1.6146988091250093e-14,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "voltage decomposition V",
+      "value": 4.440892098500626e-16,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "heat decomposition W",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "negative irreversible heat W",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "charge/discharge polarization sign W",
+      "value": 0.0,
+      "limit": 1e-10,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "negative operating margin",
+      "value": 0.0,
+      "limit": 0.0,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "port energy independent quadrature J",
+      "value": 4.973799150320701e-14,
+      "limit": 1e-05,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "heat energy independent quadrature J",
+      "value": 6.106226635438361e-16,
+      "limit": 1e-05,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "Simulink voltage V",
+      "value": 5.329070518200751e-15,
+      "limit": 1e-06,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "Simulink xn",
+      "value": 5.551115123125783e-16,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "Simulink xp",
+      "value": 4.440892098500626e-16,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "Simulink soc",
+      "value": 6.106226635438361e-16,
+      "limit": 1e-09,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "Simulink energy_port_J",
+      "value": 7.105427357601002e-14,
+      "limit": 1e-05,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "Simulink energy_heat_J",
+      "value": 7.216449660063518e-16,
+      "limit": 1e-05,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "FV 128 to 256 shells V",
+      "value": 7.750534913952833e-05,
+      "limit": 0.0001,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "FV mean fractions",
+      "value": 6.661338147750939e-16,
+      "limit": 1e-08,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "FV versus exact sphere series V",
+      "value": 7.682730514568803e-05,
+      "limit": 0.0001,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "mean state continuity event 1",
+      "value": 0.0,
+      "limit": 1e-12,
+      "passed": true
+    },
+    {
+      "case": "BAT-T04",
+      "check": "mean state continuity event 2",
+      "value": 0.0,
+      "limit": 1e-12,
+      "passed": true
+    }
+  ],
+  "cases": [
+    {
+      "id": "BAT-T01",
+      "title": "20秒恒流充电",
+      "segments": [
+        {
+          "segment": 0,
+          "start_s": 0,
+          "end_s": 2,
+          "current_A": 0,
+          "voltage_start_V": 3.7878362620118393,
+          "voltage_end_V": 3.7878362620118393,
+          "soc_start": 0.5000000000000001,
+          "soc_end": 0.5000000000000001,
+          "energy_port_J": 0.0
+        },
+        {
+          "segment": 1,
+          "start_s": 2,
+          "end_s": 22,
+          "current_A": -0.5,
+          "voltage_start_V": 3.815605894279976,
+          "voltage_end_V": 3.816476616850001,
+          "soc_start": 0.5000000000000001,
+          "soc_end": 0.5010046766711035,
+          "energy_port_J": -38.1604135819798
+        },
+        {
+          "segment": 2,
+          "start_s": 22,
+          "end_s": 30,
+          "current_A": 0,
+          "voltage_start_V": 3.788713639920456,
+          "voltage_end_V": 3.788713639920456,
+          "soc_start": 0.5010046766711035,
+          "soc_end": 0.5010046766711035,
+          "energy_port_J": 0.0
+        }
+      ],
+      "transitions": [
+        {
+          "time_s": 2.0,
+          "current_before_A": 0.0,
+          "current_after_A": -0.5,
+          "project_left_V": 3.7878362620118393,
+          "project_right_V": 3.815605894279976,
+          "diffusion_left_V": 3.7878362620118393,
+          "diffusion_right_V": 3.809772293587489
+        },
+        {
+          "time_s": 22.0,
+          "current_before_A": -0.5,
+          "current_after_A": 0.0,
+          "project_left_V": 3.816476616850001,
+          "project_right_V": 3.788713639920456,
+          "diffusion_left_V": 3.813326519578424,
+          "diffusion_right_V": 3.791394225736055
+        }
+      ],
+      "soc_initial": 0.5000000000000001,
+      "soc_final": 0.5010046766711035,
+      "voltage_min_V": 3.7878362620118393,
+      "voltage_max_V": 3.816476616850001,
+      "heat_min_W": 0.0,
+      "heat_max_W": 0.0033996807394255724,
+      "charge_in_Ah": 0.002777777777777778,
+      "charge_out_Ah": 0.0,
+      "energy_input_Wh": 0.010600114883883278,
+      "energy_output_Wh": 0.0,
+      "heat_integral_J": 0.06782337035383122,
+      "max_project_diffusion_mV": 5.83360069248684,
+      "mesh_change_mV": 0.03815508419258151,
+      "python_accepted_steps": 3009,
+      "python_derivative_evaluations": 45141,
+      "simulink_derivative_evaluations": 18021,
+      "output_rows": 3003,
+      "max_simulink_voltage_error_V": 6.217248937900877e-15,
+      "checks_passed": true
+    },
+    {
+      "id": "BAT-T02",
+      "title": "20秒恒流放电",
+      "segments": [
+        {
+          "segment": 0,
+          "start_s": 0,
+          "end_s": 2,
+          "current_A": 0,
+          "voltage_start_V": 3.7878362620118393,
+          "voltage_end_V": 3.7878362620118393,
+          "soc_start": 0.5000000000000001,
+          "soc_end": 0.5000000000000001,
+          "energy_port_J": 0.0
+        },
+        {
+          "segment": 1,
+          "start_s": 2,
+          "end_s": 22,
+          "current_A": 0.5,
+          "voltage_start_V": 3.7600245306541735,
+          "voltage_end_V": 3.7591388691604055,
+          "soc_start": 0.5000000000000001,
+          "soc_end": 0.4989953233288966,
+          "energy_port_J": 37.59581809891177
+        },
+        {
+          "segment": 2,
+          "start_s": 22,
+          "end_s": 30,
+          "current_A": 0,
+          "voltage_start_V": 3.7869576085148755,
+          "voltage_end_V": 3.7869576085148755,
+          "soc_start": 0.4989953233288966,
+          "soc_end": 0.4989953233288966,
+          "energy_port_J": 0.0
+        }
+      ],
+      "transitions": [
+        {
+          "time_s": 2.0,
+          "current_before_A": 0.0,
+          "current_after_A": 0.5,
+          "project_left_V": 3.7878362620118393,
+          "project_right_V": 3.7600245306541735,
+          "diffusion_left_V": 3.7878362620118393,
+          "diffusion_right_V": 3.7659002304361895
+        },
+        {
+          "time_s": 22.0,
+          "current_before_A": 0.5,
+          "current_after_A": 0.0,
+          "project_left_V": 3.7591388691604055,
+          "project_right_V": 3.7869576085148755,
+          "diffusion_left_V": 3.7623229481941096,
+          "diffusion_right_V": 3.784262986945487
+        }
+      ],
+      "soc_initial": 0.5000000000000001,
+      "soc_final": 0.4989953233288966,
+      "voltage_min_V": 3.7591388691604055,
+      "voltage_max_V": 3.7878362620118393,
+      "heat_min_W": 0.0,
+      "heat_max_W": 0.018669487487456785,
+      "charge_in_Ah": 0.0,
+      "charge_out_Ah": 0.002777777777777778,
+      "energy_input_Wh": 0.0,
+      "energy_output_Wh": 0.01044328280525327,
+      "heat_integral_J": 0.3732061206195432,
+      "max_project_diffusion_mV": 5.875699782015964,
+      "mesh_change_mV": 0.03842688513300274,
+      "python_accepted_steps": 3009,
+      "python_derivative_evaluations": 45141,
+      "simulink_derivative_evaluations": 18021,
+      "output_rows": 3003,
+      "max_simulink_voltage_error_V": 5.773159728050814e-15,
+      "checks_passed": true
+    },
+    {
+      "id": "BAT-T03",
+      "title": "各10秒充放电切换",
+      "segments": [
+        {
+          "segment": 0,
+          "start_s": 0,
+          "end_s": 2,
+          "current_A": 0,
+          "voltage_start_V": 3.7878362620118393,
+          "voltage_end_V": 3.7878362620118393,
+          "soc_start": 0.5000000000000001,
+          "soc_end": 0.5000000000000001,
+          "energy_port_J": 0.0
+        },
+        {
+          "segment": 1,
+          "start_s": 2,
+          "end_s": 12,
+          "current_A": -0.5,
+          "voltage_start_V": 3.815605894279976,
+          "voltage_end_V": 3.816041409514487,
+          "soc_start": 0.5000000000000001,
+          "soc_end": 0.5005023383355518,
+          "energy_port_J": -19.079118387896767
+        },
+        {
+          "segment": 2,
+          "start_s": 12,
+          "end_s": 15,
+          "current_A": 0,
+          "voltage_start_V": 3.788275110126949,
+          "voltage_end_V": 3.788275110126949,
+          "soc_start": 0.5005023383355518,
+          "soc_end": 0.5005023383355518,
+          "energy_port_J": 0.0
+        },
+        {
+          "segment": 3,
+          "start_s": 15,
+          "end_s": 25,
+          "current_A": 0.5,
+          "voltage_start_V": 3.76046686705213,
+          "voltage_end_V": 3.7600245306541735,
+          "soc_start": 0.5005023383355518,
+          "soc_end": 0.5000000000000002,
+          "energy_port_J": 18.801228631384014
+        },
+        {
+          "segment": 4,
+          "start_s": 25,
+          "end_s": 30,
+          "current_A": 0,
+          "voltage_start_V": 3.7878362620118393,
+          "voltage_end_V": 3.7878362620118393,
+          "soc_start": 0.5000000000000002,
+          "soc_end": 0.5000000000000002,
+          "energy_port_J": 0.0
+        }
+      ],
+      "transitions": [
+        {
+          "time_s": 2.0,
+          "current_before_A": 0.0,
+          "current_after_A": -0.5,
+          "project_left_V": 3.7878362620118393,
+          "project_right_V": 3.815605894279976,
+          "diffusion_left_V": 3.7878362620118393,
+          "diffusion_right_V": 3.809772293587489
+        },
+        {
+          "time_s": 12.0,
+          "current_before_A": -0.5,
+          "current_after_A": 0.0,
+          "project_left_V": 3.816041409514487,
+          "project_right_V": 3.788275110126949,
+          "diffusion_left_V": 3.8122176896174618,
+          "diffusion_right_V": 3.7902842488954445
+        },
+        {
+          "time_s": 15.0,
+          "current_before_A": 0.0,
+          "current_after_A": 0.5,
+          "project_left_V": 3.788275110126949,
+          "project_right_V": 3.76046686705213,
+          "diffusion_left_V": 3.789353369279619,
+          "diffusion_right_V": 3.7674189649790466
+        },
+        {
+          "time_s": 25.0,
+          "current_before_A": 0.5,
+          "current_after_A": 0.0,
+          "project_left_V": 3.7600245306541735,
+          "project_right_V": 3.7878362620118393,
+          "diffusion_left_V": 3.7644748892760815,
+          "diffusion_right_V": 3.7864124682723443
+        }
+      ],
+      "soc_initial": 0.5000000000000001,
+      "soc_final": 0.5000000000000002,
+      "voltage_min_V": 3.7600245306541735,
+      "voltage_max_V": 3.816041409514487,
+      "heat_min_W": 0.0,
+      "heat_max_W": 0.01865113205488755,
+      "charge_in_Ah": 0.001388888888888889,
+      "charge_out_Ah": 0.001388888888888889,
+      "energy_input_Wh": 0.005299755107749102,
+      "energy_output_Wh": 0.005222563508717782,
+      "heat_integral_J": 0.22033462101410323,
+      "max_project_diffusion_mV": 6.952097926916423,
+      "mesh_change_mV": 0.03858801343037399,
+      "python_accepted_steps": 3013,
+      "python_derivative_evaluations": 45205,
+      "simulink_derivative_evaluations": 18023,
+      "output_rows": 3005,
+      "max_simulink_voltage_error_V": 6.217248937900877e-15,
+      "cycle_energy_audit": {
+        "input_J": 19.079118387896767,
+        "output_J": 18.801228631384014,
+        "net_electrical_input_J": 0.27788975651275294,
+        "heat_reported_J": 0.22033462101410511,
+        "unclosed_energy_J": 0.057555135498647825,
+        "integral_mean_to_surface_voltage_loss_J": 0.05852913323554147,
+        "reversible_heat_integral_J": 0.0009739977368940084,
+        "expected": "For a closed isothermal cycle of the declared physical states, net electrical input equals total heat.",
+        "status": "not_closed",
+        "qualification": "Post-run physical diagnostic, not part of the predeclared numerical checks. No fabricated acceptance threshold."
+      },
+      "checks_passed": true
+    },
+    {
+      "id": "BAT-T04",
+      "title": "5秒放电脉冲",
+      "segments": [
+        {
+          "segment": 0,
+          "start_s": 0,
+          "end_s": 2,
+          "current_A": 0,
+          "voltage_start_V": 3.7878362620118393,
+          "voltage_end_V": 3.7878362620118393,
+          "soc_start": 0.5000000000000001,
+          "soc_end": 0.5000000000000001,
+          "energy_port_J": 0.0
+        },
+        {
+          "segment": 1,
+          "start_s": 2,
+          "end_s": 7,
+          "current_A": 1,
+          "voltage_start_V": 3.732248843045711,
+          "voltage_end_V": 3.731802538359242,
+          "soc_start": 0.5000000000000001,
+          "soc_end": 0.49949766166441645,
+          "energy_port_J": 18.660128595200327
+        },
+        {
+          "segment": 2,
+          "start_s": 7,
+          "end_s": 30,
+          "current_A": 0,
+          "voltage_start_V": 3.787397094999634,
+          "voltage_end_V": 3.787397094999634,
+          "soc_start": 0.49949766166441645,
+          "soc_end": 0.49949766166441645,
+          "energy_port_J": 0.0
+        }
+      ],
+      "transitions": [
+        {
+          "time_s": 2.0,
+          "current_before_A": 0.0,
+          "current_after_A": 1.0,
+          "project_left_V": 3.7878362620118393,
+          "project_right_V": 3.732248843045711,
+          "diffusion_left_V": 3.7878362620118393,
+          "diffusion_right_V": 3.7440444358522487
+        },
+        {
+          "time_s": 7.0,
+          "current_before_A": 1.0,
+          "current_after_A": 0.0,
+          "project_left_V": 3.731802538359242,
+          "project_right_V": 3.787397094999634,
+          "diffusion_left_V": 3.7406298967248586,
+          "diffusion_right_V": 3.7844292159499116
+        }
+      ],
+      "soc_initial": 0.5000000000000001,
+      "soc_final": 0.49949766166441645,
+      "voltage_min_V": 3.731802538359242,
+      "voltage_max_V": 3.7878362620118393,
+      "heat_min_W": 0.0,
+      "heat_max_W": 0.059294970628691185,
+      "charge_in_Ah": 0.0,
+      "charge_out_Ah": 0.001388888888888889,
+      "energy_input_Wh": 0.0,
+      "energy_output_Wh": 0.005183369054222313,
+      "heat_integral_J": 0.2964270118652513,
+      "max_project_diffusion_mV": 11.795592806537858,
+      "mesh_change_mV": 0.07750534913952833,
+      "python_accepted_steps": 3009,
+      "python_derivative_evaluations": 45141,
+      "simulink_derivative_evaluations": 18027,
+      "output_rows": 3003,
+      "max_simulink_voltage_error_V": 5.329070518200751e-15,
+      "rest_recovery": {
+        "start_s": 7,
+        "end_s": 30,
+        "project_mV": 0.0,
+        "diffusion_mV": 2.5181528744471215,
+        "diffusion_start_V": 3.7844292159499116,
+        "diffusion_end_V": 3.7869473688243587,
+        "project_start_V": 3.787397094999634
+      },
+      "checks_passed": true
+    }
+  ],
+  "checks_count": 87,
+  "checks_passed": 87,
+  "interpretation": "Numerical implementation checks are separate from physical transient adequacy; model has no diffusion memory.",
+  "analytical_reference": "Spherical constant-flux diffusion eigenfunction series, 1000 nonzero roots tan(lambda)=lambda; t=0 exact limit."
+}

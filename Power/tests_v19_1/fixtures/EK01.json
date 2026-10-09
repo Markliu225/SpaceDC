@@ -1,0 +1,63 @@
+{
+  "id": "EK01",
+  "project": "EK01",
+  "asset": {
+    "capacity_Ah": 2.0,
+    "soc_grid": [
+      0.1,
+      0.5,
+      0.9
+    ],
+    "temperature_grid": [
+      25.0
+    ],
+    "ocv_table": [
+      [
+        3.3,
+        3.7,
+        4.1
+      ]
+    ],
+    "r0_table": [
+      [
+        0.05,
+        0.05,
+        0.05
+      ]
+    ],
+    "r1_table": [
+      [
+        0.02,
+        0.02,
+        0.02
+      ]
+    ],
+    "tau_table": [
+      [
+        10.0,
+        10.0,
+        10.0
+      ]
+    ],
+    "provenance": "Analytical test asset A"
+  },
+  "initial": [
+    0.6,
+    0
+  ],
+  "dt_s": 0.1,
+  "stop_s": 300,
+  "max_step_s": 0.1,
+  "n_series": 1,
+  "n_parallel": 1,
+  "freeze": false,
+  "kind": "ekf",
+  "area_m2": 2.0,
+  "solar_efficiency": 0.25,
+  "distribution_efficiency": 0.9,
+  "charge_limit_A": -3.0,
+  "discharge_limit_A": 5.0,
+  "v_min_V": 2.8,
+  "v_max_V": 4.3,
+  "input_sha256": "8b8b500cf129abaa75045c75792191350506414b4a45b0aeda8523e3bc36037d"
+}

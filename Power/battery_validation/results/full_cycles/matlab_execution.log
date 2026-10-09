@@ -1,0 +1,12 @@
+START full-cycle segment 1
+DONE segment 1 rows=36001 seconds=2.75
+START full-cycle segment 2
+DONE segment 2 rows=36001 seconds=1.13
+START full-cycle segment 3
+DONE segment 3 rows=36001 seconds=1.00
+START full-cycle segment 4
+DONE segment 4 rows=36001 seconds=0.93
+START full-cycle segment 5
+DONE segment 5 rows=36001 seconds=1.16
+START full-cycle segment 6
+DONE segment 6 rows=36001 seconds=0.91

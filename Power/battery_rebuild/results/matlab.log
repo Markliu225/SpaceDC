@@ -1,0 +1,12 @@
+[警告: The model name 'sdtwin_battery_ekf_rls_1rc' is shadowing another name in the MATLAB workspace or path. Type "which -all sdtwin_battery_ekf_rls_1rc" at the command line to
+find the other uses of this name. You should change the name of the model to avoid problems.] 
+[> 位置：run_simulink (第 6 行)] 
+DRIFT 6001 rows
+EXACT 6001 rows
+FIXED_EKF 6001 rows
+MEASURED_03 1200 rows
+MEASURED_04 1200 rows
+MEASURED_06 1200 rows
+MEASURED_08 1200 rows
+NOISE 6001 rows
+REST 6001 rows

@@ -1,0 +1,206 @@
+{
+  "date": "2026-10-08",
+  "project_count": 10,
+  "run_count": 26,
+  "compared_samples": 70554,
+  "passed": 10,
+  "design_unchanged": true,
+  "accepted_plan_unchanged": true,
+  "inputs_hash_verified": true,
+  "exact_csv_subtraction": true,
+  "only_event_sample_aligned": [
+    27360
+  ],
+  "native_model_count": 11,
+  "representative_models": 10,
+  "numerical_runtime": {
+    "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "numpy": "2.4.6",
+    "scipy": "1.17.1"
+  },
+  "runs": [
+    {
+      "id": "PV01_TIME",
+      "rows": 601,
+      "stop_s": 60,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "PV01_ANGLE_0",
+      "rows": 2,
+      "stop_s": 0.1,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "PV01_ANGLE_60",
+      "rows": 2,
+      "stop_s": 0.1,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "PV01_ANGLE_90",
+      "rows": 2,
+      "stop_s": 0.1,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "PV01_ANGLE_180",
+      "rows": 2,
+      "stop_s": 0.1,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "PV01_AREA",
+      "rows": 2,
+      "stop_s": 0.1,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "BT01_1S1P_I+0",
+      "rows": 2,
+      "stop_s": 0.1,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "BT01_1S1P_I+2",
+      "rows": 2,
+      "stop_s": 0.1,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "BT01_1S1P_I-2",
+      "rows": 2,
+      "stop_s": 0.1,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "BT01_4S2P_I+0",
+      "rows": 2,
+      "stop_s": 0.1,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "BT01_4S2P_I+2",
+      "rows": 2,
+      "stop_s": 0.1,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "BT01_4S2P_I-2",
+      "rows": 2,
+      "stop_s": 0.1,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "BT02",
+      "rows": 601,
+      "stop_s": 60,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "BT02_REFINE",
+      "rows": 1201,
+      "stop_s": 60,
+      "dt_s": 0.05,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "BT02_FINE",
+      "rows": 2401,
+      "stop_s": 60,
+      "dt_s": 0.025,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "BT03",
+      "rows": 801,
+      "stop_s": 80,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "BT05",
+      "rows": 801,
+      "stop_s": 80,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "BT04_T0",
+      "rows": 601,
+      "stop_s": 60,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "BT04_T25",
+      "rows": 601,
+      "stop_s": 60,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "BT04_T50",
+      "rows": 601,
+      "stop_s": 60,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "BT06",
+      "rows": 54721,
+      "stop_s": 54720,
+      "dt_s": 1.0,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "BT07_P04",
+      "rows": 1200,
+      "stop_s": 119.9,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "BT07_P06",
+      "rows": 1200,
+      "stop_s": 119.9,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "BT07_P08",
+      "rows": 1200,
+      "stop_s": 119.9,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "EK01",
+      "rows": 3001,
+      "stop_s": 300,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    },
+    {
+      "id": "PA01",
+      "rows": 1001,
+      "stop_s": 100,
+      "dt_s": 0.1,
+      "exact_saved_subtraction": true
+    }
+  ]
+}

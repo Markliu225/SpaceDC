@@ -1,0 +1,52 @@
+[
+  {
+    "case": "BT02",
+    "time_s": 10.0,
+    "current_left_A": 0.0,
+    "current_right_A": 2.0,
+    "voltage_left_V": 3.8,
+    "voltage_right_V": 3.6999999999999997,
+    "jump_V": -0.10000000000000009,
+    "expected_jump_V": -0.1
+  },
+  {
+    "case": "BT02",
+    "time_s": 30.0,
+    "current_left_A": 2.0,
+    "current_right_A": 0.0,
+    "voltage_left_V": 3.6598578557739168,
+    "voltage_right_V": 3.759857855773917,
+    "jump_V": 0.10000000000000009,
+    "expected_jump_V": 0.1
+  },
+  {
+    "case": "BT03",
+    "time_s": 10.0,
+    "current_left_A": 0.0,
+    "current_right_A": -2.0,
+    "voltage_left_V": 3.8,
+    "voltage_right_V": 3.9,
+    "jump_V": 0.10000000000000009,
+    "expected_jump_V": 0.1
+  },
+  {
+    "case": "BT03",
+    "time_s": 30.0,
+    "current_left_A": -2.0,
+    "current_right_A": 2.0,
+    "voltage_left_V": 3.9401421442260824,
+    "voltage_right_V": 3.7401421442260823,
+    "jump_V": -0.20000000000000018,
+    "expected_jump_V": -0.2
+  },
+  {
+    "case": "BT03",
+    "time_s": 50.0,
+    "current_left_A": 2.0,
+    "current_right_A": 0.0,
+    "voltage_left_V": 3.67009419710338,
+    "voltage_right_V": 3.77009419710338,
+    "jump_V": 0.10000000000000009,
+    "expected_jump_V": 0.1
+  }
+]

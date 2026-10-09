@@ -1,0 +1,105 @@
+MATLAB worker ready
+JOB job_001.m
+错误使用 run_suite (第 13 行)
+block_diagram 没有名为 'UserData' 的参数
+
+出错 run_worker (第 11 行)
+   eval(fileread(fullfile(jobs(j).folder,jobs(j).name)));result=struct('ok',true);
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+JOB job_002.m
+错误使用 run_suite (第 13 行)
+block_diagram 没有名为 'UserData' 的参数
+
+出错 run_worker (第 11 行)
+   eval(fileread(fullfile(jobs(j).folder,jobs(j).name)));result=struct('ok',true);
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+JOB job_003.m
+START BT02 stop 60.0 maxstep 0.1
+错误使用 run_suite (第 15 行)
+多种原因导致错误。
+
+出错 run_worker (第 11 行)
+   eval(fileread(fullfile(jobs(j).folder,jobs(j).name)));result=struct('ok',true);
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+原因:
+    错误使用 run_suite (第 15 行)
+    模块 'sdtwin_power_v191/Physical inputs' 的配置无效。无法在最终工作区数据值后外插输出值，因为未启用插值。
+    
+    出错 run_worker (第 11 行)
+       eval(fileread(fullfile(jobs(j).folder,jobs(j).name)));result=struct('ok',true);
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    Suggested Actions:
+        • 启用插值。 - Fix
+    错误使用 run_suite (第 15 行)
+    'sdtwin_power_v191/Solar upper power P2' 中的表达式: u(1)*max(0,u(2))*solar_gain
+    有语法错误
+    
+    出错 run_worker (第 11 行)
+       eval(fileread(fullfile(jobs(j).folder,jobs(j).name)));result=struct('ok',true);
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+JOB job_004.m
+START BT02 stop 60.0 maxstep 0.1
+DONE BT02 601 rows in 3.9 s
+JOB job_005.m
+[警告: The model name 'sdtwin_power_v191' is shadowing another name in the MATLAB workspace or path. Type "which -all sdtwin_power_v191" at
+the command line to find the other uses of this name. You should change the name of the model to avoid problems.] 
+[> 位置：build_model (第 3 行)
+位置: run_suite (第 5 行)
+位置: run_worker (第 11 行)] 
+START PV01_TIME stop 60.0 maxstep 0.1
+DONE PV01_TIME 601 rows in 1.2 s
+START PV01_ANGLE_0 stop 0.1 maxstep 0.1
+DONE PV01_ANGLE_0 2 rows in 0.3 s
+START PV01_ANGLE_60 stop 0.1 maxstep 0.1
+DONE PV01_ANGLE_60 2 rows in 0.3 s
+START PV01_ANGLE_90 stop 0.1 maxstep 0.1
+DONE PV01_ANGLE_90 2 rows in 0.2 s
+START PV01_ANGLE_180 stop 0.1 maxstep 0.1
+DONE PV01_ANGLE_180 2 rows in 0.2 s
+START PV01_AREA stop 0.1 maxstep 0.1
+DONE PV01_AREA 2 rows in 0.2 s
+START BT01_1S1P_I+0 stop 0.1 maxstep 0.1
+DONE BT01_1S1P_I+0 2 rows in 0.2 s
+START BT01_1S1P_I+2 stop 0.1 maxstep 0.1
+DONE BT01_1S1P_I+2 2 rows in 0.2 s
+START BT01_1S1P_I-2 stop 0.1 maxstep 0.1
+DONE BT01_1S1P_I-2 2 rows in 0.2 s
+START BT01_4S2P_I+0 stop 0.1 maxstep 0.1
+DONE BT01_4S2P_I+0 2 rows in 0.2 s
+START BT01_4S2P_I+2 stop 0.1 maxstep 0.1
+DONE BT01_4S2P_I+2 2 rows in 0.2 s
+START BT01_4S2P_I-2 stop 0.1 maxstep 0.1
+DONE BT01_4S2P_I-2 2 rows in 0.2 s
+START BT02 stop 60.0 maxstep 0.1
+DONE BT02 601 rows in 0.8 s
+START BT02_REFINE stop 60.0 maxstep 0.05
+DONE BT02_REFINE 1201 rows in 1.4 s
+START BT02_FINE stop 60.0 maxstep 0.025
+DONE BT02_FINE 2401 rows in 2.4 s
+START BT03 stop 80.0 maxstep 0.1
+DONE BT03 801 rows in 0.9 s
+START BT05 stop 80.0 maxstep 0.1
+DONE BT05 801 rows in 0.9 s
+START BT04_T0 stop 60.0 maxstep 0.1
+DONE BT04_T0 601 rows in 0.8 s
+START BT04_T25 stop 60.0 maxstep 0.1
+DONE BT04_T25 601 rows in 0.8 s
+START BT04_T50 stop 60.0 maxstep 0.1
+DONE BT04_T50 601 rows in 0.7 s
+START BT06 stop 54720.0 maxstep 1
+DONE BT06 54721 rows in 48.7 s
+START BT07_P04 stop 119.9 maxstep 0.1
+DONE BT07_P04 1200 rows in 1.4 s
+START BT07_P06 stop 119.9 maxstep 0.1
+DONE BT07_P06 1200 rows in 1.4 s
+START BT07_P08 stop 119.9 maxstep 0.1
+DONE BT07_P08 1200 rows in 1.3 s
+START EK01 stop 300.0 maxstep 0.1
+DONE EK01 3001 rows in 3.7 s
+START PA01 stop 100.0 maxstep 0.1
+DONE PA01 1001 rows in 2.2 s
+JOB job_006.m
+JOB job_007.m
+JOB job_008.m
+JOB job_009.m
+MATLAB worker stopped

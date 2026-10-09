@@ -1,0 +1,8 @@
+{错误使用 build_model (第 42 行)
+block_diagram 没有名为 'UserDataPersistent' 的参数
+
+出错 run_suite (第 5 行)
+load_case(ids{1});model=build_model;
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ - 显示完整栈跟踪
+} 
+[警告: 无法关闭模型 'sdtwin_power_v191'，因为它已更改。要保存更改，请使用 close_system('sdtwin_power_v191',1)。要放弃更改，请使用 close_system('sdtwin_power_v191',0)。] 

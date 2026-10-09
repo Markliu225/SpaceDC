@@ -1,0 +1,404 @@
+0 [Normal] 
+1 [Normal] 
+2 [Normal] 
+3 [Normal] 
+4 [Normal] NTU SPACE DATA CENTER
+5 [Normal] SDTwin 供电模块
+6 [Normal] 软件模块设计报告
+7 [Normal] 太阳能板 • 降阶单粒子电池模型 • 功率分配
+8 [Normal] 南洋理工大学计算与数据科学学院
+9 [Normal] 
+10 [Normal] 版本记录
+11 [Normal] 
+12 [Normal] 
+13 [Heading 1] 文档概述
+14 [Heading 2] 目的
+15 [Normal] 本报告设计单星计算节点的供电模型。物理对象为太阳能板、电池组、电源控制器和配电器。模型根据轨道日照和计算节点用电需求，计算太阳发电、电池充放电、负载实际获得的电力，以及电池和配电器的发热。电池采用降阶单粒子模型 SPM，保留正负极各一个平均锂含量状态，并与热域的电池集总温度耦合。
+16 [Heading 2] 范围
+17 [Normal] 本文给出模型、模块职责、接口和单星场景配置。读者可据此准备器件参数并实现求解模块。文中的资产字段和模型绑定属于本项目设计，尚不代表现有演示程序已经实现。目标电芯及其电化学参数包由场景配置指定，容量和工作倍率采用该电芯的参数。
+18 [Heading 2] 预期读者
+19 [Normal] 本报告面向供电模型开发人员、热与计算模块集成人员，以及准备器件参数和配置仿真场景的研究人员。第 4 章说明物理模型，第 5 章说明函数怎样实现，第 6 章给出调用约定。
+20 [Heading 2] 术语与约定
+21 [Engineering Caption] 表 1 术语与模型约定
+22 [Heading 1] 需求与设计目标
+23 [Heading 2] 场景仿真模型组装
+24 [Normal] 供电模块应根据用户配置的场景和 SimReady 资产，读取太阳能板、电池组、电源控制器和配电器所采用的组件模型及参数，按照场景中的电气连接组装器件方程和功率平衡关系，并设置电池初始状态。组件型号、参数或连接改变后，组装结果应相应更新。
+25 [Normal] P-04 要求接入同一时刻的轨道日照、负载需求和组件温度，并用组件实例标识关联各域。P-05 要求保留资产与模型版本、参数来源、场景覆盖值、初始状态和数值配置，使组装结果可追溯、仿真可复现。
+26 [Heading 2] 组件仿真需求
+27 [Normal] 组装完成后，各组件应按表 2 计算其物理状态和输出，确定计算节点实际得到的电力，以及供电过程引起的电池状态变化和发热。
+28 [Engineering Caption] 表 2 供电组件仿真需求
+29 [Heading 1] 总体设计
+30 [Heading 2] 系统架构
+31 [Normal] 供电系统由太阳能板、电池组、电源控制器和配电器组成，并向计算节点供电。图 1 给出器件连接。轨道日照与姿态是太阳能板的环境输入，其余带功率标记的连线是电气连接。电池端口的双向箭头表示充电和放电，电源控制器直接连接配电器。
+32 [Normal] 
+33 [Engineering Caption] 图 1 供电器件及电功率连接
+34 [Normal] 第 4 章的模型计算图中各器件的电功率、电池状态变化和发热。软件中由 solve_power_allocation 完成供电系统的整体求值，调用太阳能板和电池函数，并在内部执行控制器规则与配电计算。场景计算向它传入同一时刻的环境、负载请求和状态，SimReady 资产提供器件参数与连接，三维显示读取已保存结果。
+35 [Heading 2] 软件包结构
+36 [Normal] 供电模块按数据定义、参数解析、太阳能板、电池、整体功率分配和保护事件组织源文件。以下为拟议的软件包结构，尚待实现。以 .py 结尾的条目是文件，其下列出该文件中的函数。
+37 [Normal] types.py 定义第 5.1 节的数据对象，各计算文件使用这些对象传递参数、状态和结果。__init__.py 统一导出第 6 章及附录 A 中的公共类型和函数。allocation.py 调用 solar.py 和 battery.py，并在 solve_power_allocation 内完成电源控制器和配电器的计算。各文件的函数说明见第 5 章。
+38 [Normal] SimReady 资产保存器件参数及模型引用，场景配置保存实例、连接、初值和参数覆盖值。它们由项目的数据与配置部分管理，并通过 load_power_parameters 传入供电模型；字段及参数来源见第 9 章。
+39 [Normal] 图中各器件与第 4 章模型、第 5 章函数的对应关系见表 3。太阳能板和电池各有求值函数；控制器与配电器的计算共同包含在供电系统整体求值函数中。初始化和保护状态更新在相应时机调用。
+40 [Engineering Caption] 表 3 供电器件、模型与函数的对应关系
+41 [Heading 2] 共用数据流
+42 [Normal] 太阳能板和电池组连接电源控制器，控制器直接连接配电器，配电器向计算节点供电。电池吸收太阳余电或补足供电缺口。整个电路遵循太阳功率与电池端口功率之和等于实际负载功率与配电损耗之和，式 P1 在第 4.1 节给出。
+43 [Normal] 
+44 [Engineering Caption] 图 2 供电域的共用输入与输出
+45 [Normal] 各输入对应同一仿真时刻。Power 负责两个锂状态和负载保护状态，Thermal 唯一维护电池温度。一次试算先求电流及热源，再把热源交给热域计算温度变化率，共用求解过程一起积分这些连续状态。轨道提供日照、位置和姿态，不重复运行原有单面板温度模型。
+46 [Heading 1] 供电物理建模基础
+47 [Heading 2] 总体功率平衡与状态
+48 [Normal] 整个供电电路先满足端口功率守恒：
+49 [Normal]  是太阳能板实际输出， 是电池端口输出， 是负载实际获得的功率， 是配电损耗，单位均为 。电池放电时 ，充电时 。例如太阳输出 ，电池吸收 ，配电损耗 ，则负载获得 ，式 P1 为 。
+50 [Normal] 电池内部发热记为 ，供热域使用。式 P1 已使用电池端口的电功率，不再重复扣除内部发热。本版控制器忽略损耗，太阳能板和配电器采用固定效率；电池保留电化学与温度耦合。辐射不影响供电模型。
+51 [Normal] 本版包含连续状态方程和代数关系。连续状态只有电池负极平均锂占比和正极平均锂占比。电流表示锂转移的快慢，因此决定这两个状态随时间的变化。端电压、颗粒表面锂占比、太阳输出和器件热源均由当前状态计算，不各自增加一个积分状态。
+52 [Normal] 电池温度是热域状态。温度改变扩散系数、电极反应和端电压，进而改变相同用电需求下所需的电流和电池发热。电池热源又影响温度，这构成供电域与热域的耦合。求解时使用同一时刻的状态，第 8 节说明如何避免将上一时刻的温度长期代入当前电池计算。
+53 [Normal] 本版太阳能板采用固定最大功率点效率，控制器采用理想准静态 MPPT，配电器采用固定效率。它们用于轨道尺度的能量与供电计算。MPPT 开关波形、母线电容和电压纹波不在这一模型内。电池内部采用文献中的二次浓度分布近似，保留两极材料和反应参数，不增加电解液空间离散。[1–4]
+54 [Heading 2] 太阳能板和 MPPT
+55 [Normal] 太阳能板的最大发电功率为
+56 [Normal]  是轨道提供的太阳辐照度，单位 ，已包含日食影响。 是太阳方向与板面法线夹角，由姿态和安装方向确定。 是板面收到的辐照度；背向太阳时取零。 是电池片总有效面积，单位 ，是固定几何参数。 是对应光谱下最大功率点的光电转换效率。
+57 [Normal] 控制器采用理想准静态 MPPT：负载和电池能接收全部发电时，实际输出 ；电池满电或达到充电限制时减小实际输出。当前不模拟电路开关和跟踪瞬态。太阳能板热模型始终使用实际 。[1]
+58 [Normal] 日照接口先把板面安装法线从机体系转到惯性系，再与航天器指向太阳的方向计算夹角。调用轨道模块的 sun_intensity 时保持 include_eclipse=True，其输出对应式 P2 的 。日食诊断量可以用于寻找进出影时刻，但不能再次乘入这个辐照度。面积  使用实际有效电池片面积，不能用包含间隙的展示外框面积代替。
+59 [Heading 2] 电源控制器与配电器
+60 [Normal] 控制器连接太阳能板、电池和配电器，配电器再向计算节点供电：
+61 [Normal]  是配电器入口功率，单位 。 是配电器和连接线路的效率，大于 0 且不超过 1。第一行分配太阳与电池的电力，后两行计算负载用电和配电发热。入口 、效率 0.90 时，负载得到 ，发热 。三行合并即为式 P1。
+62 [Normal] 控制器在本版中承担电力分配规则，不单独建立有储能状态的电路。配电器把控制器输出送到计算节点，并将损耗作为热源输入热域  节点。配电效率覆盖的线路范围必须在参数记录中注明，以免同一段线缆电阻同时计入电池欧姆电阻和配电效率。
+63 [Heading 2] 电池模型
+64 [Normal] 电池模型以单体电流和电池温度为输入，结合当前两极锂状态计算单体端电压、两个锂状态的变化率和电池组热源。供电分配模块负责求电流，热域负责更新温度。
+65 [Heading 3] 单体与电池组
+66 [Normal] SPM 用一个球形颗粒代表负极活性材料，用另一个代表正极。放电时锂离开负极、进入正极。采用文献的二次浓度分布近似后，只需积分两个平均锂含量状态，颗粒表面浓度由代数式计算。[2,3]
+67 [Normal] 先模拟一个单体，再换算到相同单体组成的电池组：
+68 [Normal] 、 是单体电流和端电压，单位 、；、 是整组电流和电压。 是每条支路串联节数， 是并联支路数。本版假设各单体状态和温度相同、并联均流。所有电流均以放电为正、充电为负。
+69 [Heading 3] 锂含量和表面浓度
+70 [Normal] 用 、 表示负极、正极颗粒的平均锂占比，即平均浓度除以该材料的最大浓度。它们无量纲，分别按下式更新：
+71 [Normal]  为时间，单位 。、 是各电极锂占比从 0 变为 1 所对应的电荷量，单位 ，并非电芯铭牌的  容量。放电电流为正，因此负极占比下降、正极上升。两式也保证两个电极之间转移的锂量相等。
+72 [Normal] 电极反应发生在颗粒表面。表面锂占比采用
+73 [Normal] 下标  表示颗粒表面； 是颗粒半径，单位 ； 是固体锂扩散系数，单位 ； 分别表示负极、正极。第二项描述表面与内部的差异：电流越大、颗粒越大或扩散越慢，差异越大。系数 15 来自球形颗粒的二次分布近似。[2,3] 颗粒中心占比为 ，中心与表面都应处于材料允许范围，且该范围须位于 0 与 1 内部。
+74 [Normal] 这两个状态保留了锂在两极间转移的过程。该近似不解析快速脉冲和停流后的扩散松弛。本版面向低至中等倍率工况。需要更强瞬态能力时，可换用四次分布 SPM；电解液浓差明显时再采用 SPMe 或降阶 DFN。
+75 [Heading 3] 端电压
+76 [Normal] 单体端电压等于正负极平衡电位之差，扣除电极反应和欧姆损耗：
+77 [Normal]  是电极在当前表面锂占比和温度下的平衡电位，单位 。 是电极反应造成的电压变化，单位 ，采用对称 Butler–Volmer 关系。[4]  是该单体整个电极的交换电流，单位 ，表示反应进行的容易程度。 是单体欧姆电阻，单位 。
+78 [Normal]  是热域提供的电池温度，单位 。 为气体常数， 为法拉第常数。 是反双曲正弦函数，可直接用数值库计算。放电时两项反应损耗和欧姆压降都降低端电压；充电时电流为负，端电压相应升高。
+79 [Heading 3] 独立发热与集总热模型
+80 [Normal] 先计算一个单体的发热，再乘单体总数：
+81 [Normal] 、 分别是单体和整组发热功率，单位 。第一项是电极反应热，第二项是欧姆热，两者均不小于零。 是固定表面锂占比时，平衡电位差随温度的变化率，单位 。第三项是可逆热，可以为正或负，不能强制置零。当前忽略混合热和副反应热。[5]
+82 [Normal] 例如，单体放电 ，两极反应压降之和为 ，电阻为 ，温度为 ，，则三项分别为 、 和 ，总发热为 。这些数值仅用于解释公式。
+83 [Normal] 整组温度由 Thermal 计算：
+84 [Normal]  是整组热容，单位 ； 是公共散热板温度，单位 ； 是电池到散热板的热阻，单位 。右侧为电池产热减去传向散热板的热量。温度只在热域积分一次，再反馈给式 P6 至 P8。第一版无需 FEM。
+85 [Heading 3] 参数与初始状态
+86 [Normal] 电极电荷量由  确定。 为活性材料体积分数； 为全部有效电极涂覆面积，单位 ； 为电极厚度，单位 ； 为最大锂浓度，单位 。这些参数与颗粒半径、欧姆电阻一起来自目标电芯的材料参数包。
+87 [Normal] 为明确每个函数的形式，本版采用以下参数化：
+88 [Normal] 此处  取该电极表面占比 。 是参考温度，单位 ； 是参考扩散系数； 是参考温度、 时的交换电流。、 是扩散与反应活化能，单位 。第一式计算温度对扩散的影响，第二式还计入已占据和空余锂位点的比例，电解液浓度在本版中视为常数。
+89 [Normal] 第三式用多项式表示所选材料的平衡电位及温度系数。 是幂次编号， 是拟合阶数， 单位 ， 单位 。系数和适用占比范围来自材料试验或所选电芯的参数资产。该形式是材料曲线的参数化，不能仅由电池外形和额定容量推得。式 P8 的  就是正极温度系数多项式减去负极温度系数多项式。
+90 [Normal] 初值  和  来自初始充电状态与温度。需要输出  时，采用 。、 是该电芯允许的  和  对应负极占比，来自同一参数包。整芯  与单个电极占比不能混用。SimReady 资产需包含这些电化学参数和函数；只有几何与材质信息时还不足以运行 SPM。
+91 [Heading 2] 功率分配与器件约束
+92 [Normal] 每步先读取轨道日照、请求功率  和当前 。计算 ，再由  求所需配电入口功率。两者的差额就是电池所需端口功率，通过一条代数方程求单体电流：
+93 [Normal]  完全由式 P6、P7、P10 给出。沿充电或放电方向从零电流开始搜索，先算表面占比和端电压，再比较电压乘电流与目标功率。取首先满足式 P11 且尚未触及电流、电压或锂占比约束的解。允许范围由电芯参数资产给出。
+94 [Normal] 太阳不足时，式 P11 求得正电流，电池补足差额。太阳富余时求得负电流，电池吸收余量。充电达到限制后，采用允许的充电电流，并由  降低太阳实际输出。充电界限沿充电电流增加方向寻找，以首先触及的电流、电压或占比约束为准。放电无法满足需求时，在已接受的事件边界断开计算负载，令 ，剩余太阳电力仍可按同样限制充电。
+95 [Normal] 先检查计算节点启停状态，未启用时直接采用零负载工况。失电后收到新的启动指令才重新尝试供电。确定电流后由式 P5 计算导数，供共用求解器积分，并将  送至热域。积分过程中一旦到达电压、平均、中心或表面占比边界，应在该时刻重新分配电力，不能积分越界后再裁剪状态。
+96 [Normal] 温度超出参数包的适用范围时，模型应报告工况无效或触发场景规定的停止条件。设备保护温度如需作为断电条件，应由目标器件资料单独提供。材料模型的适用范围与器件安全工作范围应分别保存，不能把缺失的保护参数默认为无限制。
+97 [Heading 1] 详细功能设计
+98 [Normal] 本章逐个说明图 1 所示供电系统的实现函数。场景初始化先调用 load_power_parameters。每次供电试算调用 solve_power_allocation，它用 solar_power 求太阳发电上限，再按试探电流调用 battery_response，直到功率平衡或器件限制确定工作状态，随后完成配电计算。事件边界被接受后，才调用 apply_power_event 更新保护状态。
+99 [Heading 2] 公共数据模型
+100 [Normal] 以下类型是拟议的 Python 数据对象。动态记录共用 run_id、instance_id 和 time_s，供电计算记录的 instance_id 为 Sat01。parameters.links 将端口映射到 SolarArray01、Battery01、PDU01 和 Compute01。固定参数不保存运行中的锂状态或温度。
+101 [Engineering Caption] 表 4 供电公共数据对象
+102 [Normal] solar 包含 area_m2、efficiency 和 normal_body[3]。battery 包含 N_s、N_p、R_ohm_ohm、T_ref_K、两极参数 electrodes[n,p]、 端点及有效范围。每极记录 radius_m、active_fraction、electrode_area_m2、thickness_m、c_max_mol_m3、D_ref_m2_s、I0_ref_A、E_D_J_mol、E_I_J_mol，以及长度为  的 b_V 和 d_V_K 数组。字段对应第 4 章的颗粒、材料和反应参数，Q_n_C、Q_p_C 在加载时由电极材料与几何计算。
+103 [Normal] battery.limits 保存 i_min_A、i_max_A、v_min_V、v_max_V、x_n_range[2]、x_p_range[2] 和 T_range_K[2]。区间端点由低到高排列，平均、表面和中心占比都须满足对应材料范围。 端点字段为 x_n_0 和 x_n_100，不与材料有效范围混用。
+104 [Normal] constraint_margins 分别保存电流、电压、平均占比、表面占比和中心占比到各自边界的余量，单位为 、 和无量纲，零表示到达边界。温度适用范围单独以  检查。输入或数值错误返回 valid=False；经确认的物理约束事件返回 valid=True、event_required=True。两种情况都不提供可用于继续积分的端口和导数，也不填零热源冒充成功。仅 valid=True 且 event_required=False 的结果可提供当前积分阶段的功率和热源。
+105 [Heading 2] 参数解析与检查
+106 [Normal] 场景初始化通过本函数，将图 1 中各器件的资产参数和连接整理为第 4 章模型使用的参数。
+107 [Normal] asset_record 提供固定版本的太阳板、电芯和配电参数及来源，scene_record 提供实例、安装、初值、连接和数值设置。函数核对版本和必需字段，应用允许的实例覆盖，换算为 SI 单位，计算两极电荷量，并检查串并联数量、面积、效率、参考参数和系数数组维度。它同时检查初始锂库存、零电流电压和初始温度，不推进状态。
+108 [Normal] 函数返回解析完成的 PowerParameters。缺少材料函数、数值不有限、范围颠倒或初值不相容时，报告字段及原因并拒绝启动。多项式系数从常数项到最高次项排列，两极可使用不同阶数。运行中的温度、锂状态和保护状态不回写资产。第 9 章说明参数来源和覆盖顺序。
+109 [Heading 2] 电池响应计算
+110 [Normal] 本函数实现第 4.4 节的电池电化学与发热计算，由 solve_power_allocation 调用。整体求解需要试探电流，因此同一时刻可多次调用本函数，而电池状态在这些试探之间保持不变。
+111 [Normal] 以 Battery01 为例，资产提供电芯参数和串并联数，实例提供当前锂状态，Thermal 提供该实例的温度，battery_response 按 P4–P8 和 P10 计算该电池的响应。另一电池实例可复用同一函数，但分别传入各自的参数、状态和温度。
+112 [Normal] i_A 是放电为正的单体电流，state 提供 x_n、x_p，T_B_K 来自同一次试算的热域。先用 P10 计算两极扩散系数，再用 P6 求表面占比，检查平均、表面和中心占比。随后在表面占比处求 P10 的交换电流与平衡电位。多项式用 Horner 方法按系数数组求值，正负极温度系数多项式之差给出 P8 的可逆热系数。
+113 [Normal] 材料函数确定后，按 P7 求单体端电压，按 P5 求两个锂状态导数，按 P8 求发热，最后用 P4 换算整组电流、电压和功率。交换电流、扩散系数和温度必须位于有效范围。非法表面占比不能进入平方根，也不能通过裁剪浓度返回成功。电流搜索遇到边界时，调用方缩小允许区间并保留诊断。
+114 [Normal] 函数只读输入并返回 BatteryResponse，不积分浓度、不积分 P9、不锁存断电。单体到整组的换算只执行一次。P9 的温度导数由 Thermal 计算，同一个 Battery01 只有一份温度状态。
+115 [Heading 2] 日照与太阳发电计算
+116 [Normal] 本函数实现第 4.2 节太阳能板的 P2 模型，由 solve_power_allocation 调用，计算当前环境下的发电上限。实际取电量由整体求解中的控制器规则确定。
+117 [Normal] environment 来自同一时刻的轨道日照、位置和姿态。函数从地心太阳位置减去航天器位置并归一化，再把资产中的机体系法线用四元数旋转至 GCRS，计算两个方向的点积。只对浮点舍入造成的微小超界作数值修正，并把背面受照余弦取零。
+118 [Normal] 按 P2 返回 G_S_W_m2 和 P_pv_max_W，不决定实际抽取电力。G_W_m2 对应 sun_intensity 在 include_eclipse=True 下的输出，不能再乘日食比例。方向或法线长度为零、姿态无效、参考系不一致或日照为负时拒绝计算。该函数无状态，太阳温度不改变本版固定效率。
+119 [Heading 2] 供电系统整体求解
+120 [Normal] 本函数是第 3.3 节跨域计算使用的供电域入口。它将太阳能板、电池、电源控制器和配电器的模型联合求解，返回整个供电系统的结果。
+121 [Normal] 函数先调用 solar_power，再依据 state.load_connected 决定实际负载需求。对接通的负载，用 P3 求所需母线功率，从零电流沿充电或放电方向建立到首次器件约束的允许区间，并调用 battery_response 求 P11 的第一个可行电流解。每次试探重新计算表面占比、材料函数和端电压。电流与功率残差分别按 parameters.numerics 检查。控制器忽略自身损耗，配电计算按 P3 将入口功率分为 P_load_W 和 Q_D_W。
+122 [Normal] 太阳有余量而电池限充时，在允许充电电流处求电池功率，再由 P1 确定实际 P_pv_W。已断开的负载保持零母线功率和零负载功率，太阳仍可给电池充电。为判断新启动命令，函数还按当前请求检查接通可行性，返回 can_supply_request，但不改变开关状态。正常结果同时给出四个跨域端口、两个锂状态导数和电池诊断。
+123 [Normal] 只有器件边界计算已确认供电能力不足时，才返回供电失效事件条件。确认时须检查允许电流区间内可供端口功率，不能只检查区间端点是否有根。event_required=True 表示必须先定位并接受边界，不能把该试算直接写入断电锁存或用来跨越边界积分。边界接受后执行第 5.6 节，再在同一时刻重算。未找到有效夹逼区间或求根不收敛应返回数值失败及原因，不能自动解释为供电不足。无法形成有效工作状态时，未定义的功率和导数留空。
+124 [Heading 2] 已接受事件的状态更新
+125 [Normal] 本函数实现第 4.5 节的负载启停与失电保护状态更新，由接受事件边界后的仿真计算调用。它使用整体求解给出的判断，并在更新后由调用方重新求供电结果。
+126 [Normal] state 包含事件时刻已接受的锂状态，event 是该时刻已接受的启停或失电事件，decision 是同一时刻的 PowerResult。函数核对时间、实例和标识，返回新的 PowerState，原样保留 x_n、x_p。accepted=False 的试算事件或 decision.valid=False 的错误结果被拒绝，已处理的命令标识不再执行。supply_loss 还要求结果中已确认相应物理边界，不能由普通数值错误构造。
+127 [Normal] stop 断开负载；supply_loss 断开并设置失电锁存。新 start 仅在 decision.can_supply_request=True 时接通并清除锁存，否则保持断开。同一时刻停止或失电优先于启动，不自动反复重试。更新后在同一时刻重算功率和热源，随后继续积分。连续试步只使用纯求值函数，不调用本函数改变保护状态。
+128 [Heading 1] 公共接口设计
+129 [Heading 2] 通用约定
+130 [Normal] 时间从运行配置中的带时区 UTC 历元起算，time_s 单位为 。动态输入、状态和结果必须属于同一 run_id、Sat01 和同一时刻。长度用 ，温度用 ，电流用 ，电功率和热源用 。电池电流与端口功率以放电为正。数组长度、有限性、时间对齐和物理范围在公共边界检查。
+131 [Normal] Orbit 位置和太阳向量须处于 GCRS，AttitudeEphemeris.quaternions_xyzw 采用 xyzw 顺序并由机体系转至惯性系。sun_intensity 已含日食，solar_power 再处理入射角。轨道原有 power_considering_thermal 同时积分面板温度，本场景停用这条路径。
+132 [Engineering Caption] 表 5 跨域端口与单位
+133 [Normal] 旧演示字段接入时按物理含义和单位映射。充电为正的旧电池字段需转换符号，通用 temperature_k 需明确绑定 Battery01，不能仅凭同名复制。供电无效、数值失败和正常失电分别记录。
+134 [Heading 2] 主要调用接口
+135 [Engineering Caption] 表 6 主要调用接口
+136 [Heading 2] 最小端到端调用示例
+137 [Normal] 下面是接口设计伪代码，不代表已安装的 Python 包。asset_record、scene_record 和 initial_state_fields 来自已检查的场景；environment、P_request_W 和 T_B_K 来自相同时刻的其他域。示例先展示一次正常试算，不在这里单独积分电池温度。
+138 [Normal] battery_derivatives 进入共用状态向量的两个锂分量。thermal_ports 交给相同试算时刻的热域，热域返回包括电池在内的温度导数。所有连续状态一起积分。若 valid=False，先处理输入或数值错误；若 event_required=True，先定位边界，不能继续使用空功率或空导数。
+139 [Normal] 时间步接受后，accepted_state_fields 保存求解器返回的两个锂状态、接受时刻及原有保护字段。若该时刻有已接受事件，boundary_inputs 使用该时刻的轨道、请求和温度，按下例更新保护状态并重算结果。
+140 [Heading 1] 端到端运行流程
+141 [Normal] 先固定资产、模型和参数版本，读取 Sat01 场景，用 load_power_parameters 检查配置并建立 PowerState。初始两极锂库存须相容，电池初温由 Thermal 保存。负载初始连接状态由场景给定，后续启停使用一次性命令。
+142 [Normal] 
+143 [Engineering Caption] 图 3 供电模型的联合运行流程
+144 [Normal] 每次求解器试算先读取当次锂状态和 T_B_K，调用 solve_power_allocation，把返回导数与 Thermal 的温度导数组成同一连续状态向量。日食切换、请求功率变化和器件边界决定分段计算时刻。试算不改保护状态，未接受的结果不进入历史。
+145 [Normal] 定位到已接受的供电边界后，调用 apply_power_event，保留边界时刻的锂状态并修改连接或锁存状态，在同一时刻重新求功率与热源。断开期间继续计算太阳发电、电池充电和散热，只有新的启动事件可以请求恢复供电。
+146 [Normal] 保存太阳可用功率与实际输出、电池电流与端电压、、负载功率、热源和温度，并记录进出日食、限充和断电时刻。
+147 [Heading 1] 数值设计与性能
+148 [Normal] P5 给出两个锂状态常微分方程，P9 属于 Thermal 温度方程组。共用求解器在每个试算阶段同时使用当次浓度和温度；电流、电压与热源在该阶段重新求解。采用自适应 Runge–Kutta 方法；热时间尺度差异明显时可采用隐式方法。solve_ivp 支持按状态分量设置绝对误差容限，因此锂占比和  温度应分别设置。[9]
+149 [Engineering Caption] 表 7 数值方法与控制参数
+150 [Normal] 上述字段归 parameters.numerics，物理参数仍归 solar、battery 和 eta_D。热域温度容差须与共用求解设置一致。Brent 求根要求区间内函数连续、端点已形成有效夹逼；xtol 是电流自变量的容差，不是功率残差。未形成夹逼时先检查区间和器件能力，不能把数值失败当作失电。[8]
+151 [Normal] 主要开销来自电流搜索中反复评估电池材料函数。固定几何和电极电荷量在配置时计算，太阳方向在同一次试算内复用。求解容差和最大步长由运行配置给定。结果保存频率和显示帧率不改变物理积分时间。
+152 [Heading 1] 部署与配置
+153 [Heading 2] 运行环境
+154 [Normal] 拟议实现使用 Python、NumPy 和 SciPy，轨道几何通过现有 Orbit 接口取得。NumPy 处理数组与材料函数，SciPy 提供连续积分和括区间求根。USD 读取只用于资产与场景接入，物理函数接收解析后的普通数据对象，不要求在每次求值时加载几何。
+155 [Normal] 部署配置记录 Python、NumPy、SciPy、Orbit 和 USD 版本，并固定参数文件。
+156 [Heading 2] 安装与解释器配置
+157 [Normal] 在现有 SpaceDC 项目环境中实现第 3.2 节拟议模块，并让编辑器与批处理使用同一解释器。安装入口、依赖清单及场景加载入口随软件包提供。
+158 [Normal] 现有  电池状态更新须替换为本文的两个锂状态积分，Orbit 的旧单面板温度更新也须停用。只有 Thermal 写入 Battery01 温度，显示端只读取已保存状态。数值计算失败、无效参数和正常失电的记录分别保留。
+159 [Heading 2] SimReady 资产与场景组装
+160 [Normal] SimReady/USD 资产提供可复用的几何和元数据。电池电化学模型、供电规则及参数绑定由本项目扩展实现。NVIDIA 文档支持资产参数与连接信息的组织，但不意味着任意电池资产已经包含本报告所需的 SPM 参数或运行行为。[6] USD reference 用于复用资产，场景层保存特定实例的配置覆盖。[7]
+161 [Engineering Caption] 表 8 资产与场景字段
+162 [Normal] 一个 Battery01 实例可以同时绑定 Power 的 SPM 和 Thermal 的  节点。model_id 从受控模型库选择算法，不在 USD 中任意执行代码。同一资产被实例化为两组电池时，两组各自保存锂状态、温度和连接，不能共享可变状态。
+163 [Normal] 以下为场景配置示例，实例名用于对齐三域报告，不代表已有可直接运行的场景文件。卫星根节点为 /World/Sat01，各组件放在其下。电气连接与 USD 几何引用分别配置，几何上相邻的器件仍需显式建立端口连接。
+164 [Engineering Caption] 表 9 Sat01 实例及连接
+165 [Normal] 安装太阳板时保存机体系法线及坐标约定。散热连接由 Thermal 场景配置，电池热源按同一个 Battery01 标识送入该节点。显示用缩放不进入有效面积、电极厚度或热参数计算。现有演示存在展示比例，几何读取应采用工程单位，并按场景变换还原尺寸。
+166 [Heading 2] 参数设置与结果归档
+167 [Normal] 首先选定真实太阳能板、电芯和供配电器件，锁定对应参数版本。其次设置串并联数和安装方向，再选择相容的初始  与温度。最后配置额定范围内的计算负载请求及数值容限。下表说明每类参数应从何处取得，以及更改时需要检查的关系。
+168 [Engineering Caption] 表 10 物理参数来源与检查
+169 [Normal] 解析配置时先加载固定版本的资产和参数包，再应用明确允许的场景覆盖，随后重新计算依赖参数并检查完整性。检查通过后保存一份确定的运行配置。容量、电压和外观不足以唯一确定电化学参数。若资产缺少平衡电位或扩散数据，应报告缺项并补充参数包，不能静默套用其他电芯的数值。
+170 [Normal] 资产记录还应说明参数针对单体、整组还是电极。式 P4 和 P8 已处理串并联换算，不能把整组电阻和整组交换电流再次当作单体量代入。工程设计更换电芯后，需要重新检查电压范围、充放电限制和热容量，而非只替换几何文件。
+171 [Normal] 每次运行归档资产版本、模型版本、解析后的参数、初值、轨道历元、负载工况和求解容限。Battery01 温度仅由 Thermal 更新，SolarArray01 不启用轨道模块的旧热积分。太阳实际电输出不得超过对应吸收能量，初始零电流电压和初始温度应位于参数适用范围内。
+172 [Normal] initial_state_fields 至少给出运行与实例标识、起始 time_s、x_n、x_p、初始 load_connected、trip_latched 和空的 handled_command_ids。相同资产实例化为两组电池时分别创建这组字段。每次接受积分结果后，只把新的锂状态和时刻写入 accepted_state_fields；离散字段保持原值，直到 apply_power_event 处理已接受事件。
+173 [Heading 1] 限制与后续扩展
+174 [Normal] 本版适用于单星内一个计算节点的供电研究，保留电池电化学、温度和负载供电之间的反馈。太阳能板温度不反馈到固定效率，辐射不改变电池或太阳能板参数。电池采用均一单体与均一温度假设，尚不描述单体不一致、老化和热失控。
+175 [Normal] 需要描述快速脉冲或停流后的扩散松弛时，可增加颗粒扩散状态；电解液浓差重要时再采用 SPMe 或降阶 DFN。更换电池内部算法时仍保留外部电流、电压、功率、热源和温度接口。母线瞬态或开关设计需要另行建立电路模型。
+176 [Normal] 
+177 [Heading 1] 需求追踪矩阵
+178 [Engineering Caption] 表 11 功能需求追踪
+179 [Normal] 
+180 [Appendix Heading] 附录 A 公共 API 清单
+181 [Engineering Caption] 表 A-1 公共 API 清单
+182 [Normal] 上述名称均为本项目拟议接口。输入中的环境由 Orbit 提供，电池温度由 Thermal 提供；其适配约定见本报告第 6.1 节。第 6.3 节没有调用其他域尚未实现的函数。
+183 [Appendix Heading] 附录 B 模型选择建议
+184 [Engineering Caption] 表 B-1 模型选择建议
+185 [Appendix Heading] 附录 C 参考文献
+186 [Normal] [1] SAM. Simple Efficiency Module Model. 面积、辐照度与转换效率的功率模型；空间阵列需采用对应光谱参数。
+187 [Normal] [2] Subramanian V R, Diwakar V D, Tapriyal D. Efficient Macro-Micro Scale Coupled Modeling of Batteries. Journal of The Electrochemical Society, 2005, 152: A2002–A2008. 作者提供的论文. 二次浓度分布降阶方法。
+188 [Normal] [3] PyBaMM. Polynomial particle profile. 二次分布的表面与平均浓度关系。
+189 [Normal] [4] PyBaMM. Single Particle Model. 单粒子模型与端电压结构。
+190 [Normal] [5] PyBaMM. Thermal models. 电极反应热、欧姆热、可逆热和集总温度方程。
+191 [Normal] [6] NVIDIA. SimReady FAQ. 资产物理属性与运行行为的范围。
+192 [Normal] [7] OpenUSD. Referencing Layers. 资产引用与场景属性覆盖。
+193 [Normal] [8] SciPy. brentq. 连续函数的括区间求根与自变量容差。
+194 [Normal] [9] SciPy. solve_ivp. 常微分方程积分、事件和分量误差容限。
+TABLES
+TABLE 0
+单位 | 南洋理工大学计算与数据科学学院
+作者 | 
+审阅 | 
+日期 | 2026年10月2日
+TABLE 1
+摘要 | 本报告设计单星计算节点的供电模型。物理对象为太阳能板、电池组、电源控制器和配电器。模型根据轨道日照和计算节点用电需求，计算太阳发电、电池充放电、负载实际获得的电力，以及电池和配电器的发热。电池采用降阶单粒子模型 SPM，保留正负极各一个平均锂含量状态，并与热域的电池集总温度耦合。 | 本报告设计单星计算节点的供电模型。物理对象为太阳能板、电池组、电源控制器和配电器。模型根据轨道日照和计算节点用电需求，计算太阳发电、电池充放电、负载实际获得的电力，以及电池和配电器的发热。电池采用降阶单粒子模型 SPM，保留正负极各一个平均锂含量状态，并与热域的电池集总温度耦合。 | 本报告设计单星计算节点的供电模型。物理对象为太阳能板、电池组、电源控制器和配电器。模型根据轨道日照和计算节点用电需求，计算太阳发电、电池充放电、负载实际获得的电力，以及电池和配电器的发热。电池采用降阶单粒子模型 SPM，保留正负极各一个平均锂含量状态，并与热域的电池集总温度耦合。 | 本报告设计单星计算节点的供电模型。物理对象为太阳能板、电池组、电源控制器和配电器。模型根据轨道日照和计算节点用电需求，计算太阳发电、电池充放电、负载实际获得的电力，以及电池和配电器的发热。电池采用降阶单粒子模型 SPM，保留正负极各一个平均锂含量状态，并与热域的电池集总温度耦合。
+关键词 | 太阳能板; 降阶单粒子电池模型; 功率分配 | 太阳能板; 降阶单粒子电池模型; 功率分配 | 太阳能板; 降阶单粒子电池模型; 功率分配 | 太阳能板; 降阶单粒子电池模型; 功率分配
+修订记录 | 修订记录 | 修订记录 | 修订记录 | 修订记录
+版本 | 变更请求 | 日期 | 作者 | 说明
+18.0 | 公式格式统一 | 2026-10-02 |  | 公式、行内符号与单位统一排版
+ |  |  |  | 
+ |  |  |  | 
+ |  |  |  | 
+TABLE 2
+术语 | 本报告含义
+最大可发功率 | 当前日照下的太阳发电上限，尚未考虑负载和电池接收能力
+实际太阳输出 | 控制器决定的电功率，热域从太阳板吸收能量中扣除这一项
+单体与整组 | 电化学参数针对一个电芯，串并联数用于换算整组端口和发热
+连续状态 | 供电域的两个平均锂占比，电池温度属于热域
+已接受状态 | 求解器接受的状态和事件结果，可保存并用于后续计算
+TABLE 3
+组件及需求编号 | 需要模拟的内容 | 输出
+太阳能板 P-04 | 给定日照和朝向下的发电能力 | 当前最大可发功率
+电池组 P-02 | 充放电过程、内部状态变化、温度影响和发热 | 电池状态变化率、端电压、充放电功率和热源
+电源控制器 P-01、P-03 | 根据发电能力、负载需求和电池限制分配功率，保持功率平衡，并执行限充与失电保护 | 实际太阳输出、电池电流、母线功率和供电可行性
+配电器 P-01 | 向负载供电及配电过程的功率损耗 | 负载实际获得的功率和配电热源
+TABLE 4
+power/
+├── __init__.py
+├── types.py
+├── parameters.py
+│   └── load_power_parameters
+├── solar.py
+│   └── solar_power
+├── battery.py
+│   └── battery_response
+├── allocation.py
+│   └── solve_power_allocation
+└── events.py
+    └── apply_power_event
+TABLE 5
+器件或功能 | 对应模型 | 实现函数与调用关系
+太阳能板 | P2 的入射日照与最大可发功率 | solar_power，由整体求值函数调用，返回太阳发电上限
+电池组 | P4–P8、P10 的电化学响应与发热；P9 的温度由 Thermal 计算 | battery_response，由整体求值函数按试探电流调用，返回电压、功率、锂状态导数和热源
+电源控制器 | 第 4.2 节的理想 MPPT 与 P11 的功率分配、器件约束 | 在 solve_power_allocation 内求电池电流，确定实际太阳输出和供电可行性
+配电器 | P3 的配电效率与损耗 | 在 solve_power_allocation 内计算负载实际供电和配电热源
+供电系统整体 | P1 的端口功率平衡与上述器件模型 | solve_power_allocation，由同一时刻的跨域计算调用，汇总功率、热源及状态导数
+参数准备 | 器件参数、连接与初值约束 | load_power_parameters，由场景初始化调用，为各模型准备参数
+负载保护状态 | 第 4.5 节的启停与失电规则 | apply_power_event，在事件边界被接受后调用，更新接通或锁存状态
+TABLE 6
+ | (P1)
+TABLE 7
+ | (P2)
+TABLE 8
+ | (P3)
+TABLE 9
+ | (P4)
+TABLE 10
+ | (P5)
+TABLE 11
+ | (P6)
+TABLE 12
+ | (P7)
+TABLE 13
+ | (P8)
+TABLE 14
+ | (P9)
+TABLE 15
+ | (P10)
+TABLE 16
+ | (P11)
+TABLE 17
+对象 | 字段与单位 | 约束或用途
+PowerParameters | solar、battery、eta_D、links、numerics、provenance | 分组保存器件参数、端口、数值配置和来源
+PowerEnvironment | G_W_m2；position_m[3]；sun_position_m[3]；quaternion_xyzw[4]；frame | 日照已含日食，两位置统一为 GCRS，四元数由机体系转至 GCRS
+PowerInputs | environment、P_request_W、T_B_K | 同一时刻的环境、非负负载请求和电池温度
+PowerState | x_n、x_p；load_connected、trip_latched、handled_command_ids | 前两项无量纲并由连续求解器积分，其余为离散保护状态
+SolarPowerResult | cos_incidence、G_S_W_m2、P_pv_max_W | 受照余弦、板面辐照度和可用太阳功率
+BatteryResponse | v_cell_V、I_B_A、V_B_V、P_B_W、Q_B_W、dx_n_dt、dx_p_dt、constraint_margins | 电压 、电流 、功率 、导数 ，以及边界余量
+PowerResult | P_pv_W、P_load_W、Q_B_W、Q_D_W、dx_n_dt、dx_p_dt、battery、valid、event_required、can_supply_request、reason | 跨域端口、状态导数、电池诊断和求解状态
+PowerEvent | kind、command_id、accepted | 类型为 start、stop 或 supply_loss，命令带唯一标识，只有已接受事件可改变保护状态
+TABLE 18
+def load_power_parameters(
+    asset_record, scene_record
+) -> PowerParameters:
+    ...
+TABLE 19
+def battery_response(
+    i_A, state, T_B_K, parameters
+) -> BatteryResponse:
+    ...
+TABLE 20
+def solar_power(
+    environment, parameters
+) -> SolarPowerResult:
+    ...
+TABLE 21
+def solve_power_allocation(
+    inputs, state, parameters
+) -> PowerResult:
+    ...
+TABLE 22
+def apply_power_event(
+    state, event, decision
+) -> PowerState:
+    ...
+TABLE 23
+来源与去向 | 公共字段 | 对应量和单位
+Orbit → Power | PowerEnvironment | 未投影的日食后日照 、位置 、姿态无量纲
+Compute → Power | P_request_W | 请求功率 ，
+Thermal → Power | T_B_K，Battery01 | 电池温度 ，
+Power → Thermal | P_pv_W，SolarArray01 | 实际太阳输出 ，
+Power → Compute 与 Thermal | P_load_W，Compute01 | 实际负载电力 ，
+Power → Thermal | Q_B_W，Battery01；Q_D_W，PDU01 | 净电池热源和配电损耗，
+TABLE 24
+调用 | 输入 | 输出
+load_power_parameters(asset_record, scene_record) | 资产、场景和数值设置 | PowerParameters
+battery_response(i_A, state, T_B_K, parameters) | 单体电流、当前锂状态与温度 | BatteryResponse
+solar_power(environment, parameters) | 同一时刻的日照几何与参数 | SolarPowerResult
+solve_power_allocation(inputs, state, parameters) | 当前输入、状态和参数 | PowerResult
+apply_power_event(state, event, decision) | 已接受边界的状态、事件和供电结果 | 新 PowerState
+TABLE 25
+parameters = load_power_parameters(asset_record, scene_record)
+state = PowerState(**initial_state_fields)
+inputs = PowerInputs(
+    run_id=run_id, instance_id="Sat01", time_s=time_s,
+    environment=environment,
+    P_request_W=P_request_W, T_B_K=T_B_K,
+)
+result = solve_power_allocation(inputs, state, parameters)
+if result.valid and not result.event_required:
+    battery_derivatives = (result.dx_n_dt, result.dx_p_dt)
+    thermal_ports = {
+        "P_pv_W": result.P_pv_W,
+        "P_load_W": result.P_load_W,
+        "Q_B_W": result.Q_B_W,
+        "Q_D_W": result.Q_D_W,
+    }
+TABLE 26
+state = PowerState(**accepted_state_fields)
+if accepted_event is not None:
+    decision = solve_power_allocation(
+        boundary_inputs, state, parameters
+    )
+    state = apply_power_event(state, accepted_event, decision)
+    result = solve_power_allocation(
+        boundary_inputs, state, parameters
+    )
+TABLE 27
+计算对象 | 方法 | 控制参数及单位
+连续状态 | 共用自适应积分 | rtol 无量纲；atol_x 无量纲；atol_T_K，
+电池电流 | 有效区间内的括区间求根 | current_xtol_A，
+功率方程 | 求根后单独检查 P11 残差 | power_residual_tol_W，
+器件事件 | 监测边界并定位首次到达时刻 | event_time_tol_s、max_step_s，
+环境与结果 | 共享环境采样，独立设置保存频率 | environment_step_s、output_step_s，
+TABLE 28
+配置层 | 拟议字段 | 保存内容
+资产定义 | asset_id、asset_version、geometry_uri | 设备类型、固定版本和几何引用
+物理参数 | parameter_set、provenance | 数值、单位、函数系数、适用范围及厂家或试验来源
+模型能力 | domain、model_id、ports | 每个域对应的算法标识及电、热接口定义
+场景实例 | instance_id、asset_ref、parameter_overrides | 该星上的设备实例和允许覆盖的设计参数
+初值与连接 | initial_state、connections | 两极初值、负载启停状态及相邻设备端口
+TABLE 29
+实例 | 资产与参数用途 | 连接关系
+SolarArray01 | 电池片有效面积、效率、安装法线 | 电输出接 Controller01，实际输出交给热域  节点
+Battery01 | 电芯参数、串并联数、初始锂占比 | 双向电端口接 Controller01，温度和热源绑定  节点
+Controller01 | MPPT、限充和失电规则 | 连接太阳、电池和 PDU01，本版忽略自身损耗
+PDU01 | 配电效率及其包含的线路范围 | 电输出接 Compute01，损耗输入热域  节点
+Compute01 | 请求功率和启停接口 | 接收实际供电，由计算域管理任务执行
+TABLE 30
+参数类别 | 必需内容 | 来源与检查
+太阳能板 | ，机体系法线 | 工程尺寸与对应光谱性能；效率和吸收率采用相容定义
+电池结构 |  | 成套电芯参数包；改变电极尺寸后重算 
+电池动力学 |  | 同一电芯的实验识别参数或厂家参数；交换电流按整个电极计
+平衡电位 |  | 材料曲线拟合，记录拟合误差及锂占比、温度适用区间
+初值和工作边界 | 两极初值、 端点、电流与电压限制 | 初始充电状态和器件资料；两极锂库存保持一致
+配电与热连接 |  | 配电效率由功率试验确定；热参数在 Thermal 资产绑定中配置
+TABLE 31
+编号 | 请求能力 | 接口 | 设计模型 | 主要输出
+P-01 | 电功率守恒与实际供电 | solve_power_allocation | P1、P3、P11 | P_pv_W、P_load_W、Q_D_W
+P-02 | 电池充放电与热耦合 | battery_response | P4–P10，温度由 Thermal 积分 | 电压、两个导数、Q_B_W
+P-03 | 限充与失电保护 | solve_power_allocation、apply_power_event | P11、器件边界和已接受事件 | 可行性、限制原因、保护状态
+P-04 | 轨道及单星跨域接入 | solar_power、PowerInputs、PowerResult | P2、同一时刻和共享端口 | 日照上限与四个跨域功率字段
+P-05 | 资产参数解析与可复现 | load_power_parameters | 材料参数、场景覆盖及版本检查 | PowerParameters、配置与来源
+TABLE 32
+公共名称 | 类型 | 契约摘要
+PowerParameters | 参数对象 | 器件、连接、数值设置和来源
+PowerEnvironment | 输入对象 | 同一时刻的日照、位置和姿态
+PowerInputs | 输入对象 | 环境、请求功率和电池温度
+PowerState | 状态对象 | 两个锂状态和离散保护状态
+SolarPowerResult | 结果对象 | 板面日照与最大发电功率
+BatteryResponse | 结果对象 | 电池端口、热源、导数和边界余量
+PowerResult | 结果对象 | 实际功率、热源、导数和有效性
+PowerEvent | 事件对象 | 已接受的启动、停止或失电记录
+load_power_parameters | 函数 | 解析并检查参数和场景，见第 5.2 节
+battery_response | 函数 | 给定电流、锂状态和温度计算响应，见第 5.3 节
+solar_power | 函数 | 日照几何与可用发电，见第 5.4 节
+solve_power_allocation | 函数 | 纯求值的电流与功率分配，见第 5.5 节
+apply_power_event | 函数 | 已接受事件更新保护状态，见第 5.6 节
+TABLE 33
+研究需要 | 本版选择及扩展条件
+轨道周期内供电与电池温升 | 固定效率太阳板、理想准静态 MPPT、两状态 SPM 与热域集总温度
+更换电芯或串并联数量 | 更新成套材料参数和初值，重查电压、倍率与热参数，不能只改额定容量
+快速电流脉冲或停流松弛 | 增加颗粒扩散状态，保持端口不变
+电解液浓差影响明显 | 采用 SPMe 或降阶 DFN
+母线纹波或开关控制设计 | 另建电路瞬态模型，本版代数控制器不提供该预测
+电池内部温度梯度或局部结构 | 采用多节点热模型或 FEM 描述内部温度分布

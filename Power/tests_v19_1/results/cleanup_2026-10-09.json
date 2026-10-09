@@ -1,0 +1,1757 @@
+﻿{
+    "date":  "2026-10-09",
+    "scope":  "Obsolete Power report files and their historical layout QA outputs",
+    "deleted_files":  434,
+    "deleted_bytes":  191735699,
+    "removed":  [
+                    {
+                        "path":  "SDTwin_Battery_EKF_RLS_Test_Report_CN.docx",
+                        "bytes":  1922845
+                    },
+                    {
+                        "path":  "SDTwin_Battery_EKF_RLS_Test_Report_CN.pdf",
+                        "bytes":  2407342
+                    },
+                    {
+                        "path":  "SDTwin_Power_Design_Report_CN_v19.docx",
+                        "bytes":  390449
+                    },
+                    {
+                        "path":  "SDTwin_Power_Design_Report_CN_v19.pdf",
+                        "bytes":  853556
+                    },
+                    {
+                        "path":  "SDTwin_Power_Design_Report_EN_v19.docx",
+                        "bytes":  406586
+                    },
+                    {
+                        "path":  "SDTwin_Power_Design_Report_EN_v19.pdf",
+                        "bytes":  674613
+                    },
+                    {
+                        "path":  "SDTwin_Power_Test_Report_CN.pdf",
+                        "bytes":  3232315
+                    },
+                    {
+                        "path":  "SDTwin_Power_Test_Report_EN.docx",
+                        "bytes":  2456815
+                    },
+                    {
+                        "path":  "SDTwin_Power_Test_Report_EN.pdf",
+                        "bytes":  3067612
+                    },
+                    {
+                        "path":  "battery_validation\\Battery_Time_Domain_Preview_CN.pdf",
+                        "bytes":  720165
+                    },
+                    {
+                        "path":  "battery_validation\\minute_scale_archive\\Battery_Time_Domain_Preview_CN.pdf",
+                        "bytes":  1000049
+                    },
+                    {
+                        "path":  "verification\\qa\\chunk_appendix.docx",
+                        "bytes":  2215551
+                    },
+                    {
+                        "path":  "verification\\qa\\chunk_appendix.pdf",
+                        "bytes":  335134
+                    },
+                    {
+                        "path":  "verification\\qa\\chunk_front.docx",
+                        "bytes":  2216088
+                    },
+                    {
+                        "path":  "verification\\qa\\chunk_front.pdf",
+                        "bytes":  364417
+                    },
+                    {
+                        "path":  "verification\\qa\\chunk_overview.docx",
+                        "bytes":  2212376
+                    },
+                    {
+                        "path":  "verification\\qa\\chunk_overview.pdf",
+                        "bytes":  213960
+                    },
+                    {
+                        "path":  "verification\\qa\\chunk_tests1.docx",
+                        "bytes":  2217204
+                    },
+                    {
+                        "path":  "verification\\qa\\chunk_tests1.pdf",
+                        "bytes":  903762
+                    },
+                    {
+                        "path":  "verification\\qa\\chunk_tests2.docx",
+                        "bytes":  2216342
+                    },
+                    {
+                        "path":  "verification\\qa\\chunk_tests2.pdf",
+                        "bytes":  923465
+                    },
+                    {
+                        "path":  "verification\\qa\\chunk_tests3.docx",
+                        "bytes":  2215830
+                    },
+                    {
+                        "path":  "verification\\qa\\chunk_tests3.pdf",
+                        "bytes":  845494
+                    },
+                    {
+                        "path":  "verification\\qa\\chunk_tests4.docx",
+                        "bytes":  2215795
+                    },
+                    {
+                        "path":  "verification\\qa\\chunk_tests4.pdf",
+                        "bytes":  976148
+                    },
+                    {
+                        "path":  "verification\\qa\\CN_before_figure_axis_refinement.pdf",
+                        "bytes":  3080737
+                    },
+                    {
+                        "path":  "verification\\qa\\EN_before_figure_axis_refinement.pdf",
+                        "bytes":  2946233
+                    },
+                    {
+                        "path":  "verification\\qa\\export_control.docx",
+                        "bytes":  36594
+                    },
+                    {
+                        "path":  "verification\\qa\\export_control.pdf",
+                        "bytes":  38277
+                    },
+                    {
+                        "path":  "verification\\qa\\export_cover.docx",
+                        "bytes":  2211303
+                    },
+                    {
+                        "path":  "verification\\qa\\export_cover.pdf",
+                        "bytes":  201251
+                    },
+                    {
+                        "path":  "verification\\qa\\orbit_reference_case.png",
+                        "bytes":  35025
+                    },
+                    {
+                        "path":  "verification\\qa\\orbit_reference_form.png",
+                        "bytes":  146416
+                    },
+                    {
+                        "path":  "verification\\qa\\visual_inspection.json",
+                        "bytes":  13295
+                    },
+                    {
+                        "path":  "verification\\qa\\before_orbit_format\\build_report.py",
+                        "bytes":  39803
+                    },
+                    {
+                        "path":  "verification\\qa\\before_orbit_format\\CN_before_standard_export.pdf",
+                        "bytes":  3062281
+                    },
+                    {
+                        "path":  "verification\\qa\\before_orbit_format\\EN_before_standard_export.pdf",
+                        "bytes":  2907558
+                    },
+                    {
+                        "path":  "verification\\qa\\before_orbit_format\\SDTwin_Power_Test_Report_CN.docx",
+                        "bytes":  2223403
+                    },
+                    {
+                        "path":  "verification\\qa\\before_orbit_format\\SDTwin_Power_Test_Report_CN.pdf",
+                        "bytes":  3062281
+                    },
+                    {
+                        "path":  "verification\\qa\\before_orbit_format\\SDTwin_Power_Test_Report_EN.docx",
+                        "bytes":  2289103
+                    },
+                    {
+                        "path":  "verification\\qa\\before_orbit_format\\SDTwin_Power_Test_Report_EN.pdf",
+                        "bytes":  2907558
+                    },
+                    {
+                        "path":  "verification\\qa\\orbit_template\\artifact.md",
+                        "bytes":  1963
+                    },
+                    {
+                        "path":  "verification\\qa\\pdf_versions\\SDTwin_Power_Test_Report_CN-20261007-120739-437.pdf",
+                        "bytes":  3275281
+                    },
+                    {
+                        "path":  "verification\\qa\\pdf_versions\\SDTwin_Power_Test_Report_CN-20261007-120803-359.pdf",
+                        "bytes":  3232633
+                    },
+                    {
+                        "path":  "verification\\qa\\pdf_versions\\SDTwin_Power_Test_Report_CN-20261007-121000-686.pdf",
+                        "bytes":  3232375
+                    },
+                    {
+                        "path":  "verification\\qa\\pdf_versions\\SDTwin_Power_Test_Report_CN-20261007-121113-440.pdf",
+                        "bytes":  3232315
+                    },
+                    {
+                        "path":  "verification\\qa\\pdf_versions\\SDTwin_Power_Test_Report_EN-20261007-120825-253.pdf",
+                        "bytes":  3116902
+                    },
+                    {
+                        "path":  "verification\\qa\\pdf_versions\\SDTwin_Power_Test_Report_EN-20261007-121026-783.pdf",
+                        "bytes":  3067785
+                    },
+                    {
+                        "path":  "verification\\qa\\pdf_versions\\SDTwin_Power_Test_Report_EN-20261007-121149-403.pdf",
+                        "bytes":  3067632
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\contact-01.png",
+                        "bytes":  537001
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\contact-02.png",
+                        "bytes":  487643
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\contact-03.png",
+                        "bytes":  525424
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\contact-04.png",
+                        "bytes":  542183
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\contact-05.png",
+                        "bytes":  603506
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\contact-06.png",
+                        "bytes":  573549
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\contact-07.png",
+                        "bytes":  599705
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\contact-08.png",
+                        "bytes":  622401
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\contact-09.png",
+                        "bytes":  519900
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\contact-10.png",
+                        "bytes":  485878
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-01.png",
+                        "bytes":  54285
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-02.png",
+                        "bytes":  62072
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-03.png",
+                        "bytes":  178092
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-04.png",
+                        "bytes":  207494
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-05.png",
+                        "bytes":  185581
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-06.png",
+                        "bytes":  135817
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-07.png",
+                        "bytes":  177849
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-08.png",
+                        "bytes":  44516
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-09.png",
+                        "bytes":  98971
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-10.png",
+                        "bytes":  181693
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-11.png",
+                        "bytes":  119120
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-12.png",
+                        "bytes":  147156
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-13.png",
+                        "bytes":  72545
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-14.png",
+                        "bytes":  123295
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-15.png",
+                        "bytes":  185344
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-16.png",
+                        "bytes":  127051
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-17.png",
+                        "bytes":  172497
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-18.png",
+                        "bytes":  115514
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-19.png",
+                        "bytes":  146125
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-20.png",
+                        "bytes":  78833
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-21.png",
+                        "bytes":  135611
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-22.png",
+                        "bytes":  169110
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-23.png",
+                        "bytes":  138887
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-24.png",
+                        "bytes":  179045
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-25.png",
+                        "bytes":  130935
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-26.png",
+                        "bytes":  184470
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-27.png",
+                        "bytes":  140633
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-28.png",
+                        "bytes":  181730
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-29.png",
+                        "bytes":  122392
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0001-30.png",
+                        "bytes":  175537
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-31.png",
+                        "bytes":  136027
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-32.png",
+                        "bytes":  179255
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-33.png",
+                        "bytes":  100843
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-34.png",
+                        "bytes":  167274
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-35.png",
+                        "bytes":  127236
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-36.png",
+                        "bytes":  185497
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-37.png",
+                        "bytes":  134132
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-38.png",
+                        "bytes":  174028
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-39.png",
+                        "bytes":  131072
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-40.png",
+                        "bytes":  169033
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-41.png",
+                        "bytes":  138588
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-42.png",
+                        "bytes":  185045
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-43.png",
+                        "bytes":  127372
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-44.png",
+                        "bytes":  179173
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-45.png",
+                        "bytes":  141007
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-46.png",
+                        "bytes":  195689
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-47.png",
+                        "bytes":  143246
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-48.png",
+                        "bytes":  180137
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-49.png",
+                        "bytes":  143788
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-50.png",
+                        "bytes":  119465
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-51.png",
+                        "bytes":  172257
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-52.png",
+                        "bytes":  117993
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-53.png",
+                        "bytes":  122812
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-54.png",
+                        "bytes":  146122
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-55.png",
+                        "bytes":  119018
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-56.png",
+                        "bytes":  94660
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-57.png",
+                        "bytes":  242390
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-58.png",
+                        "bytes":  157527
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\page0002-59.png",
+                        "bytes":  133366
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\pages.json",
+                        "bytes":  92165
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_CN\\prior_body_hashes.json",
+                        "bytes":  7378
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\contact-01.png",
+                        "bytes":  571105
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\contact-02.png",
+                        "bytes":  496856
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\contact-03.png",
+                        "bytes":  527853
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\contact-04.png",
+                        "bytes":  544121
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\contact-05.png",
+                        "bytes":  616017
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\contact-06.png",
+                        "bytes":  575028
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\contact-07.png",
+                        "bytes":  590585
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\contact-08.png",
+                        "bytes":  625251
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\contact-09.png",
+                        "bytes":  547519
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\contact-10.png",
+                        "bytes":  490619
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-01.png",
+                        "bytes":  54893
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-02.png",
+                        "bytes":  59433
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-03.png",
+                        "bytes":  179856
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-04.png",
+                        "bytes":  171677
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-05.png",
+                        "bytes":  157547
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-06.png",
+                        "bytes":  120958
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-07.png",
+                        "bytes":  141844
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-08.png",
+                        "bytes":  40062
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-09.png",
+                        "bytes":  96633
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-10.png",
+                        "bytes":  156662
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-11.png",
+                        "bytes":  114227
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-12.png",
+                        "bytes":  124479
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-13.png",
+                        "bytes":  63276
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-14.png",
+                        "bytes":  118928
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-15.png",
+                        "bytes":  155805
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-16.png",
+                        "bytes":  122016
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-17.png",
+                        "bytes":  142185
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-18.png",
+                        "bytes":  111099
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-19.png",
+                        "bytes":  122792
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-20.png",
+                        "bytes":  74545
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-21.png",
+                        "bytes":  128324
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-22.png",
+                        "bytes":  142203
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-23.png",
+                        "bytes":  133566
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-24.png",
+                        "bytes":  144671
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-25.png",
+                        "bytes":  124574
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-26.png",
+                        "bytes":  156280
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-27.png",
+                        "bytes":  136726
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-28.png",
+                        "bytes":  152676
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-29.png",
+                        "bytes":  116254
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0001-30.png",
+                        "bytes":  149230
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-31.png",
+                        "bytes":  130141
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-32.png",
+                        "bytes":  143697
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-33.png",
+                        "bytes":  98146
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-34.png",
+                        "bytes":  141679
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-35.png",
+                        "bytes":  119263
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-36.png",
+                        "bytes":  153705
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-37.png",
+                        "bytes":  125575
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-38.png",
+                        "bytes":  146295
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-39.png",
+                        "bytes":  122093
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-40.png",
+                        "bytes":  136503
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-41.png",
+                        "bytes":  130427
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-42.png",
+                        "bytes":  153374
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-43.png",
+                        "bytes":  120101
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-44.png",
+                        "bytes":  150757
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-45.png",
+                        "bytes":  133761
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-46.png",
+                        "bytes":  164192
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-47.png",
+                        "bytes":  137166
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-48.png",
+                        "bytes":  153904
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-49.png",
+                        "bytes":  137188
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-50.png",
+                        "bytes":  104145
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-51.png",
+                        "bytes":  164193
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-52.png",
+                        "bytes":  87708
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-53.png",
+                        "bytes":  113137
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-54.png",
+                        "bytes":  132001
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-55.png",
+                        "bytes":  101559
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-56.png",
+                        "bytes":  78567
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-57.png",
+                        "bytes":  208998
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-58.png",
+                        "bytes":  96261
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\page0002-59.png",
+                        "bytes":  102864
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\pages.json",
+                        "bytes":  97597
+                    },
+                    {
+                        "path":  "verification\\qa\\SDTwin_Power_Test_Report_EN\\prior_body_hashes.json",
+                        "bytes":  7378
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\montage-1.png",
+                        "bytes":  927057
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\montage-2.png",
+                        "bytes":  1308509
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\montage-3.png",
+                        "bytes":  1148368
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\montage-4.png",
+                        "bytes":  1023980
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-01.png",
+                        "bytes":  54046
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-02.png",
+                        "bytes":  47022
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-03.png",
+                        "bytes":  104645
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-04.png",
+                        "bytes":  166086
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-05.png",
+                        "bytes":  166165
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-06.png",
+                        "bytes":  129500
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-07.png",
+                        "bytes":  161646
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-08.png",
+                        "bytes":  145853
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-09.png",
+                        "bytes":  160526
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-10.png",
+                        "bytes":  145537
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-11.png",
+                        "bytes":  178825
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-12.png",
+                        "bytes":  135348
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-13.png",
+                        "bytes":  139553
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-14.png",
+                        "bytes":  147100
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-15.png",
+                        "bytes":  161853
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-16.png",
+                        "bytes":  151310
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-17.png",
+                        "bytes":  159876
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-18.png",
+                        "bytes":  160254
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-19.png",
+                        "bytes":  163638
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-20.png",
+                        "bytes":  165062
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-21.png",
+                        "bytes":  139363
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-22.png",
+                        "bytes":  162710
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-23.png",
+                        "bytes":  140321
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\montage-1.png",
+                        "bytes":  914024
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\montage-2.png",
+                        "bytes":  1650510
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\montage-3.png",
+                        "bytes":  1538987
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\montage-4.png",
+                        "bytes":  1144270
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\montage-5.png",
+                        "bytes":  317365
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-01.png",
+                        "bytes":  44214
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-02.png",
+                        "bytes":  61887
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-03.png",
+                        "bytes":  82030
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-04.png",
+                        "bytes":  58132
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-05.png",
+                        "bytes":  196879
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-06.png",
+                        "bytes":  203535
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-07.png",
+                        "bytes":  211061
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-08.png",
+                        "bytes":  172155
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-09.png",
+                        "bytes":  248889
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-10.png",
+                        "bytes":  219354
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-11.png",
+                        "bytes":  200976
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-12.png",
+                        "bytes":  240528
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-13.png",
+                        "bytes":  199377
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-14.png",
+                        "bytes":  208859
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-15.png",
+                        "bytes":  240767
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-16.png",
+                        "bytes":  232674
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-17.png",
+                        "bytes":  138733
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-18.png",
+                        "bytes":  165369
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-19.png",
+                        "bytes":  212767
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-20.png",
+                        "bytes":  206261
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-21.png",
+                        "bytes":  206709
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-22.png",
+                        "bytes":  80940
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-23.png",
+                        "bytes":  68980
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-24.png",
+                        "bytes":  157725
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-25.png",
+                        "bytes":  124885
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_CN_v19\\page-26.png",
+                        "bytes":  106003
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\montage-1.png",
+                        "bytes":  901059
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\montage-2.png",
+                        "bytes":  1580698
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\montage-3.png",
+                        "bytes":  1629044
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\montage-4.png",
+                        "bytes":  1195677
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\montage-5.png",
+                        "bytes":  347682
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-01.png",
+                        "bytes":  48273
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-02.png",
+                        "bytes":  56404
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-03.png",
+                        "bytes":  99031
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-04.png",
+                        "bytes":  53961
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-05.png",
+                        "bytes":  127309
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-06.png",
+                        "bytes":  162481
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-07.png",
+                        "bytes":  167798
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-08.png",
+                        "bytes":  149532
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-09.png",
+                        "bytes":  174415
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-10.png",
+                        "bytes":  169821
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-11.png",
+                        "bytes":  173008
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-12.png",
+                        "bytes":  153834
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-13.png",
+                        "bytes":  189808
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-14.png",
+                        "bytes":  157621
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-15.png",
+                        "bytes":  168366
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-16.png",
+                        "bytes":  185690
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-17.png",
+                        "bytes":  153301
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-18.png",
+                        "bytes":  143210
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-19.png",
+                        "bytes":  149459
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-20.png",
+                        "bytes":  161718
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-21.png",
+                        "bytes":  165572
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-22.png",
+                        "bytes":  117123
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-23.png",
+                        "bytes":  70363
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-24.png",
+                        "bytes":  133714
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-25.png",
+                        "bytes":  126502
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final\\SDTwin_Power_Design_Report_EN_v19\\page-26.png",
+                        "bytes":  81414
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\montage-1.png",
+                        "bytes":  533005
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\montage-2.png",
+                        "bytes":  681253
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\montage-3.png",
+                        "bytes":  728030
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\montage-4.png",
+                        "bytes":  719770
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\montage-5.png",
+                        "bytes":  534971
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\montage-6.png",
+                        "bytes":  745099
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\montage-7.png",
+                        "bytes":  449078
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-01.png",
+                        "bytes":  54046
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-02.png",
+                        "bytes":  47022
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-03.png",
+                        "bytes":  104541
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-04.png",
+                        "bytes":  166086
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-05.png",
+                        "bytes":  166165
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-06.png",
+                        "bytes":  118899
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-07.png",
+                        "bytes":  129738
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-08.png",
+                        "bytes":  115698
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-09.png",
+                        "bytes":  127831
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-10.png",
+                        "bytes":  123981
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-11.png",
+                        "bytes":  138257
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-12.png",
+                        "bytes":  110109
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-13.png",
+                        "bytes":  86556
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-14.png",
+                        "bytes":  122081
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-15.png",
+                        "bytes":  139513
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-16.png",
+                        "bytes":  147217
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-17.png",
+                        "bytes":  116137
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-18.png",
+                        "bytes":  54044
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-19.png",
+                        "bytes":  158991
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-20.png",
+                        "bytes":  158469
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-21.png",
+                        "bytes":  159538
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-22.png",
+                        "bytes":  150251
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-23.png",
+                        "bytes":  165211
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-24.png",
+                        "bytes":  110212
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-25.png",
+                        "bytes":  134683
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-26.png",
+                        "bytes":  183801
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Battery_EKF_RLS_Test_Report_CN\\page-27.png",
+                        "bytes":  16892
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\montage-1.png",
+                        "bytes":  409777
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\montage-2.png",
+                        "bytes":  1001427
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\montage-3.png",
+                        "bytes":  1149648
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\montage-4.png",
+                        "bytes":  1114979
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\montage-5.png",
+                        "bytes":  948591
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\montage-6.png",
+                        "bytes":  619460
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\montage-7.png",
+                        "bytes":  309369
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-01.png",
+                        "bytes":  42947
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-02.png",
+                        "bytes":  61887
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-03.png",
+                        "bytes":  82030
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-04.png",
+                        "bytes":  58132
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-05.png",
+                        "bytes":  196879
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-06.png",
+                        "bytes":  203535
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-07.png",
+                        "bytes":  211061
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-08.png",
+                        "bytes":  172155
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-09.png",
+                        "bytes":  248889
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-10.png",
+                        "bytes":  219354
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-11.png",
+                        "bytes":  200976
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-12.png",
+                        "bytes":  240528
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-13.png",
+                        "bytes":  199377
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-14.png",
+                        "bytes":  208859
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-15.png",
+                        "bytes":  240767
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-16.png",
+                        "bytes":  232674
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-17.png",
+                        "bytes":  138733
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-18.png",
+                        "bytes":  165369
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-19.png",
+                        "bytes":  212767
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-20.png",
+                        "bytes":  206261
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-21.png",
+                        "bytes":  206709
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-22.png",
+                        "bytes":  80940
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-23.png",
+                        "bytes":  68980
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-24.png",
+                        "bytes":  157725
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-25.png",
+                        "bytes":  124885
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_CN_v19\\page-26.png",
+                        "bytes":  106003
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\montage-1.png",
+                        "bytes":  433553
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\montage-2.png",
+                        "bytes":  964827
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\montage-3.png",
+                        "bytes":  1081568
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\montage-4.png",
+                        "bytes":  1142726
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\montage-5.png",
+                        "bytes":  973290
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\montage-6.png",
+                        "bytes":  708376
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\montage-7.png",
+                        "bytes":  339644
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-01.png",
+                        "bytes":  46824
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-02.png",
+                        "bytes":  56404
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-03.png",
+                        "bytes":  99031
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-04.png",
+                        "bytes":  53961
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-05.png",
+                        "bytes":  127309
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-06.png",
+                        "bytes":  162481
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-07.png",
+                        "bytes":  167798
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-08.png",
+                        "bytes":  149532
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-09.png",
+                        "bytes":  174415
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-10.png",
+                        "bytes":  169821
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-11.png",
+                        "bytes":  173008
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-12.png",
+                        "bytes":  153834
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-13.png",
+                        "bytes":  189808
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-14.png",
+                        "bytes":  157621
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-15.png",
+                        "bytes":  168366
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-16.png",
+                        "bytes":  185690
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-17.png",
+                        "bytes":  153301
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-18.png",
+                        "bytes":  143210
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-19.png",
+                        "bytes":  149459
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-20.png",
+                        "bytes":  161718
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-21.png",
+                        "bytes":  165572
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-22.png",
+                        "bytes":  117123
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-23.png",
+                        "bytes":  70363
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-24.png",
+                        "bytes":  133714
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-25.png",
+                        "bytes":  126502
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v2\\SDTwin_Power_Design_Report_EN_v19\\page-26.png",
+                        "bytes":  81414
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\montage-1.png",
+                        "bytes":  912335
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\montage-2.png",
+                        "bytes":  1026586
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\montage-3.png",
+                        "bytes":  879755
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\montage-4.png",
+                        "bytes":  685245
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\montage-5.png",
+                        "bytes":  1063914
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-01.png",
+                        "bytes":  54046
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-02.png",
+                        "bytes":  47022
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-03.png",
+                        "bytes":  104935
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-04.png",
+                        "bytes":  166086
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-05.png",
+                        "bytes":  166681
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-06.png",
+                        "bytes":  118696
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-07.png",
+                        "bytes":  129648
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-08.png",
+                        "bytes":  114804
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-09.png",
+                        "bytes":  126300
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-10.png",
+                        "bytes":  122921
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-11.png",
+                        "bytes":  137363
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-12.png",
+                        "bytes":  110109
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-13.png",
+                        "bytes":  86556
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-14.png",
+                        "bytes":  121027
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-15.png",
+                        "bytes":  138481
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-16.png",
+                        "bytes":  109891
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-17.png",
+                        "bytes":  42387
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-18.png",
+                        "bytes":  116198
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-19.png",
+                        "bytes":  54043
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-20.png",
+                        "bytes":  111449
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-21.png",
+                        "bytes":  54219
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-22.png",
+                        "bytes":  111785
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-23.png",
+                        "bytes":  53624
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-24.png",
+                        "bytes":  111150
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-25.png",
+                        "bytes":  54976
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-26.png",
+                        "bytes":  149661
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-27.png",
+                        "bytes":  165139
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-28.png",
+                        "bytes":  110305
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-29.png",
+                        "bytes":  134818
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\final_v3\\page-30.png",
+                        "bytes":  180481
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\pdf_versions\\SDTwin_Battery_EKF_RLS_Test_Report_CN-20261008-130807-662.pdf",
+                        "bytes":  2402962
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\pdf_versions\\SDTwin_Battery_EKF_RLS_Test_Report_CN-20261008-130945-637.pdf",
+                        "bytes":  2402962
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\pdf_versions\\SDTwin_Battery_EKF_RLS_Test_Report_CN-20261008-131220-715.pdf",
+                        "bytes":  2405844
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\pdf_versions\\SDTwin_Power_Design_Report_CN_v19-20261008-130753-790.pdf",
+                        "bytes":  854281
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\pdf_versions\\SDTwin_Power_Design_Report_CN_v19-20261008-130931-763.pdf",
+                        "bytes":  854490
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\pdf_versions\\SDTwin_Power_Design_Report_EN_v19-20261008-130802-503.pdf",
+                        "bytes":  674231
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\pdf_versions\\SDTwin_Power_Design_Report_EN_v19-20261008-130940-749.pdf",
+                        "bytes":  674655
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\pdf_versions\\SDTwin_Power_Model_Test_Report_CN_v19.1-20261008-184856-858.pdf",
+                        "bytes":  2806636
+                    },
+                    {
+                        "path":  "battery_rebuild\\qa\\pdf_versions\\SDTwin_Power_Model_Test_Report_CN_v19.1-20261008-185052-033.pdf",
+                        "bytes":  2798943
+                    },
+                    {
+                        "path":  "battery_validation\\qa\\current-1.png",
+                        "bytes":  263050
+                    },
+                    {
+                        "path":  "battery_validation\\qa\\current-2.png",
+                        "bytes":  221803
+                    },
+                    {
+                        "path":  "battery_validation\\qa\\current-3.png",
+                        "bytes":  260413
+                    },
+                    {
+                        "path":  "battery_validation\\qa\\current-4.png",
+                        "bytes":  269195
+                    },
+                    {
+                        "path":  "battery_validation\\qa\\page-1.png",
+                        "bytes":  274616
+                    },
+                    {
+                        "path":  "battery_validation\\qa\\page-2.png",
+                        "bytes":  224090
+                    },
+                    {
+                        "path":  "battery_validation\\qa\\page-3.png",
+                        "bytes":  228471
+                    },
+                    {
+                        "path":  "battery_validation\\qa\\page-4.png",
+                        "bytes":  256878
+                    },
+                    {
+                        "path":  "battery_validation\\qa\\page-5.png",
+                        "bytes":  249379
+                    },
+                    {
+                        "path":  "battery_validation\\qa\\page-6.png",
+                        "bytes":  320515
+                    }
+                ],
+    "template_move":  {
+                          "from":  "SDTwin_Power_Test_Report_CN.docx",
+                          "to":  "tests_v19_1/templates/orbit_power_test_source.docx",
+                          "sha256":  "9C50C61D4BAA6D04844FED88C6FE7B92F09E9E3081501CB11A72BBBAF71544C6"
+                      },
+    "current_artifacts_unchanged":  {
+                                        "SDTwin_Power_Design_Report_CN_v19.1.pdf":  "9FAC17F8ECF2609EDDFE160E5DE767BFC878E2FE02B5DE0BCB51C7CC25DBFD30",
+                                        "SDTwin_Power_Model_Test_Report_CN_v19.1.pdf":  "03466882D788E0440F31DD72CACE5A5679EE068343E0BDC54EB89D552E139654",
+                                        "SDTwin_Power_Model_Test_Report_CN_v19.1.docx":  "F2DC1F196D33753AE9712FC9AB9B23379AD7C9FD98C360EA8A336F0D4E0955E4",
+                                        "SDTwin_Power_Design_Report_CN_v19.1.docx":  "04F225FA8798BF0A9A8378C93A1CC0BE2BCDD190317F3B3A94DF55BF4480CBD7"
+                                    },
+    "retained_legacy_design_reason":  "Existing Thermal reports still cite the CN and EN historical design reports; the CN file is open in Word.",
+    "numerical_inputs_and_results_unchanged":  true
+}

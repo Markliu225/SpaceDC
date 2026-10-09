@@ -1,0 +1,176 @@
+{
+  "date": "2026-10-08",
+  "parameters": {
+    "data_status": "illustrative test values for the SDTwin thermal tests; not a selected, qualified or measured device. The SPM geometry and kinetics are of the order of published NMC and graphite cells, the open-circuit potentials are simple monotone polynomials chosen for these tests, not fitted material curves.",
+    "solar": {
+      "asset_id": "example.solar_array",
+      "asset_version": "test-1",
+      "source": "illustrative test value, not a selected device (sdtwin_sim.power_stand_in.example_power_records)",
+      "area_m2": 1.8,
+      "efficiency": 0.3,
+      "normal_body": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "battery": {
+      "asset_id": "example.battery_pack",
+      "asset_version": "test-1",
+      "source": "illustrative test value, not a selected device (sdtwin_sim.power_stand_in.example_power_records)",
+      "parameter_level": "cell",
+      "N_s": 1,
+      "N_p": 1,
+      "R_ohm_ohm": 0.025,
+      "T_ref_K": 298.15,
+      "electrodes": {
+        "n": {
+          "radius_m": 6e-06,
+          "active_fraction": 0.75,
+          "electrode_area_m2": 0.06,
+          "thickness_m": 8.5e-05,
+          "c_max_mol_m3": 31000.0,
+          "D_ref_m2_s": 3.3e-14,
+          "I0_ref_A": 2.5,
+          "E_D_J_mol": 30300.0,
+          "E_I_J_mol": 35000.0,
+          "b_V": [
+            0.65,
+            -1.6,
+            2.0,
+            -0.95
+          ],
+          "d_V_K": [
+            0.00012,
+            -0.0003,
+            0.00015,
+            0.0
+          ],
+          "source": "illustrative test value, not a selected device (sdtwin_sim.power_stand_in.example_power_records)"
+        },
+        "p": {
+          "radius_m": 5e-06,
+          "active_fraction": 0.665,
+          "electrode_area_m2": 0.06,
+          "thickness_m": 7.5e-05,
+          "c_max_mol_m3": 63000.0,
+          "D_ref_m2_s": 1e-14,
+          "I0_ref_A": 3.0,
+          "E_D_J_mol": 25000.0,
+          "E_I_J_mol": 17500.0,
+          "b_V": [
+            4.6,
+            -1.3,
+            0.9,
+            -0.8
+          ],
+          "d_V_K": [
+            -6e-05,
+            4e-05,
+            0.0,
+            0.0
+          ],
+          "source": "illustrative test value, not a selected device (sdtwin_sim.power_stand_in.example_power_records)"
+        }
+      },
+      "x_n_0": 0.03,
+      "x_n_100": 0.9,
+      "x_p_100": 0.27,
+      "limits": {
+        "i_min_A": -3.0,
+        "i_max_A": 6.0,
+        "v_min_V": 3.0,
+        "v_max_V": 4.2,
+        "x_n_range": [
+          0.01,
+          0.95
+        ],
+        "x_p_range": [
+          0.2,
+          0.95
+        ],
+        "T_range_K": [
+          253.15,
+          333.15
+        ]
+      }
+    },
+    "pdu": {
+      "asset_id": "example.pdu",
+      "asset_version": "test-1",
+      "source": "illustrative test value, not a selected device (sdtwin_sim.power_stand_in.example_power_records)",
+      "eta_D": 0.95,
+      "covered_wiring": "PDU01 conversion and the PDU01 to Compute01 harness; battery and array harness resistance is not included (battery ohmic resistance is in R_ohm_ohm)"
+    }
+  },
+  "scene": {
+    "instance_id": "Sat01",
+    "asset_refs": {
+      "solar": {
+        "asset_id": "example.solar_array",
+        "asset_version": "test-1"
+      },
+      "battery": {
+        "asset_id": "example.battery_pack",
+        "asset_version": "test-1"
+      },
+      "pdu": {
+        "asset_id": "example.pdu",
+        "asset_version": "test-1"
+      }
+    },
+    "links": {
+      "P_pv_W": "SolarArray01",
+      "P_load_W": "Compute01",
+      "Q_B_W": "Battery01",
+      "Q_D_W": "PDU01"
+    },
+    "overrides": {},
+    "initial_state": {
+      "time_s": 0.0,
+      "x_n": 0.9,
+      "x_p": 0.27,
+      "T_B_K": 298.15,
+      "load_connected": true,
+      "trip_latched": false
+    },
+    "numerics": {
+      "rtol": 1e-06,
+      "atol_x": 1e-09,
+      "atol_T_K": 1e-06,
+      "current_xtol_A": 1e-12,
+      "power_residual_tol_W": 1e-06,
+      "event_time_tol_s": 0.001,
+      "max_step_s": 60.0,
+      "environment_step_s": 10.0,
+      "output_step_s": 60.0,
+      "current_scan_points": 32,
+      "inventory_rtol": 1e-09
+    }
+  },
+  "temperature_K": 298.15,
+  "capacity_Ah": 2.7648474952311752,
+  "current_magnitude_A": 0.2764847495231175,
+  "c_rate": 0.1,
+  "initial_soc": 1.0,
+  "initial_xn": 0.9,
+  "initial_xp": 0.27,
+  "cycles": 3,
+  "numerics": {
+    "max_step_s": 1.0,
+    "output_interval_s": 1.0,
+    "rtol": 1e-09,
+    "atol": 1e-11
+  },
+  "protocol": "Start fully charged; discharge to SOC=0, then charge to SOC=1; repeat 3 times. Stop early if voltage hits 3 or 4.2 V.",
+  "axis": "Integrated branch charge magnitude Ah; reset only plotted branch-capacity origin; all physical states remain continuous.",
+  "accuracy": {
+    "soc_error": 1e-08,
+    "simulink_voltage_V": 1e-06,
+    "simulink_energy_J": 0.0001,
+    "inventory_relative": 1e-09
+  },
+  "material_mass_known": false,
+  "aging_model": false,
+  "hysteresis_state": false
+}

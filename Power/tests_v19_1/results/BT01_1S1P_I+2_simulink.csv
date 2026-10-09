@@ -1,0 +1,3 @@
+time_s,current_A,soc,polarization_V,voltage_V,ocv_V,r0_ohm,r1_ohm,tau_s,c1_F,dsoc_dt,du1_dt,pack_voltage_V,pack_current_A,power_W,ohmic_heat_W,polarization_heat_W,heat_W,polarization_energy_J,available_solar_W,actual_solar_W,request_W,load_W,distribution_heat_W,power_residual_W,connected,measured_voltage_V,noise_V,heat_energy_J,port_loss_energy_J,cumulative_Ah
+0,2,0.6,0.02,3.68,3.8,0.05,0.02,10,500,-0.000277777777777778,0.002,3.68,2,7.36,0.2,0.02,0.22,0.1,0,0,0,0,0,0,1,3.68,0,0,0,0
+0.1,2,0.6,0.02,3.68,3.8,0.05,0.02,10,500,-0.000277777777777778,0.002,3.68,2,7.36,0.2,0.02,0.22,0.1,0,0,0,0,0,0,1,3.68,0,0.022,0.024,5.55555555555556e-05

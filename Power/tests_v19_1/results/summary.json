@@ -1,0 +1,1487 @@
+{
+  "projects": {
+    "PV01": {
+      "pass_": true,
+      "runs": [
+        "PV01_TIME",
+        "PV01_ANGLE_0",
+        "PV01_ANGLE_60",
+        "PV01_ANGLE_90",
+        "PV01_ANGLE_180",
+        "PV01_AREA"
+      ],
+      "checks": {
+        "angle_0_W": {
+          "value": 500.0,
+          "pass_": true
+        },
+        "angle_60_W": {
+          "value": 250.0,
+          "pass_": true
+        },
+        "angle_90_W": {
+          "value": 3.06161699786838e-14,
+          "pass_": true
+        },
+        "angle_180_W": {
+          "value": 0.0,
+          "pass_": true
+        },
+        "double_area_W": {
+          "value": 1000.0,
+          "pass_": true
+        },
+        "time_profile_max_error_W": {
+          "value": 0.0,
+          "pass_": true
+        }
+      }
+    },
+    "BT01": {
+      "pass_": true,
+      "runs": [
+        "BT01_1S1P_I+0",
+        "BT01_1S1P_I+2",
+        "BT01_1S1P_I-2",
+        "BT01_4S2P_I+0",
+        "BT01_4S2P_I+2",
+        "BT01_4S2P_I-2"
+      ],
+      "checks": {
+        "BT01_1S1P_I+0": {
+          "value": {
+            "voltage_V": 0.0,
+            "power_W": 0.0,
+            "heat_W": 0.0,
+            "polarization_energy_J": 0.0,
+            "dsoc_dt": 0.0,
+            "du1_dt": 0.0,
+            "pack_current_A": 0.0,
+            "pack_voltage_V": 0.0
+          },
+          "pass_": true
+        },
+        "BT01_1S1P_I+2": {
+          "value": {
+            "voltage_V": 4.440892098500626e-16,
+            "power_W": 8.881784197001252e-16,
+            "heat_W": 0.0,
+            "polarization_energy_J": 0.0,
+            "dsoc_dt": 2.168404344971009e-19,
+            "du1_dt": 0.0,
+            "pack_current_A": 0.0,
+            "pack_voltage_V": 4.440892098500626e-16
+          },
+          "pass_": true
+        },
+        "BT01_1S1P_I-2": {
+          "value": {
+            "voltage_V": 0.0,
+            "power_W": 0.0,
+            "heat_W": 0.0,
+            "polarization_energy_J": 0.0,
+            "dsoc_dt": 2.168404344971009e-19,
+            "du1_dt": 0.0,
+            "pack_current_A": 0.0,
+            "pack_voltage_V": 0.0
+          },
+          "pass_": true
+        },
+        "BT01_4S2P_I+0": {
+          "value": {
+            "voltage_V": 0.0,
+            "power_W": 0.0,
+            "heat_W": 0.0,
+            "polarization_energy_J": 0.0,
+            "dsoc_dt": 0.0,
+            "du1_dt": 0.0,
+            "pack_current_A": 0.0,
+            "pack_voltage_V": 0.0
+          },
+          "pass_": true
+        },
+        "BT01_4S2P_I+2": {
+          "value": {
+            "voltage_V": 4.440892098500626e-16,
+            "power_W": 7.105427357601002e-15,
+            "heat_W": 0.0,
+            "polarization_energy_J": 0.0,
+            "dsoc_dt": 2.168404344971009e-19,
+            "du1_dt": 0.0,
+            "pack_current_A": 0.0,
+            "pack_voltage_V": 1.7763568394002505e-15
+          },
+          "pass_": true
+        },
+        "BT01_4S2P_I-2": {
+          "value": {
+            "voltage_V": 0.0,
+            "power_W": 0.0,
+            "heat_W": 0.0,
+            "polarization_energy_J": 0.0,
+            "dsoc_dt": 2.168404344971009e-19,
+            "du1_dt": 0.0,
+            "pack_current_A": 0.0,
+            "pack_voltage_V": 0.0
+          },
+          "pass_": true
+        }
+      }
+    },
+    "BT02": {
+      "pass_": true,
+      "runs": [
+        "BT02",
+        "BT02_REFINE",
+        "BT02_FINE"
+      ],
+      "checks": {
+        "analytic_max_errors": {
+          "value": {
+            "soc": 4.440892098500626e-16,
+            "polarization_V": 4.40619762898109e-16,
+            "voltage_V": 5.329070518200751e-15
+          },
+          "pass_": true
+        },
+        "refinement_005_vs_0025": {
+          "value": {
+            "soc": 4.4075854077618715e-14,
+            "polarization_V": 1.0408340855860843e-16,
+            "voltage_V": 5.0182080713057076e-14
+          },
+          "pass_": true
+        },
+        "voltage_jump_10s": {
+          "value": -0.10000000000000009,
+          "pass_": true
+        },
+        "voltage_jump_30s": {
+          "value": 0.10000000000000009,
+          "pass_": true
+        }
+      }
+    },
+    "BT03": {
+      "pass_": true,
+      "runs": [
+        "BT03"
+      ],
+      "checks": {
+        "analytic_max_errors": {
+          "value": {
+            "soc": 4.440892098500626e-16,
+            "polarization_V": 7.788908407135864e-16,
+            "voltage_V": 5.773159728050814e-15
+          },
+          "pass_": true
+        },
+        "voltage_jump_10s": {
+          "value": 0.10000000000000009,
+          "pass_": true
+        },
+        "voltage_jump_30s": {
+          "value": -0.20000000000000018,
+          "pass_": true
+        },
+        "voltage_jump_50s": {
+          "value": 0.10000000000000009,
+          "pass_": true
+        }
+      }
+    },
+    "BT04": {
+      "pass_": true,
+      "runs": [
+        "BT04_T0",
+        "BT04_T25",
+        "BT04_T50"
+      ],
+      "checks": {
+        "bilinear_max_errors": {
+          "value": {
+            "ocv_V": 8.881784197001252e-16,
+            "r0_ohm": 6.938893903907228e-18,
+            "r1_ohm": 3.469446951953614e-18,
+            "tau_s": 0.0,
+            "c1_F": 4.547473508864641e-13
+          },
+          "pass_": true
+        },
+        "out_of_domain_rejections": {
+          "value": 4,
+          "pass_": true
+        }
+      }
+    },
+    "BT05": {
+      "pass_": true,
+      "runs": [
+        "BT05"
+      ],
+      "checks": {
+        "python_energy_residual_J": {
+          "value": 8.43769498715119e-15,
+          "pass_": true
+        },
+        "python_nonnegative_heat": {
+          "value": 0.0,
+          "pass_": true
+        },
+        "simulink_energy_residual_J": {
+          "value": 3.927717526219787e-14,
+          "pass_": true
+        },
+        "simulink_nonnegative_heat": {
+          "value": 0.0,
+          "pass_": true
+        }
+      }
+    },
+    "BT06": {
+      "pass_": true,
+      "runs": [
+        "BT06"
+      ],
+      "checks": {
+        "charge_Ah": {
+          "value": 1.52000000000036,
+          "pass_": true
+        },
+        "discharge_Ah": {
+          "value": 1.51999999999688,
+          "pass_": true
+        },
+        "soc_at_reversal": {
+          "value": 0.88,
+          "pass_": true
+        },
+        "final_soc": {
+          "value": 0.120000000000926,
+          "pass_": true
+        },
+        "event_time_error_s": {
+          "value": 1.6698322724550962e-08,
+          "pass_": true
+        },
+        "matched_event_sides": {
+          "value": {
+            "time_s": 0.0,
+            "current_A": 0.0,
+            "soc": 4.640732242933154e-13,
+            "polarization_V": 8.673617379884035e-19,
+            "voltage_V": 4.645173135031655e-13,
+            "ocv_V": 4.645173135031655e-13,
+            "r0_ohm": 0.0,
+            "r1_ohm": 0.0,
+            "tau_s": 0.0,
+            "c1_F": 0.0,
+            "dsoc_dt": 2.0328790734103208e-20,
+            "du1_dt": 1.6263032587282557e-19,
+            "pack_voltage_V": 4.645173135031655e-13,
+            "pack_current_A": 0.0,
+            "power_W": 9.281464485866309e-14,
+            "ohmic_heat_W": 4.336808689942018e-19,
+            "polarization_heat_W": 6.505213034913027e-19,
+            "heat_W": 0.0,
+            "polarization_energy_J": 8.673617379884035e-18,
+            "available_solar_W": 0.0,
+            "actual_solar_W": 0.0,
+            "request_W": 0.0,
+            "load_W": 0.0,
+            "distribution_heat_W": 0.0,
+            "power_residual_W": 0.0,
+            "connected": 0.0,
+            "measured_voltage_V": 4.645173135031655e-13,
+            "noise_V": 0.0,
+            "heat_energy_J": 4.673950115829939e-11,
+            "port_loss_energy_J": 4.675371201301459e-11,
+            "cumulative_Ah": 9.305889392408062e-13
+          },
+          "pass_": true
+        }
+      }
+    },
+    "BT07": {
+      "pass_": true,
+      "runs": [
+        "BT07_P04",
+        "BT07_P06",
+        "BT07_P08"
+      ],
+      "checks": {
+        "BT07_P04": {
+          "value": {
+            "rmse": 0.026699694055754473,
+            "max_abs": 0.06025045070355084,
+            "segments": {
+              "discharge": {
+                "rmse": 0.007514059309125928,
+                "max_abs": 0.048538945239830156
+              },
+              "rest_after_discharge": {
+                "rmse": 0.036518306343065014,
+                "max_abs": 0.04022044923577983
+              },
+              "charge": {
+                "rmse": 0.03846514857672827,
+                "max_abs": 0.06025045070355084
+              },
+              "rest_after_charge": {
+                "rmse": 0.01981909585761894,
+                "max_abs": 0.03608896415428031
+              }
+            }
+          },
+          "pass_": true
+        },
+        "BT07_P06": {
+          "value": {
+            "rmse": 0.028645876067279478,
+            "max_abs": 0.059465065231819825,
+            "segments": {
+              "discharge": {
+                "rmse": 0.007758890952123921,
+                "max_abs": 0.03047764788230989
+              },
+              "rest_after_discharge": {
+                "rmse": 0.035573927416148225,
+                "max_abs": 0.03964855195160988
+              },
+              "charge": {
+                "rmse": 0.04083891956014566,
+                "max_abs": 0.059465065231819825
+              },
+              "rest_after_charge": {
+                "rmse": 0.027095197099508226,
+                "max_abs": 0.04009877564023023
+              }
+            }
+          },
+          "pass_": true
+        },
+        "BT07_P08": {
+          "value": {
+            "rmse": 0.01726596970743144,
+            "max_abs": 0.05050549291009032,
+            "segments": {
+              "discharge": {
+                "rmse": 0.016961619278394378,
+                "max_abs": 0.040699130363690106
+              },
+              "rest_after_discharge": {
+                "rmse": 0.02086416176919593,
+                "max_abs": 0.024425115218110083
+              },
+              "charge": {
+                "rmse": 0.021842183586609495,
+                "max_abs": 0.05050549291009032
+              },
+              "rest_after_charge": {
+                "rmse": 0.011134866012483287,
+                "max_abs": 0.02237490067961989
+              }
+            }
+          },
+          "pass_": true
+        }
+      }
+    },
+    "EK01": {
+      "pass_": true,
+      "runs": [
+        "EK01"
+      ],
+      "checks": {
+        "soc_accuracy": {
+          "value": {
+            "last_30s_rmse": 7.66649907905123e-05,
+            "final_abs": 4.6100068910925884e-05,
+            "settling_s": 0.0,
+            "prior_voltage": {
+              "rmse": 0.003590083012087277,
+              "max_abs": 0.10003094286371006
+            }
+          },
+          "pass_": true
+        },
+        "covariance": {
+          "value": {
+            "min_eigenvalue": 3.5736813008562473e-07,
+            "max_asymmetry": 1.0842021724855044e-19
+          },
+          "pass_": true
+        },
+        "independent_estimator": {
+          "value": {
+            "estimated_soc": 8.881784197001252e-16,
+            "estimated_u1_V": 1.083334810747516e-15,
+            "prior_voltage_V": 6.661338147750939e-15
+          },
+          "pass_": true
+        }
+      }
+    },
+    "PA01": {
+      "pass_": true,
+      "runs": [
+        "PA01"
+      ],
+      "checks": {
+        "max_balance_residual_W": {
+          "value": 3.80850906367414e-12,
+          "pass_": true
+        },
+        "five_operating_stages": {
+          "value": [
+            {
+              "start_s": 0,
+              "mode": "balance",
+              "current_min_A": 0.0,
+              "current_max_A": 0.0,
+              "pass_": true
+            },
+            {
+              "start_s": 20,
+              "mode": "discharge",
+              "current_min_A": 3.44569491365801,
+              "current_max_A": 3.51710933762249,
+              "pass_": true
+            },
+            {
+              "start_s": 40,
+              "mode": "charge",
+              "current_min_A": -1.63966832415548,
+              "current_max_A": -1.60479754575378,
+              "pass_": true
+            },
+            {
+              "start_s": 60,
+              "mode": "curtailed",
+              "current_min_A": -3.0,
+              "current_max_A": -3.0,
+              "pass_": true
+            },
+            {
+              "start_s": 80,
+              "mode": "disconnected",
+              "current_min_A": 0.0,
+              "current_max_A": 0.0,
+              "pass_": true
+            }
+          ],
+          "pass_": true
+        },
+        "operating_bounds": {
+          "value": {
+            "min_i_A": -3.0,
+            "max_i_A": 3.51710933762249,
+            "min_v_V": 3.55405499234487,
+            "max_v_V": 4.00757570977333
+          },
+          "pass_": true
+        },
+        "maximum_load_before_disconnect_W": {
+          "value": 129.8761996100541,
+          "pass_": true
+        }
+      }
+    }
+  },
+  "comparisons": {
+    "PV01_TIME": {
+      "pass_": true,
+      "rows": 601,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 0.0,
+        "polarization_V": 0.0,
+        "voltage_V": 0.0,
+        "ocv_V": 0.0,
+        "r0_ohm": 0.0,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 5.684341886080802e-14,
+        "dsoc_dt": 0.0,
+        "du1_dt": 0.0,
+        "pack_voltage_V": 0.0,
+        "pack_current_A": 0.0,
+        "power_W": 0.0,
+        "ohmic_heat_W": 0.0,
+        "polarization_heat_W": 0.0,
+        "heat_W": 0.0,
+        "polarization_energy_J": 0.0,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 0.0,
+        "noise_V": 0.0,
+        "heat_energy_J": 0.0,
+        "port_loss_energy_J": 0.0,
+        "cumulative_Ah": 0.0
+      },
+      "failures": []
+    },
+    "PV01_ANGLE_0": {
+      "pass_": true,
+      "rows": 2,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 0.0,
+        "polarization_V": 0.0,
+        "voltage_V": 0.0,
+        "ocv_V": 0.0,
+        "r0_ohm": 0.0,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 5.684341886080802e-14,
+        "dsoc_dt": 0.0,
+        "du1_dt": 0.0,
+        "pack_voltage_V": 0.0,
+        "pack_current_A": 0.0,
+        "power_W": 0.0,
+        "ohmic_heat_W": 0.0,
+        "polarization_heat_W": 0.0,
+        "heat_W": 0.0,
+        "polarization_energy_J": 0.0,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 0.0,
+        "noise_V": 0.0,
+        "heat_energy_J": 0.0,
+        "port_loss_energy_J": 0.0,
+        "cumulative_Ah": 0.0
+      },
+      "failures": []
+    },
+    "PV01_ANGLE_60": {
+      "pass_": true,
+      "rows": 2,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 0.0,
+        "polarization_V": 0.0,
+        "voltage_V": 0.0,
+        "ocv_V": 0.0,
+        "r0_ohm": 0.0,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 5.684341886080802e-14,
+        "dsoc_dt": 0.0,
+        "du1_dt": 0.0,
+        "pack_voltage_V": 0.0,
+        "pack_current_A": 0.0,
+        "power_W": 0.0,
+        "ohmic_heat_W": 0.0,
+        "polarization_heat_W": 0.0,
+        "heat_W": 0.0,
+        "polarization_energy_J": 0.0,
+        "available_solar_W": 5.684341886080802e-14,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 0.0,
+        "noise_V": 0.0,
+        "heat_energy_J": 0.0,
+        "port_loss_energy_J": 0.0,
+        "cumulative_Ah": 0.0
+      },
+      "failures": []
+    },
+    "PV01_ANGLE_90": {
+      "pass_": true,
+      "rows": 2,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 0.0,
+        "polarization_V": 0.0,
+        "voltage_V": 0.0,
+        "ocv_V": 0.0,
+        "r0_ohm": 0.0,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 5.684341886080802e-14,
+        "dsoc_dt": 0.0,
+        "du1_dt": 0.0,
+        "pack_voltage_V": 0.0,
+        "pack_current_A": 0.0,
+        "power_W": 0.0,
+        "ohmic_heat_W": 0.0,
+        "polarization_heat_W": 0.0,
+        "heat_W": 0.0,
+        "polarization_energy_J": 0.0,
+        "available_solar_W": 3.155443620884047e-29,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 0.0,
+        "noise_V": 0.0,
+        "heat_energy_J": 0.0,
+        "port_loss_energy_J": 0.0,
+        "cumulative_Ah": 0.0
+      },
+      "failures": []
+    },
+    "PV01_ANGLE_180": {
+      "pass_": true,
+      "rows": 2,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 0.0,
+        "polarization_V": 0.0,
+        "voltage_V": 0.0,
+        "ocv_V": 0.0,
+        "r0_ohm": 0.0,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 5.684341886080802e-14,
+        "dsoc_dt": 0.0,
+        "du1_dt": 0.0,
+        "pack_voltage_V": 0.0,
+        "pack_current_A": 0.0,
+        "power_W": 0.0,
+        "ohmic_heat_W": 0.0,
+        "polarization_heat_W": 0.0,
+        "heat_W": 0.0,
+        "polarization_energy_J": 0.0,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 0.0,
+        "noise_V": 0.0,
+        "heat_energy_J": 0.0,
+        "port_loss_energy_J": 0.0,
+        "cumulative_Ah": 0.0
+      },
+      "failures": []
+    },
+    "PV01_AREA": {
+      "pass_": true,
+      "rows": 2,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 0.0,
+        "polarization_V": 0.0,
+        "voltage_V": 0.0,
+        "ocv_V": 0.0,
+        "r0_ohm": 0.0,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 5.684341886080802e-14,
+        "dsoc_dt": 0.0,
+        "du1_dt": 0.0,
+        "pack_voltage_V": 0.0,
+        "pack_current_A": 0.0,
+        "power_W": 0.0,
+        "ohmic_heat_W": 0.0,
+        "polarization_heat_W": 0.0,
+        "heat_W": 0.0,
+        "polarization_energy_J": 0.0,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 0.0,
+        "noise_V": 0.0,
+        "heat_energy_J": 0.0,
+        "port_loss_energy_J": 0.0,
+        "cumulative_Ah": 0.0
+      },
+      "failures": []
+    },
+    "BT01_1S1P_I+0": {
+      "pass_": true,
+      "rows": 2,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 0.0,
+        "polarization_V": 0.0,
+        "voltage_V": 0.0,
+        "ocv_V": 0.0,
+        "r0_ohm": 0.0,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 5.684341886080802e-14,
+        "dsoc_dt": 0.0,
+        "du1_dt": 0.0,
+        "pack_voltage_V": 0.0,
+        "pack_current_A": 0.0,
+        "power_W": 0.0,
+        "ohmic_heat_W": 0.0,
+        "polarization_heat_W": 3.469446951953614e-18,
+        "heat_W": 3.469446951953614e-18,
+        "polarization_energy_J": 1.3877787807814457e-17,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 0.0,
+        "noise_V": 0.0,
+        "heat_energy_J": 4.336808689942018e-19,
+        "port_loss_energy_J": 0.0,
+        "cumulative_Ah": 0.0
+      },
+      "failures": []
+    },
+    "BT01_1S1P_I+2": {
+      "pass_": true,
+      "rows": 2,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 0.0,
+        "polarization_V": 0.0,
+        "voltage_V": 4.440892098500626e-16,
+        "ocv_V": 0.0,
+        "r0_ohm": 0.0,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 5.684341886080802e-14,
+        "dsoc_dt": 2.168404344971009e-19,
+        "du1_dt": 8.673617379884035e-19,
+        "pack_voltage_V": 4.440892098500626e-16,
+        "pack_current_A": 0.0,
+        "power_W": 8.881784197001252e-16,
+        "ohmic_heat_W": 0.0,
+        "polarization_heat_W": 3.469446951953614e-18,
+        "heat_W": 2.7755575615628914e-17,
+        "polarization_energy_J": 1.3877787807814457e-17,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 4.440892098500626e-16,
+        "noise_V": 0.0,
+        "heat_energy_J": 3.469446951953614e-18,
+        "port_loss_energy_J": 2.0816681711721685e-17,
+        "cumulative_Ah": 6.776263578034403e-20
+      },
+      "failures": []
+    },
+    "BT01_1S1P_I-2": {
+      "pass_": true,
+      "rows": 2,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 0.0,
+        "polarization_V": 0.0,
+        "voltage_V": 0.0,
+        "ocv_V": 0.0,
+        "r0_ohm": 0.0,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 5.684341886080802e-14,
+        "dsoc_dt": 2.168404344971009e-19,
+        "du1_dt": 8.673617379884035e-19,
+        "pack_voltage_V": 0.0,
+        "pack_current_A": 0.0,
+        "power_W": 0.0,
+        "ohmic_heat_W": 0.0,
+        "polarization_heat_W": 3.469446951953614e-18,
+        "heat_W": 2.7755575615628914e-17,
+        "polarization_energy_J": 1.3877787807814457e-17,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 0.0,
+        "noise_V": 0.0,
+        "heat_energy_J": 0.0,
+        "port_loss_energy_J": 6.938893903907228e-18,
+        "cumulative_Ah": 5.421010862427522e-20
+      },
+      "failures": []
+    },
+    "BT01_4S2P_I+0": {
+      "pass_": true,
+      "rows": 2,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 0.0,
+        "polarization_V": 0.0,
+        "voltage_V": 0.0,
+        "ocv_V": 0.0,
+        "r0_ohm": 0.0,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 5.684341886080802e-14,
+        "dsoc_dt": 0.0,
+        "du1_dt": 0.0,
+        "pack_voltage_V": 0.0,
+        "pack_current_A": 0.0,
+        "power_W": 0.0,
+        "ohmic_heat_W": 0.0,
+        "polarization_heat_W": 2.7755575615628914e-17,
+        "heat_W": 2.7755575615628914e-17,
+        "polarization_energy_J": 1.1102230246251565e-16,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 0.0,
+        "noise_V": 0.0,
+        "heat_energy_J": 0.0,
+        "port_loss_energy_J": 0.0,
+        "cumulative_Ah": 0.0
+      },
+      "failures": []
+    },
+    "BT01_4S2P_I+2": {
+      "pass_": true,
+      "rows": 2,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 0.0,
+        "polarization_V": 0.0,
+        "voltage_V": 4.440892098500626e-16,
+        "ocv_V": 0.0,
+        "r0_ohm": 0.0,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 5.684341886080802e-14,
+        "dsoc_dt": 2.168404344971009e-19,
+        "du1_dt": 8.673617379884035e-19,
+        "pack_voltage_V": 1.7763568394002505e-15,
+        "pack_current_A": 0.0,
+        "power_W": 7.105427357601002e-15,
+        "ohmic_heat_W": 0.0,
+        "polarization_heat_W": 2.7755575615628914e-17,
+        "heat_W": 2.220446049250313e-16,
+        "polarization_energy_J": 1.1102230246251565e-16,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 4.440892098500626e-16,
+        "noise_V": 0.0,
+        "heat_energy_J": 2.7755575615628914e-17,
+        "port_loss_energy_J": 1.6653345369377348e-16,
+        "cumulative_Ah": 6.776263578034403e-20
+      },
+      "failures": []
+    },
+    "BT01_4S2P_I-2": {
+      "pass_": true,
+      "rows": 2,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 0.0,
+        "polarization_V": 0.0,
+        "voltage_V": 0.0,
+        "ocv_V": 0.0,
+        "r0_ohm": 0.0,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 5.684341886080802e-14,
+        "dsoc_dt": 2.168404344971009e-19,
+        "du1_dt": 8.673617379884035e-19,
+        "pack_voltage_V": 0.0,
+        "pack_current_A": 0.0,
+        "power_W": 0.0,
+        "ohmic_heat_W": 0.0,
+        "polarization_heat_W": 2.7755575615628914e-17,
+        "heat_W": 2.220446049250313e-16,
+        "polarization_energy_J": 1.1102230246251565e-16,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 0.0,
+        "noise_V": 0.0,
+        "heat_energy_J": 0.0,
+        "port_loss_energy_J": 5.551115123125783e-17,
+        "cumulative_Ah": 6.098637220230962e-20
+      },
+      "failures": []
+    },
+    "BT02": {
+      "pass_": true,
+      "rows": 601,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 5.551115123125783e-16,
+        "polarization_V": 4.614364446098307e-16,
+        "voltage_V": 5.329070518200751e-15,
+        "ocv_V": 5.329070518200751e-15,
+        "r0_ohm": 0.0,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 1.1368683772161603e-13,
+        "dsoc_dt": 2.168404344971009e-19,
+        "du1_dt": 4.5536491244391186e-17,
+        "pack_voltage_V": 5.329070518200751e-15,
+        "pack_current_A": 0.0,
+        "power_W": 6.217248937900877e-15,
+        "ohmic_heat_W": 0.0,
+        "polarization_heat_W": 1.1934897514720433e-15,
+        "heat_W": 1.609823385706477e-15,
+        "polarization_energy_J": 6.467049118441537e-15,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 5.329070518200751e-15,
+        "noise_V": 0.0,
+        "heat_energy_J": 2.5091040356528538e-14,
+        "port_loss_energy_J": 1.554312234475219e-14,
+        "cumulative_Ah": 5.551115123125783e-17
+      },
+      "failures": []
+    },
+    "BT02_REFINE": {
+      "pass_": true,
+      "rows": 1201,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 5.551115123125783e-16,
+        "polarization_V": 7.632783294297951e-17,
+        "voltage_V": 5.773159728050814e-15,
+        "ocv_V": 5.329070518200751e-15,
+        "r0_ohm": 0.0,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 1.1368683772161603e-13,
+        "dsoc_dt": 2.168404344971009e-19,
+        "du1_dt": 7.589415207398531e-18,
+        "pack_voltage_V": 5.773159728050814e-15,
+        "pack_current_A": 0.0,
+        "power_W": 5.329070518200751e-15,
+        "ohmic_heat_W": 0.0,
+        "polarization_heat_W": 1.5959455978986625e-16,
+        "heat_W": 6.106226635438361e-16,
+        "polarization_energy_J": 9.992007221626409e-16,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 5.773159728050814e-15,
+        "noise_V": 0.0,
+        "heat_energy_J": 1.1546319456101628e-14,
+        "port_loss_energy_J": 7.549516567451064e-15,
+        "cumulative_Ah": 5.377642775528102e-17
+      },
+      "failures": []
+    },
+    "BT02_FINE": {
+      "pass_": true,
+      "rows": 2401,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 5.551115123125783e-16,
+        "polarization_V": 7.632783294297951e-17,
+        "voltage_V": 5.329070518200751e-15,
+        "ocv_V": 5.329070518200751e-15,
+        "r0_ohm": 0.0,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 1.1368683772161603e-13,
+        "dsoc_dt": 2.168404344971009e-19,
+        "du1_dt": 7.37257477290143e-18,
+        "pack_voltage_V": 5.329070518200751e-15,
+        "pack_current_A": 0.0,
+        "power_W": 7.105427357601002e-15,
+        "ohmic_heat_W": 0.0,
+        "polarization_heat_W": 1.5265566588595902e-16,
+        "heat_W": 6.106226635438361e-16,
+        "polarization_energy_J": 1.0547118733938987e-15,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 5.329070518200751e-15,
+        "noise_V": 0.0,
+        "heat_energy_J": 8.881784197001252e-15,
+        "port_loss_energy_J": 1.7763568394002505e-14,
+        "cumulative_Ah": 9.71445146547012e-17
+      },
+      "failures": []
+    },
+    "BT03": {
+      "pass_": true,
+      "rows": 801,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 5.551115123125783e-16,
+        "polarization_V": 7.008282842946301e-16,
+        "voltage_V": 5.773159728050814e-15,
+        "ocv_V": 5.329070518200751e-15,
+        "r0_ohm": 6.938893903907228e-18,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 1.1368683772161603e-13,
+        "dsoc_dt": 2.168404344971009e-19,
+        "du1_dt": 6.982261990806649e-17,
+        "pack_voltage_V": 5.773159728050814e-15,
+        "pack_current_A": 0.0,
+        "power_W": 6.217248937900877e-15,
+        "ohmic_heat_W": 2.7755575615628914e-17,
+        "polarization_heat_W": 1.6375789613221059e-15,
+        "heat_W": 1.9984014443252818e-15,
+        "polarization_energy_J": 8.354428260304303e-15,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 5.773159728050814e-15,
+        "noise_V": 0.0,
+        "heat_energy_J": 6.750155989720952e-14,
+        "port_loss_energy_J": 3.907985046680551e-14,
+        "cumulative_Ah": 6.245004513516506e-17
+      },
+      "failures": []
+    },
+    "BT05": {
+      "pass_": true,
+      "rows": 801,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 5.551115123125783e-16,
+        "polarization_V": 7.008282842946301e-16,
+        "voltage_V": 5.773159728050814e-15,
+        "ocv_V": 5.329070518200751e-15,
+        "r0_ohm": 6.938893903907228e-18,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 1.1368683772161603e-13,
+        "dsoc_dt": 2.168404344971009e-19,
+        "du1_dt": 6.982261990806649e-17,
+        "pack_voltage_V": 5.773159728050814e-15,
+        "pack_current_A": 0.0,
+        "power_W": 6.217248937900877e-15,
+        "ohmic_heat_W": 2.7755575615628914e-17,
+        "polarization_heat_W": 1.6375789613221059e-15,
+        "heat_W": 1.9984014443252818e-15,
+        "polarization_energy_J": 8.354428260304303e-15,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 5.773159728050814e-15,
+        "noise_V": 0.0,
+        "heat_energy_J": 6.750155989720952e-14,
+        "port_loss_energy_J": 3.907985046680551e-14,
+        "cumulative_Ah": 6.245004513516506e-17
+      },
+      "failures": []
+    },
+    "BT04_T0": {
+      "pass_": true,
+      "rows": 601,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 4.440892098500626e-16,
+        "polarization_V": 4.3021142204224816e-16,
+        "voltage_V": 5.329070518200751e-15,
+        "ocv_V": 4.884981308350689e-15,
+        "r0_ohm": 4.85722573273506e-17,
+        "r1_ohm": 4.85722573273506e-17,
+        "tau_s": 4.973799150320701e-14,
+        "c1_F": 5.115907697472721e-13,
+        "dsoc_dt": 2.168404344971009e-19,
+        "du1_dt": 4.141652298894627e-17,
+        "pack_voltage_V": 5.329070518200751e-15,
+        "pack_current_A": 0.0,
+        "power_W": 6.217248937900877e-15,
+        "ohmic_heat_W": 4.996003610813204e-16,
+        "polarization_heat_W": 1.1449174941446927e-15,
+        "heat_W": 1.6653345369377348e-15,
+        "polarization_energy_J": 6.161737786669619e-15,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 5.329070518200751e-15,
+        "noise_V": 0.0,
+        "heat_energy_J": 2.6645352591003757e-14,
+        "port_loss_energy_J": 1.554312234475219e-14,
+        "cumulative_Ah": 5.551115123125783e-17
+      },
+      "failures": []
+    },
+    "BT04_T25": {
+      "pass_": true,
+      "rows": 601,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 4.440892098500626e-16,
+        "polarization_V": 4.961309141293668e-16,
+        "voltage_V": 5.329070518200751e-15,
+        "ocv_V": 4.884981308350689e-15,
+        "r0_ohm": 4.85722573273506e-17,
+        "r1_ohm": 4.85722573273506e-17,
+        "tau_s": 5.329070518200751e-15,
+        "c1_F": 1.1368683772161603e-13,
+        "dsoc_dt": 2.168404344971009e-19,
+        "du1_dt": 5.0523821237824507e-17,
+        "pack_voltage_V": 5.329070518200751e-15,
+        "pack_current_A": 0.0,
+        "power_W": 6.217248937900877e-15,
+        "ohmic_heat_W": 4.996003610813204e-16,
+        "polarization_heat_W": 1.3183898417423734e-15,
+        "heat_W": 1.7763568394002505e-15,
+        "polarization_energy_J": 6.716849298982197e-15,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 5.329070518200751e-15,
+        "noise_V": 0.0,
+        "heat_energy_J": 2.7533531010703882e-14,
+        "port_loss_energy_J": 1.865174681370263e-14,
+        "cumulative_Ah": 5.551115123125783e-17
+      },
+      "failures": []
+    },
+    "BT04_T50": {
+      "pass_": true,
+      "rows": 601,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 4.440892098500626e-16,
+        "polarization_V": 6.106226635438361e-16,
+        "voltage_V": 5.773159728050814e-15,
+        "ocv_V": 4.884981308350689e-15,
+        "r0_ohm": 4.85722573273506e-17,
+        "r1_ohm": 4.85722573273506e-17,
+        "tau_s": 5.329070518200751e-15,
+        "c1_F": 5.115907697472721e-13,
+        "dsoc_dt": 2.168404344971009e-19,
+        "du1_dt": 6.353424730765056e-17,
+        "pack_voltage_V": 5.773159728050814e-15,
+        "pack_current_A": 0.0,
+        "power_W": 7.105427357601002e-15,
+        "ohmic_heat_W": 4.996003610813204e-16,
+        "polarization_heat_W": 1.6375789613221059e-15,
+        "heat_W": 2.0816681711721685e-15,
+        "polarization_energy_J": 7.91033905045424e-15,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 5.773159728050814e-15,
+        "noise_V": 0.0,
+        "heat_energy_J": 3.9968028886505635e-14,
+        "port_loss_energy_J": 1.8207657603852567e-14,
+        "cumulative_Ah": 5.551115123125783e-17
+      },
+      "failures": []
+    },
+    "BT06": {
+      "pass_": true,
+      "rows": 54721,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 9.28590537796481e-13,
+        "polarization_V": 1.2104592935630043e-11,
+        "voltage_V": 1.3034018309099338e-11,
+        "ocv_V": 9.325873406851315e-13,
+        "r0_ohm": 6.938893903907228e-18,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 1.7763568394002505e-15,
+        "c1_F": 1.1368683772161603e-13,
+        "dsoc_dt": 2.0328790734103208e-20,
+        "du1_dt": 1.2104582744129622e-12,
+        "pack_voltage_V": 1.3034018309099338e-11,
+        "pack_current_A": 0.0,
+        "power_W": 2.6068036618198676e-12,
+        "ohmic_heat_W": 8.673617379884035e-19,
+        "polarization_heat_W": 3.920312425381711e-12,
+        "heat_W": 3.920311991700842e-12,
+        "polarization_energy_J": 1.9601561693227687e-11,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 1.3034018309099338e-11,
+        "noise_V": 0.0,
+        "heat_energy_J": 4.673950115829939e-11,
+        "port_loss_energy_J": 4.675371201301459e-11,
+        "cumulative_Ah": 9.305889392408062e-13
+      },
+      "failures": []
+    },
+    "BT07_P04": {
+      "pass_": true,
+      "rows": 1200,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 3.552713678800501e-15,
+        "polarization_V": 6.522560269672795e-16,
+        "voltage_V": 7.993605777301127e-15,
+        "ocv_V": 7.549516567451064e-15,
+        "r0_ohm": 4.163336342344337e-17,
+        "r1_ohm": 3.2959746043559335e-17,
+        "tau_s": 2.842170943040401e-14,
+        "c1_F": 3.410605131648481e-13,
+        "dsoc_dt": 4.87890977618477e-19,
+        "du1_dt": 6.375108774214766e-17,
+        "pack_voltage_V": 7.993605777301127e-15,
+        "pack_current_A": 0.0,
+        "power_W": 6.394884621840902e-14,
+        "ohmic_heat_W": 5.329070518200751e-15,
+        "polarization_heat_W": 5.88418203051333e-15,
+        "heat_W": 1.0880185641326534e-14,
+        "polarization_energy_J": 3.2862601528904634e-14,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 0.0,
+        "noise_V": 0.0,
+        "heat_energy_J": 2.5579538487363607e-13,
+        "port_loss_energy_J": 8.526512829121202e-14,
+        "cumulative_Ah": 1.1796119636642288e-16
+      },
+      "failures": []
+    },
+    "BT07_P06": {
+      "pass_": true,
+      "rows": 1200,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 1.27675647831893e-15,
+        "polarization_V": 6.800116025829084e-16,
+        "voltage_V": 6.217248937900877e-15,
+        "ocv_V": 5.773159728050814e-15,
+        "r0_ohm": 4.163336342344337e-17,
+        "r1_ohm": 3.2959746043559335e-17,
+        "tau_s": 2.842170943040401e-14,
+        "c1_F": 3.410605131648481e-13,
+        "dsoc_dt": 4.87890977618477e-19,
+        "du1_dt": 6.591949208711867e-17,
+        "pack_voltage_V": 6.217248937900877e-15,
+        "pack_current_A": 0.0,
+        "power_W": 6.039613253960852e-14,
+        "ohmic_heat_W": 5.551115123125783e-15,
+        "polarization_heat_W": 6.161737786669619e-15,
+        "heat_W": 1.0658141036401503e-14,
+        "polarization_energy_J": 3.419486915845482e-14,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 0.0,
+        "noise_V": 0.0,
+        "heat_energy_J": 2.4158453015843406e-13,
+        "port_loss_energy_J": 1.5631940186722204e-13,
+        "cumulative_Ah": 1.3877787807814457e-16
+      },
+      "failures": []
+    },
+    "BT07_P08": {
+      "pass_": true,
+      "rows": 1200,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 6.938893903907228e-16,
+        "polarization_V": 6.730727086790012e-16,
+        "voltage_V": 5.773159728050814e-15,
+        "ocv_V": 5.329070518200751e-15,
+        "r0_ohm": 4.163336342344337e-17,
+        "r1_ohm": 3.2959746043559335e-17,
+        "tau_s": 2.842170943040401e-14,
+        "c1_F": 3.410605131648481e-13,
+        "dsoc_dt": 4.87890977618477e-19,
+        "du1_dt": 6.548581121812447e-17,
+        "pack_voltage_V": 5.773159728050814e-15,
+        "pack_current_A": 0.0,
+        "power_W": 5.3290705182007514e-14,
+        "ohmic_heat_W": 5.551115123125783e-15,
+        "polarization_heat_W": 5.828670879282072e-15,
+        "heat_W": 1.021405182655144e-14,
+        "polarization_energy_J": 3.2862601528904634e-14,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 0.0,
+        "noise_V": 0.0,
+        "heat_energy_J": 2.1316282072803006e-13,
+        "port_loss_energy_J": 1.2079226507921703e-13,
+        "cumulative_Ah": 1.734723475976807e-16
+      },
+      "failures": []
+    },
+    "EK01": {
+      "pass_": true,
+      "rows": 3001,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 0.0,
+        "soc": 1.3322676295501878e-15,
+        "polarization_V": 4.926614671774132e-16,
+        "voltage_V": 6.217248937900877e-15,
+        "ocv_V": 6.217248937900877e-15,
+        "r0_ohm": 0.0,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 1.1368683772161603e-13,
+        "dsoc_dt": 3.5236570605778894e-19,
+        "du1_dt": 4.9439619065339e-17,
+        "pack_voltage_V": 6.217248937900877e-15,
+        "pack_current_A": 0.0,
+        "power_W": 7.105427357601002e-15,
+        "ohmic_heat_W": 0.0,
+        "polarization_heat_W": 9.818534874028728e-16,
+        "heat_W": 1.3322676295501878e-15,
+        "polarization_energy_J": 5.287437154777308e-15,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 0.0,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 0.0,
+        "connected": 0.0,
+        "measured_voltage_V": 6.217248937900877e-15,
+        "noise_V": 1.734723475976807e-17,
+        "heat_energy_J": 2.0605739337042905e-13,
+        "port_loss_energy_J": 1.545430450278218e-13,
+        "cumulative_Ah": 4.371503159461554e-16
+      },
+      "failures": []
+    },
+    "PA01": {
+      "pass_": true,
+      "rows": 1001,
+      "max_errors": {
+        "time_s": 0.0,
+        "current_A": 1.234568003383174e-13,
+        "soc": 1.2212453270876722e-15,
+        "polarization_V": 1.2663481374630692e-15,
+        "voltage_V": 1.199040866595169e-14,
+        "ocv_V": 6.217248937900877e-15,
+        "r0_ohm": 0.0,
+        "r1_ohm": 3.469446951953614e-18,
+        "tau_s": 0.0,
+        "c1_F": 1.1368683772161603e-13,
+        "dsoc_dt": 1.6967763999398144e-17,
+        "du1_dt": 1.8301332671555315e-16,
+        "pack_voltage_V": 7.460698725481052e-14,
+        "pack_current_A": 2.4291679778798425e-13,
+        "power_W": 3.808509063674137e-12,
+        "ohmic_heat_W": 1.5631940186722204e-13,
+        "polarization_heat_W": 3.042011087472929e-14,
+        "heat_W": 1.7563728249569976e-13,
+        "polarization_energy_J": 1.3589129821411916e-13,
+        "available_solar_W": 0.0,
+        "actual_solar_W": 5.684341886080801e-13,
+        "request_W": 0.0,
+        "load_W": 0.0,
+        "distribution_heat_W": 0.0,
+        "power_residual_W": 3.80850906367414e-12,
+        "connected": 0.0,
+        "measured_voltage_V": 1.199040866595169e-14,
+        "noise_V": 0.0,
+        "heat_energy_J": 4.575895218295045e-12,
+        "port_loss_energy_J": 4.007461029686965e-12,
+        "cumulative_Ah": 6.210310043996969e-16
+      },
+      "failures": []
+    }
+  },
+  "passed": 10,
+  "total": 10,
+  "all_pass": true,
+  "compared_samples": 70554,
+  "plan_sha256": "2cf9d8dcd508b8d66ecbeda2616a5b8e28ef236a0caf5abe8840b8ea411ce2a8",
+  "scope": "10 model projects; artificial temperature table; measured voltage only at 25 C; no full spacecraft thermal integration"
+}

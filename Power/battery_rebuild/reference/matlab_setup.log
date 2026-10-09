@@ -1,0 +1,18 @@
+C:/Workspace/SpaceDC/Power/battery_rebuild/reference/mathworks_download
+                      id: 'simscapebattery-ex31513223'
+               component: 'simscapebattery'
+                filename: 'ex31513223'
+            componentDir: "C:\Users\markl\Documents\MATLAB\Examples\R2026b\simscapebattery"
+                    main: 'DownloadBatteryDataExample'
+                    type: 'livem'
+               extension: 'm'
+                   files: {0×1 cell}
+                    dirs: {[1×1 struct]}
+                products: 'matlab,simscapebattery'
+            alternatives: ''
+               thumbnail: ''
+    thumbnailIsCheckedIn: 0
+                 project: []
+                 foundBy: 'simscapebattery/DownloadBatteryDataExample'
+                 workDir: 'C:/Workspace/SpaceDC/Power/battery_rebuild/reference/mathworks_download'
+

@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-08",
+  "execution_complete": true,
+  "all_acceptance_criteria_pass": false,
+  "case_records": 13,
+  "passed_case_records": 12,
+  "failed_case_records": 1,
+  "failed_case": "NOISE",
+  "independent_simulink_cases": 9,
+  "compared_samples": 34805,
+  "unit_test_functions_passed": 8,
+  "validated_scope": "25 C BAK pulse voltage and numerical/analytic/synthetic checks; real SOC and parameter truth unavailable",
+  "integration": "Standalone rebuilt battery core; legacy Thermal SPM adapter not migrated",
+  "artifacts": [
+    {
+      "name": "SDTwin_Power_Design_Report_CN_v19",
+      "docx_sha256": "920a8a4b703b9c804584fa24be5591e05777bc051b6d9157503c6def2b80f442",
+      "pdf_sha256": "afd757bd8f21befb94bb870c181d11b07b8d5d93ce50f36c493d4818e277fe95",
+      "pages": 26
+    },
+    {
+      "name": "SDTwin_Power_Design_Report_EN_v19",
+      "docx_sha256": "6d1a01c99fd62aeedbed64ac9f1b13cba67d4c85c983828ecc7d11ffce3f0eb5",
+      "pdf_sha256": "317f5c85b2f610b3c33a6b3eca3925e4cda217753529a866b07743a3c673e862",
+      "pages": 26
+    },
+    {
+      "name": "SDTwin_Battery_EKF_RLS_Test_Report_CN",
+      "docx_sha256": "24f274da3dbbd95a3e1050e87faad7198c387d319412c8bdc0c156ee1228b528",
+      "pdf_sha256": "6189a19c5e92a6dc5fd46c3447146e295d8ae8ddf58fb9d65076c3cba37c1939",
+      "pages": 30
+    }
+  ],
+  "hashes": {
+    "battery.py": "56986542715dfbca0ffbdc01d5a6d316732f8d25e503a8005743bd33ee805988",
+    "battery_rebuild\\contract.json": "6e21358e4f35bca07dcff630552dc35eeb85701c54235860baef2b8b70fc2a7c",
+    "battery_rebuild\\run.py": "7d22b240bda6010b36467e55fd729ec49c1d6086709c2e9dbf84384ca19a0fbe",
+    "battery_rebuild\\analyze.py": "ad2443de7beb74693e32dff738552020e036047a77ecbcee1814b931116ef6d6",
+    "battery_rebuild\\test_model.py": "1d385a3e513f0bc7ec9eeec156886a5d23c1a655750145cf8aa646b4ea8f33fa",
+    "battery_rebuild\\build_reports.py": "241939c767882b356ece8ccfb552ba0f181c28e6de73e0e1aa1d3d870ef3c734",
+    "battery_rebuild\\matlab\\ecm_observer_sfun.m": "5727a1170b1c8ba108dfea4405596fb62ad8fb1e78ec2a43c512b9e03bbae9fa",
+    "battery_rebuild\\matlab\\ecm_reference_init.m": "0aecd3981c2f3509fb720f9bfb30058bf72d7a3d866320341b29eb0a796008f8",
+    "battery_rebuild\\matlab\\ecm_reference_step.m": "8801580bc12cfb2bec2ebca47b52810bd5f5dc73eb56566aabbf57ebb6b77336",
+    "battery_rebuild\\matlab\\ecm_state_codec.m": "a9e451ea71d1639c847c90c0658f14b4ab51cc3494c175ac242d3a78601c21d3",
+    "battery_rebuild\\matlab\\run_simulink.m": "f5cdedd8ce44de8455a9d0a35bebf90f974b36f962418cfb7bdb31d228ac1ea0",
+    "battery_rebuild\\matlab\\sdtwin_battery_ekf_rls_1rc.slx": "775fb6b0317aaa2f4da45e722b9722990ce2f3b7f29e82d6711b81c6739e366a",
+    "battery_rebuild\\fixtures\\DRIFT.csv": "a8b44014a186f5377105cf637b94877a191e7e6feef9ed64a570defff324f65f",
+    "battery_rebuild\\fixtures\\DRIFT.json": "758a5116e5494a9bb8ed6bb1bfd15c820433c5b8ff2cc3850ca35b269c0f3dfb",
+    "battery_rebuild\\fixtures\\EXACT.csv": "b96a03fe4283319387c079de6d216dc6afa5665dcca12284b18bd425d56f8e3b",
+    "battery_rebuild\\fixtures\\EXACT.json": "71485caf9bbcf243d114f58c50ca30088069877cceadf1f1e5ae8f94913823dc",
+    "battery_rebuild\\fixtures\\FIXED_EKF.csv": "088fc024b679e75777a21826b2d65161f459dd424a0cb0d2d9dff23593d56627",
+    "battery_rebuild\\fixtures\\FIXED_EKF.json": "71769f068cac54fc2d3790ac35db84ad80043f452f6e8fb1a6d2186a25ac8c5f",
+    "battery_rebuild\\fixtures\\MEASURED_03.csv": "d89b5a1ddf4891a6a9220b4706be63c5fd1b4102b2d111da31e95a8a5edf34c9",
+    "battery_rebuild\\fixtures\\MEASURED_03.json": "cf2ac55cf71c2a351cec7273fb65955d2392975463026cad892bdb8b4d288421",
+    "battery_rebuild\\fixtures\\MEASURED_04.csv": "7dac8d021c79e6014440f1c3abb392bd1f7e16e58beab13368ea85576a7c12af",
+    "battery_rebuild\\fixtures\\MEASURED_04.json": "e37f350c843d41ff01b0d8cd69efc40bf8c819e2ab1bcbe2117322ee6ed619fc",
+    "battery_rebuild\\fixtures\\MEASURED_06.csv": "6169ef20ffda3b0fbb6c1bbefb416cbb68c2d3068a20482ee686a7c45bc8d6eb",
+    "battery_rebuild\\fixtures\\MEASURED_06.json": "8ad306f06b7765b078fb41eb679a4d2b3e895586ba231c0be8796afa8eea70c5",
+    "battery_rebuild\\fixtures\\MEASURED_08.csv": "f43a58ced897e5553f374979c25130c79beaddacf5d819151b5623c79821179a",
+    "battery_rebuild\\fixtures\\MEASURED_08.json": "aa8acde5854a86f90252fb04140dbe9134c836e596741a71d5c97f2e391533b2",
+    "battery_rebuild\\fixtures\\NOISE.csv": "088fc024b679e75777a21826b2d65161f459dd424a0cb0d2d9dff23593d56627",
+    "battery_rebuild\\fixtures\\NOISE.json": "834cf80aeb4eeb0d542a808cdafb3b63f555f14dd173eabce78009df2448976c",
+    "battery_rebuild\\fixtures\\REST.csv": "65d6c1b02ba437b3d0cc34761a9ab6d5b89c159169f1102c1e7de4bc4d602f55",
+    "battery_rebuild\\fixtures\\REST.json": "33ec9ce714e5c061681d6328bba7d16aeba64e79b6a48bbd098d35e57b429d49",
+    "battery_rebuild\\data\\BAK_0C.csv": "a715d0e484c1e9a1712dfbf03271b197b1c3c041d00ec74a5319c2e68a7154cb",
+    "battery_rebuild\\data\\BAK_10C.csv": "a931800e8001d589115a25d87bc8695c8752f17135ba64b178a86cbf35e9c035",
+    "battery_rebuild\\data\\BAK_25C.csv": "7fba19867cf66e81152917cf265868bf572892ea7142cd61bb5c9e014ea4f84b",
+    "battery_rebuild\\data\\BAK_35C.csv": "b25492dc84a64396262d31d0cb81422d41d255e5c153e1379e90e75060249ab4",
+    "battery_rebuild\\data\\BAK_45C.csv": "692a69d2bc347e86c25d2b57c8adef96038fb42c73401a83c3f89e8e4974528e",
+    "battery_rebuild\\data\\LICENSE.txt": "ff2cd9ada5ad2f2c15178b17826e707cf35e013343624ff367d12fcf24e0dcc3"
+  },
+  "rendering": "Word COM PDF export after packaged renderer reported missing LibreOffice; Poppler PNG review",
+  "visual_inspection": {
+    "date": "2026-10-08",
+    "all_pages_reviewed": true,
+    "inspected_render_directories": {
+      "SDTwin_Power_Design_Report_CN_v19": "qa/final_v2/SDTwin_Power_Design_Report_CN_v19",
+      "SDTwin_Power_Design_Report_EN_v19": "qa/final_v2/SDTwin_Power_Design_Report_EN_v19",
+      "SDTwin_Battery_EKF_RLS_Test_Report_CN": "qa/final_v3"
+    },
+    "findings": "Final renders checked for clipping, overlap, detached captions and orphan paragraphs; none remained after revisions"
+  },
+  "source_originals_preserved": true
+}

@@ -1,0 +1,405 @@
+0 [Normal] 
+1 [Normal] 
+2 [Normal] 
+3 [Normal] 
+4 [Normal] NTU SPACE DATA CENTER
+5 [Normal] SDTWIN POWER
+6 [Normal] Software Module Design Report
+7 [Normal] Solar array • Reduced SPM • Power allocation
+8 [Normal] College of Computing and Data Science, Nanyang Technological University
+9 [Normal] 
+10 [Normal] Version Control
+11 [Normal] 
+12 [Normal] 
+13 [Heading 1] Document Overview
+14 [Heading 2] Purpose
+15 [Normal] This report specifies the power model for a computing node on one satellite. Its physical components are a solar array, battery pack, power controller, and distribution unit. Orbit illumination and computing demand determine solar generation, battery charging or discharge, delivered power, and battery and distribution heat. A reduced single-particle model, SPM, retains one average lithium state per electrode and couples to the lumped battery temperature in Thermal.
+16 [Heading 2] Scope
+17 [Normal] The report defines equations, module responsibilities, interfaces, and scene configuration for preparing component parameters and implementing the solver. Asset fields and model bindings are proposed project interfaces; they do not imply implementation in the existing demonstrator. The scene specifies the target cell and its electrochemical parameter set. Capacity and operating C-rate follow the selected cell parameters.
+18 [Heading 2] Intended readers
+19 [Normal] The report is for Power developers, Thermal and Compute integrators, and researchers preparing device parameters and configuring simulation scenes. Chapter 4 defines the physical model, Chapter 5 explains its functions, and Chapter 6 specifies their calling contracts.
+20 [Heading 2] Normative terminology
+21 [Engineering Caption] Table 1 Terminology and model conventions
+22 [Heading 1] Requirements and Design Objectives
+23 [Heading 2] Scene model assembly
+24 [Normal] The Power module shall use the user-configured scene and SimReady assets to read the selected models and parameters for the solar array, battery pack, power controller, and distribution unit. It shall assemble component equations and power-balance relations according to the scene's electrical connections and set the initial battery state. Changes to component types, parameters, or connections shall be reflected in the assembled model.
+25 [Normal] P-04 requires orbital illumination, load demand, and component temperatures at a shared physical time, linked across domains by component instance identifiers. P-05 requires asset and model versions, parameter provenance, scene overrides, initial states, and numerical settings to be retained for traceable assembly and reproducible simulation.
+26 [Heading 2] Component simulation requirements
+27 [Normal] After assembly, the components shall calculate the physical states and outputs in Table 2 to determine the power actually delivered to the compute node, the resulting battery-state changes, and heat generation.
+28 [Engineering Caption] Table 2 Power component simulation requirements
+29 [Heading 1] Overall Design
+30 [Heading 2] System architecture
+31 [Normal] The power system contains a solar array, battery pack, power controller, and distribution unit, and supplies the compute node. Figure 1 shows their connections. Orbit illumination and attitude are environmental inputs to the array; the links marked with powers are electrical connections. The bidirectional battery port represents charging and discharge. The controller connects directly to the distribution unit.
+32 [Normal] 
+33 [Engineering Caption] Figure 1 Power components and electrical connections
+34 [Normal] The Chapter 4 models calculate component powers, battery-state changes, and heat in this system. In software, solve_power_allocation evaluates the complete power system. It calls the solar-array and battery functions and performs controller rules and distribution calculations internally. Scene calculations supply same-time environment, demand, and state. SimReady assets provide component parameters and connections, while visualization reads saved results.
+35 [Normal] The existing SpaceDC demonstrator has USD generation, configuration updates, and state advancement, but its battery uses  integration. Integrating this model replaces that battery instance's old integration instead of maintaining two charge states.
+36 [Heading 2] Package decomposition
+37 [Normal] The Power module separates data definitions, parameter resolution, solar-array calculations, battery calculations, overall power allocation, and protection events into source files. The following package structure is proposed for implementation. Entries ending in .py are files; indented entries beneath them are functions defined in those files.
+38 [Normal] types.py defines the data objects in Section 5.1, which the calculation files use to exchange parameters, state, and results. __init__.py exports the public types and functions in Chapter 6 and Appendix A. allocation.py calls solar.py and battery.py, and implements the controller and distribution calculations within solve_power_allocation. Chapter 5 describes the functions.
+39 [Normal] SimReady assets hold device parameters and model references. Scene configuration holds instances, connections, initial conditions, and parameter overrides. The project manages these inputs separately from source code and passes them to the Power model through load_power_parameters. Chapter 9 specifies their fields and parameter sources.
+40 [Normal] In Table 3, the components in Figure 1 are linked to the Chapter 4 models and Chapter 5 functions. The solar array and battery have component evaluators. Controller and distribution calculations are both included in the overall power evaluator. Initialization and protection-state updates are called at their respective times.
+41 [Engineering Caption] Table 3 Mapping of power components, models, and functions
+42 [Heading 2] Shared data flow
+43 [Normal] The solar array and battery connect to the controller, which connects directly to the distribution unit supplying the compute node. The battery absorbs solar surplus or covers a supply deficit. Solar power plus battery-terminal power equals actual load power plus distribution loss, as specified by P1 in Section 4.1.
+44 [Normal] 
+45 [Engineering Caption] Figure 2 Shared inputs and outputs of Power
+46 [Normal] All inputs refer to the same simulation time. Power owns the two lithium states and load-protection state; Thermal alone owns battery temperature. Each evaluation solves current and heat, then passes heat to Thermal for temperature derivatives. The common numerical calculation integrates these states together. Orbit supplies illumination, position, and attitude without also running its old one-panel temperature model.
+47 [Heading 1] Concise Power Modeling Background
+48 [Heading 2] Overall Power Balance and States
+49 [Normal] The complete circuit satisfies terminal power conservation:
+50 [Normal]  is actual solar-array output,  battery-terminal output,  power received by the load, and  distribution loss, all in .  during discharge and  during charging. For example,  solar output,  battery absorption, and  distribution loss deliver  to the load: .
+51 [Normal] Internal battery heat, , is sent to Thermal. Equation P1 already uses battery-terminal electrical power, so internal heat is not deducted again. This version neglects controller losses and uses fixed solar-array and distribution efficiencies, while retaining battery electrochemical and temperature coupling. Radiation does not affect this model.
+52 [Normal] This version combines continuous state equations with algebraic relations. Power owns two continuous states: average lithium fractions in the negative and positive electrodes. Current determines the lithium-transfer rate and thus their time evolution. Terminal voltage, surface fractions, solar output, and component heat are evaluated from the current state without separate integration states.
+53 [Normal] Battery temperature belongs to Thermal. Temperature changes diffusion, reaction kinetics, and voltage, which change the current and heat required for the same demand. Battery heat then affects temperature, forming the coupling between Power and Thermal. Calculations use states at the same time. Section 8 explains how the solver avoids holding an outdated temperature during battery evaluation.
+54 [Normal] The array uses fixed maximum-power-point efficiency, the controller ideal quasi-static MPPT, and the distribution unit fixed efficiency. These support orbit-scale energy and supply calculations. Switching waveforms, bus capacitance, and voltage ripple are outside this model. The battery uses the literature's quadratic particle-concentration approximation, retaining electrode material and reaction parameters without spatial electrolyte discretization. [1–4]
+55 [Heading 2] Solar Array and MPPT
+56 [Normal] Maximum solar-array power is
+57 [Normal]  is solar irradiance from Orbit, in , including eclipse effects.  is the angle between the Sun direction and panel normal, determined from attitude and installation orientation.  is incident panel irradiance, set to zero when facing away from the Sun.  is total active cell area, a fixed geometric parameter in .  is conversion efficiency at the maximum power point for the applicable spectrum.
+58 [Normal] The controller uses ideal quasi-static MPPT. When the load and battery can accept all generation, . Output decreases when the battery is full or reaches a charging limit. Switching and tracking transients are omitted. The solar thermal model always uses actual . [1]
+59 [Normal] The illumination adapter transforms the installation normal from body to inertial coordinates and compares it with the spacecraft-to-Sun direction. Keep include_eclipse=True when calling Orbit's sun_intensity; its output is  in Equation P2. Eclipse diagnostics may locate entry and exit events, but must not multiply this irradiance again. Use actual active cell area for , excluding gaps and display-frame area.
+60 [Heading 2] Controller and Distribution Unit
+61 [Normal] The controller connects the solar array, battery, and distribution unit, which supplies the compute node:
+62 [Normal]  is distribution input power in .  is the efficiency of the distribution unit and connecting lines, greater than zero and at most one. The first line combines solar and battery power; the next two calculate load power and distribution heat. At  input and 0.90 efficiency, the load receives  and heat is . Combining the three lines gives Equation P1.
+63 [Normal] The controller implements allocation rules without a separate circuit energy state. The distribution unit supplies the compute node and sends its loss to Thermal node . Parameter provenance must specify which wiring losses are included in efficiency so that a wire resistance is not counted in both cell ohmic resistance and distribution efficiency.
+64 [Heading 2] Battery Model
+65 [Normal] The battery model takes cell current and battery temperature as inputs. Using the current lithium states of both electrodes, it calculates cell terminal voltage, the two lithium-state derivatives, and pack heat generation. The power-allocation module solves for current, and Thermal updates temperature.
+66 [Heading 3] Cell and Pack
+67 [Normal] SPM represents each electrode's active material by one spherical particle. Lithium leaves the negative electrode and enters the positive electrode during discharge. The literature's quadratic concentration-profile approximation requires only two average lithium states; surface concentrations follow algebraically. [2,3]
+68 [Normal] One cell is modeled and scaled to a pack of identical cells:
+69 [Normal]  and  are cell current and terminal voltage, in  and ;  and  are pack current and voltage.  is the number of series cells per branch and  the number of parallel branches. Cells share identical states and temperature, with equal parallel currents. All currents are positive for discharge and negative for charging.
+70 [Heading 3] Lithium Content and Surface Concentration
+71 [Normal]  and  are dimensionless average lithium fractions in negative- and positive-electrode particles: average concentration divided by the material's maximum concentration. They evolve as
+72 [Normal]  is time in .  and  are the electrode charges corresponding to a lithium-fraction change from zero to one, in , distinct from nameplate cell capacity in . Positive discharge current reduces the negative-electrode fraction and increases the positive-electrode fraction. Both equations transfer equal lithium amounts between electrodes.
+73 [Normal] Electrode reactions occur at particle surfaces. Surface fractions are approximated by
+74 [Normal] Subscript  denotes the surface.  is particle radius in ,  solid lithium diffusivity in , and  identifies the negative or positive electrode. The correction describes the surface–interior difference, which increases with current, particle size, or slower diffusion. The factor 15 follows from the quadratic profile in a sphere. [2,3] The particle-center fraction is . Both center and surface fractions must remain within the material's permitted range, strictly between zero and one.
+75 [Normal] These two states retain lithium transfer between electrodes. The approximation does not resolve fast pulses or diffusion relaxation after current stops. This version is intended for low to moderate C-rates. A quartic-profile SPM can improve transient resolution; significant electrolyte concentration gradients require SPMe or a reduced DFN model.
+76 [Heading 3] Terminal Voltage
+77 [Normal] Cell voltage equals the electrode equilibrium-potential difference minus reaction and ohmic losses:
+78 [Normal]  is electrode equilibrium potential at the current surface fraction and temperature, in .  is the signed reaction voltage change in , calculated using symmetric Butler–Volmer kinetics. [4]  is the exchange current of the cell's entire electrode in , describing how readily the reaction proceeds.  is cell ohmic resistance in .
+79 [Normal]  is battery temperature from Thermal, in .  is the gas constant;  is the Faraday constant.  is the inverse hyperbolic sine, available in numerical libraries. Reaction and ohmic drops lower discharge voltage. Negative charging current correspondingly raises terminal voltage.
+80 [Heading 3] Separate Heat Generation and Lumped Temperature Model
+81 [Normal] Calculate cell heat, then multiply by the number of cells:
+82 [Normal]  and  are cell and pack heat generation in . Reaction heat and ohmic heat, the first two terms, are nonnegative.  is the temperature derivative of the equilibrium-potential difference at fixed surface fractions, in . The third term is reversible heat; it may be positive or negative and must not be clipped to zero. Mixing and side-reaction heat are omitted. [5]
+83 [Normal] For illustration, take  discharge current,  total reaction drop,  resistance,  temperature, and . The terms are , , and , giving  total heat.
+84 [Normal] Pack temperature is calculated in Thermal:
+85 [Normal]  is pack heat capacity in ,  common-radiator temperature in , and  battery-to-radiator thermal resistance in . The right side subtracts radiator heat flow from battery heat generation. Temperature is integrated once, in Thermal, and fed back to Equations P6–P8. The first version requires no FEM.
+86 [Heading 3] Parameters and Initial State
+87 [Normal] Electrode charge is .  is active-material volume fraction,  total effective coated-electrode area in ,  electrode thickness in , and  maximum lithium concentration in . These quantities, particle radius, and ohmic resistance come from the target cell's material parameter set.
+88 [Normal] Each function uses the following explicit parameterization:
+89 [Normal] Here  is the electrode surface fraction .  is reference temperature in ;  is reference diffusivity;  is exchange current at reference temperature and .  and  are diffusion and reaction activation energies in . The first equation describes temperature-dependent diffusion; the second also includes occupied and vacant lithium sites. Electrolyte concentration is constant in this version.
+90 [Normal] The third equation represents material equilibrium potential and its temperature coefficient by polynomials.  is the power index,  the fitted degree,  has units , and . Coefficients and valid fraction ranges come from material measurements or parameter assets for the selected cell. These material curves cannot be inferred from battery geometry and rated capacity alone. In Equation P8,  is the positive-electrode temperature-coefficient polynomial minus the negative-electrode polynomial.
+91 [Normal] Initial , , and  follow from initial charge state and temperature. If  is required, use .  and  are negative-electrode fractions at the cell's permitted  and , from the same parameter set. Cell  and electrode fraction are different quantities. A SimReady asset must include these electrochemical parameters and functions; geometry and material labels alone cannot run SPM.
+92 [Heading 2] Power Allocation and Device Limits
+93 [Normal] Each step reads illumination, requested power , and current . Calculate  and required distribution input . Their difference is the required battery-terminal power. Solve one algebraic equation for cell current:
+94 [Normal] Equations P6, P7, and P10 fully determine . Search from zero current in the charging or discharging direction. Calculate surface fractions and terminal voltage, then compare voltage times current with target power. Select the first solution satisfying Equation P11 before reaching any current, voltage, or lithium-fraction constraint. Permitted ranges come from the cell parameter asset.
+95 [Normal] Insufficient solar power gives positive current and battery discharge. Surplus solar power gives negative current and charging. At a charging limit, use the allowed charging current and reduce solar output using . Find the charging boundary by increasing charging-current magnitude until the first current, voltage, or fraction constraint is reached. If discharge cannot meet demand, disconnect the compute load at an accepted event boundary and set . Remaining solar power can still charge the battery under the same limits.
+96 [Normal] Check the compute node's start/stop state first; an inactive node uses the zero-load case. Following power loss, retry supply only after a new start command. Once current is determined, integrate Equation P5 and send  to Thermal. Reallocate power when integration reaches a voltage, average-fraction, center-fraction, or surface-fraction boundary, without stepping beyond it and clipping the state afterward.
+97 [Normal] When temperature leaves the parameter set's applicable range, report an invalid condition or trigger the scene's prescribed stop condition. Device protection temperatures, if used to disconnect supply, require separate target-device data. Store material-model validity and device operating limits separately; missing protection data must not silently imply unrestricted operation.
+98 [Heading 1] Detailed Functional Design
+99 [Normal] This chapter describes the functions implementing the power system in Figure 1. Scene initialization calls load_power_parameters. Each power evaluation calls solve_power_allocation, which uses solar_power for available generation and calls battery_response at trial currents until power balance or a device limit determines the operating condition. It then completes distribution calculations. Only after an event boundary is accepted is apply_power_event called to update protection state.
+100 [Heading 2] Common data models
+101 [Normal] The following Python data objects are proposed. Dynamic records share run_id, instance_id, and time_s; a Power evaluation uses Sat01 as instance_id. parameters.links maps ports to SolarArray01, Battery01, PDU01, and Compute01. Fixed parameters do not store evolving lithium states or temperatures.
+102 [Engineering Caption] Table 4 Common Power data objects
+103 [Normal] solar contains area_m2, efficiency, and normal_body[3]. battery contains N_s, N_p, R_ohm_ohm, T_ref_K, electrode records electrodes[n,p],  endpoints, and validity ranges. Each electrode records radius_m, active_fraction, electrode_area_m2, thickness_m, c_max_mol_m3, D_ref_m2_s, I0_ref_A, E_D_J_mol, E_I_J_mol, and arrays b_V and d_V_K of length . These represent the particle, material, and reaction parameters in Chapter 4. Loading derives Q_n_C and Q_p_C from electrode materials and geometry.
+104 [Normal] battery.limits stores i_min_A, i_max_A, v_min_V, v_max_V, x_n_range[2], x_p_range[2], and T_range_K[2]. Interval endpoints run from low to high. Average, surface, and center fractions must satisfy the corresponding material range.  endpoints use x_n_0 and x_n_100, separately from material validity limits.
+105 [Normal] constraint_margins records distances to current, voltage, average-fraction, surface-fraction, and center-fraction boundaries, in , , and dimensionless fractions. Zero denotes a boundary. Temperature validity is checked separately in . Input or numerical errors return valid=False; confirmed physical constraint events return valid=True and event_required=True. Neither case supplies ports or derivatives for continued integration, and neither substitutes zero heat for success. Only valid=True and event_required=False results supply power and heat to the current integration stage.
+106 [Heading 2] Parameter Resolution and Checks
+107 [Normal] Scene initialization uses this function to assemble asset parameters and connections for the Figure 1 components into parameters for the Chapter 4 models.
+108 [Normal] asset_record supplies fixed-version array, cell, and distribution parameters with provenance. scene_record supplies instances, installation, initial conditions, connections, and numerical settings. The function checks versions and required fields, applies permitted overrides, converts to SI, derives electrode charges, and checks counts, areas, efficiencies, reference parameters, and coefficient dimensions. It also checks initial lithium inventory, zero-current voltage, and temperature without advancing state.
+109 [Normal] The result is a resolved PowerParameters object. Missing material functions, nonfinite values, reversed ranges, or incompatible initial conditions reject startup with a field name and reason. Coefficients run from the constant term to the highest degree; electrode degrees may differ. Evolving temperature, lithium state, and protection state are not written into assets. Chapter 9 specifies sources and override order.
+110 [Heading 2] Battery Response Calculation
+111 [Normal] This function implements the electrochemical and heat calculations in Section 4.4 and is called by solve_power_allocation. Overall solution requires trial currents, so this function may be called repeatedly at one time while the battery state remains unchanged between those trials.
+112 [Normal] For Battery01, the asset supplies cell parameters and series/parallel counts, the instance supplies its current lithium states, and Thermal supplies that instance's temperature. battery_response evaluates this battery using P4–P8 and P10. Another battery instance can reuse the same function with its own parameters, states, and temperature.
+113 [Normal] i_A is cell current, positive for discharge. state supplies x_n and x_p, and T_B_K comes from Thermal at the same trial stage. Evaluate diffusion coefficients from P10, then surface fractions from P6, checking average, surface, and center fractions. Evaluate the P10 exchange currents and equilibrium potentials at those surface fractions. Horner evaluation uses the ordered coefficient arrays; the positive-minus-negative temperature-coefficient polynomial supplies the reversible-heat coefficient in P8.
+114 [Normal] With material functions known, P7 gives cell voltage, P5 gives lithium derivatives, and P8 gives heat. P4 then scales current, voltage, and power to the pack. Exchange currents, diffusion coefficients, and temperature must remain valid. Invalid surface fractions must not enter a square root or be clipped to manufacture success. If current search reaches a boundary, the caller narrows its admissible interval and retains the diagnostic.
+115 [Normal] The function reads inputs and returns BatteryResponse. It does not integrate concentration, integrate P9, or latch a trip. Cell-to-pack scaling occurs once. Thermal calculates the P9 temperature derivative so Battery01 has one temperature state.
+116 [Heading 2] Illumination and Solar-Power Calculation
+117 [Normal] This function implements the P2 solar-array model in Section 4.2. solve_power_allocation calls it for the generation available in the current environment. Controller rules within the overall solution determine actual extraction.
+118 [Normal] environment supplies same-time orbit irradiance, position, and attitude. Subtract spacecraft position from the geocentric solar position and normalize. Rotate the asset's body-frame normal to GCRS using the quaternion and calculate the dot product. Only small floating-point excursions receive numerical correction; rear-side incidence is set to zero.
+119 [Normal] P2 returns G_S_W_m2 and P_pv_max_W, without selecting actual extraction. G_W_m2 corresponds to sun_intensity with include_eclipse=True and receives no second eclipse factor. Zero-length directions or normals, invalid attitude, inconsistent frames, and negative irradiance reject evaluation. The function has no state, and temperature does not change this version's fixed efficiency.
+120 [Heading 2] Overall Power-System Evaluation
+121 [Normal] This function is the Power entry point used by the coupled calculations in Section 3.3. It solves the solar-array, battery, controller, and distribution models together and returns results for the complete power system.
+122 [Normal] The function calls solar_power and determines actual demand from state.load_connected. For a connected load, P3 gives required bus power. Establish the admissible interval from zero current in the charging or discharge direction to the first device constraint, and call battery_response to find the first feasible solution of P11. Each trial recomputes surface fractions, material functions, and voltage. Current error and power residual are checked separately using parameters.numerics. Controller loss is neglected; P3 divides bus input into P_load_W and Q_D_W.
+123 [Normal] When solar surplus reaches a charging limit, evaluate battery power at the permitted current and use P1 to select actual P_pv_W. A disconnected load keeps zero bus and load powers while solar charging continues. To assess a new start command, also check whether the current request could be connected and return can_supply_request without changing the switch. A normal result includes the four domain ports, both lithium derivatives, and battery diagnostics.
+124 [Normal] A supply-loss condition requires device-boundary calculations confirming insufficient capability. This assessment checks available terminal power over the admissible current interval, not merely whether its endpoints bracket a root. event_required=True means that the boundary must first be located and accepted. A trial neither latches a trip nor provides a valid result for integration across that boundary. After acceptance, apply Section 5.6 and reevaluate at the same time. Missing a valid bracket or failing numerical convergence returns a numerical failure and reason; neither automatically means insufficient supply. Undefined powers and derivatives remain empty when no valid operating result exists.
+125 [Heading 2] State Update at Accepted Events
+126 [Normal] This function implements the load-switching and supply-loss protection updates in Section 4.5. Simulation calculations call it after accepting an event boundary. It uses the overall evaluator's decision; the caller then reevaluates supply after the update.
+127 [Normal] state contains lithium states accepted at the event time, event is an accepted start, stop, or supply-loss event at that time, and decision is its PowerResult. Check time, instance, and identifier, then return a new PowerState while preserving x_n and x_p. Reject trial events with accepted=False or error results with decision.valid=False, and do not execute a command identifier twice. supply_loss also requires confirmation of its physical boundary in the result; an ordinary numerical error cannot create that event.
+128 [Normal] stop disconnects the load. supply_loss disconnects it and latches the trip. A new start connects and clears the latch only when decision.can_supply_request=True; otherwise it remains disconnected. Simultaneous stop or supply loss takes priority over start, without repeated automatic retries. Reevaluate powers and heat at that time, then continue integration. Continuous trial stages use pure evaluation and do not call this function to change protection state.
+129 [Heading 1] Public Interface Design
+130 [Heading 2] General contracts
+131 [Normal] Time starts from the timezone-aware UTC epoch stored in the run configuration; time_s is in . Dynamic inputs, states, and results belong to the same run_id, Sat01, and evaluation time. Length is in , temperature in , current in , and electrical power and heat in . Battery current and terminal power are positive for discharge. Public boundaries check dimensions, finite values, aligned times, and physical ranges.
+132 [Normal] Orbit position and solar vectors use GCRS. AttitudeEphemeris.quaternions_xyzw uses xyzw ordering and maps body to inertial coordinates. sun_intensity includes eclipse; solar_power subsequently applies incidence. Orbit's original power_considering_thermal also integrates panel temperature and is disabled for this scene.
+133 [Engineering Caption] Table 5 Coupled ports and units
+134 [Normal] Map demonstrator fields by physical meaning and units. Convert any older battery field positive for charging, and explicitly bind a generic temperature_k to Battery01. Matching names alone do not establish compatibility. Invalid supply results, numerical failure, and normal loss of supply have distinct records.
+135 [Heading 2] Primary calling interfaces
+136 [Engineering Caption] Table 6 Primary calling interfaces
+137 [Heading 2] Minimal end-to-end call
+138 [Normal] This is design pseudocode, not an installed Python package. asset_record, scene_record, and initial_state_fields come from a checked scene. environment, P_request_W, and T_B_K come from other domains at the same time. The first example shows a normal trial evaluation without separately integrating battery temperature.
+139 [Normal] battery_derivatives supplies the common state vector's two lithium components. thermal_ports goes to Thermal at that same trial time; Thermal returns temperature derivatives including the battery. All continuous states are integrated together. If valid=False, address the input or numerical error. If event_required=True, locate the boundary before proceeding; empty powers or derivatives cannot be used.
+140 [Normal] After step acceptance, accepted_state_fields contains the solver's lithium states, accepted time, and existing protection fields. When an accepted event occurs, boundary_inputs contains orbit, demand, and temperature at that time. Update protection and recalculate as follows.
+141 [Heading 1] End-to-End Operational Workflow
+142 [Normal] Fix asset, model, and parameter versions, read the Sat01 scene, resolve its parameters with load_power_parameters, and construct PowerState. Initial electrode lithium inventories must be compatible; Thermal stores initial battery temperature. The scene specifies initial load connection, and subsequent start/stop commands are one-time events.
+143 [Normal] 
+144 [Engineering Caption] Figure 3 Coupled operational workflow of Power
+145 [Normal] At each trial stage, read its lithium states and T_B_K, call solve_power_allocation, and combine its derivatives with Thermal's temperature derivatives in the common continuous state vector. Eclipse transitions, demand changes, and device boundaries determine calculation intervals. Trials do not change protection state, and rejected results do not enter history.
+146 [Normal] At an accepted supply boundary, call apply_power_event, preserving the boundary lithium states while updating connection or latch state. Recalculate powers and heat at that same time. Solar generation, charging, and cooling continue while disconnected; only a new start event requests restoration.
+147 [Normal] Save available and actual solar power, battery current and voltage, , load power, heat, and temperature. Record eclipse transitions, charging-limit events, and disconnection times.
+148 [Heading 1] Numerical Design and Performance
+149 [Normal] P5 supplies the two lithium ODEs; P9 belongs to Thermal's temperature system. The common solver uses current trial concentrations and temperatures together, resolving current, voltage, and heat at that stage. Use an adaptive Runge–Kutta method; implicit methods may be used when thermal time scales differ substantially. solve_ivp supports component-wise absolute tolerances, so lithium fractions and temperatures in  use separate values. [9]
+150 [Engineering Caption] Table 7 Numerical methods and controls
+151 [Normal] These fields belong to parameters.numerics; physical parameters remain in solar, battery, and eta_D. Thermal tolerances must agree with common solver settings. Brent solving requires a continuous function and a valid bracket. xtol controls the current variable, not the power residual. If no bracket is formed, inspect the interval and device capability; numerical failure does not establish supply loss. [8]
+152 [Normal] Repeated material-function evaluation during current search is the principal cost. Derive fixed geometry-dependent charges at configuration time and reuse solar geometry within one stage. The run configuration supplies solver tolerances and the maximum step. Recording frequency and rendering frame rate do not change integration time.
+153 [Heading 1] Deployment and Configuration
+154 [Heading 2] Runtime
+155 [Normal] The proposed implementation uses Python, NumPy, and SciPy, obtaining orbit geometry through existing Orbit interfaces. NumPy handles arrays and material functions; SciPy supplies continuous integration and bracketed root finding. USD reading supports asset and scene integration. Physical functions receive resolved ordinary data objects and do not load geometry at every evaluation.
+156 [Normal] The deployment configuration records Python, NumPy, SciPy, Orbit, and USD versions and fixes parameter files.
+157 [Heading 2] Installation and interpreter configuration
+158 [Normal] Implement the proposed modules from Section 3.2 in the existing SpaceDC environment, using the same interpreter in the editor and batch runs. The package supplies installation entry points, dependency declarations, and scene-loading entry points.
+159 [Normal] Replace the current  battery update with integration of the two lithium states and disable Orbit's old one-panel temperature update. Only Thermal writes Battery01 temperature, and visualization only reads saved states. Keep separate records for numerical failure, invalid parameters, and normal supply loss.
+160 [Heading 2] SimReady assets and scene assembly
+161 [Normal] SimReady/USD assets provide reusable geometry and metadata. The project supplies electrochemical behavior, power rules, and parameter bindings. NVIDIA documentation supports organizing parameters and connections but does not imply that an arbitrary battery asset already contains SPM data or runtime behavior. [6] USD references reuse assets; scene layers retain instance-specific overrides. [7]
+162 [Engineering Caption] Table 8 Asset and scene fields
+163 [Normal] One Battery01 instance binds both the Power SPM and Thermal node . model_id selects an algorithm from a controlled library rather than executing arbitrary code from USD. Two instances of one battery asset retain separate mutable lithium states, temperatures, and connections.
+164 [Normal] The following design example aligns instance names across the three reports; it is not an already executable scene file. Components are placed under /World/Sat01. Electrical connections are configured separately from geometry references. Geometric proximity does not create a port connection.
+165 [Engineering Caption] Table 9 Sat01 instances and connections
+166 [Normal] Store the panel's body-frame installation normal and coordinate convention. Thermal configures heat-transfer connections and receives battery heat under the same Battery01 identifier. Display scaling does not determine active area, electrode thickness, or thermal properties. The demonstrator uses presentation scaling, so geometry extraction must use engineering units and recover physical dimensions from scene transforms.
+167 [Heading 2] Parameter configuration and result archive
+168 [Normal] Select actual array, cell, and distribution hardware and fix their parameter versions. Set series/parallel counts and orientation, then choose consistent initial  and temperature. Finally configure computing demand and numerical tolerances within device operating limits. The table gives parameter sources and dependencies.
+169 [Engineering Caption] Table 10 Physical parameter sources and checks
+170 [Normal] Configuration resolution loads fixed asset and parameter versions, applies explicitly permitted scene overrides, recalculates dependent parameters, and checks completeness. Save the complete resolved configuration. Capacity, voltage, and appearance do not uniquely determine electrochemistry. Missing equilibrium-potential or diffusion data require a completed parameter package; values from another cell must not be silently substituted.
+171 [Normal] Parameter provenance must distinguish cell, pack, and electrode quantities. Equations P4 and P8 already perform pack scaling, so pack resistance or exchange current must not be substituted as cell values. Changing the cell requires rechecking voltage range, charging/discharge limits, and heat capacity as well as geometry.
+172 [Normal] Archive asset and model versions, resolved parameters, initial conditions, orbit epoch, workload, and solver tolerances for every run. Thermal alone updates Battery01 temperature, and SolarArray01 does not use Orbit's older thermal integrator. Actual solar electricity must not exceed compatible absorbed solar energy. Initial zero-current voltage and temperature must lie within the parameter set's applicable ranges.
+173 [Normal] initial_state_fields contains run and instance identifiers, initial time_s, x_n, x_p, initial load_connected, trip_latched, and empty handled_command_ids. Two instances of one battery asset receive separate fields. After an accepted integration result, write new lithium states and time into accepted_state_fields. Preserve the discrete fields until apply_power_event processes an accepted event.
+174 [Heading 1] Limitations and Planned Evolution
+175 [Normal] The baseline supports supply studies for one computing node within a satellite, retaining battery electrochemistry, temperature, and load-delivery feedback. Solar temperature does not alter the fixed array efficiency, and radiation does not change power parameters. Identical cells and uniform pack temperature omit cell imbalance, aging, and thermal runaway.
+176 [Normal] Add particle-diffusion states when fast pulses or diffusion relaxation must be resolved; consider SPMe or reduced DFN when electrolyte gradients matter. Changes to the battery's internal solver can retain external current, voltage, power, heat, and temperature interfaces. Bus transients or switching design require an additional circuit model.
+177 [Normal] 
+178 [Heading 1] Requirements Traceability Matrix
+179 [Engineering Caption] Table 11 Functional requirements traceability
+180 [Normal] 
+181 [Appendix Heading] Appendix A Public API Inventory
+182 [Engineering Caption] Table A-1 Public API inventory
+183 [Normal] All names above are proposed project interfaces. Orbit supplies environment inputs and Thermal supplies battery temperature; adaptation is specified in Section 6.1. Section 6.3 does not call unimplemented functions from other domains.
+184 [Appendix Heading] Appendix B Model-Selection Guidance
+185 [Engineering Caption] Table B-1 Model-selection guidance
+186 [Appendix Heading] Appendix C References
+187 [Normal] [1] SAM. Simple Efficiency Module Model. Power from area, irradiance, and conversion efficiency; space arrays require parameters for the applicable spectrum.
+188 [Normal] [2] Subramanian V R, Diwakar V D, Tapriyal D. Efficient Macro-Micro Scale Coupled Modeling of Batteries. Journal of The Electrochemical Society, 2005, 152: A2002–A2008. Author-provided paper. Reduction using quadratic concentration profiles.
+189 [Normal] [3] PyBaMM. Polynomial particle profile. Surface-to-average concentration relation for a quadratic profile.
+190 [Normal] [4] PyBaMM. Single Particle Model. Single-particle model and terminal-voltage structure.
+191 [Normal] [5] PyBaMM. Thermal models. Reaction, ohmic, and reversible heat and the lumped temperature equation.
+192 [Normal] [6] NVIDIA. SimReady FAQ. Scope of physical asset properties and runtime behavior.
+193 [Normal] [7] OpenUSD. Referencing Layers. Asset references and scene-level property overrides.
+194 [Normal] [8] SciPy. brentq. Bracketed roots of continuous functions and independent-variable tolerance.
+195 [Normal] [9] SciPy. solve_ivp. ODE integration, events, and component-wise tolerances.
+TABLES
+TABLE 0
+Institute | College of Computing and Data Science, Nanyang Technological University
+Author | 
+Reviewer | 
+Issue date | 2 October 2026
+TABLE 1
+Abstract | This report specifies the power model for a computing node on one satellite. Its physical components are a solar array, battery pack, power controller, and distribution unit. Orbit illumination and computing demand determine solar generation, battery charging or discharge, delivered power, and battery and distribution heat. A reduced single-particle model, SPM, retains one average lithium state per electrode and couples to the lumped battery temperature in Thermal. | This report specifies the power model for a computing node on one satellite. Its physical components are a solar array, battery pack, power controller, and distribution unit. Orbit illumination and computing demand determine solar generation, battery charging or discharge, delivered power, and battery and distribution heat. A reduced single-particle model, SPM, retains one average lithium state per electrode and couples to the lumped battery temperature in Thermal. | This report specifies the power model for a computing node on one satellite. Its physical components are a solar array, battery pack, power controller, and distribution unit. Orbit illumination and computing demand determine solar generation, battery charging or discharge, delivered power, and battery and distribution heat. A reduced single-particle model, SPM, retains one average lithium state per electrode and couples to the lumped battery temperature in Thermal. | This report specifies the power model for a computing node on one satellite. Its physical components are a solar array, battery pack, power controller, and distribution unit. Orbit illumination and computing demand determine solar generation, battery charging or discharge, delivered power, and battery and distribution heat. A reduced single-particle model, SPM, retains one average lithium state per electrode and couples to the lumped battery temperature in Thermal.
+Keywords | Solar array; Reduced SPM; Power allocation | Solar array; Reduced SPM; Power allocation | Solar array; Reduced SPM; Power allocation | Solar array; Reduced SPM; Power allocation
+Change Record | Change Record | Change Record | Change Record | Change Record
+Revision | Change Request | Date | Author | Description
+18.0 | Mathematical notation | 2026-10-02 |  | Consistent equations, inline symbols and units
+ |  |  |  | 
+ |  |  |  | 
+ |  |  |  | 
+TABLE 2
+Term | Meaning in this report
+Maximum available power | Solar generation available before load and battery acceptance limits
+Actual solar output | Power selected by the controller and removed from absorbed panel energy in Thermal
+Cell and pack | Electrochemistry describes one cell; series and parallel counts scale terminal quantities and heat
+Continuous state | Power's two average lithium fractions; battery temperature belongs to Thermal
+Accepted state | State and event results accepted by the solver for saving and subsequent calculation
+TABLE 3
+Component and requirement ID | Process to simulate | Output
+Solar array P-04 | Generation capability under the specified illumination and orientation | Maximum available electrical power
+Battery pack P-02 | Charging, discharge, internal-state changes, temperature effects, and heat generation | Battery-state derivatives, terminal voltage, charging or discharge power, and heat source
+Power controller P-01, P-03 | Allocate power within generation, load, and battery constraints; maintain power balance and apply charging limits and supply-disconnection protection | Actual solar output, battery current, bus power, and supply feasibility
+Distribution unit P-01 | Delivery to the load and distribution losses | Actual load power and distribution heat source
+TABLE 4
+power/
+├── __init__.py
+├── types.py
+├── parameters.py
+│   └── load_power_parameters
+├── solar.py
+│   └── solar_power
+├── battery.py
+│   └── battery_response
+├── allocation.py
+│   └── solve_power_allocation
+└── events.py
+    └── apply_power_event
+TABLE 5
+Component or function | Corresponding model | Implementation and caller
+Solar array | P2 incidence and maximum available power | solar_power, called by the overall evaluator to return available generation
+Battery pack | P4–P8 and P10 electrochemical response and heat; Thermal calculates the P9 temperature | battery_response, called at trial currents by the overall evaluator to return voltage, power, lithium derivatives, and heat
+Power controller | Section 4.2 ideal MPPT and P11 power allocation with device limits | Inside solve_power_allocation: solve battery current and determine actual solar extraction and supply feasibility
+Distribution unit | P3 efficiency and loss | Inside solve_power_allocation: calculate actual load supply and distribution heat
+Complete power system | P1 terminal-power balance and the component models above | solve_power_allocation, called by same-time coupled calculations to collect powers, heat, and state derivatives
+Parameter preparation | Device parameters, connections, and initial-state constraints | load_power_parameters, called during scene initialization to prepare model parameters
+Load-protection state | Section 4.5 start, stop, and supply-loss rules | apply_power_event, called after an event boundary is accepted to update connection or trip state
+TABLE 6
+ | (P1)
+TABLE 7
+ | (P2)
+TABLE 8
+ | (P3)
+TABLE 9
+ | (P4)
+TABLE 10
+ | (P5)
+TABLE 11
+ | (P6)
+TABLE 12
+ | (P7)
+TABLE 13
+ | (P8)
+TABLE 14
+ | (P9)
+TABLE 15
+ | (P10)
+TABLE 16
+ | (P11)
+TABLE 17
+Object | Fields and units | Invariant or use
+PowerParameters | solar, battery, eta_D, links, numerics, provenance | Separate groups for devices, ports, numerical settings, and sources
+PowerEnvironment | G_W_m2; position_m[3]; sun_position_m[3]; quaternion_xyzw[4]; frame | Eclipse included; both positions in GCRS; quaternion maps body to GCRS
+PowerInputs | environment, P_request_W, T_B_K | Same-time environment, nonnegative demand, and battery temperature
+PowerState | x_n, x_p; load_connected, trip_latched, handled_command_ids | Dimensionless lithium states are integrated; other fields are discrete protection state
+SolarPowerResult | cos_incidence, G_S_W_m2, P_pv_max_W | Incidence cosine, panel irradiance, and available solar power
+BatteryResponse | v_cell_V, I_B_A, V_B_V, P_B_W, Q_B_W, dx_n_dt, dx_p_dt, constraint_margins | , , , derivatives in , and boundary margins
+PowerResult | P_pv_W, P_load_W, Q_B_W, Q_D_W, dx_n_dt, dx_p_dt, battery, valid, event_required, can_supply_request, reason | Domain ports, derivatives, battery diagnostics, and solution status
+PowerEvent | kind, command_id, accepted | Kind is start, stop, or supply_loss; unique command identifiers; only accepted events change protection state
+TABLE 18
+def load_power_parameters(
+    asset_record, scene_record
+) -> PowerParameters:
+    ...
+TABLE 19
+def battery_response(
+    i_A, state, T_B_K, parameters
+) -> BatteryResponse:
+    ...
+TABLE 20
+def solar_power(
+    environment, parameters
+) -> SolarPowerResult:
+    ...
+TABLE 21
+def solve_power_allocation(
+    inputs, state, parameters
+) -> PowerResult:
+    ...
+TABLE 22
+def apply_power_event(
+    state, event, decision
+) -> PowerState:
+    ...
+TABLE 23
+Source and destination | Public field | Quantity and unit
+Orbit → Power | PowerEnvironment | Eclipsed, unprojected irradiance in ; positions in ; dimensionless attitude
+Compute → Power | P_request_W | Requested power , 
+Thermal → Power | T_B_K, Battery01 | Battery temperature , 
+Power → Thermal | P_pv_W, SolarArray01 | Actual solar output , 
+Power → Compute and Thermal | P_load_W, Compute01 | Actual load power , 
+Power → Thermal | Q_B_W, Battery01; Q_D_W, PDU01 | Net battery heat and distribution loss, 
+TABLE 24
+Call | Input | Output
+load_power_parameters(asset_record, scene_record) | Assets, scene, and numerical settings | PowerParameters
+battery_response(i_A, state, T_B_K, parameters) | Cell current, current lithium state, and temperature | BatteryResponse
+solar_power(environment, parameters) | Same-time illumination geometry and parameters | SolarPowerResult
+solve_power_allocation(inputs, state, parameters) | Current inputs, state, and parameters | PowerResult
+apply_power_event(state, event, decision) | State, event, and supply result at an accepted boundary | New PowerState
+TABLE 25
+parameters = load_power_parameters(asset_record, scene_record)
+state = PowerState(**initial_state_fields)
+inputs = PowerInputs(
+    run_id=run_id, instance_id="Sat01", time_s=time_s,
+    environment=environment,
+    P_request_W=P_request_W, T_B_K=T_B_K,
+)
+result = solve_power_allocation(inputs, state, parameters)
+if result.valid and not result.event_required:
+    battery_derivatives = (result.dx_n_dt, result.dx_p_dt)
+    thermal_ports = {
+        "P_pv_W": result.P_pv_W,
+        "P_load_W": result.P_load_W,
+        "Q_B_W": result.Q_B_W,
+        "Q_D_W": result.Q_D_W,
+    }
+TABLE 26
+state = PowerState(**accepted_state_fields)
+if accepted_event is not None:
+    decision = solve_power_allocation(
+        boundary_inputs, state, parameters
+    )
+    state = apply_power_event(state, accepted_event, decision)
+    result = solve_power_allocation(
+        boundary_inputs, state, parameters
+    )
+TABLE 27
+Calculation | Method | Controls and units
+Continuous states | Common adaptive integration | Dimensionless rtol and atol_x; atol_T_K in 
+Battery current | Bracketed root within the valid interval | current_xtol_A in 
+Power equation | Separate P11 residual check after solution | power_residual_tol_W in 
+Device events | Monitor boundaries and locate first arrival | event_time_tol_s and max_step_s in 
+Environment and output | Shared input sampling; separate recording rate | environment_step_s and output_step_s in 
+TABLE 28
+Configuration layer | Proposed fields | Contents
+Asset definition | asset_id, asset_version, geometry_uri | Device identity, fixed version, and geometry reference
+Physical parameters | parameter_set, provenance | Values, units, coefficients, valid ranges, and manufacturer or test sources
+Model capability | domain, model_id, ports | Domain-specific algorithm identifier and electrical/thermal ports
+Scene instance | instance_id, asset_ref, parameter_overrides | Installed device and permitted design overrides
+Initialization and connection | initial_state, connections | Electrode initial fractions, load enable state, and connected ports
+TABLE 29
+Instance | Asset parameters and purpose | Connections
+SolarArray01 | Active cell area, efficiency, installation normal | Electrical output to Controller01; actual output to Thermal node 
+Battery01 | Cell parameters, series/parallel counts, initial lithium fractions | Bidirectional port to Controller01; temperature and heat bound to node 
+Controller01 | MPPT, charging limits, and supply-disconnection rules | Connects array, battery, and PDU01; its own loss is neglected
+PDU01 | Distribution efficiency and included wiring | Supplies Compute01; loss enters Thermal node 
+Compute01 | Requested power and start/stop interface | Receives actual supply; Compute owns workload execution
+TABLE 30
+Parameter group | Required content | Source and checks
+Solar array |  and body-frame normal | Engineering dimensions and spectrum-specific performance; efficiency and absorptivity use compatible definitions
+Battery structure |  | Consistent cell parameter set; recalculate  after electrode geometry changes
+Battery kinetics |  | Same-cell identified parameters or manufacturer data; exchange current is for the complete electrode
+Equilibrium potential |  | Material-curve fits with errors and valid lithium/temperature ranges
+Initial state and limits | Both electrode fractions,  endpoints, current and voltage limits | Initial charge condition and device data; preserve lithium inventory
+Distribution and thermal connection |  | Power tests determine efficiency; Thermal bindings store heat capacity and resistance
+TABLE 31
+ID | Requested capability | Interface | Design model | Primary output
+P-01 | Conserved power and actual delivery | solve_power_allocation | P1, P3, P11 | P_pv_W, P_load_W, Q_D_W
+P-02 | Battery cycling and thermal coupling | battery_response | P4–P10; Thermal integrates temperature | Voltage, two derivatives, Q_B_W
+P-03 | Charging limits and supply protection | solve_power_allocation, apply_power_event | P11, device bounds, accepted events | Feasibility, limiting reason, protection state
+P-04 | Orbit and satellite-domain integration | solar_power, PowerInputs, PowerResult | P2, same time, shared ports | Available solar power and four coupled fields
+P-05 | Asset resolution and reproduction | load_power_parameters | Material data, overrides, version checks | PowerParameters, configuration, provenance
+TABLE 32
+Public name | Kind | Contract summary
+PowerParameters | Parameter type | Devices, connections, numerical settings, and sources
+PowerEnvironment | Input type | Same-time illumination, position, and attitude
+PowerInputs | Input type | Environment, requested power, and battery temperature
+PowerState | State type | Two lithium states and discrete protection state
+SolarPowerResult | Result type | Panel irradiance and maximum available power
+BatteryResponse | Result type | Battery ports, heat, derivatives, and boundary margins
+PowerResult | Result type | Actual powers, heat, derivatives, and validity
+PowerEvent | Event type | Accepted start, stop, or supply-loss record
+load_power_parameters | Function | Resolve and check parameters and scene; Section 5.2
+battery_response | Function | Response from current, lithium state, and temperature; Section 5.3
+solar_power | Function | Illumination geometry and available generation; Section 5.4
+solve_power_allocation | Function | Pure current solution and power allocation; Section 5.5
+apply_power_event | Function | Protection update at accepted events; Section 5.6
+TABLE 33
+Study need | Baseline and condition for extension
+Orbital supply and battery temperature | Fixed-efficiency array, ideal quasi-static MPPT, two-state SPM, and Thermal's lumped temperature
+Different cell or series/parallel count | Replace complete material data and initial states; recheck voltage, C-rate, and thermal data instead of changing nominal capacity alone
+Fast pulses or diffusion relaxation | Add particle-diffusion states while retaining external ports
+Significant electrolyte gradients | Use SPMe or a reduced DFN model
+Bus ripple or switching-control design | Use a separate transient circuit model; the algebraic controller does not predict these effects
+Internal battery gradients or local structure | Use a multi-node thermal model or FEM to describe internal temperature distributions

@@ -1,0 +1,11 @@
+[警告: The model name 'sdtwin_battery_time_validation' is shadowing another name in the MATLAB workspace or path. Type "which -all sdtwin_battery_time_validation" at the command
+line to find the other uses of this name. You should change the name of the model to avoid problems.] 
+[> 位置：run_battery_simulink (第 14 行)] 
+START BAT-T01
+DONE BAT-T01 rows=3003 seconds=7.83
+START BAT-T02
+DONE BAT-T02 rows=3003 seconds=5.76
+START BAT-T03
+DONE BAT-T03 rows=3005 seconds=6.48
+START BAT-T04
+DONE BAT-T04 rows=3003 seconds=6.39

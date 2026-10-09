@@ -1,5 +1,22 @@
 # Power model versus Simulink verification
 
+The current authority is the user-updated [design revision 19.1](../SDTwin_Power_Design_Report_CN_v19.1.docx).
+Its [10-project model verification plan](../TEST_PLAN.md) is the active scope:
+one solar, seven battery, one EKF and one power-allocation project. Engineering
+integration, API, fault-injection and checkpoint suites are outside this round.
+Revision 19.1 removes online RLS and requires asset-table parameters with EKF.
+Neither this historical suite nor the revision 19 battery results validate that revision.
+The newly executed v19.1 results are in [tests_v19_1](../tests_v19_1/README.md):
+10 projects, 26 Simulink runs, 70,554 compared samples, with preserved event-side
+alignment records and explicit limits on measured-data validity.
+
+**Historical SPM suite.** Its battery equations refer to design revision 18.
+The rebuilt first-order ECM with EKF/RLS is in
+[battery_rebuild](../battery_rebuild/README.md), which retains revision 19 calibration
+data and historical results. Obsolete report files were removed on 2026-10-09.
+This suite's numerical data remains as evidence for the legacy
+Thermal adapter; its results do not validate the new battery implementation.
+
 This suite compares the repository's current Power equation implementation in
 `Thermal/sdtwin_sim/power_stand_in.py` with an independently written MATLAB reference
 executed by a saved Simulink model. The Python component remains explicitly a test
@@ -39,7 +56,7 @@ The report also records scope gaps, illustrative parameters and numerical conver
 
 ## Report format
 
-Both reports use the retained Orbit test report as the formatting authority:
+The removed historical reports used the Orbit test report as the formatting authority:
 `Orbit/2. Test Report for Orbit Dynamics Module of SDCTwin  - 20260817.docx`.
 `build_report.py` supplies evidence and figures; `orbit_format.py` clones the actual
 reference document, case-record form and landscape summary. The seven chapters are

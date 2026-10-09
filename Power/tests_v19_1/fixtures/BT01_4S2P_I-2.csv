@@ -1,0 +1,3 @@
+time_s,current_A,temperature_K,irradiance_W_m2,cos_incidence,request_W,noise_V,measured_voltage_V
+0,-2,298.14999999999998,0,1,0,0,0
+0.10000000000000001,-2,298.14999999999998,0,1,0,0,0
